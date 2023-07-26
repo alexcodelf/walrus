@@ -28,6 +28,8 @@ const (
 	FieldStatus = "status"
 	// FieldStatusMessage holds the string denoting the status_message field in the database.
 	FieldStatusMessage = "status_message"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
 	// FieldProjectID holds the string denoting the project_id field in the database.
 	FieldProjectID = "project_id"
 	// FieldEnvironmentID holds the string denoting the environment_id field in the database.
@@ -91,6 +93,7 @@ var Columns = []string{
 	FieldCreateTime,
 	FieldStatus,
 	FieldStatusMessage,
+	FieldType,
 	FieldProjectID,
 	FieldEnvironmentID,
 	FieldServiceID,
@@ -169,6 +172,11 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByStatusMessage orders the results by the status_message field.
 func ByStatusMessage(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatusMessage, opts...).ToFunc()
+}
+
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
 // ByProjectID orders the results by the project_id field.

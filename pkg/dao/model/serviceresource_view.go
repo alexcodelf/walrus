@@ -1146,6 +1146,7 @@ type ServiceResourceOutput struct {
 	Shape        string                              `json:"shape,omitempty"`
 	Status       types.ServiceResourceStatus         `json:"status,omitempty"`
 	Keys         *types.ServiceResourceOperationKeys `json:"keys,omitempty"`
+	DriftResult  *types.ServiceResourceDriftResult   `json:"driftResult,omitempty"`
 
 	Project      *ProjectOutput                       `json:"project,omitempty"`
 	Environment  *EnvironmentOutput                   `json:"environment,omitempty"`
@@ -1185,6 +1186,7 @@ func ExposeServiceResource(_sr *ServiceResource) *ServiceResourceOutput {
 		Shape:        _sr.Shape,
 		Status:       _sr.Status,
 		Keys:         _sr.Keys,
+		DriftResult:  _sr.DriftResult,
 	}
 
 	if _sr.Edges.Project != nil {

@@ -24,6 +24,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -134,6 +135,12 @@ func (sc *ServiceCreate) SetTemplateID(o object.ID) *ServiceCreate {
 // SetAttributes sets the "attributes" field.
 func (sc *ServiceCreate) SetAttributes(pr property.Values) *ServiceCreate {
 	sc.mutation.SetAttributes(pr)
+	return sc
+}
+
+// SetDriftResult sets the "driftResult" field.
+func (sc *ServiceCreate) SetDriftResult(tdr *types.ServiceDriftResult) *ServiceCreate {
+	sc.mutation.SetDriftResult(tdr)
 	return sc
 }
 
@@ -383,6 +390,10 @@ func (sc *ServiceCreate) createSpec() (*Service, *sqlgraph.CreateSpec) {
 		_spec.SetField(service.FieldAttributes, field.TypeOther, value)
 		_node.Attributes = value
 	}
+	if value, ok := sc.mutation.DriftResult(); ok {
+		_spec.SetField(service.FieldDriftResult, field.TypeJSON, value)
+		_node.DriftResult = value
+	}
 	if nodes := sc.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -538,6 +549,9 @@ func (sc *ServiceCreate) Set(obj *Service) *ServiceCreate {
 	if !reflect.ValueOf(obj.Attributes).IsZero() {
 		sc.SetAttributes(obj.Attributes)
 	}
+	if !reflect.ValueOf(obj.DriftResult).IsZero() {
+		sc.SetDriftResult(obj.DriftResult)
+	}
 
 	// Record the given object.
 	sc.object = obj
@@ -606,6 +620,9 @@ func (sc *ServiceCreate) SaveE(ctx context.Context, cbs ...func(ctx context.Cont
 		}
 		if _, set := sc.mutation.Field(service.FieldAttributes); set {
 			obj.Attributes = x.Attributes
+		}
+		if _, set := sc.mutation.Field(service.FieldDriftResult); set {
+			obj.DriftResult = x.DriftResult
 		}
 		obj.Edges = x.Edges
 	}
@@ -741,6 +758,9 @@ func (scb *ServiceCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx context
 			}
 			if _, set := scb.builders[i].mutation.Field(service.FieldAttributes); set {
 				objs[i].Attributes = x[i].Attributes
+			}
+			if _, set := scb.builders[i].mutation.Field(service.FieldDriftResult); set {
+				objs[i].DriftResult = x[i].DriftResult
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -982,6 +1002,24 @@ func (u *ServiceUpsert) ClearAttributes() *ServiceUpsert {
 	return u
 }
 
+// SetDriftResult sets the "driftResult" field.
+func (u *ServiceUpsert) SetDriftResult(v *types.ServiceDriftResult) *ServiceUpsert {
+	u.Set(service.FieldDriftResult, v)
+	return u
+}
+
+// UpdateDriftResult sets the "driftResult" field to the value that was provided on create.
+func (u *ServiceUpsert) UpdateDriftResult() *ServiceUpsert {
+	u.SetExcluded(service.FieldDriftResult)
+	return u
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (u *ServiceUpsert) ClearDriftResult() *ServiceUpsert {
+	u.SetNull(service.FieldDriftResult)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1172,6 +1210,27 @@ func (u *ServiceUpsertOne) UpdateAttributes() *ServiceUpsertOne {
 func (u *ServiceUpsertOne) ClearAttributes() *ServiceUpsertOne {
 	return u.Update(func(s *ServiceUpsert) {
 		s.ClearAttributes()
+	})
+}
+
+// SetDriftResult sets the "driftResult" field.
+func (u *ServiceUpsertOne) SetDriftResult(v *types.ServiceDriftResult) *ServiceUpsertOne {
+	return u.Update(func(s *ServiceUpsert) {
+		s.SetDriftResult(v)
+	})
+}
+
+// UpdateDriftResult sets the "driftResult" field to the value that was provided on create.
+func (u *ServiceUpsertOne) UpdateDriftResult() *ServiceUpsertOne {
+	return u.Update(func(s *ServiceUpsert) {
+		s.UpdateDriftResult()
+	})
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (u *ServiceUpsertOne) ClearDriftResult() *ServiceUpsertOne {
+	return u.Update(func(s *ServiceUpsert) {
+		s.ClearDriftResult()
 	})
 }
 
@@ -1530,6 +1589,27 @@ func (u *ServiceUpsertBulk) UpdateAttributes() *ServiceUpsertBulk {
 func (u *ServiceUpsertBulk) ClearAttributes() *ServiceUpsertBulk {
 	return u.Update(func(s *ServiceUpsert) {
 		s.ClearAttributes()
+	})
+}
+
+// SetDriftResult sets the "driftResult" field.
+func (u *ServiceUpsertBulk) SetDriftResult(v *types.ServiceDriftResult) *ServiceUpsertBulk {
+	return u.Update(func(s *ServiceUpsert) {
+		s.SetDriftResult(v)
+	})
+}
+
+// UpdateDriftResult sets the "driftResult" field to the value that was provided on create.
+func (u *ServiceUpsertBulk) UpdateDriftResult() *ServiceUpsertBulk {
+	return u.Update(func(s *ServiceUpsert) {
+		s.UpdateDriftResult()
+	})
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (u *ServiceUpsertBulk) ClearDriftResult() *ServiceUpsertBulk {
+	return u.Update(func(s *ServiceUpsert) {
+		s.ClearDriftResult()
 	})
 }
 

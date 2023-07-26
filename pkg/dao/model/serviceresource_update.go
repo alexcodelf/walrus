@@ -67,6 +67,18 @@ func (sru *ServiceResourceUpdate) ClearStatus() *ServiceResourceUpdate {
 	return sru
 }
 
+// SetDriftResult sets the "driftResult" field.
+func (sru *ServiceResourceUpdate) SetDriftResult(trdr *types.ServiceResourceDriftResult) *ServiceResourceUpdate {
+	sru.mutation.SetDriftResult(trdr)
+	return sru
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (sru *ServiceResourceUpdate) ClearDriftResult() *ServiceResourceUpdate {
+	sru.mutation.ClearDriftResult()
+	return sru
+}
+
 // AddComponentIDs adds the "components" edge to the ServiceResource entity by IDs.
 func (sru *ServiceResourceUpdate) AddComponentIDs(ids ...object.ID) *ServiceResourceUpdate {
 	sru.mutation.AddComponentIDs(ids...)
@@ -277,6 +289,9 @@ func (sru *ServiceResourceUpdate) Set(obj *ServiceResource) *ServiceResourceUpda
 	} else {
 		sru.ClearStatus()
 	}
+	if !reflect.ValueOf(obj.DriftResult).IsZero() {
+		sru.SetDriftResult(obj.DriftResult)
+	}
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -315,6 +330,12 @@ func (sru *ServiceResourceUpdate) sqlSave(ctx context.Context) (n int, err error
 	}
 	if sru.mutation.StatusCleared() {
 		_spec.ClearField(serviceresource.FieldStatus, field.TypeJSON)
+	}
+	if value, ok := sru.mutation.DriftResult(); ok {
+		_spec.SetField(serviceresource.FieldDriftResult, field.TypeJSON, value)
+	}
+	if sru.mutation.DriftResultCleared() {
+		_spec.ClearField(serviceresource.FieldDriftResult, field.TypeJSON)
 	}
 	if sru.mutation.ComponentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -508,6 +529,18 @@ func (sruo *ServiceResourceUpdateOne) SetNillableStatus(trs *types.ServiceResour
 // ClearStatus clears the value of the "status" field.
 func (sruo *ServiceResourceUpdateOne) ClearStatus() *ServiceResourceUpdateOne {
 	sruo.mutation.ClearStatus()
+	return sruo
+}
+
+// SetDriftResult sets the "driftResult" field.
+func (sruo *ServiceResourceUpdateOne) SetDriftResult(trdr *types.ServiceResourceDriftResult) *ServiceResourceUpdateOne {
+	sruo.mutation.SetDriftResult(trdr)
+	return sruo
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (sruo *ServiceResourceUpdateOne) ClearDriftResult() *ServiceResourceUpdateOne {
+	sruo.mutation.ClearDriftResult()
 	return sruo
 }
 
@@ -746,6 +779,11 @@ func (sruo *ServiceResourceUpdateOne) Set(obj *ServiceResource) *ServiceResource
 			} else {
 				sruo.ClearStatus()
 			}
+			if !reflect.ValueOf(obj.DriftResult).IsZero() {
+				if !reflect.DeepEqual(db.DriftResult, obj.DriftResult) {
+					sruo.SetDriftResult(obj.DriftResult)
+				}
+			}
 
 			// With Default.
 			if (obj.UpdateTime != nil) && (!reflect.DeepEqual(db.UpdateTime, obj.UpdateTime)) {
@@ -798,6 +836,9 @@ func (sruo *ServiceResourceUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx
 	} else if x := sruo.object; x != nil {
 		if _, set := sruo.mutation.Field(serviceresource.FieldStatus); set {
 			obj.Status = x.Status
+		}
+		if _, set := sruo.mutation.Field(serviceresource.FieldDriftResult); set {
+			obj.DriftResult = x.DriftResult
 		}
 		obj.Edges = x.Edges
 	}
@@ -877,6 +918,12 @@ func (sruo *ServiceResourceUpdateOne) sqlSave(ctx context.Context) (_node *Servi
 	}
 	if sruo.mutation.StatusCleared() {
 		_spec.ClearField(serviceresource.FieldStatus, field.TypeJSON)
+	}
+	if value, ok := sruo.mutation.DriftResult(); ok {
+		_spec.SetField(serviceresource.FieldDriftResult, field.TypeJSON, value)
+	}
+	if sruo.mutation.DriftResultCleared() {
+		_spec.ClearField(serviceresource.FieldDriftResult, field.TypeJSON)
 	}
 	if sruo.mutation.ComponentsCleared() {
 		edge := &sqlgraph.EdgeSpec{

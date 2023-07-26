@@ -17,6 +17,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/service"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -50,6 +51,8 @@ type Service struct {
 	TemplateID object.ID `json:"template_id,omitempty"`
 	// Attributes to configure the template.
 	Attributes property.Values `json:"attributes,omitempty"`
+	// Drift detection result.
+	DriftResult *types.ServiceDriftResult `json:"driftResult,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ServiceQuery when eager-loading is set.
 	Edges        ServiceEdges `json:"edges,omitempty"`
@@ -146,7 +149,7 @@ func (*Service) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case service.FieldLabels, service.FieldAnnotations, service.FieldStatus:
+		case service.FieldLabels, service.FieldAnnotations, service.FieldStatus, service.FieldDriftResult:
 			values[i] = new([]byte)
 		case service.FieldID, service.FieldProjectID, service.FieldEnvironmentID, service.FieldTemplateID:
 			values[i] = new(object.ID)
@@ -251,6 +254,14 @@ func (s *Service) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				s.Attributes = *value
 			}
+		case service.FieldDriftResult:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field driftResult", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &s.DriftResult); err != nil {
+					return fmt.Errorf("unmarshal field driftResult: %w", err)
+				}
+			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
 		}
@@ -353,6 +364,9 @@ func (s *Service) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("attributes=")
 	builder.WriteString(fmt.Sprintf("%v", s.Attributes))
+	builder.WriteString(", ")
+	builder.WriteString("driftResult=")
+	builder.WriteString(fmt.Sprintf("%v", s.DriftResult))
 	builder.WriteByte(')')
 	return builder.String()
 }

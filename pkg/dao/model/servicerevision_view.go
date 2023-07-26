@@ -39,6 +39,8 @@ type ServiceRevisionCreateInput struct {
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion"`
 	// Name of the template.
 	TemplateName string `path:"-" query:"-" json:"templateName"`
+	// Type of the revision.
+	Type string `path:"-" query:"-" json:"type"`
 	// Attributes to configure the template.
 	Attributes property.Values `path:"-" query:"-" json:"attributes,omitempty"`
 	// Variables of the revision.
@@ -65,6 +67,7 @@ func (srci *ServiceRevisionCreateInput) Model() *ServiceRevision {
 		InputPlan:                 srci.InputPlan,
 		TemplateVersion:           srci.TemplateVersion,
 		TemplateName:              srci.TemplateName,
+		Type:                      srci.Type,
 		Attributes:                srci.Attributes,
 		Variables:                 srci.Variables,
 		DeployerType:              srci.DeployerType,
@@ -137,6 +140,8 @@ type ServiceRevisionCreateInputsItem struct {
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion"`
 	// Name of the template.
 	TemplateName string `path:"-" query:"-" json:"templateName"`
+	// Type of the revision.
+	Type string `path:"-" query:"-" json:"type"`
 	// Attributes to configure the template.
 	Attributes property.Values `path:"-" query:"-" json:"attributes,omitempty"`
 	// Variables of the revision.
@@ -195,6 +200,7 @@ func (srci *ServiceRevisionCreateInputs) Model() []*ServiceRevision {
 			InputPlan:                 srci.Items[i].InputPlan,
 			TemplateVersion:           srci.Items[i].TemplateVersion,
 			TemplateName:              srci.Items[i].TemplateName,
+			Type:                      srci.Items[i].Type,
 			Attributes:                srci.Items[i].Attributes,
 			Variables:                 srci.Items[i].Variables,
 			DeployerType:              srci.Items[i].DeployerType,
@@ -619,6 +625,8 @@ func (srqi *ServiceRevisionQueryInputs) ValidateWith(ctx context.Context, cs Cli
 type ServiceRevisionUpdateInput struct {
 	ServiceRevisionQueryInput `path:",inline" query:"-" json:"-"`
 
+	// Type of the revision.
+	Type string `path:"-" query:"-" json:"type,omitempty"`
 	// Version of the template.
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion,omitempty"`
 	// Attributes to configure the template.
@@ -648,6 +656,7 @@ func (srui *ServiceRevisionUpdateInput) Model() *ServiceRevision {
 
 	_sr := &ServiceRevision{
 		ID:                        srui.ID,
+		Type:                      srui.Type,
 		TemplateVersion:           srui.TemplateVersion,
 		Attributes:                srui.Attributes,
 		Variables:                 srui.Variables,
@@ -689,6 +698,8 @@ type ServiceRevisionUpdateInputsItem struct {
 	// ID of the ServiceRevision entity.
 	ID object.ID `path:"-" query:"-" json:"id"`
 
+	// Type of the revision.
+	Type string `path:"-" query:"-" json:"type"`
 	// Version of the template.
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion"`
 	// Attributes to configure the template.
@@ -750,6 +761,7 @@ func (srui *ServiceRevisionUpdateInputs) Model() []*ServiceRevision {
 	for i := range srui.Items {
 		_sr := &ServiceRevision{
 			ID:                        srui.Items[i].ID,
+			Type:                      srui.Items[i].Type,
 			TemplateVersion:           srui.Items[i].TemplateVersion,
 			Attributes:                srui.Items[i].Attributes,
 			Variables:                 srui.Items[i].Variables,
@@ -884,6 +896,7 @@ type ServiceRevisionOutput struct {
 	CreateTime                *time.Time                  `json:"createTime,omitempty"`
 	Status                    string                      `json:"status,omitempty"`
 	StatusMessage             string                      `json:"statusMessage,omitempty"`
+	Type                      string                      `json:"type,omitempty"`
 	TemplateName              string                      `json:"templateName,omitempty"`
 	TemplateVersion           string                      `json:"templateVersion,omitempty"`
 	Attributes                property.Values             `json:"attributes,omitempty"`
@@ -919,6 +932,7 @@ func ExposeServiceRevision(_sr *ServiceRevision) *ServiceRevisionOutput {
 		CreateTime:                _sr.CreateTime,
 		Status:                    _sr.Status,
 		StatusMessage:             _sr.StatusMessage,
+		Type:                      _sr.Type,
 		TemplateName:              _sr.TemplateName,
 		TemplateVersion:           _sr.TemplateVersion,
 		Attributes:                _sr.Attributes,

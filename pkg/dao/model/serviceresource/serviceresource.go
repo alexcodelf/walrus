@@ -47,6 +47,8 @@ const (
 	FieldShape = "shape"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldDriftResult holds the string denoting the driftresult field in the database.
+	FieldDriftResult = "drift_result"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeEnvironment holds the string denoting the environment edge name in mutations.
@@ -137,6 +139,7 @@ var Columns = []string{
 	FieldDeployerType,
 	FieldShape,
 	FieldStatus,
+	FieldDriftResult,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

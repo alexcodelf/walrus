@@ -56,6 +56,8 @@ type ServiceResource struct {
 	Shape string `json:"shape,omitempty"`
 	// Status of the resource.
 	Status types.ServiceResourceStatus `json:"status,omitempty"`
+	// Drift detection result.
+	DriftResult *types.ServiceResourceDriftResult `json:"driftResult,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ServiceResourceQuery when eager-loading is set.
 	Edges        ServiceResourceEdges `json:"edges,omitempty"`
@@ -201,7 +203,7 @@ func (*ServiceResource) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case serviceresource.FieldStatus:
+		case serviceresource.FieldStatus, serviceresource.FieldDriftResult:
 			values[i] = new([]byte)
 		case serviceresource.FieldID, serviceresource.FieldProjectID, serviceresource.FieldEnvironmentID, serviceresource.FieldServiceID, serviceresource.FieldConnectorID, serviceresource.FieldCompositionID, serviceresource.FieldClassID:
 			values[i] = new(object.ID)
@@ -316,6 +318,14 @@ func (sr *ServiceResource) assignValues(columns []string, values []any) error {
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &sr.Status); err != nil {
 					return fmt.Errorf("unmarshal field status: %w", err)
+				}
+			}
+		case serviceresource.FieldDriftResult:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field driftResult", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sr.DriftResult); err != nil {
+					return fmt.Errorf("unmarshal field driftResult: %w", err)
 				}
 			}
 		default:
@@ -444,6 +454,9 @@ func (sr *ServiceResource) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", sr.Status))
+	builder.WriteString(", ")
+	builder.WriteString("driftResult=")
+	builder.WriteString(fmt.Sprintf("%v", sr.DriftResult))
 	builder.WriteByte(')')
 	return builder.String()
 }

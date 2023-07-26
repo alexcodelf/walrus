@@ -79,6 +79,12 @@ func (src *ServiceRevisionCreate) SetNillableStatusMessage(s *string) *ServiceRe
 	return src
 }
 
+// SetType sets the "type" field.
+func (src *ServiceRevisionCreate) SetType(s string) *ServiceRevisionCreate {
+	src.mutation.SetType(s)
+	return src
+}
+
 // SetProjectID sets the "project_id" field.
 func (src *ServiceRevisionCreate) SetProjectID(o object.ID) *ServiceRevisionCreate {
 	src.mutation.SetProjectID(o)
@@ -266,6 +272,9 @@ func (src *ServiceRevisionCreate) check() error {
 	if _, ok := src.mutation.CreateTime(); !ok {
 		return &ValidationError{Name: "create_time", err: errors.New(`model: missing required field "ServiceRevision.create_time"`)}
 	}
+	if _, ok := src.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`model: missing required field "ServiceRevision.type"`)}
+	}
 	if _, ok := src.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project_id", err: errors.New(`model: missing required field "ServiceRevision.project_id"`)}
 	}
@@ -385,6 +394,10 @@ func (src *ServiceRevisionCreate) createSpec() (*ServiceRevision, *sqlgraph.Crea
 		_spec.SetField(servicerevision.FieldStatusMessage, field.TypeString, value)
 		_node.StatusMessage = value
 	}
+	if value, ok := src.mutation.GetType(); ok {
+		_spec.SetField(servicerevision.FieldType, field.TypeString, value)
+		_node.Type = value
+	}
 	if value, ok := src.mutation.TemplateName(); ok {
 		_spec.SetField(servicerevision.FieldTemplateName, field.TypeString, value)
 		_node.TemplateName = value
@@ -502,6 +515,7 @@ func (src *ServiceRevisionCreate) createSpec() (*ServiceRevision, *sqlgraph.Crea
 //	}
 func (src *ServiceRevisionCreate) Set(obj *ServiceRevision) *ServiceRevisionCreate {
 	// Required.
+	src.SetType(obj.Type)
 	src.SetProjectID(obj.ProjectID)
 	src.SetEnvironmentID(obj.EnvironmentID)
 	src.SetServiceID(obj.ServiceID)
@@ -569,6 +583,9 @@ func (src *ServiceRevisionCreate) SaveE(ctx context.Context, cbs ...func(ctx con
 		}
 		if _, set := src.mutation.Field(servicerevision.FieldStatusMessage); set {
 			obj.StatusMessage = x.StatusMessage
+		}
+		if _, set := src.mutation.Field(servicerevision.FieldType); set {
+			obj.Type = x.Type
 		}
 		if _, set := src.mutation.Field(servicerevision.FieldProjectID); set {
 			obj.ProjectID = x.ProjectID
@@ -698,6 +715,9 @@ func (srcb *ServiceRevisionCreateBulk) SaveE(ctx context.Context, cbs ...func(ct
 			}
 			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldStatusMessage); set {
 				objs[i].StatusMessage = x[i].StatusMessage
+			}
+			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldType); set {
+				objs[i].Type = x[i].Type
 			}
 			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldProjectID); set {
 				objs[i].ProjectID = x[i].ProjectID
@@ -882,6 +902,18 @@ func (u *ServiceRevisionUpsert) UpdateStatusMessage() *ServiceRevisionUpsert {
 // ClearStatusMessage clears the value of the "status_message" field.
 func (u *ServiceRevisionUpsert) ClearStatusMessage() *ServiceRevisionUpsert {
 	u.SetNull(servicerevision.FieldStatusMessage)
+	return u
+}
+
+// SetType sets the "type" field.
+func (u *ServiceRevisionUpsert) SetType(v string) *ServiceRevisionUpsert {
+	u.Set(servicerevision.FieldType, v)
+	return u
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ServiceRevisionUpsert) UpdateType() *ServiceRevisionUpsert {
+	u.SetExcluded(servicerevision.FieldType)
 	return u
 }
 
@@ -1107,6 +1139,20 @@ func (u *ServiceRevisionUpsertOne) UpdateStatusMessage() *ServiceRevisionUpsertO
 func (u *ServiceRevisionUpsertOne) ClearStatusMessage() *ServiceRevisionUpsertOne {
 	return u.Update(func(s *ServiceRevisionUpsert) {
 		s.ClearStatusMessage()
+	})
+}
+
+// SetType sets the "type" field.
+func (u *ServiceRevisionUpsertOne) SetType(v string) *ServiceRevisionUpsertOne {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ServiceRevisionUpsertOne) UpdateType() *ServiceRevisionUpsertOne {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.UpdateType()
 	})
 }
 
@@ -1517,6 +1563,20 @@ func (u *ServiceRevisionUpsertBulk) UpdateStatusMessage() *ServiceRevisionUpsert
 func (u *ServiceRevisionUpsertBulk) ClearStatusMessage() *ServiceRevisionUpsertBulk {
 	return u.Update(func(s *ServiceRevisionUpsert) {
 		s.ClearStatusMessage()
+	})
+}
+
+// SetType sets the "type" field.
+func (u *ServiceRevisionUpsertBulk) SetType(v string) *ServiceRevisionUpsertBulk {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ServiceRevisionUpsertBulk) UpdateType() *ServiceRevisionUpsertBulk {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.UpdateType()
 	})
 }
 

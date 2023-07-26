@@ -14,6 +14,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/service"
 	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -852,14 +853,15 @@ func (sui *ServiceUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 
 // ServiceOutput holds the output of the Service entity.
 type ServiceOutput struct {
-	ID          object.ID         `json:"id,omitempty"`
-	Name        string            `json:"name,omitempty"`
-	Description string            `json:"description,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	CreateTime  *time.Time        `json:"createTime,omitempty"`
-	UpdateTime  *time.Time        `json:"updateTime,omitempty"`
-	Status      status.Status     `json:"status,omitempty"`
-	Attributes  property.Values   `json:"attributes,omitempty"`
+	ID          object.ID                 `json:"id,omitempty"`
+	Name        string                    `json:"name,omitempty"`
+	Description string                    `json:"description,omitempty"`
+	Labels      map[string]string         `json:"labels,omitempty"`
+	CreateTime  *time.Time                `json:"createTime,omitempty"`
+	UpdateTime  *time.Time                `json:"updateTime,omitempty"`
+	Status      status.Status             `json:"status,omitempty"`
+	Attributes  property.Values           `json:"attributes,omitempty"`
+	DriftResult *types.ServiceDriftResult `json:"driftResult,omitempty"`
 
 	Project     *ProjectOutput         `json:"project,omitempty"`
 	Environment *EnvironmentOutput     `json:"environment,omitempty"`
@@ -891,6 +893,7 @@ func ExposeService(_s *Service) *ServiceOutput {
 		UpdateTime:  _s.UpdateTime,
 		Status:      _s.Status,
 		Attributes:  _s.Attributes,
+		DriftResult: _s.DriftResult,
 	}
 
 	if _s.Edges.Project != nil {

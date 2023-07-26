@@ -81,6 +81,12 @@ func (sru *ServiceRevisionUpdate) ClearStatusMessage() *ServiceRevisionUpdate {
 	return sru
 }
 
+// SetType sets the "type" field.
+func (sru *ServiceRevisionUpdate) SetType(s string) *ServiceRevisionUpdate {
+	sru.mutation.SetType(s)
+	return sru
+}
+
 // SetTemplateVersion sets the "template_version" field.
 func (sru *ServiceRevisionUpdate) SetTemplateVersion(s string) *ServiceRevisionUpdate {
 	sru.mutation.SetTemplateVersion(s)
@@ -266,6 +272,7 @@ func (sru *ServiceRevisionUpdate) Set(obj *ServiceRevision) *ServiceRevisionUpda
 	if obj.StatusMessage != "" {
 		sru.SetStatusMessage(obj.StatusMessage)
 	}
+	sru.SetType(obj.Type)
 	sru.SetTemplateVersion(obj.TemplateVersion)
 	if !reflect.ValueOf(obj.Attributes).IsZero() {
 		sru.SetAttributes(obj.Attributes)
@@ -317,6 +324,9 @@ func (sru *ServiceRevisionUpdate) sqlSave(ctx context.Context) (n int, err error
 	}
 	if sru.mutation.StatusMessageCleared() {
 		_spec.ClearField(servicerevision.FieldStatusMessage, field.TypeString)
+	}
+	if value, ok := sru.mutation.GetType(); ok {
+		_spec.SetField(servicerevision.FieldType, field.TypeString, value)
 	}
 	if value, ok := sru.mutation.TemplateVersion(); ok {
 		_spec.SetField(servicerevision.FieldTemplateVersion, field.TypeString, value)
@@ -423,6 +433,12 @@ func (sruo *ServiceRevisionUpdateOne) SetNillableStatusMessage(s *string) *Servi
 // ClearStatusMessage clears the value of the "status_message" field.
 func (sruo *ServiceRevisionUpdateOne) ClearStatusMessage() *ServiceRevisionUpdateOne {
 	sruo.mutation.ClearStatusMessage()
+	return sruo
+}
+
+// SetType sets the "type" field.
+func (sruo *ServiceRevisionUpdateOne) SetType(s string) *ServiceRevisionUpdateOne {
+	sruo.mutation.SetType(s)
 	return sruo
 }
 
@@ -638,6 +654,9 @@ func (sruo *ServiceRevisionUpdateOne) Set(obj *ServiceRevision) *ServiceRevision
 					sruo.SetStatusMessage(obj.StatusMessage)
 				}
 			}
+			if db.Type != obj.Type {
+				sruo.SetType(obj.Type)
+			}
 			if db.TemplateVersion != obj.TemplateVersion {
 				sruo.SetTemplateVersion(obj.TemplateVersion)
 			}
@@ -721,6 +740,9 @@ func (sruo *ServiceRevisionUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx
 		}
 		if _, set := sruo.mutation.Field(servicerevision.FieldStatusMessage); set {
 			obj.StatusMessage = x.StatusMessage
+		}
+		if _, set := sruo.mutation.Field(servicerevision.FieldType); set {
+			obj.Type = x.Type
 		}
 		if _, set := sruo.mutation.Field(servicerevision.FieldTemplateVersion); set {
 			obj.TemplateVersion = x.TemplateVersion
@@ -830,6 +852,9 @@ func (sruo *ServiceRevisionUpdateOne) sqlSave(ctx context.Context) (_node *Servi
 	}
 	if sruo.mutation.StatusMessageCleared() {
 		_spec.ClearField(servicerevision.FieldStatusMessage, field.TypeString)
+	}
+	if value, ok := sruo.mutation.GetType(); ok {
+		_spec.SetField(servicerevision.FieldType, field.TypeString, value)
 	}
 	if value, ok := sruo.mutation.TemplateVersion(); ok {
 		_spec.SetField(servicerevision.FieldTemplateVersion, field.TypeString, value)

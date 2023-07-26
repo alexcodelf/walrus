@@ -161,6 +161,12 @@ func (src *ServiceResourceCreate) SetNillableStatus(trs *types.ServiceResourceSt
 	return src
 }
 
+// SetDriftResult sets the "driftResult" field.
+func (src *ServiceResourceCreate) SetDriftResult(trdr *types.ServiceResourceDriftResult) *ServiceResourceCreate {
+	src.mutation.SetDriftResult(trdr)
+	return src
+}
+
 // SetID sets the "id" field.
 func (src *ServiceResourceCreate) SetID(o object.ID) *ServiceResourceCreate {
 	src.mutation.SetID(o)
@@ -457,6 +463,10 @@ func (src *ServiceResourceCreate) createSpec() (*ServiceResource, *sqlgraph.Crea
 		_spec.SetField(serviceresource.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
+	if value, ok := src.mutation.DriftResult(); ok {
+		_spec.SetField(serviceresource.FieldDriftResult, field.TypeJSON, value)
+		_node.DriftResult = value
+	}
 	if nodes := src.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -665,6 +675,9 @@ func (src *ServiceResourceCreate) Set(obj *ServiceResource) *ServiceResourceCrea
 	if !reflect.ValueOf(obj.Status).IsZero() {
 		src.SetStatus(obj.Status)
 	}
+	if !reflect.ValueOf(obj.DriftResult).IsZero() {
+		src.SetDriftResult(obj.DriftResult)
+	}
 
 	// Record the given object.
 	src.object = obj
@@ -736,6 +749,9 @@ func (src *ServiceResourceCreate) SaveE(ctx context.Context, cbs ...func(ctx con
 		}
 		if _, set := src.mutation.Field(serviceresource.FieldStatus); set {
 			obj.Status = x.Status
+		}
+		if _, set := src.mutation.Field(serviceresource.FieldDriftResult); set {
+			obj.DriftResult = x.DriftResult
 		}
 		obj.Edges = x.Edges
 	}
@@ -871,6 +887,9 @@ func (srcb *ServiceResourceCreateBulk) SaveE(ctx context.Context, cbs ...func(ct
 			}
 			if _, set := srcb.builders[i].mutation.Field(serviceresource.FieldStatus); set {
 				objs[i].Status = x[i].Status
+			}
+			if _, set := srcb.builders[i].mutation.Field(serviceresource.FieldDriftResult); set {
+				objs[i].DriftResult = x[i].DriftResult
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -1028,6 +1047,24 @@ func (u *ServiceResourceUpsert) ClearStatus() *ServiceResourceUpsert {
 	return u
 }
 
+// SetDriftResult sets the "driftResult" field.
+func (u *ServiceResourceUpsert) SetDriftResult(v *types.ServiceResourceDriftResult) *ServiceResourceUpsert {
+	u.Set(serviceresource.FieldDriftResult, v)
+	return u
+}
+
+// UpdateDriftResult sets the "driftResult" field to the value that was provided on create.
+func (u *ServiceResourceUpsert) UpdateDriftResult() *ServiceResourceUpsert {
+	u.SetExcluded(serviceresource.FieldDriftResult)
+	return u
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (u *ServiceResourceUpsert) ClearDriftResult() *ServiceResourceUpsert {
+	u.SetNull(serviceresource.FieldDriftResult)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1144,6 +1181,27 @@ func (u *ServiceResourceUpsertOne) UpdateStatus() *ServiceResourceUpsertOne {
 func (u *ServiceResourceUpsertOne) ClearStatus() *ServiceResourceUpsertOne {
 	return u.Update(func(s *ServiceResourceUpsert) {
 		s.ClearStatus()
+	})
+}
+
+// SetDriftResult sets the "driftResult" field.
+func (u *ServiceResourceUpsertOne) SetDriftResult(v *types.ServiceResourceDriftResult) *ServiceResourceUpsertOne {
+	return u.Update(func(s *ServiceResourceUpsert) {
+		s.SetDriftResult(v)
+	})
+}
+
+// UpdateDriftResult sets the "driftResult" field to the value that was provided on create.
+func (u *ServiceResourceUpsertOne) UpdateDriftResult() *ServiceResourceUpsertOne {
+	return u.Update(func(s *ServiceResourceUpsert) {
+		s.UpdateDriftResult()
+	})
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (u *ServiceResourceUpsertOne) ClearDriftResult() *ServiceResourceUpsertOne {
+	return u.Update(func(s *ServiceResourceUpsert) {
+		s.ClearDriftResult()
 	})
 }
 
@@ -1428,6 +1486,27 @@ func (u *ServiceResourceUpsertBulk) UpdateStatus() *ServiceResourceUpsertBulk {
 func (u *ServiceResourceUpsertBulk) ClearStatus() *ServiceResourceUpsertBulk {
 	return u.Update(func(s *ServiceResourceUpsert) {
 		s.ClearStatus()
+	})
+}
+
+// SetDriftResult sets the "driftResult" field.
+func (u *ServiceResourceUpsertBulk) SetDriftResult(v *types.ServiceResourceDriftResult) *ServiceResourceUpsertBulk {
+	return u.Update(func(s *ServiceResourceUpsert) {
+		s.SetDriftResult(v)
+	})
+}
+
+// UpdateDriftResult sets the "driftResult" field to the value that was provided on create.
+func (u *ServiceResourceUpsertBulk) UpdateDriftResult() *ServiceResourceUpsertBulk {
+	return u.Update(func(s *ServiceResourceUpsert) {
+		s.UpdateDriftResult()
+	})
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (u *ServiceResourceUpsertBulk) ClearDriftResult() *ServiceResourceUpsertBulk {
+	return u.Update(func(s *ServiceResourceUpsert) {
+		s.ClearDriftResult()
 	})
 }
 

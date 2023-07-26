@@ -25,6 +25,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -130,6 +131,18 @@ func (su *ServiceUpdate) SetAttributes(pr property.Values) *ServiceUpdate {
 // ClearAttributes clears the value of the "attributes" field.
 func (su *ServiceUpdate) ClearAttributes() *ServiceUpdate {
 	su.mutation.ClearAttributes()
+	return su
+}
+
+// SetDriftResult sets the "driftResult" field.
+func (su *ServiceUpdate) SetDriftResult(tdr *types.ServiceDriftResult) *ServiceUpdate {
+	su.mutation.SetDriftResult(tdr)
+	return su
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (su *ServiceUpdate) ClearDriftResult() *ServiceUpdate {
+	su.mutation.ClearDriftResult()
 	return su
 }
 
@@ -373,6 +386,9 @@ func (su *ServiceUpdate) Set(obj *Service) *ServiceUpdate {
 	} else {
 		su.ClearAttributes()
 	}
+	if !reflect.ValueOf(obj.DriftResult).IsZero() {
+		su.SetDriftResult(obj.DriftResult)
+	}
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -435,6 +451,12 @@ func (su *ServiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if su.mutation.AttributesCleared() {
 		_spec.ClearField(service.FieldAttributes, field.TypeOther)
+	}
+	if value, ok := su.mutation.DriftResult(); ok {
+		_spec.SetField(service.FieldDriftResult, field.TypeJSON, value)
+	}
+	if su.mutation.DriftResultCleared() {
+		_spec.ClearField(service.FieldDriftResult, field.TypeJSON)
 	}
 	if su.mutation.TemplateCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -724,6 +746,18 @@ func (suo *ServiceUpdateOne) ClearAttributes() *ServiceUpdateOne {
 	return suo
 }
 
+// SetDriftResult sets the "driftResult" field.
+func (suo *ServiceUpdateOne) SetDriftResult(tdr *types.ServiceDriftResult) *ServiceUpdateOne {
+	suo.mutation.SetDriftResult(tdr)
+	return suo
+}
+
+// ClearDriftResult clears the value of the "driftResult" field.
+func (suo *ServiceUpdateOne) ClearDriftResult() *ServiceUpdateOne {
+	suo.mutation.ClearDriftResult()
+	return suo
+}
+
 // SetTemplate sets the "template" edge to the TemplateVersion entity.
 func (suo *ServiceUpdateOne) SetTemplate(t *TemplateVersion) *ServiceUpdateOne {
 	return suo.SetTemplateID(t.ID)
@@ -999,6 +1033,11 @@ func (suo *ServiceUpdateOne) Set(obj *Service) *ServiceUpdateOne {
 			} else {
 				suo.ClearAttributes()
 			}
+			if !reflect.ValueOf(obj.DriftResult).IsZero() {
+				if !reflect.DeepEqual(db.DriftResult, obj.DriftResult) {
+					suo.SetDriftResult(obj.DriftResult)
+				}
+			}
 
 			// With Default.
 			if (obj.UpdateTime != nil) && (!reflect.DeepEqual(db.UpdateTime, obj.UpdateTime)) {
@@ -1066,6 +1105,9 @@ func (suo *ServiceUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx context.
 		}
 		if _, set := suo.mutation.Field(service.FieldAttributes); set {
 			obj.Attributes = x.Attributes
+		}
+		if _, set := suo.mutation.Field(service.FieldDriftResult); set {
+			obj.DriftResult = x.DriftResult
 		}
 		obj.Edges = x.Edges
 	}
@@ -1169,6 +1211,12 @@ func (suo *ServiceUpdateOne) sqlSave(ctx context.Context) (_node *Service, err e
 	}
 	if suo.mutation.AttributesCleared() {
 		_spec.ClearField(service.FieldAttributes, field.TypeOther)
+	}
+	if value, ok := suo.mutation.DriftResult(); ok {
+		_spec.SetField(service.FieldDriftResult, field.TypeJSON, value)
+	}
+	if suo.mutation.DriftResultCleared() {
+		_spec.ClearField(service.FieldDriftResult, field.TypeJSON)
 	}
 	if suo.mutation.TemplateCleared() {
 		edge := &sqlgraph.EdgeSpec{

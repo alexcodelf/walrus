@@ -35,6 +35,8 @@ type ServiceRevision struct {
 	Status string `json:"status,omitempty"`
 	// StatusMessage holds the value of the "status_message" field.
 	StatusMessage string `json:"status_message,omitempty"`
+	// Type of the revision.
+	Type string `json:"type,omitempty"`
 	// ID of the project to belong.
 	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the environment to which the revision belongs.
@@ -134,7 +136,7 @@ func (*ServiceRevision) scanValues(columns []string) ([]any, error) {
 			values[i] = new(property.Values)
 		case servicerevision.FieldDuration:
 			values[i] = new(sql.NullInt64)
-		case servicerevision.FieldStatus, servicerevision.FieldStatusMessage, servicerevision.FieldTemplateName, servicerevision.FieldTemplateVersion, servicerevision.FieldInputPlan, servicerevision.FieldOutput, servicerevision.FieldDeployerType:
+		case servicerevision.FieldStatus, servicerevision.FieldStatusMessage, servicerevision.FieldType, servicerevision.FieldTemplateName, servicerevision.FieldTemplateVersion, servicerevision.FieldInputPlan, servicerevision.FieldOutput, servicerevision.FieldDeployerType:
 			values[i] = new(sql.NullString)
 		case servicerevision.FieldCreateTime:
 			values[i] = new(sql.NullTime)
@@ -177,6 +179,12 @@ func (sr *ServiceRevision) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status_message", values[i])
 			} else if value.Valid {
 				sr.StatusMessage = value.String
+			}
+		case servicerevision.FieldType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[i])
+			} else if value.Valid {
+				sr.Type = value.String
 			}
 		case servicerevision.FieldProjectID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -321,6 +329,9 @@ func (sr *ServiceRevision) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status_message=")
 	builder.WriteString(sr.StatusMessage)
+	builder.WriteString(", ")
+	builder.WriteString("type=")
+	builder.WriteString(sr.Type)
 	builder.WriteString(", ")
 	builder.WriteString("project_id=")
 	builder.WriteString(fmt.Sprintf("%v", sr.ProjectID))

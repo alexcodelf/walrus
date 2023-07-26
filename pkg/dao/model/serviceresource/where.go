@@ -981,6 +981,16 @@ func StatusNotNil() predicate.ServiceResource {
 	return predicate.ServiceResource(sql.FieldNotNull(FieldStatus))
 }
 
+// DriftResultIsNil applies the IsNil predicate on the "driftResult" field.
+func DriftResultIsNil() predicate.ServiceResource {
+	return predicate.ServiceResource(sql.FieldIsNull(FieldDriftResult))
+}
+
+// DriftResultNotNil applies the NotNil predicate on the "driftResult" field.
+func DriftResultNotNil() predicate.ServiceResource {
+	return predicate.ServiceResource(sql.FieldNotNull(FieldDriftResult))
+}
+
 // HasProject applies the HasEdge predicate on the "project" edge.
 func HasProject() predicate.ServiceResource {
 	return predicate.ServiceResource(func(s *sql.Selector) {
