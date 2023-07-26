@@ -85,6 +85,12 @@ func (ServiceResource) Fields() []ent.Field {
 			Annotations(
 				entx.SkipInput(),
 				entx.SkipStoringField()),
+		field.JSON("driftResult", &types.ServiceResourceDriftResult{}).
+			Comment("Drift detection result.").
+			Optional().
+			Annotations(
+				entx.SkipInput(),
+			),
 	}
 }
 

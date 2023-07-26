@@ -28,6 +28,8 @@ func (ServiceRevision) Mixin() []ent.Mixin {
 
 func (ServiceRevision) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("type").
+			Comment("Type of the revision."),
 		object.IDField("project_id").
 			Comment("ID of the project to belong.").
 			NotEmpty().
