@@ -126,7 +126,7 @@ func (op Operator) getComponentsOfCronJob(ctx context.Context, ns, n string) ([]
 		return nil, nil
 	}
 
-	// Convert pod to application resource.
+	// Convert pod to service resource.
 	ps := *psp
 
 	var rs []*model.ServiceResource
@@ -156,7 +156,7 @@ func (op Operator) getComponentsOfAny(
 		return nil, nil
 	}
 
-	// Convert pod to application resource.
+	// Convert pod to service resource.
 	ps := *psp
 
 	var rs []*model.ServiceResource

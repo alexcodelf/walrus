@@ -32,17 +32,17 @@ const (
 // RelationshipCheckTask checks services pending on relationships and
 // proceeds applying/destroying services when the check pass.
 type RelationshipCheckTask struct {
-	logger        log.Logger
-	modelClient   model.ClientSet
-	skipTLSVerify bool
-	deployer      deptypes.Deployer
+	logger       log.Logger
+	modelClient  model.ClientSet
+	tlsCertified bool
+	deployer     deptypes.Deployer
 }
 
 func NewServiceRelationshipCheckTask(
 	logger log.Logger,
 	mc model.ClientSet,
 	kc *rest.Config,
-	skipTLSVerify bool,
+	tlsCertified bool,
 ) (in *RelationshipCheckTask, err error) {
 	// Create deployer.
 	opts := deptypes.CreateOptions{
@@ -57,10 +57,10 @@ func NewServiceRelationshipCheckTask(
 	}
 
 	in = &RelationshipCheckTask{
-		logger:        logger,
-		modelClient:   mc,
-		skipTLSVerify: skipTLSVerify,
-		deployer:      dp,
+		logger:       logger,
+		modelClient:  mc,
+		tlsCertified: tlsCertified,
+		deployer:     dp,
 	}
 
 	return
@@ -149,7 +149,7 @@ func (in *RelationshipCheckTask) destroyServices(ctx context.Context) error {
 	}
 
 	opts := pkgservice.Options{
-		TlsCertified: in.skipTLSVerify,
+		TlsCertified: in.tlsCertified,
 	}
 
 	for _, svc := range services {
@@ -231,7 +231,7 @@ func (in *RelationshipCheckTask) deployService(ctx context.Context, entity *mode
 	}
 
 	opts := pkgservice.Options{
-		TlsCertified: in.skipTLSVerify,
+		TlsCertified: in.tlsCertified,
 	}
 
 	return pkgservice.Apply(ctx, in.modelClient, in.deployer, entity, opts)

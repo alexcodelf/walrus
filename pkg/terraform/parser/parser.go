@@ -253,7 +253,7 @@ func ParseInstanceProviderConnector(providerString string) (string, error) {
 }
 
 // ParseInstanceID get the real instance id from the instance object state.
-// The instance id is stored in the "name" attribute of application resource.
+// The instance id is stored in the "name" attribute of service resource.
 func ParseInstanceID(is instanceObjectState) (string, error) {
 	if is.Attributes != nil {
 		ty, err := ctyjson.ImpliedType(is.Attributes)
