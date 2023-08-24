@@ -21,6 +21,12 @@ type Deployer interface {
 
 	// Destroy cleans all resources of the given service.
 	Destroy(context.Context, *model.Service, DestroyOptions) error
+
+	// Refresh sync the resources from remote system of the given service.
+	Refresh(context.Context, *model.Service, RefreshOptions) error
+
+	// Detect will detect resource changes from remote system of given service.
+	Detect(context.Context, *model.Service, DetectOptions) error
 }
 
 // ApplyOptions holds the options of Deployer's Apply action.
@@ -35,4 +41,16 @@ type ApplyOptions struct {
 type DestroyOptions struct {
 	// SkipTLSVerify indicates to skip TLS verification.
 	SkipTLSVerify bool
+}
+
+// RefreshOptions holds the options of Deployer's Refresh action.
+type RefreshOptions struct {
+	SkipTLSVerify bool
+}
+
+// DetectOptions holds the options of Deployer's detect action.
+type DetectOptions struct {
+	SkipTLSVerify bool
+	// Labels holds the labels of the Deployer's detect job.
+	Labels map[string]string
 }

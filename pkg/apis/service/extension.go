@@ -467,3 +467,35 @@ func (h Handler) RouteGetGraph(req RouteGetGraphRequest) (*RouteGetGraphResponse
 		Edges:    edges,
 	}, nil
 }
+
+func (h Handler) RouteRefresh(req RouteRefreshRequest) error {
+	entity, err := h.modelClient.Services().Get(req.Context, req.ID)
+	if err != nil {
+		return err
+	}
+
+	status.ServiceStatusSynced.Reset(entity, "Sync service status from remote system")
+
+	err = h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
+		entity, err = tx.Services().UpdateOne(entity).
+			SetStatus(entity.Status).
+			Save(req.Context)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	dp, err := h.getDeployer(req.Context)
+	if err != nil {
+		return err
+	}
+
+	return pkgservice.Refresh(req.Context, h.modelClient, dp, entity, pkgservice.Options{
+		TlsCertified: h.tlsCertified,
+	})
+}

@@ -47,7 +47,12 @@ func SyncServiceRevisionStatus(ctx context.Context, bm revisionbus.BusMessage) (
 
 	entity.Status.SetSummary(status.WalkService(&entity.Status))
 
-	return mc.Services().UpdateOne(entity).
+	err = mc.Services().UpdateOne(entity).
 		SetStatus(entity.Status).
 		Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	return updateServiceDriftResult(ctx, mc, entity, revision)
 }

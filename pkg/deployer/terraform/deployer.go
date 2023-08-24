@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"regexp"
-	"strings"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
@@ -32,7 +30,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/crypto"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/property"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	deptypes "github.com/seal-io/walrus/pkg/deployer/types"
 	pkgenv "github.com/seal-io/walrus/pkg/environment"
@@ -42,7 +39,6 @@ import (
 	"github.com/seal-io/walrus/pkg/terraform/config"
 	"github.com/seal-io/walrus/pkg/terraform/parser"
 	"github.com/seal-io/walrus/pkg/terraform/util"
-	"github.com/seal-io/walrus/utils/json"
 	"github.com/seal-io/walrus/utils/log"
 )
 
@@ -159,9 +155,61 @@ func (d Deployer) Destroy(ctx context.Context, service *model.Service, opts dept
 	})
 }
 
+// Refresh will sync the state of the service from remote system.
+func (d Deployer) Refresh(
+	ctx context.Context,
+	service *model.Service,
+	opts deptypes.RefreshOptions,
+) (err error) {
+	return d.createJob(ctx, service.ID, createK8sJobOptions{
+		Type:          JobTypeRefresh,
+		SkipTLSVerify: opts.SkipTLSVerify,
+	})
+}
+
+// Detect will detect resource changes from remote system of given service.
+func (d Deployer) Detect(
+	ctx context.Context,
+	service *model.Service,
+	opts deptypes.DetectOptions,
+) error {
+	return d.createJob(ctx, service.ID, createK8sJobOptions{
+		Type:          JobTypeDetectDrift,
+		SkipTLSVerify: opts.SkipTLSVerify,
+		Labels:        opts.Labels,
+	})
+}
+
+func (d Deployer) createJob(ctx context.Context, svcID object.ID, opts createK8sJobOptions) error {
+	revision, err := d.createRevision(ctx, createRevisionOptions{
+		JobType:   opts.Type,
+		ServiceID: svcID,
+	})
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err == nil {
+			return
+		}
+
+		_ = d.updateRevisionStatus(ctx, revision, status.ServiceRevisionStatusFailed, err.Error())
+	}()
+
+	return d.createK8sJob(ctx, createK8sJobOptions{
+		Type:            opts.Type,
+		Labels:          opts.Labels,
+		SkipTLSVerify:   opts.SkipTLSVerify,
+		ServiceRevision: revision,
+	})
+}
+
 type createK8sJobOptions struct {
 	// Type indicates the type of the job.
 	Type string
+	// Labels indicates the labels of the job.
+	Labels map[string]string
 	// SkipTLSVerify indicates to skip TLS verification.
 	SkipTLSVerify bool
 	// ServiceRevision indicates the service revision to create the deployment job.
@@ -240,6 +288,7 @@ func (d Deployer) createK8sJob(ctx context.Context, opts createK8sJobOptions) er
 	// Create deployment job.
 	jobOpts := JobCreateOptions{
 		Type:              opts.Type,
+		Labels:            opts.Labels,
 		ServiceRevisionID: opts.ServiceRevision.ID.String(),
 		Image:             jobImage,
 		Env:               jobEnv,
@@ -424,6 +473,7 @@ func (d Deployer) createRevision(
 
 	entity := &model.ServiceRevision{
 		ProjectID:       svc.ProjectID,
+		Type:            opts.JobType,
 		EnvironmentID:   svc.EnvironmentID,
 		ServiceID:       svc.ID,
 		TemplateName:    svc.Edges.Template.Name,
@@ -982,259 +1032,4 @@ func (d Deployer) getServiceDependencyOutputs(
 	}
 
 	return outputs, nil
-}
-
-// parseAttributeReplace parses attribute variable ${var.name} replaces it with ${var._variablePrefix+name},
-// service reference ${service.name.output} replaces it with ${var._servicePrefix+name}
-// and returns variable names and service names.
-func parseAttributeReplace(
-	attributes map[string]any,
-	variableNames []string,
-	serviceOutputs []string,
-) ([]string, []string) {
-	for key, value := range attributes {
-		if value == nil {
-			continue
-		}
-
-		switch reflect.TypeOf(value).Kind() {
-		case reflect.Map:
-			if _, ok := value.(map[string]any); !ok {
-				continue
-			}
-
-			variableNames, serviceOutputs = parseAttributeReplace(
-				value.(map[string]any),
-				variableNames,
-				serviceOutputs,
-			)
-		case reflect.String:
-			str := value.(string)
-			matches := _variableReg.FindAllStringSubmatch(str, -1)
-			serviceMatches := _serviceReg.FindAllStringSubmatch(str, -1)
-
-			var matched []string
-
-			for _, match := range matches {
-				if len(match) > 1 {
-					matched = append(matched, match[1])
-				}
-			}
-
-			var serviceMatched []string
-
-			for _, match := range serviceMatches {
-				if len(match) > 1 {
-					serviceMatched = append(serviceMatched, match[1]+"_"+match[2])
-				}
-			}
-
-			variableNames = append(variableNames, matched...)
-			variableRepl := "${var." + _variablePrefix + "${1}}"
-			str = _variableReg.ReplaceAllString(str, variableRepl)
-
-			serviceOutputs = append(serviceOutputs, serviceMatched...)
-			serviceRepl := "${var." + _servicePrefix + "${1}_${2}}"
-
-			attributes[key] = _serviceReg.ReplaceAllString(str, serviceRepl)
-		case reflect.Slice:
-			if _, ok := value.([]any); !ok {
-				continue
-			}
-
-			for _, v := range value.([]any) {
-				if _, ok := v.(map[string]any); !ok {
-					continue
-				}
-				variableNames, serviceOutputs = parseAttributeReplace(
-					v.(map[string]any),
-					variableNames,
-					serviceOutputs,
-				)
-			}
-		}
-	}
-
-	return variableNames, serviceOutputs
-}
-
-func getVarConfigOptions(variables model.Variables, serviceOutputs map[string]parser.OutputState) config.CreateOptions {
-	varsConfigOpts := config.CreateOptions{
-		Attributes: map[string]any{},
-	}
-
-	for _, v := range variables {
-		varsConfigOpts.Attributes[_variablePrefix+v.Name] = v.Value
-	}
-
-	// Setup service outputs.
-	for n, v := range serviceOutputs {
-		varsConfigOpts.Attributes[_servicePrefix+n] = v.Value
-	}
-
-	return varsConfigOpts
-}
-
-func getModuleConfig(
-	revision *model.ServiceRevision,
-	template *model.TemplateVersion,
-	opts createK8sSecretsOptions,
-) (*config.ModuleConfig, error) {
-	var (
-		props              = make(property.Properties, len(revision.Attributes))
-		typesWith          = revision.Attributes.TypesWith(template.Schema.Variables)
-		sensitiveVariables = sets.Set[string]{}
-	)
-
-	for k, v := range revision.Attributes {
-		props[k] = property.Property{
-			Type:  typesWith[k],
-			Value: v,
-		}
-	}
-
-	attrs, err := props.TypedValues()
-	if err != nil {
-		return nil, err
-	}
-
-	mc := &config.ModuleConfig{
-		Name:       opts.ServiceName,
-		Source:     template.Source,
-		Schema:     template.Schema,
-		Attributes: attrs,
-	}
-
-	if template.Schema == nil {
-		return mc, nil
-	}
-
-	for _, v := range template.Schema.Variables {
-		// Add sensitive from schema variable.
-		if v.Sensitive {
-			sensitiveVariables.Insert(fmt.Sprintf(`var\.%s`, v.Name))
-		}
-
-		// Add seal metadata.
-		var attrValue string
-
-		switch v.Name {
-		case WalrusMetadataProjectName:
-			attrValue = opts.ProjectName
-		case WalrusMetadataEnvironmentName:
-			attrValue = opts.EnvironmentName
-		case WalrusMetadataServiceName:
-			attrValue = opts.ServiceName
-		case WalrusMetadataProjectID:
-			attrValue = opts.ProjectID.String()
-		case WalrusMetadataEnvironmentID:
-			attrValue = opts.EnvironmentID.String()
-		case WalrusMetadataServiceID:
-			attrValue = opts.ServiceID.String()
-		case WalrusMetadataNamespaceName:
-			attrValue = opts.ManagedNamespaceName
-		}
-
-		if attrValue != "" {
-			mc.Attributes[v.Name] = attrValue
-		}
-	}
-
-	sensitiveVariableRegex, err := matchAnyRegex(sensitiveVariables.UnsortedList())
-	if err != nil {
-		return nil, err
-	}
-
-	mc.Outputs = make([]config.Output, len(template.Schema.Outputs))
-	for i, v := range template.Schema.Outputs {
-		mc.Outputs[i].Sensitive = v.Sensitive
-		mc.Outputs[i].Name = v.Name
-		mc.Outputs[i].ServiceName = opts.ServiceName
-		mc.Outputs[i].Value = v.Value
-
-		if v.Sensitive {
-			continue
-		}
-
-		// Update sensitive while output is from sensitive data, like secret.
-		if sensitiveVariables.Len() != 0 && sensitiveVariableRegex.Match(v.Value) {
-			mc.Outputs[i].Sensitive = true
-		}
-	}
-
-	return mc, nil
-}
-
-func updateOutputWithVariables(variables model.Variables, moduleConfig *config.ModuleConfig) (map[string]bool, error) {
-	var (
-		variableOpts         = make(map[string]bool)
-		encryptVariableNames = sets.NewString()
-	)
-
-	for _, s := range variables {
-		variableOpts[s.Name] = s.Sensitive
-
-		if s.Sensitive {
-			encryptVariableNames.Insert(_variablePrefix + s.Name)
-		}
-	}
-
-	if encryptVariableNames.Len() == 0 {
-		return variableOpts, nil
-	}
-
-	reg, err := matchAnyRegex(encryptVariableNames.UnsortedList())
-	if err != nil {
-		return nil, err
-	}
-
-	var shouldEncryptAttr []string
-
-	for k, v := range moduleConfig.Attributes {
-		b, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-
-		matches := reg.FindAllString(string(b), -1)
-		if len(matches) != 0 {
-			shouldEncryptAttr = append(shouldEncryptAttr, fmt.Sprintf(`var\.%s`, k))
-		}
-	}
-
-	// Outputs use encrypted variable should set to sensitive.
-	for i, v := range moduleConfig.Outputs {
-		if v.Sensitive {
-			continue
-		}
-
-		reg, err := matchAnyRegex(shouldEncryptAttr)
-		if err != nil {
-			return nil, err
-		}
-
-		if reg.MatchString(string(v.Value)) {
-			moduleConfig.Outputs[i].Sensitive = true
-		}
-	}
-
-	return variableOpts, nil
-}
-
-func matchAnyRegex(list []string) (*regexp.Regexp, error) {
-	var sb strings.Builder
-
-	sb.WriteString("(")
-
-	for i, v := range list {
-		sb.WriteString(v)
-
-		if i < len(list)-1 {
-			sb.WriteString("|")
-		}
-	}
-
-	sb.WriteString(")")
-
-	return regexp.Compile(sb.String())
 }

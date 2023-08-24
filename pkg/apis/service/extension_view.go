@@ -152,3 +152,17 @@ type (
 		Edges    []GraphEdge   `json:"edges"`
 	}
 )
+
+type RouteRefreshRequest struct {
+	_ struct{} `route:"POST=/refresh"`
+
+	model.ServiceQueryInput `path:",inline"`
+}
+
+func (r *RouteRefreshRequest) Validate() error {
+	if err := r.ServiceQueryInput.Validate(); err != nil {
+		return err
+	}
+
+	return validateRevisionsStatus(r.Context, r.Client, r.ID)
+}

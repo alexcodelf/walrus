@@ -29,13 +29,18 @@ import (
 )
 
 const (
-	JobTypeApply   = "apply"
-	JobTypeDestroy = "destroy"
+	JobTypeApply       = "apply"
+	JobTypeDestroy     = "destroy"
+	JobTypeDetectDrift = "detect"
+	JobTypeRefresh     = "refresh"
 )
+
+const K8sJobGroupAnno = "walrus.seal.io/job-group"
 
 type JobCreateOptions struct {
 	// Type is the deployment type of job, apply or destroy or other.
 	Type              string
+	Labels            map[string]string
 	ServiceRevisionID string
 	Image             string
 	Env               []corev1.EnvVar
@@ -76,6 +81,12 @@ const (
 	_applyCommands = "terraform init -no-color && terraform apply -auto-approve -no-color "
 	// _destroyCommands the commands to destroy deployment of the service.
 	_destroyCommands = "terraform init -no-color && terraform destroy -auto-approve -no-color "
+	// _detectCommands the commands to detect drift of the service.
+	_detectCommands = "terraform init -no-color > /dev/null 2>&1 && " +
+		"terraform plan -refresh-only -no-color -out=plan.out %s > /dev/null 2>&1 && " +
+		"TF_LOG=ERROR terraform show -json plan.out"
+	// _refreshCommands the commands to refresh deployment of the service.
+	_refreshCommands = "terraform init -no-color && terraform apply -refresh-only -auto-approve -no-color "
 )
 
 func (r JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -209,7 +220,8 @@ func CreateJob(ctx context.Context, clientSet *kubernetes.Clientset, opts JobCre
 	podTemplate := getPodTemplate(opts.ServiceRevisionID, configName, opts)
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:   name,
+			Labels: opts.Labels,
 		},
 		Spec: batchv1.JobSpec{
 			Template:                podTemplate,
@@ -278,6 +290,10 @@ func getPodTemplate(serviceRevisionID, configName string, opts JobCreateOptions)
 		deployCommand += _applyCommands + varfile
 	case JobTypeDestroy:
 		deployCommand += _destroyCommands + varfile
+	case JobTypeRefresh:
+		deployCommand += _refreshCommands + varfile
+	case JobTypeDetectDrift:
+		deployCommand += fmt.Sprintf(_detectCommands, varfile)
 	}
 
 	command = append(command, deployCommand)

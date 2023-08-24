@@ -50,6 +50,7 @@ func GetVerticesAndEdges(
 				"environmentID": entity.EnvironmentID,
 				"serviceID":     entity.ServiceID,
 				"connectorID":   entity.ConnectorID,
+				"drift":         entity.DriftResult,
 			},
 		})
 

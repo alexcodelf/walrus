@@ -123,6 +123,12 @@ var (
 		editable,
 		initializeFrom("true"),
 		modifyWith(notBlank))
+	// EnableDriftDetection keeps the user config for enable service drift detection or not.
+	EnableDriftDetection = newValue(
+		"EnableDriftDetection",
+		editable,
+		initializeFrom("true"),
+		modifyWith(notBlank))
 )
 
 // the built-in settings for server cron jobs.
@@ -198,6 +204,14 @@ var (
 		"CatalogTemplateSyncCronExpr",
 		private,
 		initializeFrom("0 0 1 * * *"),
+		modifyWith(notBlank, cronExpression),
+	)
+	// ServiceDriftDetectCronExpr indicates the cron expression of detect service drift,
+	// default cron expression means syncing every 1 hour.
+	ServiceDriftDetectCronExpr = newValue(
+		"ServiceDriftDetectCronExpr",
+		editable,
+		initializeFrom("*/30 * * ? * *"),
 		modifyWith(notBlank, cronExpression),
 	)
 )
