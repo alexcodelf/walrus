@@ -211,6 +211,7 @@ var (
 	ServiceDriftDetectCronExpr = newValue(
 		"ServiceDriftDetectCronExpr",
 		editable,
+		// TODO change to "0 0 * ? * *" after testing.
 		initializeFrom("*/30 * * ? * *"),
 		modifyWith(notBlank, cronExpression),
 	)

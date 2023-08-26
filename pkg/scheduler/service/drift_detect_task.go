@@ -10,6 +10,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -153,6 +154,10 @@ func (in *DriftDetectTask) driftDetectServices(
 		return err
 	}
 
+	if len(entities) == 0 {
+		return nil
+	}
+
 	for _, entity := range entities {
 		if err = in.updateServiceStatus(ctx, entity, status.ServiceStatusDetected); err != nil {
 			return err
@@ -170,11 +175,9 @@ func (in *DriftDetectTask) driftDetectServices(
 	}
 
 	// Wait for job complete.
-	labelSelector := metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			terraform.K8sJobGroupAnno: jobGroupLabel,
-		},
-	}
+	labelSelector := labels.Set(map[string]string{
+		terraform.K8sJobGroupAnno: jobGroupLabel,
+	})
 
 	finished, err := waitJobCompleted(ctx, in.kubeClient, len(entities), metav1.ListOptions{
 		ResourceVersion: "0",
@@ -185,7 +188,7 @@ func (in *DriftDetectTask) driftDetectServices(
 	}
 
 	if !finished {
-		return errors.New("job is not completed")
+		in.logger.Warnf("drift detect job is not completed")
 	}
 
 	return nil

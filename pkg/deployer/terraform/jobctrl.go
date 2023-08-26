@@ -217,11 +217,21 @@ func CreateJob(ctx context.Context, clientSet *kubernetes.Clientset, opts JobCre
 		return err
 	}
 
+	labels := map[string]string{
+		_serviceRevisionIDLabel: opts.ServiceRevisionID,
+	}
+
+	if opts.Labels != nil {
+		for k, v := range opts.Labels {
+			labels[k] = v
+		}
+	}
+
 	podTemplate := getPodTemplate(opts.ServiceRevisionID, configName, opts)
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
-			Labels: opts.Labels,
+			Labels: labels,
 		},
 		Spec: batchv1.JobSpec{
 			Template:                podTemplate,

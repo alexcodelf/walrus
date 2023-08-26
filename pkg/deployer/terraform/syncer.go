@@ -5,6 +5,7 @@ import (
 
 	revisionbus "github.com/seal-io/walrus/pkg/bus/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/service"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
 
@@ -35,6 +36,14 @@ func SyncServiceRevisionStatus(ctx context.Context, bm revisionbus.BusMessage) (
 
 		status.ServiceStatusDeployed.True(entity, "")
 		status.ServiceStatusReady.Unknown(entity, "")
+
+		if revision.Type == types.ServiceRevisionTypeDetect {
+			err = updateServiceDriftResult(ctx, mc, entity, revision)
+			if err != nil {
+				return err
+			}
+		}
+
 	case status.ServiceRevisionStatusFailed:
 		if status.ServiceStatusDeleted.IsUnknown(entity) {
 			status.ServiceStatusDeleted.False(entity, "")
@@ -47,12 +56,7 @@ func SyncServiceRevisionStatus(ctx context.Context, bm revisionbus.BusMessage) (
 
 	entity.Status.SetSummary(status.WalkService(&entity.Status))
 
-	err = mc.Services().UpdateOne(entity).
+	return mc.Services().UpdateOne(entity).
 		SetStatus(entity.Status).
 		Exec(ctx)
-	if err != nil {
-		return err
-	}
-
-	return updateServiceDriftResult(ctx, mc, entity, revision)
 }
