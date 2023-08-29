@@ -64,13 +64,18 @@ var (
 	_serviceReg = regexp.MustCompile(`\${service\.([^.}]+)\.([^.}]+)}`)
 )
 
-// Deployer terraform deployer to deploy the service.
+// Deployer is a terraform deployer that deploys the service.
+// It uses a Kubernetes client set to interact with the Kubernetes API,
+// and a model client to interact with the database.
 type Deployer struct {
 	logger      log.Logger
 	modelClient model.ClientSet
 	clientSet   *kubernetes.Clientset
 }
 
+// NewDeployer creates a new Deployer.
+// It takes a Kubernetes configuration and a set of options, and returns a Deployer.
+// If there is an error creating the Kubernetes client set, it returns the error.
 func NewDeployer(_ context.Context, opts deptypes.CreateOptions) (deptypes.Deployer, error) {
 	clientSet, err := kubernetes.NewForConfig(opts.KubeConfig)
 	if err != nil {
@@ -88,9 +93,12 @@ func (d Deployer) Type() deptypes.Type {
 	return DeployerType
 }
 
-// Apply creates a new service revision by the given service,
+// Apply creates a new service revision for the given service,
 // and drives the Kubernetes Job to create resources of the service.
+// It takes a context, a service, and a set of options.
+// It returns an error if there is an issue creating the revision or the Kubernetes job.
 func (d Deployer) Apply(ctx context.Context, service *model.Service, opts deptypes.ApplyOptions) (err error) {
+	// Create a new revision for the service
 	revision, err := d.createRevision(ctx, createRevisionOptions{
 		ServiceID: service.ID,
 		JobType:   JobTypeApply,
@@ -100,6 +108,7 @@ func (d Deployer) Apply(ctx context.Context, service *model.Service, opts deptyp
 		return err
 	}
 
+	// If there is an error, update the revision status to failed
 	defer func() {
 		if err == nil {
 			return
@@ -109,6 +118,7 @@ func (d Deployer) Apply(ctx context.Context, service *model.Service, opts deptyp
 		_ = d.updateRevisionStatus(ctx, revision, status.ServiceRevisionStatusFailed, err.Error())
 	}()
 
+	// Create a Kubernetes job for the revision
 	return d.createK8sJob(ctx, createK8sJobOptions{
 		Type:            JobTypeApply,
 		SkipTLSVerify:   opts.SkipTLSVerify,
