@@ -104,7 +104,10 @@ func (r JobReconciler) Setup(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// syncApplicationRevisionStatus sync the application revision status.
+// syncApplicationRevisionStatus syncs the status of the application revision with the status of the job.
+// It first checks if the job is a deployer job and if the application revision is running.
+// If the job has succeeded or failed, it updates the status of the application revision accordingly.
+// It also gets the logs of the job pods and sets them as the status message of the application revision.
 func (r JobReconciler) syncApplicationRevisionStatus(ctx context.Context, job *batchv1.Job) (err error) {
 	appRevisionID, ok := job.Labels[_applicationRevisionIDLabel]
 	if !ok {
@@ -190,7 +193,11 @@ func (r JobReconciler) getJobPodsLogs(ctx context.Context, jobName string) (stri
 	return logs, nil
 }
 
-// CreateJob create a job to run terraform deployment.
+// CreateJob creates a Kubernetes job to run the terraform deployment.
+// It first gets the secret associated with the job and creates a pod template for the job.
+// It then creates the job and updates the secret to set the job as its owner.
+// If the job already exists, it logs a warning and returns nil.
+// If there is an error creating the job or updating the secret, it returns the error.
 func CreateJob(ctx context.Context, clientSet *kubernetes.Clientset, opts JobCreateOptions) error {
 	var (
 		logger = log.WithName("deployer").WithName("tf")
