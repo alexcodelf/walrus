@@ -58,12 +58,17 @@ func Setup(ctx context.Context, opts SetupOptions) (err error) {
 		return
 	}
 
-	// Catalog.
-	err = catalog.AddSubscriber("sync-catalog",
-		pkgcatalog.CatalogSync(opts.ModelClient).Do)
-	if err != nil {
-		return
-	}
+ // Catalog.
+ var catalogSyncFunc func() error
+ if setting.Catalog != "" {
+ 	catalogSyncFunc = pkgcatalog.UserCatalogSync(setting.Catalog, opts.ModelClient).Do
+ } else {
+ 	catalogSyncFunc = pkgcatalog.CatalogSync(opts.ModelClient).Do
+ }
+ err = catalog.AddSubscriber("sync-catalog", catalogSyncFunc)
+ if err != nil {
+ 	return
+ }
 
 	return
 }
