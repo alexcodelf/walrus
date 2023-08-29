@@ -55,17 +55,13 @@ const (
 )
 
 // NewConfig returns a new Config.
+// It creates a new Config object based on the provided CreateOptions.
+// It initializes the attributes and blocks of the Config, and validates the blocks.
+// If any error occurs during this process, it returns the error.
 func NewConfig(opts CreateOptions) (*Config, error) {
-	// Terraform block.
-	var (
-		err        error
-		attributes map[string]any
-	)
-
-	if opts.Attributes != nil {
-		attributes = opts.Attributes
-	} else {
-		attributes = make(map[string]any)
+	attributes, err := initAttributes(opts)
+	if err != nil {
+		return nil, err
 	}
 
 	blocks, err := loadBlocks(opts)
@@ -83,16 +79,22 @@ func NewConfig(opts CreateOptions) (*Config, error) {
 		return nil, err
 	}
 
-	// Init the config.
-	if err = c.initAttributes(); err != nil {
-		return nil, err
-	}
-
 	if err = c.initBlocks(); err != nil {
 		return nil, err
 	}
 
 	return c, nil
+}
+
+// initAttributes initializes the attributes of the configuration.
+// It creates a new map of attributes based on the provided CreateOptions.
+// If the CreateOptions does not contain any attributes, it creates an empty map.
+func initAttributes(opts CreateOptions) (map[string]any, error) {
+	if opts.Attributes != nil {
+		return opts.Attributes, nil
+	} else {
+		return make(map[string]any), nil
+	}
 }
 
 func (c *Config) validate() error {
@@ -189,43 +191,48 @@ func (c *Config) Bytes() ([]byte, error) {
 }
 
 // loadBlocks loads the blocks of the configuration.
+// It loads different types of blocks based on the provided CreateOptions.
+// If any error occurs during this process, it returns the error.
 func loadBlocks(opts CreateOptions) (blocks block.Blocks, err error) {
-	var (
-		tfBlocks       block.Blocks
-		providerBlocks block.Blocks
-		moduleBlocks   block.Blocks
-		variableBlocks block.Blocks
-		outputBlocks   block.Blocks
-	)
-	// Load terraform block.
-	if opts.TerraformOptions != nil {
-		tfBlocks = block.Blocks{loadTerraformBlock(opts.TerraformOptions)}
-	}
-	// Other blocks like provider, module, etc.
-	// load provider blocks.
-	if opts.ProviderOptions != nil {
-		providerBlocks, err = loadProviderBlocks(opts.ProviderOptions)
-		if err != nil {
-			return nil, err
-		}
-	}
-	// Load module blocks.
-	if opts.ModuleOptions != nil {
-		moduleBlocks = loadModuleBlocks(opts.ModuleOptions.ModuleConfigs, providerBlocks)
-	}
-	// Load variable blocks.
-	if opts.VariableOptions != nil {
-		variableBlocks = loadVariableBlocks(opts.VariableOptions)
+	tfBlocks, err := loadTerraformBlocks(opts)
+	if err != nil {
+		return nil, err
 	}
 
-	if len(opts.OutputOptions) != 0 {
-		outputBlocks = loadOutputBlocks(opts.OutputOptions)
+	providerBlocks, err := loadProviderBlocks(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	moduleBlocks, err := loadModuleBlocks(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	variableBlocks, err := loadVariableBlocks(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	outputBlocks, err := loadOutputBlocks(opts)
+	if err != nil {
+		return nil, err
 	}
 
 	blocks = make(block.Blocks, 0, block.CountLen(tfBlocks, providerBlocks, moduleBlocks, variableBlocks, outputBlocks))
 	blocks = block.AppendBlocks(blocks, tfBlocks, providerBlocks, moduleBlocks, variableBlocks, outputBlocks)
 
 	return blocks, nil
+}
+
+// loadTerraformBlocks loads the terraform blocks of the configuration.
+// It creates a new terraform block based on the provided CreateOptions.
+func loadTerraformBlocks(opts CreateOptions) (block.Blocks, error) {
+	if opts.TerraformOptions != nil {
+		return block.Blocks{loadTerraformBlock(opts.TerraformOptions)}, nil
+	} else {
+		return nil, nil
+	}
 }
 
 // loadTerraformBlock loads the terraform block.
