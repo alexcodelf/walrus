@@ -11,30 +11,30 @@ import (
 
 // the built-in settings for deployer.
 var (
-	// DeployerHttpProxy indicates the address for proxying none SSL http outbound traffic used by deployer,
-	// it's in form of http(s)://[user:password@]address[:port].
-	DeployerHttpProxy = newValue(
-		"DeployerHttpProxy",
-		editable,
-		initializeFromSpecifiedEnv("HTTP_PROXY", ""),
-		modifyWith(httpUrl),
-	)
-	// DeployerHttpsProxy indicates the address for proxying SSL http outbound traffic used by deployer,
-	// it's in form of http(s)://[user:password@]address[:port].
-	DeployerHttpsProxy = newValue(
-		"DeployerHttpsProxy",
-		editable,
-		initializeFromSpecifiedEnv("HTTPS_PROXY", ""),
-		modifyWith(httpUrl),
-	)
-	// DeployerAllProxy indicates the address for proxying outbound traffic used by deployer,
-	// it's in form of scheme://[user:password@]address[:port].
-	DeployerAllProxy = newValue(
-		"DeployerAllProxy",
-		editable,
-		initializeFromSpecifiedEnv("ALL_PROXY", ""),
-		modifyWith(sockUrl),
-	)
+ // DeployerHttpProxy indicates the address for proxying none SSL http outbound traffic used by deployer,
+ // it's in form of http\(s\)://[user:password@]address[:port].
+ DeployerHttpProxy = newValue(
+ 		"DeployerHttpProxy",
+ 		editable,
+ 		initializeFromSpecifiedEnv("HTTP_PROXY", ""),
+ 		modifyWith(httpUrl),
+ 	)
+ // DeployerHttpsProxy indicates the address for proxying SSL http outbound traffic used by deployer,
+ // it's in form of http(s)://[user:password@]address[:port].
+ DeployerHttpsProxy = newValue(
+ 		"DeployerHttpsProxy",
+ 		editable,
+ 		initializeFromSpecifiedEnv("HTTPS_PROXY", ""),
+ 		modifyWith(httpUrl),
+ 	)
+ // DeployerAllProxy indicates the address for proxying outbound traffic used by deployer,
+  // it's in form of scheme://[user:password@]address[:port].
+ 	DeployerAllProxy = newValue(
+ 		"DeployerAllProxy",
+ 		editable,
+ 		initializeFromSpecifiedEnv("ALL_PROXY", ""),
+ 		modifyWith(sockUrl),
+ 	)
 	// DeployerNoProxy indicates the host exclusion list when proxying outbound traffic used by deployer,
 	// it's a comma-separated string.
 	DeployerNoProxy = newValue(
@@ -73,12 +73,12 @@ var (
 		private,
 		nil,
 		nil)
-	// ServeUrl keeps the URL for accessing server.
-	ServeUrl = newValue(
-		"ServeUrl",
-		editable,
-		nil,
-		modifyWith(notBlank, httpUrl))
+ // ServeUrl keeps the URL for accessing server.
+ // it's in form of http(s)://[user:password@]address[:port].
+ "ServeUrl",
+ 		editable,
+ 		nil,
+ 		modifyWith(notBlank, httpUrl))
 	// ServeUiIndex keeps the address for serving UI.
 	ServeUiIndex = newValue(
 		"ServeUiIndex",
@@ -117,13 +117,20 @@ var (
 		editable,
 		initializeFrom("true"),
 		modifyWith(notBlank))
-	// EnableSyncCatalog keeps the user config for enable sync catalog or not.
-	EnableSyncCatalog = newValue(
-		"EnableSyncCatalog",
-		editable,
-		initializeFrom("true"),
-		modifyWith(notBlank))
-)
+ // EnableSyncCatalog keeps the user config for enable sync catalog or not.
+ EnableSyncCatalog = newValue(
+ 	"EnableSyncCatalog",
+ 	editable,
+ 	initializeFrom("true"),
+ 	modifyWith(notBlank))
+ 
+ // UserCatalog allows the user to configure their own catalog.
+ UserCatalog = newValue(
+ 	"UserCatalog",
+ 	editable,
+ 	initializeFromEnv("USER_CATALOG"),
+ 	modifyWith(notBlank))
+ )
 
 // the built-in settings for server cron jobs.
 var (
