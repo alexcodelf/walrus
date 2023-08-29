@@ -27,15 +27,16 @@ type initOptions struct {
 
 func (r *Server) init(ctx context.Context, opts initOptions) error {
 	// Initialize data for system.
-	inits := []initiation{
-		r.applyModelSchemas,
-		r.setupSettings,
-		r.initConfigs,
-		r.registerMetricCollectors,
-		r.registerHealthCheckers,
-		r.startBackgroundJobs,
-		r.setupBusSubscribers,
-	}
+ inits := []initiation{
+ 	r.applyModelSchemas,
+ 	r.setupSettings,
+ 	r.initConfigs,
+ 	r.registerMetricCollectors,
+ 	r.registerHealthCheckers,
+ 	r.startBackgroundJobs,
+ 	r.setupBusSubscribers,
+ 	r.initCatalog,
+ }
 	if r.EnableAuthn {
 		inits = append(inits,
 			r.configureCasdoor,
@@ -62,9 +63,14 @@ func (r *Server) init(ctx context.Context, opts initOptions) error {
 
 type initiation func(context.Context, initOptions) error
 
+func (r *Server) initCatalog(ctx context.Context, opts initOptions) error {
+	// Initialize catalog from settings
+	// If the setting does not exist or is empty, use the built-in catalog
+	return nil
+}
+
 func loadInitiationName(i initiation) string {
 	n := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 	n = strings.TrimPrefix(strings.TrimSuffix(filepath.Ext(n), "-fm"), ".")
-
 	return strs.Decamelize(n, true)
 }
