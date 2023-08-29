@@ -29,6 +29,18 @@ func getRepos(ctx context.Context, c *model.Catalog, ua string) ([]*vcs.Reposito
 		err    error
 	)
 
+	// Check if the catalog setting exists and is not empty
+	catalogSetting := settings.Get("catalog")
+	if catalogSetting != "" {
+		c = catalogSetting
+	}
+
+ _, err := url.ParseRequestURI(c.Source)
+ if err != nil {
+ 	// Return an error if the URL is invalid
+ 	return nil, fmt.Errorf("invalid URL: %v", err)
+ }
+
 	orgName, err := vcs.GetOrgFromGitURL(c.Source)
 	if err != nil {
 		return nil, err
@@ -103,6 +115,12 @@ func getSyncResult(ctx context.Context, mc model.ClientSet, c *model.Catalog) (*
 // SyncTemplates fetch and update catalog templates.
 func SyncTemplates(ctx context.Context, mc model.ClientSet, c *model.Catalog) error {
 	logger := log.WithName("catalog")
+
+	// Check if the catalog setting exists and is not empty
+	catalogSetting := settings.Get("catalog")
+	if catalogSetting != "" {
+		c = catalogSetting
+	}
 
 	ua := version.GetUserAgent() + "; uuid=" + settings.InstallationUUID.ShouldValue(ctx, mc)
 
