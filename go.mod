@@ -14,6 +14,8 @@ require (
 	github.com/alexeyco/simpletable v1.0.0
 	github.com/aliyun/alibaba-cloud-sdk-go v1.62.3
 	github.com/aliyun/aliyun_assist_client v0.0.0-20230515114040-d2b430f3fa8a
+	github.com/argoproj/argo-workflows/v3 v3.4.11
+	github.com/argoproj/pkg v0.13.6
 	github.com/aws/aws-sdk-go v1.44.153
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/config v1.17.10
@@ -65,9 +67,9 @@ require (
 	golang.org/x/tools v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.11.1
-	k8s.io/api v0.28.2
+	k8s.io/api v0.26.2
 	k8s.io/apimachinery v0.28.2
-	k8s.io/client-go v0.28.2
+	k8s.io/client-go v0.26.2
 	k8s.io/klog/v2 v2.100.1
 	k8s.io/kube-aggregator v0.26.2
 	sigs.k8s.io/controller-runtime v0.14.2
@@ -128,8 +130,6 @@ require (
 	github.com/allegro/bigcache/v3 v3.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/argoproj/argo-workflows/v3 v3.4.11
-	github.com/argoproj/pkg v0.13.6
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.23 // indirect

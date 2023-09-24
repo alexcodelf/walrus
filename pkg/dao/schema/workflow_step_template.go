@@ -6,6 +6,7 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
 	"github.com/seal-io/walrus/pkg/dao/types"
+	"github.com/seal-io/walrus/pkg/dao/types/property"
 )
 
 type WorkflowStepTemplate struct {
@@ -25,7 +26,7 @@ func (WorkflowStepTemplate) Fields() []ent.Field {
 			Comment("Type of the workflow step template.").
 			NotEmpty().
 			Immutable(),
-		field.JSON("schema", types.WorkflowStepTemplateSchema{}).
+		property.SchemasField("schema").
 			Comment("Schema of the workflow step template.").
 			Default(types.WorkflowStepTemplateSchema{}),
 	}

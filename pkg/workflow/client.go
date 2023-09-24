@@ -12,7 +12,7 @@ import (
 
 var helloWorldWorkflow = wfv1.Workflow{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: "中文名字",
+		Name: "nameofit",
 	},
 	Spec: wfv1.WorkflowSpec{
 		Entrypoint: "whalesay",
