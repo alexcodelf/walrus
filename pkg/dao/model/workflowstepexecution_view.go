@@ -39,7 +39,7 @@ type WorkflowStepExecutionCreateInput struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
@@ -131,7 +131,7 @@ type WorkflowStepExecutionCreateInputsItem struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
@@ -566,7 +566,7 @@ type WorkflowStepExecutionUpdateInput struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
@@ -630,7 +630,7 @@ type WorkflowStepExecutionUpdateInputsItem struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `path:"-" query:"-" json:"times"`
 	// Duration of the workflow step execution.
@@ -793,21 +793,21 @@ func (wseui *WorkflowStepExecutionUpdateInputs) ValidateWith(ctx context.Context
 
 // WorkflowStepExecutionOutput holds the output of the WorkflowStepExecution entity.
 type WorkflowStepExecutionOutput struct {
-	ID                  object.ID              `json:"id,omitempty"`
-	Name                string                 `json:"name,omitempty"`
-	Description         string                 `json:"description,omitempty"`
-	Labels              map[string]string      `json:"labels,omitempty"`
-	CreateTime          *time.Time             `json:"createTime,omitempty"`
-	UpdateTime          *time.Time             `json:"updateTime,omitempty"`
-	Status              status.Status          `json:"status,omitempty"`
-	WorkflowExecutionID object.ID              `json:"workflowExecutionID,omitempty"`
-	WorkflowID          object.ID              `json:"workflowID,omitempty"`
-	Type                string                 `json:"type,omitempty"`
-	Spec                map[string]interface{} `json:"spec,omitempty"`
-	Times               int                    `json:"times,omitempty"`
-	Duration            int                    `json:"duration,omitempty"`
-	Record              string                 `json:"record,omitempty"`
-	Input               string                 `json:"input,omitempty"`
+	ID                  object.ID         `json:"id,omitempty"`
+	Name                string            `json:"name,omitempty"`
+	Description         string            `json:"description,omitempty"`
+	Labels              map[string]string `json:"labels,omitempty"`
+	CreateTime          *time.Time        `json:"createTime,omitempty"`
+	UpdateTime          *time.Time        `json:"updateTime,omitempty"`
+	Status              status.Status     `json:"status,omitempty"`
+	WorkflowExecutionID object.ID         `json:"workflowExecutionID,omitempty"`
+	WorkflowID          object.ID         `json:"workflowID,omitempty"`
+	Type                string            `json:"type,omitempty"`
+	Spec                map[string]any    `json:"spec,omitempty"`
+	Times               int               `json:"times,omitempty"`
+	Duration            int               `json:"duration,omitempty"`
+	Record              string            `json:"record,omitempty"`
+	Input               string            `json:"input,omitempty"`
 
 	WorkflowStep   *WorkflowStepOutput           `json:"workflowStep,omitempty"`
 	StageExecution *WorkflowStageExecutionOutput `json:"stageExecution,omitempty"`

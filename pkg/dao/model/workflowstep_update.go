@@ -114,7 +114,7 @@ func (wsu *WorkflowStepUpdate) ClearStatus() *WorkflowStepUpdate {
 }
 
 // SetSpec sets the "spec" field.
-func (wsu *WorkflowStepUpdate) SetSpec(m map[string]interface{}) *WorkflowStepUpdate {
+func (wsu *WorkflowStepUpdate) SetSpec(m map[string]any) *WorkflowStepUpdate {
 	wsu.mutation.SetSpec(m)
 	return wsu
 }
@@ -126,7 +126,7 @@ func (wsu *WorkflowStepUpdate) ClearSpec() *WorkflowStepUpdate {
 }
 
 // SetInput sets the "input" field.
-func (wsu *WorkflowStepUpdate) SetInput(m map[string]interface{}) *WorkflowStepUpdate {
+func (wsu *WorkflowStepUpdate) SetInput(m map[string]any) *WorkflowStepUpdate {
 	wsu.mutation.SetInput(m)
 	return wsu
 }
@@ -138,7 +138,7 @@ func (wsu *WorkflowStepUpdate) ClearInput() *WorkflowStepUpdate {
 }
 
 // SetOutput sets the "output" field.
-func (wsu *WorkflowStepUpdate) SetOutput(m map[string]interface{}) *WorkflowStepUpdate {
+func (wsu *WorkflowStepUpdate) SetOutput(m map[string]any) *WorkflowStepUpdate {
 	wsu.mutation.SetOutput(m)
 	return wsu
 }
@@ -600,7 +600,7 @@ func (wsuo *WorkflowStepUpdateOne) ClearStatus() *WorkflowStepUpdateOne {
 }
 
 // SetSpec sets the "spec" field.
-func (wsuo *WorkflowStepUpdateOne) SetSpec(m map[string]interface{}) *WorkflowStepUpdateOne {
+func (wsuo *WorkflowStepUpdateOne) SetSpec(m map[string]any) *WorkflowStepUpdateOne {
 	wsuo.mutation.SetSpec(m)
 	return wsuo
 }
@@ -612,7 +612,7 @@ func (wsuo *WorkflowStepUpdateOne) ClearSpec() *WorkflowStepUpdateOne {
 }
 
 // SetInput sets the "input" field.
-func (wsuo *WorkflowStepUpdateOne) SetInput(m map[string]interface{}) *WorkflowStepUpdateOne {
+func (wsuo *WorkflowStepUpdateOne) SetInput(m map[string]any) *WorkflowStepUpdateOne {
 	wsuo.mutation.SetInput(m)
 	return wsuo
 }
@@ -624,7 +624,7 @@ func (wsuo *WorkflowStepUpdateOne) ClearInput() *WorkflowStepUpdateOne {
 }
 
 // SetOutput sets the "output" field.
-func (wsuo *WorkflowStepUpdateOne) SetOutput(m map[string]interface{}) *WorkflowStepUpdateOne {
+func (wsuo *WorkflowStepUpdateOne) SetOutput(m map[string]any) *WorkflowStepUpdateOne {
 	wsuo.mutation.SetOutput(m)
 	return wsuo
 }

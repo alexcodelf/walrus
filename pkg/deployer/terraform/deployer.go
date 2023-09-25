@@ -33,6 +33,7 @@ import (
 	pkgenv "github.com/seal-io/walrus/pkg/environment"
 	opk8s "github.com/seal-io/walrus/pkg/operator/k8s"
 	pkgservice "github.com/seal-io/walrus/pkg/service"
+	pkgrevision "github.com/seal-io/walrus/pkg/servicerevision"
 	"github.com/seal-io/walrus/pkg/settings"
 	"github.com/seal-io/walrus/pkg/terraform/config"
 	"github.com/seal-io/walrus/pkg/terraform/parser"
@@ -66,9 +67,11 @@ var (
 
 // Deployer terraform deployer to deploy the service.
 type Deployer struct {
-	logger      log.Logger
+	logger log.Logger
+
 	modelClient model.ClientSet
 	clientSet   *kubernetes.Clientset
+	plan        pkgrevision.IPlan
 }
 
 func NewDeployer(_ context.Context, opts deptypes.CreateOptions) (deptypes.Deployer, error) {
@@ -323,29 +326,14 @@ func (d Deployer) updateRevisionStatus(ctx context.Context, ar *model.ServiceRev
 	return nil
 }
 
-type createK8sSecretsOptions struct {
-	SkipTLSVerify   bool
-	ServiceRevision *model.ServiceRevision
-	Connectors      model.Connectors
-	ProjectID       object.ID
-	EnvironmentID   object.ID
-	SubjectID       object.ID
-	// Metadata.
-	ProjectName          string
-	EnvironmentName      string
-	ServiceName          string
-	ServiceID            object.ID
-	ManagedNamespaceName string
-}
-
 // createK8sSecrets creates the k8s secrets for deployment.
-func (d Deployer) createK8sSecrets(ctx context.Context, opts createK8sSecretsOptions) error {
+func (d Deployer) createK8sSecrets(ctx context.Context, opts pkgrevision.PlanOptions) error {
 	secretData := make(map[string][]byte)
 	// SecretName terraform tfConfig name.
 	secretName := _jobSecretPrefix + string(opts.ServiceRevision.ID)
 
 	// Prepare terraform config files bytes for deployment.
-	terraformData, err := d.loadConfigsBytes(ctx, opts)
+	terraformData, err := d.plan.LoadConfigs(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -507,7 +495,7 @@ func (d Deployer) getRequiredProviders(
 }
 
 // loadConfigsBytes returns terraform main.tf and terraform.tfvars for deployment.
-func (d Deployer) loadConfigsBytes(ctx context.Context, opts createK8sSecretsOptions) (map[string][]byte, error) {
+func (d Deployer) loadConfigsBytes(ctx context.Context, opts pkgrevision.PlanOptions) (map[string][]byte, error) {
 	logger := log.WithName("deployer").WithName("tf")
 	// Prepare terraform tfConfig.
 	//  get module configs from service revision.
@@ -672,7 +660,7 @@ func (d Deployer) getProviderSecretData(connectors model.Connectors) (map[string
 // get terraform module config block from service revision.
 func (d Deployer) getModuleConfig(
 	ctx context.Context,
-	opts createK8sSecretsOptions,
+	opts pkgrevision.PlanOptions,
 ) (*config.ModuleConfig, []types.ProviderRequirement, error) {
 	var (
 		requiredProviders = make([]types.ProviderRequirement, 0)
@@ -794,7 +782,7 @@ func getVarConfigOptions(variables model.Variables, serviceOutputs map[string]pa
 func getModuleConfig(
 	revision *model.ServiceRevision,
 	template *model.TemplateVersion,
-	opts createK8sSecretsOptions,
+	opts pkgrevision.PlanOptions,
 ) (*config.ModuleConfig, error) {
 	var (
 		props              = make(property.Properties, len(revision.Attributes))

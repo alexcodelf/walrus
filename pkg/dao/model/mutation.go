@@ -26701,9 +26701,9 @@ type WorkflowStepMutation struct {
 	status             *status.Status
 	_type              *string
 	workflow_id        *object.ID
-	spec               *map[string]interface{}
-	input              *map[string]interface{}
-	output             *map[string]interface{}
+	spec               *map[string]any
+	input              *map[string]any
+	output             *map[string]any
 	dependencies       *[]object.ID
 	appenddependencies []object.ID
 	retryStrategy      *types.RetryStrategy
@@ -27237,12 +27237,12 @@ func (m *WorkflowStepMutation) ResetStageID() {
 }
 
 // SetSpec sets the "spec" field.
-func (m *WorkflowStepMutation) SetSpec(value map[string]interface{}) {
+func (m *WorkflowStepMutation) SetSpec(value map[string]any) {
 	m.spec = &value
 }
 
 // Spec returns the value of the "spec" field in the mutation.
-func (m *WorkflowStepMutation) Spec() (r map[string]interface{}, exists bool) {
+func (m *WorkflowStepMutation) Spec() (r map[string]any, exists bool) {
 	v := m.spec
 	if v == nil {
 		return
@@ -27253,7 +27253,7 @@ func (m *WorkflowStepMutation) Spec() (r map[string]interface{}, exists bool) {
 // OldSpec returns the old "spec" field's value of the WorkflowStep entity.
 // If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepMutation) OldSpec(ctx context.Context) (v map[string]interface{}, err error) {
+func (m *WorkflowStepMutation) OldSpec(ctx context.Context) (v map[string]any, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldSpec is only allowed on UpdateOne operations")
 	}
@@ -27286,12 +27286,12 @@ func (m *WorkflowStepMutation) ResetSpec() {
 }
 
 // SetInput sets the "input" field.
-func (m *WorkflowStepMutation) SetInput(value map[string]interface{}) {
+func (m *WorkflowStepMutation) SetInput(value map[string]any) {
 	m.input = &value
 }
 
 // Input returns the value of the "input" field in the mutation.
-func (m *WorkflowStepMutation) Input() (r map[string]interface{}, exists bool) {
+func (m *WorkflowStepMutation) Input() (r map[string]any, exists bool) {
 	v := m.input
 	if v == nil {
 		return
@@ -27302,7 +27302,7 @@ func (m *WorkflowStepMutation) Input() (r map[string]interface{}, exists bool) {
 // OldInput returns the old "input" field's value of the WorkflowStep entity.
 // If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepMutation) OldInput(ctx context.Context) (v map[string]interface{}, err error) {
+func (m *WorkflowStepMutation) OldInput(ctx context.Context) (v map[string]any, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldInput is only allowed on UpdateOne operations")
 	}
@@ -27335,12 +27335,12 @@ func (m *WorkflowStepMutation) ResetInput() {
 }
 
 // SetOutput sets the "output" field.
-func (m *WorkflowStepMutation) SetOutput(value map[string]interface{}) {
+func (m *WorkflowStepMutation) SetOutput(value map[string]any) {
 	m.output = &value
 }
 
 // Output returns the value of the "output" field in the mutation.
-func (m *WorkflowStepMutation) Output() (r map[string]interface{}, exists bool) {
+func (m *WorkflowStepMutation) Output() (r map[string]any, exists bool) {
 	v := m.output
 	if v == nil {
 		return
@@ -27351,7 +27351,7 @@ func (m *WorkflowStepMutation) Output() (r map[string]interface{}, exists bool) 
 // OldOutput returns the old "output" field's value of the WorkflowStep entity.
 // If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepMutation) OldOutput(ctx context.Context) (v map[string]interface{}, err error) {
+func (m *WorkflowStepMutation) OldOutput(ctx context.Context) (v map[string]any, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldOutput is only allowed on UpdateOne operations")
 	}
@@ -27863,21 +27863,21 @@ func (m *WorkflowStepMutation) SetField(name string, value ent.Value) error {
 		m.SetStageID(v)
 		return nil
 	case workflowstep.FieldSpec:
-		v, ok := value.(map[string]interface{})
+		v, ok := value.(map[string]any)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSpec(v)
 		return nil
 	case workflowstep.FieldInput:
-		v, ok := value.(map[string]interface{})
+		v, ok := value.(map[string]any)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetInput(v)
 		return nil
 	case workflowstep.FieldOutput:
-		v, ok := value.(map[string]interface{})
+		v, ok := value.(map[string]any)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -28189,7 +28189,7 @@ type WorkflowStepExecutionMutation struct {
 	workflow_execution_id  *object.ID
 	workflow_id            *object.ID
 	_type                  *string
-	spec                   *map[string]interface{}
+	spec                   *map[string]any
 	times                  *int
 	addtimes               *int
 	duration               *int
@@ -28795,12 +28795,12 @@ func (m *WorkflowStepExecutionMutation) ResetType() {
 }
 
 // SetSpec sets the "spec" field.
-func (m *WorkflowStepExecutionMutation) SetSpec(value map[string]interface{}) {
+func (m *WorkflowStepExecutionMutation) SetSpec(value map[string]any) {
 	m.spec = &value
 }
 
 // Spec returns the value of the "spec" field in the mutation.
-func (m *WorkflowStepExecutionMutation) Spec() (r map[string]interface{}, exists bool) {
+func (m *WorkflowStepExecutionMutation) Spec() (r map[string]any, exists bool) {
 	v := m.spec
 	if v == nil {
 		return
@@ -28811,7 +28811,7 @@ func (m *WorkflowStepExecutionMutation) Spec() (r map[string]interface{}, exists
 // OldSpec returns the old "spec" field's value of the WorkflowStepExecution entity.
 // If the WorkflowStepExecution object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepExecutionMutation) OldSpec(ctx context.Context) (v map[string]interface{}, err error) {
+func (m *WorkflowStepExecutionMutation) OldSpec(ctx context.Context) (v map[string]any, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldSpec is only allowed on UpdateOne operations")
 	}
@@ -29357,7 +29357,7 @@ func (m *WorkflowStepExecutionMutation) SetField(name string, value ent.Value) e
 		m.SetType(v)
 		return nil
 	case workflowstepexecution.FieldSpec:
-		v, ok := value.(map[string]interface{})
+		v, ok := value.(map[string]any)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
