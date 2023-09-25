@@ -40,6 +40,13 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/model/token"
 	"github.com/seal-io/walrus/pkg/dao/model/variable"
+	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowsteptemplate"
 
 	stdsql "database/sql"
 
@@ -93,6 +100,20 @@ type Client struct {
 	Token *TokenClient
 	// Variable is the client for interacting with the Variable builders.
 	Variable *VariableClient
+	// Workflow is the client for interacting with the Workflow builders.
+	Workflow *WorkflowClient
+	// WorkflowExecution is the client for interacting with the WorkflowExecution builders.
+	WorkflowExecution *WorkflowExecutionClient
+	// WorkflowStage is the client for interacting with the WorkflowStage builders.
+	WorkflowStage *WorkflowStageClient
+	// WorkflowStageExecution is the client for interacting with the WorkflowStageExecution builders.
+	WorkflowStageExecution *WorkflowStageExecutionClient
+	// WorkflowStep is the client for interacting with the WorkflowStep builders.
+	WorkflowStep *WorkflowStepClient
+	// WorkflowStepExecution is the client for interacting with the WorkflowStepExecution builders.
+	WorkflowStepExecution *WorkflowStepExecutionClient
+	// WorkflowStepTemplate is the client for interacting with the WorkflowStepTemplate builders.
+	WorkflowStepTemplate *WorkflowStepTemplateClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -127,6 +148,13 @@ func (c *Client) init() {
 	c.TemplateVersion = NewTemplateVersionClient(c.config)
 	c.Token = NewTokenClient(c.config)
 	c.Variable = NewVariableClient(c.config)
+	c.Workflow = NewWorkflowClient(c.config)
+	c.WorkflowExecution = NewWorkflowExecutionClient(c.config)
+	c.WorkflowStage = NewWorkflowStageClient(c.config)
+	c.WorkflowStageExecution = NewWorkflowStageExecutionClient(c.config)
+	c.WorkflowStep = NewWorkflowStepClient(c.config)
+	c.WorkflowStepExecution = NewWorkflowStepExecutionClient(c.config)
+	c.WorkflowStepTemplate = NewWorkflowStepTemplateClient(c.config)
 }
 
 type (
@@ -232,6 +260,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		TemplateVersion:                  NewTemplateVersionClient(cfg),
 		Token:                            NewTokenClient(cfg),
 		Variable:                         NewVariableClient(cfg),
+		Workflow:                         NewWorkflowClient(cfg),
+		WorkflowExecution:                NewWorkflowExecutionClient(cfg),
+		WorkflowStage:                    NewWorkflowStageClient(cfg),
+		WorkflowStageExecution:           NewWorkflowStageExecutionClient(cfg),
+		WorkflowStep:                     NewWorkflowStepClient(cfg),
+		WorkflowStepExecution:            NewWorkflowStepExecutionClient(cfg),
+		WorkflowStepTemplate:             NewWorkflowStepTemplateClient(cfg),
 	}, nil
 }
 
@@ -272,6 +307,13 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		TemplateVersion:                  NewTemplateVersionClient(cfg),
 		Token:                            NewTokenClient(cfg),
 		Variable:                         NewVariableClient(cfg),
+		Workflow:                         NewWorkflowClient(cfg),
+		WorkflowExecution:                NewWorkflowExecutionClient(cfg),
+		WorkflowStage:                    NewWorkflowStageClient(cfg),
+		WorkflowStageExecution:           NewWorkflowStageExecutionClient(cfg),
+		WorkflowStep:                     NewWorkflowStepClient(cfg),
+		WorkflowStepExecution:            NewWorkflowStepExecutionClient(cfg),
+		WorkflowStepTemplate:             NewWorkflowStepTemplateClient(cfg),
 	}, nil
 }
 
@@ -306,6 +348,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Service, c.ServiceRelationship, c.ServiceResource,
 		c.ServiceResourceRelationship, c.ServiceRevision, c.Setting, c.Subject,
 		c.SubjectRoleRelationship, c.Template, c.TemplateVersion, c.Token, c.Variable,
+		c.Workflow, c.WorkflowExecution, c.WorkflowStage, c.WorkflowStageExecution,
+		c.WorkflowStep, c.WorkflowStepExecution, c.WorkflowStepTemplate,
 	} {
 		n.Use(hooks...)
 	}
@@ -320,6 +364,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Service, c.ServiceRelationship, c.ServiceResource,
 		c.ServiceResourceRelationship, c.ServiceRevision, c.Setting, c.Subject,
 		c.SubjectRoleRelationship, c.Template, c.TemplateVersion, c.Token, c.Variable,
+		c.Workflow, c.WorkflowExecution, c.WorkflowStage, c.WorkflowStageExecution,
+		c.WorkflowStep, c.WorkflowStepExecution, c.WorkflowStepTemplate,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -430,6 +476,41 @@ func (c *Client) Variables() *VariableClient {
 	return c.Variable
 }
 
+// Workflows implements the ClientSet.
+func (c *Client) Workflows() *WorkflowClient {
+	return c.Workflow
+}
+
+// WorkflowExecutions implements the ClientSet.
+func (c *Client) WorkflowExecutions() *WorkflowExecutionClient {
+	return c.WorkflowExecution
+}
+
+// WorkflowStages implements the ClientSet.
+func (c *Client) WorkflowStages() *WorkflowStageClient {
+	return c.WorkflowStage
+}
+
+// WorkflowStageExecutions implements the ClientSet.
+func (c *Client) WorkflowStageExecutions() *WorkflowStageExecutionClient {
+	return c.WorkflowStageExecution
+}
+
+// WorkflowSteps implements the ClientSet.
+func (c *Client) WorkflowSteps() *WorkflowStepClient {
+	return c.WorkflowStep
+}
+
+// WorkflowStepExecutions implements the ClientSet.
+func (c *Client) WorkflowStepExecutions() *WorkflowStepExecutionClient {
+	return c.WorkflowStepExecution
+}
+
+// WorkflowStepTemplates implements the ClientSet.
+func (c *Client) WorkflowStepTemplates() *WorkflowStepTemplateClient {
+	return c.WorkflowStepTemplate
+}
+
 // Dialect returns the dialect name of the driver.
 func (c *Client) Dialect() string {
 	return c.driver.Dialect()
@@ -518,6 +599,20 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Token.mutate(ctx, m)
 	case *VariableMutation:
 		return c.Variable.mutate(ctx, m)
+	case *WorkflowMutation:
+		return c.Workflow.mutate(ctx, m)
+	case *WorkflowExecutionMutation:
+		return c.WorkflowExecution.mutate(ctx, m)
+	case *WorkflowStageMutation:
+		return c.WorkflowStage.mutate(ctx, m)
+	case *WorkflowStageExecutionMutation:
+		return c.WorkflowStageExecution.mutate(ctx, m)
+	case *WorkflowStepMutation:
+		return c.WorkflowStep.mutate(ctx, m)
+	case *WorkflowStepExecutionMutation:
+		return c.WorkflowStepExecution.mutate(ctx, m)
+	case *WorkflowStepTemplateMutation:
+		return c.WorkflowStepTemplate.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("model: unknown mutation type %T", m)
 	}
@@ -4094,6 +4189,1105 @@ func (c *VariableClient) mutate(ctx context.Context, m *VariableMutation) (Value
 	}
 }
 
+// WorkflowClient is a client for the Workflow schema.
+type WorkflowClient struct {
+	config
+}
+
+// NewWorkflowClient returns a client for the Workflow from the given config.
+func NewWorkflowClient(c config) *WorkflowClient {
+	return &WorkflowClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflow.Hooks(f(g(h())))`.
+func (c *WorkflowClient) Use(hooks ...Hook) {
+	c.hooks.Workflow = append(c.hooks.Workflow, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflow.Intercept(f(g(h())))`.
+func (c *WorkflowClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Workflow = append(c.inters.Workflow, interceptors...)
+}
+
+// Create returns a builder for creating a Workflow entity.
+func (c *WorkflowClient) Create() *WorkflowCreate {
+	mutation := newWorkflowMutation(c.config, OpCreate)
+	return &WorkflowCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Workflow entities.
+func (c *WorkflowClient) CreateBulk(builders ...*WorkflowCreate) *WorkflowCreateBulk {
+	return &WorkflowCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Workflow.
+func (c *WorkflowClient) Update() *WorkflowUpdate {
+	mutation := newWorkflowMutation(c.config, OpUpdate)
+	return &WorkflowUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowClient) UpdateOne(w *Workflow) *WorkflowUpdateOne {
+	mutation := newWorkflowMutation(c.config, OpUpdateOne, withWorkflow(w))
+	return &WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowClient) UpdateOneID(id object.ID) *WorkflowUpdateOne {
+	mutation := newWorkflowMutation(c.config, OpUpdateOne, withWorkflowID(id))
+	return &WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Workflow.
+func (c *WorkflowClient) Delete() *WorkflowDelete {
+	mutation := newWorkflowMutation(c.config, OpDelete)
+	return &WorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowClient) DeleteOne(w *Workflow) *WorkflowDeleteOne {
+	return c.DeleteOneID(w.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowClient) DeleteOneID(id object.ID) *WorkflowDeleteOne {
+	builder := c.Delete().Where(workflow.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowDeleteOne{builder}
+}
+
+// Query returns a query builder for Workflow.
+func (c *WorkflowClient) Query() *WorkflowQuery {
+	return &WorkflowQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflow},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Workflow entity by its id.
+func (c *WorkflowClient) Get(ctx context.Context, id object.ID) (*Workflow, error) {
+	return c.Query().Where(workflow.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowClient) GetX(ctx context.Context, id object.ID) *Workflow {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryStages queries the stages edge of a Workflow.
+func (c *WorkflowClient) QueryStages(w *Workflow) *WorkflowStageQuery {
+	query := (&WorkflowStageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflow.Table, workflow.FieldID, id),
+			sqlgraph.To(workflowstage.Table, workflowstage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflow.StagesTable, workflow.StagesColumn),
+		)
+		schemaConfig := w.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStage
+		step.Edge.Schema = schemaConfig.WorkflowStage
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryExecutions queries the executions edge of a Workflow.
+func (c *WorkflowClient) QueryExecutions(w *Workflow) *WorkflowExecutionQuery {
+	query := (&WorkflowExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflow.Table, workflow.FieldID, id),
+			sqlgraph.To(workflowexecution.Table, workflowexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflow.ExecutionsTable, workflow.ExecutionsColumn),
+		)
+		schemaConfig := w.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowExecution
+		step.Edge.Schema = schemaConfig.WorkflowExecution
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowClient) Hooks() []Hook {
+	hooks := c.hooks.Workflow
+	return append(hooks[:len(hooks):len(hooks)], workflow.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowClient) Interceptors() []Interceptor {
+	return c.inters.Workflow
+}
+
+func (c *WorkflowClient) mutate(ctx context.Context, m *WorkflowMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("model: unknown Workflow mutation op: %q", m.Op())
+	}
+}
+
+// WorkflowExecutionClient is a client for the WorkflowExecution schema.
+type WorkflowExecutionClient struct {
+	config
+}
+
+// NewWorkflowExecutionClient returns a client for the WorkflowExecution from the given config.
+func NewWorkflowExecutionClient(c config) *WorkflowExecutionClient {
+	return &WorkflowExecutionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowexecution.Hooks(f(g(h())))`.
+func (c *WorkflowExecutionClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowExecution = append(c.hooks.WorkflowExecution, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowexecution.Intercept(f(g(h())))`.
+func (c *WorkflowExecutionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowExecution = append(c.inters.WorkflowExecution, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowExecution entity.
+func (c *WorkflowExecutionClient) Create() *WorkflowExecutionCreate {
+	mutation := newWorkflowExecutionMutation(c.config, OpCreate)
+	return &WorkflowExecutionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowExecution entities.
+func (c *WorkflowExecutionClient) CreateBulk(builders ...*WorkflowExecutionCreate) *WorkflowExecutionCreateBulk {
+	return &WorkflowExecutionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowExecution.
+func (c *WorkflowExecutionClient) Update() *WorkflowExecutionUpdate {
+	mutation := newWorkflowExecutionMutation(c.config, OpUpdate)
+	return &WorkflowExecutionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowExecutionClient) UpdateOne(we *WorkflowExecution) *WorkflowExecutionUpdateOne {
+	mutation := newWorkflowExecutionMutation(c.config, OpUpdateOne, withWorkflowExecution(we))
+	return &WorkflowExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowExecutionClient) UpdateOneID(id object.ID) *WorkflowExecutionUpdateOne {
+	mutation := newWorkflowExecutionMutation(c.config, OpUpdateOne, withWorkflowExecutionID(id))
+	return &WorkflowExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowExecution.
+func (c *WorkflowExecutionClient) Delete() *WorkflowExecutionDelete {
+	mutation := newWorkflowExecutionMutation(c.config, OpDelete)
+	return &WorkflowExecutionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowExecutionClient) DeleteOne(we *WorkflowExecution) *WorkflowExecutionDeleteOne {
+	return c.DeleteOneID(we.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowExecutionClient) DeleteOneID(id object.ID) *WorkflowExecutionDeleteOne {
+	builder := c.Delete().Where(workflowexecution.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowExecutionDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowExecution.
+func (c *WorkflowExecutionClient) Query() *WorkflowExecutionQuery {
+	return &WorkflowExecutionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowExecution},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowExecution entity by its id.
+func (c *WorkflowExecutionClient) Get(ctx context.Context, id object.ID) (*WorkflowExecution, error) {
+	return c.Query().Where(workflowexecution.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowExecutionClient) GetX(ctx context.Context, id object.ID) *WorkflowExecution {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryWorkflowStageExecutions queries the workflow_stage_executions edge of a WorkflowExecution.
+func (c *WorkflowExecutionClient) QueryWorkflowStageExecutions(we *WorkflowExecution) *WorkflowStageExecutionQuery {
+	query := (&WorkflowStageExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := we.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowexecution.Table, workflowexecution.FieldID, id),
+			sqlgraph.To(workflowstageexecution.Table, workflowstageexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowexecution.WorkflowStageExecutionsTable, workflowexecution.WorkflowStageExecutionsColumn),
+		)
+		schemaConfig := we.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStageExecution
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		fromV = sqlgraph.Neighbors(we.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflow queries the workflow edge of a WorkflowExecution.
+func (c *WorkflowExecutionClient) QueryWorkflow(we *WorkflowExecution) *WorkflowQuery {
+	query := (&WorkflowClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := we.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowexecution.Table, workflowexecution.FieldID, id),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowexecution.WorkflowTable, workflowexecution.WorkflowColumn),
+		)
+		schemaConfig := we.schemaConfig
+		step.To.Schema = schemaConfig.Workflow
+		step.Edge.Schema = schemaConfig.WorkflowExecution
+		fromV = sqlgraph.Neighbors(we.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowExecutionClient) Hooks() []Hook {
+	hooks := c.hooks.WorkflowExecution
+	return append(hooks[:len(hooks):len(hooks)], workflowexecution.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowExecutionClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowExecution
+}
+
+func (c *WorkflowExecutionClient) mutate(ctx context.Context, m *WorkflowExecutionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowExecutionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowExecutionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowExecutionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("model: unknown WorkflowExecution mutation op: %q", m.Op())
+	}
+}
+
+// WorkflowStageClient is a client for the WorkflowStage schema.
+type WorkflowStageClient struct {
+	config
+}
+
+// NewWorkflowStageClient returns a client for the WorkflowStage from the given config.
+func NewWorkflowStageClient(c config) *WorkflowStageClient {
+	return &WorkflowStageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowstage.Hooks(f(g(h())))`.
+func (c *WorkflowStageClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowStage = append(c.hooks.WorkflowStage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowstage.Intercept(f(g(h())))`.
+func (c *WorkflowStageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowStage = append(c.inters.WorkflowStage, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowStage entity.
+func (c *WorkflowStageClient) Create() *WorkflowStageCreate {
+	mutation := newWorkflowStageMutation(c.config, OpCreate)
+	return &WorkflowStageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowStage entities.
+func (c *WorkflowStageClient) CreateBulk(builders ...*WorkflowStageCreate) *WorkflowStageCreateBulk {
+	return &WorkflowStageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowStage.
+func (c *WorkflowStageClient) Update() *WorkflowStageUpdate {
+	mutation := newWorkflowStageMutation(c.config, OpUpdate)
+	return &WorkflowStageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowStageClient) UpdateOne(ws *WorkflowStage) *WorkflowStageUpdateOne {
+	mutation := newWorkflowStageMutation(c.config, OpUpdateOne, withWorkflowStage(ws))
+	return &WorkflowStageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowStageClient) UpdateOneID(id object.ID) *WorkflowStageUpdateOne {
+	mutation := newWorkflowStageMutation(c.config, OpUpdateOne, withWorkflowStageID(id))
+	return &WorkflowStageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowStage.
+func (c *WorkflowStageClient) Delete() *WorkflowStageDelete {
+	mutation := newWorkflowStageMutation(c.config, OpDelete)
+	return &WorkflowStageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowStageClient) DeleteOne(ws *WorkflowStage) *WorkflowStageDeleteOne {
+	return c.DeleteOneID(ws.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowStageClient) DeleteOneID(id object.ID) *WorkflowStageDeleteOne {
+	builder := c.Delete().Where(workflowstage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowStageDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowStage.
+func (c *WorkflowStageClient) Query() *WorkflowStageQuery {
+	return &WorkflowStageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowStage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowStage entity by its id.
+func (c *WorkflowStageClient) Get(ctx context.Context, id object.ID) (*WorkflowStage, error) {
+	return c.Query().Where(workflowstage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowStageClient) GetX(ctx context.Context, id object.ID) *WorkflowStage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySteps queries the steps edge of a WorkflowStage.
+func (c *WorkflowStageClient) QuerySteps(ws *WorkflowStage) *WorkflowStepQuery {
+	query := (&WorkflowStepClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ws.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstage.Table, workflowstage.FieldID, id),
+			sqlgraph.To(workflowstep.Table, workflowstep.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowstage.StepsTable, workflowstage.StepsColumn),
+		)
+		schemaConfig := ws.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStep
+		step.Edge.Schema = schemaConfig.WorkflowStep
+		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflowStageExecutions queries the workflow_stage_executions edge of a WorkflowStage.
+func (c *WorkflowStageClient) QueryWorkflowStageExecutions(ws *WorkflowStage) *WorkflowStageExecutionQuery {
+	query := (&WorkflowStageExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ws.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstage.Table, workflowstage.FieldID, id),
+			sqlgraph.To(workflowstageexecution.Table, workflowstageexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowstage.WorkflowStageExecutionsTable, workflowstage.WorkflowStageExecutionsColumn),
+		)
+		schemaConfig := ws.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStageExecution
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflow queries the workflow edge of a WorkflowStage.
+func (c *WorkflowStageClient) QueryWorkflow(ws *WorkflowStage) *WorkflowQuery {
+	query := (&WorkflowClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ws.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstage.Table, workflowstage.FieldID, id),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstage.WorkflowTable, workflowstage.WorkflowColumn),
+		)
+		schemaConfig := ws.schemaConfig
+		step.To.Schema = schemaConfig.Workflow
+		step.Edge.Schema = schemaConfig.WorkflowStage
+		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowStageClient) Hooks() []Hook {
+	hooks := c.hooks.WorkflowStage
+	return append(hooks[:len(hooks):len(hooks)], workflowstage.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowStageClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowStage
+}
+
+func (c *WorkflowStageClient) mutate(ctx context.Context, m *WorkflowStageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowStageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowStageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowStageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowStageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("model: unknown WorkflowStage mutation op: %q", m.Op())
+	}
+}
+
+// WorkflowStageExecutionClient is a client for the WorkflowStageExecution schema.
+type WorkflowStageExecutionClient struct {
+	config
+}
+
+// NewWorkflowStageExecutionClient returns a client for the WorkflowStageExecution from the given config.
+func NewWorkflowStageExecutionClient(c config) *WorkflowStageExecutionClient {
+	return &WorkflowStageExecutionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowstageexecution.Hooks(f(g(h())))`.
+func (c *WorkflowStageExecutionClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowStageExecution = append(c.hooks.WorkflowStageExecution, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowstageexecution.Intercept(f(g(h())))`.
+func (c *WorkflowStageExecutionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowStageExecution = append(c.inters.WorkflowStageExecution, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowStageExecution entity.
+func (c *WorkflowStageExecutionClient) Create() *WorkflowStageExecutionCreate {
+	mutation := newWorkflowStageExecutionMutation(c.config, OpCreate)
+	return &WorkflowStageExecutionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowStageExecution entities.
+func (c *WorkflowStageExecutionClient) CreateBulk(builders ...*WorkflowStageExecutionCreate) *WorkflowStageExecutionCreateBulk {
+	return &WorkflowStageExecutionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) Update() *WorkflowStageExecutionUpdate {
+	mutation := newWorkflowStageExecutionMutation(c.config, OpUpdate)
+	return &WorkflowStageExecutionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowStageExecutionClient) UpdateOne(wse *WorkflowStageExecution) *WorkflowStageExecutionUpdateOne {
+	mutation := newWorkflowStageExecutionMutation(c.config, OpUpdateOne, withWorkflowStageExecution(wse))
+	return &WorkflowStageExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowStageExecutionClient) UpdateOneID(id object.ID) *WorkflowStageExecutionUpdateOne {
+	mutation := newWorkflowStageExecutionMutation(c.config, OpUpdateOne, withWorkflowStageExecutionID(id))
+	return &WorkflowStageExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) Delete() *WorkflowStageExecutionDelete {
+	mutation := newWorkflowStageExecutionMutation(c.config, OpDelete)
+	return &WorkflowStageExecutionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowStageExecutionClient) DeleteOne(wse *WorkflowStageExecution) *WorkflowStageExecutionDeleteOne {
+	return c.DeleteOneID(wse.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowStageExecutionClient) DeleteOneID(id object.ID) *WorkflowStageExecutionDeleteOne {
+	builder := c.Delete().Where(workflowstageexecution.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowStageExecutionDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) Query() *WorkflowStageExecutionQuery {
+	return &WorkflowStageExecutionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowStageExecution},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowStageExecution entity by its id.
+func (c *WorkflowStageExecutionClient) Get(ctx context.Context, id object.ID) (*WorkflowStageExecution, error) {
+	return c.Query().Where(workflowstageexecution.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowStageExecutionClient) GetX(ctx context.Context, id object.ID) *WorkflowStageExecution {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryStepExecutions queries the step_executions edge of a WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) QueryStepExecutions(wse *WorkflowStageExecution) *WorkflowStepExecutionQuery {
+	query := (&WorkflowStepExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wse.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstageexecution.Table, workflowstageexecution.FieldID, id),
+			sqlgraph.To(workflowstepexecution.Table, workflowstepexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowstageexecution.StepExecutionsTable, workflowstageexecution.StepExecutionsColumn),
+		)
+		schemaConfig := wse.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStepExecution
+		step.Edge.Schema = schemaConfig.WorkflowStepExecution
+		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStage queries the stage edge of a WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) QueryStage(wse *WorkflowStageExecution) *WorkflowStageQuery {
+	query := (&WorkflowStageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wse.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstageexecution.Table, workflowstageexecution.FieldID, id),
+			sqlgraph.To(workflowstage.Table, workflowstage.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstageexecution.StageTable, workflowstageexecution.StageColumn),
+		)
+		schemaConfig := wse.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStage
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflowExecution queries the workflow_execution edge of a WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) QueryWorkflowExecution(wse *WorkflowStageExecution) *WorkflowExecutionQuery {
+	query := (&WorkflowExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wse.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstageexecution.Table, workflowstageexecution.FieldID, id),
+			sqlgraph.To(workflowexecution.Table, workflowexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstageexecution.WorkflowExecutionTable, workflowstageexecution.WorkflowExecutionColumn),
+		)
+		schemaConfig := wse.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowExecution
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowStageExecutionClient) Hooks() []Hook {
+	hooks := c.hooks.WorkflowStageExecution
+	return append(hooks[:len(hooks):len(hooks)], workflowstageexecution.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowStageExecutionClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowStageExecution
+}
+
+func (c *WorkflowStageExecutionClient) mutate(ctx context.Context, m *WorkflowStageExecutionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowStageExecutionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowStageExecutionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowStageExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowStageExecutionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("model: unknown WorkflowStageExecution mutation op: %q", m.Op())
+	}
+}
+
+// WorkflowStepClient is a client for the WorkflowStep schema.
+type WorkflowStepClient struct {
+	config
+}
+
+// NewWorkflowStepClient returns a client for the WorkflowStep from the given config.
+func NewWorkflowStepClient(c config) *WorkflowStepClient {
+	return &WorkflowStepClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowstep.Hooks(f(g(h())))`.
+func (c *WorkflowStepClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowStep = append(c.hooks.WorkflowStep, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowstep.Intercept(f(g(h())))`.
+func (c *WorkflowStepClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowStep = append(c.inters.WorkflowStep, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowStep entity.
+func (c *WorkflowStepClient) Create() *WorkflowStepCreate {
+	mutation := newWorkflowStepMutation(c.config, OpCreate)
+	return &WorkflowStepCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowStep entities.
+func (c *WorkflowStepClient) CreateBulk(builders ...*WorkflowStepCreate) *WorkflowStepCreateBulk {
+	return &WorkflowStepCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowStep.
+func (c *WorkflowStepClient) Update() *WorkflowStepUpdate {
+	mutation := newWorkflowStepMutation(c.config, OpUpdate)
+	return &WorkflowStepUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowStepClient) UpdateOne(ws *WorkflowStep) *WorkflowStepUpdateOne {
+	mutation := newWorkflowStepMutation(c.config, OpUpdateOne, withWorkflowStep(ws))
+	return &WorkflowStepUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowStepClient) UpdateOneID(id object.ID) *WorkflowStepUpdateOne {
+	mutation := newWorkflowStepMutation(c.config, OpUpdateOne, withWorkflowStepID(id))
+	return &WorkflowStepUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowStep.
+func (c *WorkflowStepClient) Delete() *WorkflowStepDelete {
+	mutation := newWorkflowStepMutation(c.config, OpDelete)
+	return &WorkflowStepDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowStepClient) DeleteOne(ws *WorkflowStep) *WorkflowStepDeleteOne {
+	return c.DeleteOneID(ws.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowStepClient) DeleteOneID(id object.ID) *WorkflowStepDeleteOne {
+	builder := c.Delete().Where(workflowstep.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowStepDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowStep.
+func (c *WorkflowStepClient) Query() *WorkflowStepQuery {
+	return &WorkflowStepQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowStep},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowStep entity by its id.
+func (c *WorkflowStepClient) Get(ctx context.Context, id object.ID) (*WorkflowStep, error) {
+	return c.Query().Where(workflowstep.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowStepClient) GetX(ctx context.Context, id object.ID) *WorkflowStep {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryExecutions queries the executions edge of a WorkflowStep.
+func (c *WorkflowStepClient) QueryExecutions(ws *WorkflowStep) *WorkflowStepExecutionQuery {
+	query := (&WorkflowStepExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ws.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstep.Table, workflowstep.FieldID, id),
+			sqlgraph.To(workflowstepexecution.Table, workflowstepexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowstep.ExecutionsTable, workflowstep.ExecutionsColumn),
+		)
+		schemaConfig := ws.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStepExecution
+		step.Edge.Schema = schemaConfig.WorkflowStepExecution
+		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStage queries the stage edge of a WorkflowStep.
+func (c *WorkflowStepClient) QueryStage(ws *WorkflowStep) *WorkflowStageQuery {
+	query := (&WorkflowStageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ws.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstep.Table, workflowstep.FieldID, id),
+			sqlgraph.To(workflowstage.Table, workflowstage.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstep.StageTable, workflowstep.StageColumn),
+		)
+		schemaConfig := ws.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStage
+		step.Edge.Schema = schemaConfig.WorkflowStep
+		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowStepClient) Hooks() []Hook {
+	hooks := c.hooks.WorkflowStep
+	return append(hooks[:len(hooks):len(hooks)], workflowstep.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowStepClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowStep
+}
+
+func (c *WorkflowStepClient) mutate(ctx context.Context, m *WorkflowStepMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowStepCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowStepUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowStepUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowStepDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("model: unknown WorkflowStep mutation op: %q", m.Op())
+	}
+}
+
+// WorkflowStepExecutionClient is a client for the WorkflowStepExecution schema.
+type WorkflowStepExecutionClient struct {
+	config
+}
+
+// NewWorkflowStepExecutionClient returns a client for the WorkflowStepExecution from the given config.
+func NewWorkflowStepExecutionClient(c config) *WorkflowStepExecutionClient {
+	return &WorkflowStepExecutionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowstepexecution.Hooks(f(g(h())))`.
+func (c *WorkflowStepExecutionClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowStepExecution = append(c.hooks.WorkflowStepExecution, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowstepexecution.Intercept(f(g(h())))`.
+func (c *WorkflowStepExecutionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowStepExecution = append(c.inters.WorkflowStepExecution, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowStepExecution entity.
+func (c *WorkflowStepExecutionClient) Create() *WorkflowStepExecutionCreate {
+	mutation := newWorkflowStepExecutionMutation(c.config, OpCreate)
+	return &WorkflowStepExecutionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowStepExecution entities.
+func (c *WorkflowStepExecutionClient) CreateBulk(builders ...*WorkflowStepExecutionCreate) *WorkflowStepExecutionCreateBulk {
+	return &WorkflowStepExecutionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowStepExecution.
+func (c *WorkflowStepExecutionClient) Update() *WorkflowStepExecutionUpdate {
+	mutation := newWorkflowStepExecutionMutation(c.config, OpUpdate)
+	return &WorkflowStepExecutionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowStepExecutionClient) UpdateOne(wse *WorkflowStepExecution) *WorkflowStepExecutionUpdateOne {
+	mutation := newWorkflowStepExecutionMutation(c.config, OpUpdateOne, withWorkflowStepExecution(wse))
+	return &WorkflowStepExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowStepExecutionClient) UpdateOneID(id object.ID) *WorkflowStepExecutionUpdateOne {
+	mutation := newWorkflowStepExecutionMutation(c.config, OpUpdateOne, withWorkflowStepExecutionID(id))
+	return &WorkflowStepExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowStepExecution.
+func (c *WorkflowStepExecutionClient) Delete() *WorkflowStepExecutionDelete {
+	mutation := newWorkflowStepExecutionMutation(c.config, OpDelete)
+	return &WorkflowStepExecutionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowStepExecutionClient) DeleteOne(wse *WorkflowStepExecution) *WorkflowStepExecutionDeleteOne {
+	return c.DeleteOneID(wse.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowStepExecutionClient) DeleteOneID(id object.ID) *WorkflowStepExecutionDeleteOne {
+	builder := c.Delete().Where(workflowstepexecution.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowStepExecutionDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowStepExecution.
+func (c *WorkflowStepExecutionClient) Query() *WorkflowStepExecutionQuery {
+	return &WorkflowStepExecutionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowStepExecution},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowStepExecution entity by its id.
+func (c *WorkflowStepExecutionClient) Get(ctx context.Context, id object.ID) (*WorkflowStepExecution, error) {
+	return c.Query().Where(workflowstepexecution.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowStepExecutionClient) GetX(ctx context.Context, id object.ID) *WorkflowStepExecution {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryWorkflowStep queries the workflow_step edge of a WorkflowStepExecution.
+func (c *WorkflowStepExecutionClient) QueryWorkflowStep(wse *WorkflowStepExecution) *WorkflowStepQuery {
+	query := (&WorkflowStepClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wse.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstepexecution.Table, workflowstepexecution.FieldID, id),
+			sqlgraph.To(workflowstep.Table, workflowstep.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstepexecution.WorkflowStepTable, workflowstepexecution.WorkflowStepColumn),
+		)
+		schemaConfig := wse.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStep
+		step.Edge.Schema = schemaConfig.WorkflowStepExecution
+		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStageExecution queries the stage_execution edge of a WorkflowStepExecution.
+func (c *WorkflowStepExecutionClient) QueryStageExecution(wse *WorkflowStepExecution) *WorkflowStageExecutionQuery {
+	query := (&WorkflowStageExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wse.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstepexecution.Table, workflowstepexecution.FieldID, id),
+			sqlgraph.To(workflowstageexecution.Table, workflowstageexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstepexecution.StageExecutionTable, workflowstepexecution.StageExecutionColumn),
+		)
+		schemaConfig := wse.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStageExecution
+		step.Edge.Schema = schemaConfig.WorkflowStepExecution
+		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowStepExecutionClient) Hooks() []Hook {
+	hooks := c.hooks.WorkflowStepExecution
+	return append(hooks[:len(hooks):len(hooks)], workflowstepexecution.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowStepExecutionClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowStepExecution
+}
+
+func (c *WorkflowStepExecutionClient) mutate(ctx context.Context, m *WorkflowStepExecutionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowStepExecutionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowStepExecutionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowStepExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowStepExecutionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("model: unknown WorkflowStepExecution mutation op: %q", m.Op())
+	}
+}
+
+// WorkflowStepTemplateClient is a client for the WorkflowStepTemplate schema.
+type WorkflowStepTemplateClient struct {
+	config
+}
+
+// NewWorkflowStepTemplateClient returns a client for the WorkflowStepTemplate from the given config.
+func NewWorkflowStepTemplateClient(c config) *WorkflowStepTemplateClient {
+	return &WorkflowStepTemplateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowsteptemplate.Hooks(f(g(h())))`.
+func (c *WorkflowStepTemplateClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowStepTemplate = append(c.hooks.WorkflowStepTemplate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowsteptemplate.Intercept(f(g(h())))`.
+func (c *WorkflowStepTemplateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowStepTemplate = append(c.inters.WorkflowStepTemplate, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowStepTemplate entity.
+func (c *WorkflowStepTemplateClient) Create() *WorkflowStepTemplateCreate {
+	mutation := newWorkflowStepTemplateMutation(c.config, OpCreate)
+	return &WorkflowStepTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowStepTemplate entities.
+func (c *WorkflowStepTemplateClient) CreateBulk(builders ...*WorkflowStepTemplateCreate) *WorkflowStepTemplateCreateBulk {
+	return &WorkflowStepTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowStepTemplate.
+func (c *WorkflowStepTemplateClient) Update() *WorkflowStepTemplateUpdate {
+	mutation := newWorkflowStepTemplateMutation(c.config, OpUpdate)
+	return &WorkflowStepTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowStepTemplateClient) UpdateOne(wst *WorkflowStepTemplate) *WorkflowStepTemplateUpdateOne {
+	mutation := newWorkflowStepTemplateMutation(c.config, OpUpdateOne, withWorkflowStepTemplate(wst))
+	return &WorkflowStepTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowStepTemplateClient) UpdateOneID(id object.ID) *WorkflowStepTemplateUpdateOne {
+	mutation := newWorkflowStepTemplateMutation(c.config, OpUpdateOne, withWorkflowStepTemplateID(id))
+	return &WorkflowStepTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowStepTemplate.
+func (c *WorkflowStepTemplateClient) Delete() *WorkflowStepTemplateDelete {
+	mutation := newWorkflowStepTemplateMutation(c.config, OpDelete)
+	return &WorkflowStepTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowStepTemplateClient) DeleteOne(wst *WorkflowStepTemplate) *WorkflowStepTemplateDeleteOne {
+	return c.DeleteOneID(wst.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowStepTemplateClient) DeleteOneID(id object.ID) *WorkflowStepTemplateDeleteOne {
+	builder := c.Delete().Where(workflowsteptemplate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowStepTemplateDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowStepTemplate.
+func (c *WorkflowStepTemplateClient) Query() *WorkflowStepTemplateQuery {
+	return &WorkflowStepTemplateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowStepTemplate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowStepTemplate entity by its id.
+func (c *WorkflowStepTemplateClient) Get(ctx context.Context, id object.ID) (*WorkflowStepTemplate, error) {
+	return c.Query().Where(workflowsteptemplate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowStepTemplateClient) GetX(ctx context.Context, id object.ID) *WorkflowStepTemplate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowStepTemplateClient) Hooks() []Hook {
+	hooks := c.hooks.WorkflowStepTemplate
+	return append(hooks[:len(hooks):len(hooks)], workflowsteptemplate.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowStepTemplateClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowStepTemplate
+}
+
+func (c *WorkflowStepTemplateClient) mutate(ctx context.Context, m *WorkflowStepTemplateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowStepTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowStepTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowStepTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowStepTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("model: unknown WorkflowStepTemplate mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
@@ -4101,14 +5295,18 @@ type (
 		EnvironmentConnectorRelationship, Perspective, Project, Role, Service,
 		ServiceRelationship, ServiceResource, ServiceResourceRelationship,
 		ServiceRevision, Setting, Subject, SubjectRoleRelationship, Template,
-		TemplateVersion, Token, Variable []ent.Hook
+		TemplateVersion, Token, Variable, Workflow, WorkflowExecution, WorkflowStage,
+		WorkflowStageExecution, WorkflowStep, WorkflowStepExecution,
+		WorkflowStepTemplate []ent.Hook
 	}
 	inters struct {
 		Catalog, Connector, CostReport, DistributeLock, Environment,
 		EnvironmentConnectorRelationship, Perspective, Project, Role, Service,
 		ServiceRelationship, ServiceResource, ServiceResourceRelationship,
 		ServiceRevision, Setting, Subject, SubjectRoleRelationship, Template,
-		TemplateVersion, Token, Variable []ent.Interceptor
+		TemplateVersion, Token, Variable, Workflow, WorkflowExecution, WorkflowStage,
+		WorkflowStageExecution, WorkflowStep, WorkflowStepExecution,
+		WorkflowStepTemplate []ent.Interceptor
 	}
 )
 

@@ -29,10 +29,18 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/model/token"
 	"github.com/seal-io/walrus/pkg/dao/model/variable"
+	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowsteptemplate"
 	"github.com/seal-io/walrus/pkg/dao/schema"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/crypto"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
+	"github.com/seal-io/walrus/pkg/dao/types/property"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -790,6 +798,317 @@ func init() {
 	variableDescSensitive := variableFields[4].Descriptor()
 	// variable.DefaultSensitive holds the default value on creation for the sensitive field.
 	variable.DefaultSensitive = variableDescSensitive.Default.(bool)
+	workflowMixin := schema.Workflow{}.Mixin()
+	workflowMixinHooks0 := workflowMixin[0].Hooks()
+	workflow.Hooks[0] = workflowMixinHooks0[0]
+	workflowMixinFields0 := workflowMixin[0].Fields()
+	_ = workflowMixinFields0
+	workflowFields := schema.Workflow{}.Fields()
+	_ = workflowFields
+	// workflowDescName is the schema descriptor for name field.
+	workflowDescName := workflowMixinFields0[1].Descriptor()
+	// workflow.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflow.NameValidator = workflowDescName.Validators[0].(func(string) error)
+	// workflowDescLabels is the schema descriptor for labels field.
+	workflowDescLabels := workflowMixinFields0[3].Descriptor()
+	// workflow.DefaultLabels holds the default value on creation for the labels field.
+	workflow.DefaultLabels = workflowDescLabels.Default.(map[string]string)
+	// workflowDescAnnotations is the schema descriptor for annotations field.
+	workflowDescAnnotations := workflowMixinFields0[4].Descriptor()
+	// workflow.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflow.DefaultAnnotations = workflowDescAnnotations.Default.(map[string]string)
+	// workflowDescCreateTime is the schema descriptor for create_time field.
+	workflowDescCreateTime := workflowMixinFields0[5].Descriptor()
+	// workflow.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflow.DefaultCreateTime = workflowDescCreateTime.Default.(func() time.Time)
+	// workflowDescUpdateTime is the schema descriptor for update_time field.
+	workflowDescUpdateTime := workflowMixinFields0[6].Descriptor()
+	// workflow.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflow.DefaultUpdateTime = workflowDescUpdateTime.Default.(func() time.Time)
+	// workflow.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflow.UpdateDefaultUpdateTime = workflowDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowDescDisplayName is the schema descriptor for display_name field.
+	workflowDescDisplayName := workflowFields[2].Descriptor()
+	// workflow.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
+	workflow.DisplayNameValidator = workflowDescDisplayName.Validators[0].(func(string) error)
+	// workflowDescType is the schema descriptor for type field.
+	workflowDescType := workflowFields[3].Descriptor()
+	// workflow.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflow.TypeValidator = workflowDescType.Validators[0].(func(string) error)
+	// workflowDescWorkflowStageIds is the schema descriptor for workflow_stage_ids field.
+	workflowDescWorkflowStageIds := workflowFields[4].Descriptor()
+	// workflow.DefaultWorkflowStageIds holds the default value on creation for the workflow_stage_ids field.
+	workflow.DefaultWorkflowStageIds = workflowDescWorkflowStageIds.Default.([]object.ID)
+	// workflowDescParallelism is the schema descriptor for parallelism field.
+	workflowDescParallelism := workflowFields[5].Descriptor()
+	// workflow.DefaultParallelism holds the default value on creation for the parallelism field.
+	workflow.DefaultParallelism = workflowDescParallelism.Default.(int)
+	// workflow.ParallelismValidator is a validator for the "parallelism" field. It is called by the builders before save.
+	workflow.ParallelismValidator = workflowDescParallelism.Validators[0].(func(int) error)
+	workflowexecutionMixin := schema.WorkflowExecution{}.Mixin()
+	workflowexecutionMixinHooks0 := workflowexecutionMixin[0].Hooks()
+	workflowexecution.Hooks[0] = workflowexecutionMixinHooks0[0]
+	workflowexecutionMixinFields0 := workflowexecutionMixin[0].Fields()
+	_ = workflowexecutionMixinFields0
+	workflowexecutionFields := schema.WorkflowExecution{}.Fields()
+	_ = workflowexecutionFields
+	// workflowexecutionDescName is the schema descriptor for name field.
+	workflowexecutionDescName := workflowexecutionMixinFields0[1].Descriptor()
+	// workflowexecution.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowexecution.NameValidator = workflowexecutionDescName.Validators[0].(func(string) error)
+	// workflowexecutionDescLabels is the schema descriptor for labels field.
+	workflowexecutionDescLabels := workflowexecutionMixinFields0[3].Descriptor()
+	// workflowexecution.DefaultLabels holds the default value on creation for the labels field.
+	workflowexecution.DefaultLabels = workflowexecutionDescLabels.Default.(map[string]string)
+	// workflowexecutionDescAnnotations is the schema descriptor for annotations field.
+	workflowexecutionDescAnnotations := workflowexecutionMixinFields0[4].Descriptor()
+	// workflowexecution.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowexecution.DefaultAnnotations = workflowexecutionDescAnnotations.Default.(map[string]string)
+	// workflowexecutionDescCreateTime is the schema descriptor for create_time field.
+	workflowexecutionDescCreateTime := workflowexecutionMixinFields0[5].Descriptor()
+	// workflowexecution.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowexecution.DefaultCreateTime = workflowexecutionDescCreateTime.Default.(func() time.Time)
+	// workflowexecutionDescUpdateTime is the schema descriptor for update_time field.
+	workflowexecutionDescUpdateTime := workflowexecutionMixinFields0[6].Descriptor()
+	// workflowexecution.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowexecution.DefaultUpdateTime = workflowexecutionDescUpdateTime.Default.(func() time.Time)
+	// workflowexecution.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowexecution.UpdateDefaultUpdateTime = workflowexecutionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowexecutionDescProgress is the schema descriptor for progress field.
+	workflowexecutionDescProgress := workflowexecutionFields[2].Descriptor()
+	// workflowexecution.ProgressValidator is a validator for the "progress" field. It is called by the builders before save.
+	workflowexecution.ProgressValidator = workflowexecutionDescProgress.Validators[0].(func(int) error)
+	// workflowexecutionDescWorkflowStagesExecution is the schema descriptor for workflow_stages_execution field.
+	workflowexecutionDescWorkflowStagesExecution := workflowexecutionFields[4].Descriptor()
+	// workflowexecution.DefaultWorkflowStagesExecution holds the default value on creation for the workflow_stages_execution field.
+	workflowexecution.DefaultWorkflowStagesExecution = workflowexecutionDescWorkflowStagesExecution.Default.([]object.ID)
+	// workflowexecutionDescRecord is the schema descriptor for record field.
+	workflowexecutionDescRecord := workflowexecutionFields[5].Descriptor()
+	// workflowexecution.DefaultRecord holds the default value on creation for the record field.
+	workflowexecution.DefaultRecord = workflowexecutionDescRecord.Default.(string)
+	// workflowexecutionDescInput is the schema descriptor for input field.
+	workflowexecutionDescInput := workflowexecutionFields[6].Descriptor()
+	// workflowexecution.DefaultInput holds the default value on creation for the input field.
+	workflowexecution.DefaultInput = workflowexecutionDescInput.Default.(string)
+	workflowstageMixin := schema.WorkflowStage{}.Mixin()
+	workflowstageMixinHooks0 := workflowstageMixin[0].Hooks()
+	workflowstage.Hooks[0] = workflowstageMixinHooks0[0]
+	workflowstageMixinFields0 := workflowstageMixin[0].Fields()
+	_ = workflowstageMixinFields0
+	workflowstageFields := schema.WorkflowStage{}.Fields()
+	_ = workflowstageFields
+	// workflowstageDescName is the schema descriptor for name field.
+	workflowstageDescName := workflowstageMixinFields0[1].Descriptor()
+	// workflowstage.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowstage.NameValidator = workflowstageDescName.Validators[0].(func(string) error)
+	// workflowstageDescLabels is the schema descriptor for labels field.
+	workflowstageDescLabels := workflowstageMixinFields0[3].Descriptor()
+	// workflowstage.DefaultLabels holds the default value on creation for the labels field.
+	workflowstage.DefaultLabels = workflowstageDescLabels.Default.(map[string]string)
+	// workflowstageDescAnnotations is the schema descriptor for annotations field.
+	workflowstageDescAnnotations := workflowstageMixinFields0[4].Descriptor()
+	// workflowstage.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowstage.DefaultAnnotations = workflowstageDescAnnotations.Default.(map[string]string)
+	// workflowstageDescCreateTime is the schema descriptor for create_time field.
+	workflowstageDescCreateTime := workflowstageMixinFields0[5].Descriptor()
+	// workflowstage.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowstage.DefaultCreateTime = workflowstageDescCreateTime.Default.(func() time.Time)
+	// workflowstageDescUpdateTime is the schema descriptor for update_time field.
+	workflowstageDescUpdateTime := workflowstageMixinFields0[6].Descriptor()
+	// workflowstage.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowstage.DefaultUpdateTime = workflowstageDescUpdateTime.Default.(func() time.Time)
+	// workflowstage.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowstage.UpdateDefaultUpdateTime = workflowstageDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowstageDescDuration is the schema descriptor for duration field.
+	workflowstageDescDuration := workflowstageFields[2].Descriptor()
+	// workflowstage.DefaultDuration holds the default value on creation for the duration field.
+	workflowstage.DefaultDuration = workflowstageDescDuration.Default.(int)
+	// workflowstage.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	workflowstage.DurationValidator = workflowstageDescDuration.Validators[0].(func(int) error)
+	// workflowstageDescDependencies is the schema descriptor for dependencies field.
+	workflowstageDescDependencies := workflowstageFields[3].Descriptor()
+	// workflowstage.DefaultDependencies holds the default value on creation for the dependencies field.
+	workflowstage.DefaultDependencies = workflowstageDescDependencies.Default.([]object.ID)
+	workflowstageexecutionMixin := schema.WorkflowStageExecution{}.Mixin()
+	workflowstageexecutionMixinHooks0 := workflowstageexecutionMixin[0].Hooks()
+	workflowstageexecution.Hooks[0] = workflowstageexecutionMixinHooks0[0]
+	workflowstageexecutionMixinFields0 := workflowstageexecutionMixin[0].Fields()
+	_ = workflowstageexecutionMixinFields0
+	workflowstageexecutionFields := schema.WorkflowStageExecution{}.Fields()
+	_ = workflowstageexecutionFields
+	// workflowstageexecutionDescName is the schema descriptor for name field.
+	workflowstageexecutionDescName := workflowstageexecutionMixinFields0[1].Descriptor()
+	// workflowstageexecution.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowstageexecution.NameValidator = workflowstageexecutionDescName.Validators[0].(func(string) error)
+	// workflowstageexecutionDescLabels is the schema descriptor for labels field.
+	workflowstageexecutionDescLabels := workflowstageexecutionMixinFields0[3].Descriptor()
+	// workflowstageexecution.DefaultLabels holds the default value on creation for the labels field.
+	workflowstageexecution.DefaultLabels = workflowstageexecutionDescLabels.Default.(map[string]string)
+	// workflowstageexecutionDescAnnotations is the schema descriptor for annotations field.
+	workflowstageexecutionDescAnnotations := workflowstageexecutionMixinFields0[4].Descriptor()
+	// workflowstageexecution.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowstageexecution.DefaultAnnotations = workflowstageexecutionDescAnnotations.Default.(map[string]string)
+	// workflowstageexecutionDescCreateTime is the schema descriptor for create_time field.
+	workflowstageexecutionDescCreateTime := workflowstageexecutionMixinFields0[5].Descriptor()
+	// workflowstageexecution.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowstageexecution.DefaultCreateTime = workflowstageexecutionDescCreateTime.Default.(func() time.Time)
+	// workflowstageexecutionDescUpdateTime is the schema descriptor for update_time field.
+	workflowstageexecutionDescUpdateTime := workflowstageexecutionMixinFields0[6].Descriptor()
+	// workflowstageexecution.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowstageexecution.DefaultUpdateTime = workflowstageexecutionDescUpdateTime.Default.(func() time.Time)
+	// workflowstageexecution.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowstageexecution.UpdateDefaultUpdateTime = workflowstageexecutionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowstageexecutionDescDuration is the schema descriptor for duration field.
+	workflowstageexecutionDescDuration := workflowstageexecutionFields[0].Descriptor()
+	// workflowstageexecution.DefaultDuration holds the default value on creation for the duration field.
+	workflowstageexecution.DefaultDuration = workflowstageexecutionDescDuration.Default.(int)
+	// workflowstageexecution.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	workflowstageexecution.DurationValidator = workflowstageexecutionDescDuration.Validators[0].(func(int) error)
+	// workflowstageexecutionDescStepExecutionIds is the schema descriptor for step_execution_ids field.
+	workflowstageexecutionDescStepExecutionIds := workflowstageexecutionFields[3].Descriptor()
+	// workflowstageexecution.DefaultStepExecutionIds holds the default value on creation for the step_execution_ids field.
+	workflowstageexecution.DefaultStepExecutionIds = workflowstageexecutionDescStepExecutionIds.Default.([]object.ID)
+	// workflowstageexecutionDescRecord is the schema descriptor for record field.
+	workflowstageexecutionDescRecord := workflowstageexecutionFields[4].Descriptor()
+	// workflowstageexecution.DefaultRecord holds the default value on creation for the record field.
+	workflowstageexecution.DefaultRecord = workflowstageexecutionDescRecord.Default.(string)
+	// workflowstageexecutionDescInput is the schema descriptor for input field.
+	workflowstageexecutionDescInput := workflowstageexecutionFields[5].Descriptor()
+	// workflowstageexecution.DefaultInput holds the default value on creation for the input field.
+	workflowstageexecution.DefaultInput = workflowstageexecutionDescInput.Default.(string)
+	workflowstepMixin := schema.WorkflowStep{}.Mixin()
+	workflowstepMixinHooks0 := workflowstepMixin[0].Hooks()
+	workflowstep.Hooks[0] = workflowstepMixinHooks0[0]
+	workflowstepMixinFields0 := workflowstepMixin[0].Fields()
+	_ = workflowstepMixinFields0
+	workflowstepFields := schema.WorkflowStep{}.Fields()
+	_ = workflowstepFields
+	// workflowstepDescName is the schema descriptor for name field.
+	workflowstepDescName := workflowstepMixinFields0[1].Descriptor()
+	// workflowstep.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowstep.NameValidator = workflowstepDescName.Validators[0].(func(string) error)
+	// workflowstepDescLabels is the schema descriptor for labels field.
+	workflowstepDescLabels := workflowstepMixinFields0[3].Descriptor()
+	// workflowstep.DefaultLabels holds the default value on creation for the labels field.
+	workflowstep.DefaultLabels = workflowstepDescLabels.Default.(map[string]string)
+	// workflowstepDescAnnotations is the schema descriptor for annotations field.
+	workflowstepDescAnnotations := workflowstepMixinFields0[4].Descriptor()
+	// workflowstep.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowstep.DefaultAnnotations = workflowstepDescAnnotations.Default.(map[string]string)
+	// workflowstepDescCreateTime is the schema descriptor for create_time field.
+	workflowstepDescCreateTime := workflowstepMixinFields0[5].Descriptor()
+	// workflowstep.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowstep.DefaultCreateTime = workflowstepDescCreateTime.Default.(func() time.Time)
+	// workflowstepDescUpdateTime is the schema descriptor for update_time field.
+	workflowstepDescUpdateTime := workflowstepMixinFields0[6].Descriptor()
+	// workflowstep.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowstep.DefaultUpdateTime = workflowstepDescUpdateTime.Default.(func() time.Time)
+	// workflowstep.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowstep.UpdateDefaultUpdateTime = workflowstepDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowstepDescType is the schema descriptor for type field.
+	workflowstepDescType := workflowstepFields[0].Descriptor()
+	// workflowstep.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflowstep.TypeValidator = workflowstepDescType.Validators[0].(func(string) error)
+	// workflowstepDescDependencies is the schema descriptor for dependencies field.
+	workflowstepDescDependencies := workflowstepFields[6].Descriptor()
+	// workflowstep.DefaultDependencies holds the default value on creation for the dependencies field.
+	workflowstep.DefaultDependencies = workflowstepDescDependencies.Default.([]object.ID)
+	// workflowstepDescTimeout is the schema descriptor for timeout field.
+	workflowstepDescTimeout := workflowstepFields[8].Descriptor()
+	// workflowstep.DefaultTimeout holds the default value on creation for the timeout field.
+	workflowstep.DefaultTimeout = workflowstepDescTimeout.Default.(int)
+	// workflowstep.TimeoutValidator is a validator for the "timeout" field. It is called by the builders before save.
+	workflowstep.TimeoutValidator = workflowstepDescTimeout.Validators[0].(func(int) error)
+	workflowstepexecutionMixin := schema.WorkflowStepExecution{}.Mixin()
+	workflowstepexecutionMixinHooks0 := workflowstepexecutionMixin[0].Hooks()
+	workflowstepexecution.Hooks[0] = workflowstepexecutionMixinHooks0[0]
+	workflowstepexecutionMixinFields0 := workflowstepexecutionMixin[0].Fields()
+	_ = workflowstepexecutionMixinFields0
+	workflowstepexecutionFields := schema.WorkflowStepExecution{}.Fields()
+	_ = workflowstepexecutionFields
+	// workflowstepexecutionDescName is the schema descriptor for name field.
+	workflowstepexecutionDescName := workflowstepexecutionMixinFields0[1].Descriptor()
+	// workflowstepexecution.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowstepexecution.NameValidator = workflowstepexecutionDescName.Validators[0].(func(string) error)
+	// workflowstepexecutionDescLabels is the schema descriptor for labels field.
+	workflowstepexecutionDescLabels := workflowstepexecutionMixinFields0[3].Descriptor()
+	// workflowstepexecution.DefaultLabels holds the default value on creation for the labels field.
+	workflowstepexecution.DefaultLabels = workflowstepexecutionDescLabels.Default.(map[string]string)
+	// workflowstepexecutionDescAnnotations is the schema descriptor for annotations field.
+	workflowstepexecutionDescAnnotations := workflowstepexecutionMixinFields0[4].Descriptor()
+	// workflowstepexecution.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowstepexecution.DefaultAnnotations = workflowstepexecutionDescAnnotations.Default.(map[string]string)
+	// workflowstepexecutionDescCreateTime is the schema descriptor for create_time field.
+	workflowstepexecutionDescCreateTime := workflowstepexecutionMixinFields0[5].Descriptor()
+	// workflowstepexecution.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowstepexecution.DefaultCreateTime = workflowstepexecutionDescCreateTime.Default.(func() time.Time)
+	// workflowstepexecutionDescUpdateTime is the schema descriptor for update_time field.
+	workflowstepexecutionDescUpdateTime := workflowstepexecutionMixinFields0[6].Descriptor()
+	// workflowstepexecution.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowstepexecution.DefaultUpdateTime = workflowstepexecutionDescUpdateTime.Default.(func() time.Time)
+	// workflowstepexecution.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowstepexecution.UpdateDefaultUpdateTime = workflowstepexecutionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowstepexecutionDescType is the schema descriptor for type field.
+	workflowstepexecutionDescType := workflowstepexecutionFields[4].Descriptor()
+	// workflowstepexecution.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflowstepexecution.TypeValidator = workflowstepexecutionDescType.Validators[0].(func(string) error)
+	// workflowstepexecutionDescTimes is the schema descriptor for times field.
+	workflowstepexecutionDescTimes := workflowstepexecutionFields[6].Descriptor()
+	// workflowstepexecution.DefaultTimes holds the default value on creation for the times field.
+	workflowstepexecution.DefaultTimes = workflowstepexecutionDescTimes.Default.(int)
+	// workflowstepexecution.TimesValidator is a validator for the "times" field. It is called by the builders before save.
+	workflowstepexecution.TimesValidator = workflowstepexecutionDescTimes.Validators[0].(func(int) error)
+	// workflowstepexecutionDescDuration is the schema descriptor for duration field.
+	workflowstepexecutionDescDuration := workflowstepexecutionFields[7].Descriptor()
+	// workflowstepexecution.DefaultDuration holds the default value on creation for the duration field.
+	workflowstepexecution.DefaultDuration = workflowstepexecutionDescDuration.Default.(int)
+	// workflowstepexecution.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	workflowstepexecution.DurationValidator = workflowstepexecutionDescDuration.Validators[0].(func(int) error)
+	// workflowstepexecutionDescRecord is the schema descriptor for record field.
+	workflowstepexecutionDescRecord := workflowstepexecutionFields[8].Descriptor()
+	// workflowstepexecution.DefaultRecord holds the default value on creation for the record field.
+	workflowstepexecution.DefaultRecord = workflowstepexecutionDescRecord.Default.(string)
+	// workflowstepexecutionDescInput is the schema descriptor for input field.
+	workflowstepexecutionDescInput := workflowstepexecutionFields[9].Descriptor()
+	// workflowstepexecution.DefaultInput holds the default value on creation for the input field.
+	workflowstepexecution.DefaultInput = workflowstepexecutionDescInput.Default.(string)
+	workflowsteptemplateMixin := schema.WorkflowStepTemplate{}.Mixin()
+	workflowsteptemplateMixinHooks0 := workflowsteptemplateMixin[0].Hooks()
+	workflowsteptemplate.Hooks[0] = workflowsteptemplateMixinHooks0[0]
+	workflowsteptemplateMixinFields0 := workflowsteptemplateMixin[0].Fields()
+	_ = workflowsteptemplateMixinFields0
+	workflowsteptemplateFields := schema.WorkflowStepTemplate{}.Fields()
+	_ = workflowsteptemplateFields
+	// workflowsteptemplateDescName is the schema descriptor for name field.
+	workflowsteptemplateDescName := workflowsteptemplateMixinFields0[1].Descriptor()
+	// workflowsteptemplate.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowsteptemplate.NameValidator = workflowsteptemplateDescName.Validators[0].(func(string) error)
+	// workflowsteptemplateDescLabels is the schema descriptor for labels field.
+	workflowsteptemplateDescLabels := workflowsteptemplateMixinFields0[3].Descriptor()
+	// workflowsteptemplate.DefaultLabels holds the default value on creation for the labels field.
+	workflowsteptemplate.DefaultLabels = workflowsteptemplateDescLabels.Default.(map[string]string)
+	// workflowsteptemplateDescAnnotations is the schema descriptor for annotations field.
+	workflowsteptemplateDescAnnotations := workflowsteptemplateMixinFields0[4].Descriptor()
+	// workflowsteptemplate.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowsteptemplate.DefaultAnnotations = workflowsteptemplateDescAnnotations.Default.(map[string]string)
+	// workflowsteptemplateDescCreateTime is the schema descriptor for create_time field.
+	workflowsteptemplateDescCreateTime := workflowsteptemplateMixinFields0[5].Descriptor()
+	// workflowsteptemplate.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowsteptemplate.DefaultCreateTime = workflowsteptemplateDescCreateTime.Default.(func() time.Time)
+	// workflowsteptemplateDescUpdateTime is the schema descriptor for update_time field.
+	workflowsteptemplateDescUpdateTime := workflowsteptemplateMixinFields0[6].Descriptor()
+	// workflowsteptemplate.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowsteptemplate.DefaultUpdateTime = workflowsteptemplateDescUpdateTime.Default.(func() time.Time)
+	// workflowsteptemplate.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowsteptemplate.UpdateDefaultUpdateTime = workflowsteptemplateDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowsteptemplateDescType is the schema descriptor for type field.
+	workflowsteptemplateDescType := workflowsteptemplateFields[0].Descriptor()
+	// workflowsteptemplate.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflowsteptemplate.TypeValidator = workflowsteptemplateDescType.Validators[0].(func(string) error)
+	// workflowsteptemplateDescSchema is the schema descriptor for schema field.
+	workflowsteptemplateDescSchema := workflowsteptemplateFields[1].Descriptor()
+	// workflowsteptemplate.DefaultSchema holds the default value on creation for the schema field.
+	workflowsteptemplate.DefaultSchema = workflowsteptemplateDescSchema.Default.(property.Schemas)
 }
 
 const (

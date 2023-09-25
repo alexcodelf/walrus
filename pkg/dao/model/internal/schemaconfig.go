@@ -31,6 +31,13 @@ type SchemaConfig struct {
 	TemplateVersion                  string // TemplateVersion table.
 	Token                            string // Token table.
 	Variable                         string // Variable table.
+	Workflow                         string // Workflow table.
+	WorkflowExecution                string // WorkflowExecution table.
+	WorkflowStage                    string // WorkflowStage table.
+	WorkflowStageExecution           string // WorkflowStageExecution table.
+	WorkflowStep                     string // WorkflowStep table.
+	WorkflowStepExecution            string // WorkflowStepExecution table.
+	WorkflowStepTemplate             string // WorkflowStepTemplate table.
 }
 
 type schemaCtxKey struct{}
