@@ -86,9 +86,9 @@ func (sru *ServiceRevisionUpdate) SetVariables(c crypto.Map[string, string]) *Se
 	return sru
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (sru *ServiceRevisionUpdate) SetInputPlan(s string) *ServiceRevisionUpdate {
-	sru.mutation.SetInputPlan(s)
+// SetInputPlanConfigs sets the "input_plan_configs" field.
+func (sru *ServiceRevisionUpdate) SetInputPlanConfigs(m map[string][]uint8) *ServiceRevisionUpdate {
+	sru.mutation.SetInputPlanConfigs(m)
 	return sru
 }
 
@@ -259,7 +259,7 @@ func (sru *ServiceRevisionUpdate) Set(obj *ServiceRevision) *ServiceRevisionUpda
 		sru.ClearAttributes()
 	}
 	sru.SetVariables(obj.Variables)
-	sru.SetInputPlan(obj.InputPlan)
+	sru.SetInputPlanConfigs(obj.InputPlanConfigs)
 	sru.SetOutput(obj.Output)
 	sru.SetDeployerType(obj.DeployerType)
 	sru.SetDuration(obj.Duration)
@@ -314,8 +314,8 @@ func (sru *ServiceRevisionUpdate) sqlSave(ctx context.Context) (n int, err error
 	if value, ok := sru.mutation.Variables(); ok {
 		_spec.SetField(servicerevision.FieldVariables, field.TypeOther, value)
 	}
-	if value, ok := sru.mutation.InputPlan(); ok {
-		_spec.SetField(servicerevision.FieldInputPlan, field.TypeString, value)
+	if value, ok := sru.mutation.InputPlanConfigs(); ok {
+		_spec.SetField(servicerevision.FieldInputPlanConfigs, field.TypeJSON, value)
 	}
 	if value, ok := sru.mutation.Output(); ok {
 		_spec.SetField(servicerevision.FieldOutput, field.TypeString, value)
@@ -412,9 +412,9 @@ func (sruo *ServiceRevisionUpdateOne) SetVariables(c crypto.Map[string, string])
 	return sruo
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (sruo *ServiceRevisionUpdateOne) SetInputPlan(s string) *ServiceRevisionUpdateOne {
-	sruo.mutation.SetInputPlan(s)
+// SetInputPlanConfigs sets the "input_plan_configs" field.
+func (sruo *ServiceRevisionUpdateOne) SetInputPlanConfigs(m map[string][]uint8) *ServiceRevisionUpdateOne {
+	sruo.mutation.SetInputPlanConfigs(m)
 	return sruo
 }
 
@@ -616,8 +616,8 @@ func (sruo *ServiceRevisionUpdateOne) Set(obj *ServiceRevision) *ServiceRevision
 			if !reflect.DeepEqual(db.Variables, obj.Variables) {
 				sruo.SetVariables(obj.Variables)
 			}
-			if db.InputPlan != obj.InputPlan {
-				sruo.SetInputPlan(obj.InputPlan)
+			if !reflect.DeepEqual(db.InputPlanConfigs, obj.InputPlanConfigs) {
+				sruo.SetInputPlanConfigs(obj.InputPlanConfigs)
 			}
 			if db.Output != obj.Output {
 				sruo.SetOutput(obj.Output)
@@ -697,8 +697,8 @@ func (sruo *ServiceRevisionUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx
 		if _, set := sruo.mutation.Field(servicerevision.FieldVariables); set {
 			obj.Variables = x.Variables
 		}
-		if _, set := sruo.mutation.Field(servicerevision.FieldInputPlan); set {
-			obj.InputPlan = x.InputPlan
+		if _, set := sruo.mutation.Field(servicerevision.FieldInputPlanConfigs); set {
+			obj.InputPlanConfigs = x.InputPlanConfigs
 		}
 		if _, set := sruo.mutation.Field(servicerevision.FieldOutput); set {
 			obj.Output = x.Output
@@ -803,8 +803,8 @@ func (sruo *ServiceRevisionUpdateOne) sqlSave(ctx context.Context) (_node *Servi
 	if value, ok := sruo.mutation.Variables(); ok {
 		_spec.SetField(servicerevision.FieldVariables, field.TypeOther, value)
 	}
-	if value, ok := sruo.mutation.InputPlan(); ok {
-		_spec.SetField(servicerevision.FieldInputPlan, field.TypeString, value)
+	if value, ok := sruo.mutation.InputPlanConfigs(); ok {
+		_spec.SetField(servicerevision.FieldInputPlanConfigs, field.TypeJSON, value)
 	}
 	if value, ok := sruo.mutation.Output(); ok {
 		_spec.SetField(servicerevision.FieldOutput, field.TypeString, value)

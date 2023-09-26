@@ -40,8 +40,8 @@ const (
 	FieldAttributes = "attributes"
 	// FieldVariables holds the string denoting the variables field in the database.
 	FieldVariables = "variables"
-	// FieldInputPlan holds the string denoting the input_plan field in the database.
-	FieldInputPlan = "input_plan"
+	// FieldInputPlanConfigs holds the string denoting the input_plan_configs field in the database.
+	FieldInputPlanConfigs = "input_plan_configs"
 	// FieldOutput holds the string denoting the output field in the database.
 	FieldOutput = "output"
 	// FieldDeployerType holds the string denoting the deployer_type field in the database.
@@ -95,7 +95,7 @@ var Columns = []string{
 	FieldTemplateVersion,
 	FieldAttributes,
 	FieldVariables,
-	FieldInputPlan,
+	FieldInputPlanConfigs,
 	FieldOutput,
 	FieldDeployerType,
 	FieldDuration,
@@ -189,11 +189,6 @@ func ByAttributes(opts ...sql.OrderTermOption) OrderOption {
 // ByVariables orders the results by the variables field.
 func ByVariables(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVariables, opts...).ToFunc()
-}
-
-// ByInputPlan orders the results by the input_plan field.
-func ByInputPlan(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldInputPlan, opts...).ToFunc()
 }
 
 // ByOutput orders the results by the output field.

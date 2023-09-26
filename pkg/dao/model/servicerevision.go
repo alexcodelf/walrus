@@ -48,8 +48,8 @@ type ServiceRevision struct {
 	Attributes property.Values `json:"attributes,omitempty"`
 	// Variables of the revision.
 	Variables crypto.Map[string, string] `json:"variables,omitempty"`
-	// Input plan of the revision.
-	InputPlan string `json:"-"`
+	// Input plan configs of the revision.
+	InputPlanConfigs map[string][]uint8 `json:"-"`
 	// Output of the revision.
 	Output string `json:"-"`
 	// Type of deployer.
@@ -123,7 +123,7 @@ func (*ServiceRevision) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicerevision.FieldStatus, servicerevision.FieldPreviousRequiredProviders:
+		case servicerevision.FieldStatus, servicerevision.FieldInputPlanConfigs, servicerevision.FieldPreviousRequiredProviders:
 			values[i] = new([]byte)
 		case servicerevision.FieldVariables:
 			values[i] = new(crypto.Map[string, string])
@@ -133,7 +133,7 @@ func (*ServiceRevision) scanValues(columns []string) ([]any, error) {
 			values[i] = new(property.Values)
 		case servicerevision.FieldDuration:
 			values[i] = new(sql.NullInt64)
-		case servicerevision.FieldTemplateName, servicerevision.FieldTemplateVersion, servicerevision.FieldInputPlan, servicerevision.FieldOutput, servicerevision.FieldDeployerType, servicerevision.FieldRecord:
+		case servicerevision.FieldTemplateName, servicerevision.FieldTemplateVersion, servicerevision.FieldOutput, servicerevision.FieldDeployerType, servicerevision.FieldRecord:
 			values[i] = new(sql.NullString)
 		case servicerevision.FieldCreateTime:
 			values[i] = new(sql.NullTime)
@@ -215,11 +215,13 @@ func (sr *ServiceRevision) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				sr.Variables = *value
 			}
-		case servicerevision.FieldInputPlan:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field input_plan", values[i])
-			} else if value.Valid {
-				sr.InputPlan = value.String
+		case servicerevision.FieldInputPlanConfigs:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field input_plan_configs", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sr.InputPlanConfigs); err != nil {
+					return fmt.Errorf("unmarshal field input_plan_configs: %w", err)
+				}
 			}
 		case servicerevision.FieldOutput:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -333,7 +335,7 @@ func (sr *ServiceRevision) String() string {
 	builder.WriteString("variables=")
 	builder.WriteString(fmt.Sprintf("%v", sr.Variables))
 	builder.WriteString(", ")
-	builder.WriteString("input_plan=<sensitive>")
+	builder.WriteString("input_plan_configs=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("output=<sensitive>")
 	builder.WriteString(", ")

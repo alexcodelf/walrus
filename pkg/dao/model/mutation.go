@@ -14538,7 +14538,7 @@ type ServiceRevisionMutation struct {
 	template_version                  *string
 	attributes                        *property.Values
 	variables                         *crypto.Map[string, string]
-	input_plan                        *string
+	input_plan_configs                *map[string][]uint8
 	output                            *string
 	deployer_type                     *string
 	duration                          *int
@@ -15012,40 +15012,40 @@ func (m *ServiceRevisionMutation) ResetVariables() {
 	m.variables = nil
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (m *ServiceRevisionMutation) SetInputPlan(s string) {
-	m.input_plan = &s
+// SetInputPlanConfigs sets the "input_plan_configs" field.
+func (m *ServiceRevisionMutation) SetInputPlanConfigs(value map[string][]uint8) {
+	m.input_plan_configs = &value
 }
 
-// InputPlan returns the value of the "input_plan" field in the mutation.
-func (m *ServiceRevisionMutation) InputPlan() (r string, exists bool) {
-	v := m.input_plan
+// InputPlanConfigs returns the value of the "input_plan_configs" field in the mutation.
+func (m *ServiceRevisionMutation) InputPlanConfigs() (r map[string][]uint8, exists bool) {
+	v := m.input_plan_configs
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldInputPlan returns the old "input_plan" field's value of the ServiceRevision entity.
+// OldInputPlanConfigs returns the old "input_plan_configs" field's value of the ServiceRevision entity.
 // If the ServiceRevision object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServiceRevisionMutation) OldInputPlan(ctx context.Context) (v string, err error) {
+func (m *ServiceRevisionMutation) OldInputPlanConfigs(ctx context.Context) (v map[string][]uint8, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldInputPlan is only allowed on UpdateOne operations")
+		return v, errors.New("OldInputPlanConfigs is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldInputPlan requires an ID field in the mutation")
+		return v, errors.New("OldInputPlanConfigs requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldInputPlan: %w", err)
+		return v, fmt.Errorf("querying old value for OldInputPlanConfigs: %w", err)
 	}
-	return oldValue.InputPlan, nil
+	return oldValue.InputPlanConfigs, nil
 }
 
-// ResetInputPlan resets all changes to the "input_plan" field.
-func (m *ServiceRevisionMutation) ResetInputPlan() {
-	m.input_plan = nil
+// ResetInputPlanConfigs resets all changes to the "input_plan_configs" field.
+func (m *ServiceRevisionMutation) ResetInputPlanConfigs() {
+	m.input_plan_configs = nil
 }
 
 // SetOutput sets the "output" field.
@@ -15416,8 +15416,8 @@ func (m *ServiceRevisionMutation) Fields() []string {
 	if m.variables != nil {
 		fields = append(fields, servicerevision.FieldVariables)
 	}
-	if m.input_plan != nil {
-		fields = append(fields, servicerevision.FieldInputPlan)
+	if m.input_plan_configs != nil {
+		fields = append(fields, servicerevision.FieldInputPlanConfigs)
 	}
 	if m.output != nil {
 		fields = append(fields, servicerevision.FieldOutput)
@@ -15460,8 +15460,8 @@ func (m *ServiceRevisionMutation) Field(name string) (ent.Value, bool) {
 		return m.Attributes()
 	case servicerevision.FieldVariables:
 		return m.Variables()
-	case servicerevision.FieldInputPlan:
-		return m.InputPlan()
+	case servicerevision.FieldInputPlanConfigs:
+		return m.InputPlanConfigs()
 	case servicerevision.FieldOutput:
 		return m.Output()
 	case servicerevision.FieldDeployerType:
@@ -15499,8 +15499,8 @@ func (m *ServiceRevisionMutation) OldField(ctx context.Context, name string) (en
 		return m.OldAttributes(ctx)
 	case servicerevision.FieldVariables:
 		return m.OldVariables(ctx)
-	case servicerevision.FieldInputPlan:
-		return m.OldInputPlan(ctx)
+	case servicerevision.FieldInputPlanConfigs:
+		return m.OldInputPlanConfigs(ctx)
 	case servicerevision.FieldOutput:
 		return m.OldOutput(ctx)
 	case servicerevision.FieldDeployerType:
@@ -15583,12 +15583,12 @@ func (m *ServiceRevisionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetVariables(v)
 		return nil
-	case servicerevision.FieldInputPlan:
-		v, ok := value.(string)
+	case servicerevision.FieldInputPlanConfigs:
+		v, ok := value.(map[string][]uint8)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetInputPlan(v)
+		m.SetInputPlanConfigs(v)
 		return nil
 	case servicerevision.FieldOutput:
 		v, ok := value.(string)
@@ -15737,8 +15737,8 @@ func (m *ServiceRevisionMutation) ResetField(name string) error {
 	case servicerevision.FieldVariables:
 		m.ResetVariables()
 		return nil
-	case servicerevision.FieldInputPlan:
-		m.ResetInputPlan()
+	case servicerevision.FieldInputPlanConfigs:
+		m.ResetInputPlanConfigs()
 		return nil
 	case servicerevision.FieldOutput:
 		m.ResetOutput()

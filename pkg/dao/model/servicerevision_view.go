@@ -34,8 +34,8 @@ type ServiceRevisionCreateInput struct {
 
 	// Output of the revision.
 	Output string `path:"-" query:"-" json:"output"`
-	// Input plan of the revision.
-	InputPlan string `path:"-" query:"-" json:"inputPlan"`
+	// Input plan configs of the revision.
+	InputPlanConfigs map[string][]uint8 `path:"-" query:"-" json:"inputPlanConfigs"`
 	// Version of the template.
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion"`
 	// Name of the template.
@@ -63,7 +63,7 @@ func (srci *ServiceRevisionCreateInput) Model() *ServiceRevision {
 
 	_sr := &ServiceRevision{
 		Output:                    srci.Output,
-		InputPlan:                 srci.InputPlan,
+		InputPlanConfigs:          srci.InputPlanConfigs,
 		TemplateVersion:           srci.TemplateVersion,
 		TemplateName:              srci.TemplateName,
 		Attributes:                srci.Attributes,
@@ -132,8 +132,8 @@ func (srci *ServiceRevisionCreateInput) ValidateWith(ctx context.Context, cs Cli
 type ServiceRevisionCreateInputsItem struct {
 	// Output of the revision.
 	Output string `path:"-" query:"-" json:"output"`
-	// Input plan of the revision.
-	InputPlan string `path:"-" query:"-" json:"inputPlan"`
+	// Input plan configs of the revision.
+	InputPlanConfigs map[string][]uint8 `path:"-" query:"-" json:"inputPlanConfigs"`
 	// Version of the template.
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion"`
 	// Name of the template.
@@ -193,7 +193,7 @@ func (srci *ServiceRevisionCreateInputs) Model() []*ServiceRevision {
 	for i := range srci.Items {
 		_sr := &ServiceRevision{
 			Output:                    srci.Items[i].Output,
-			InputPlan:                 srci.Items[i].InputPlan,
+			InputPlanConfigs:          srci.Items[i].InputPlanConfigs,
 			TemplateVersion:           srci.Items[i].TemplateVersion,
 			TemplateName:              srci.Items[i].TemplateName,
 			Attributes:                srci.Items[i].Attributes,
@@ -626,8 +626,8 @@ type ServiceRevisionUpdateInput struct {
 	Attributes property.Values `path:"-" query:"-" json:"attributes,omitempty"`
 	// Variables of the revision.
 	Variables crypto.Map[string, string] `path:"-" query:"-" json:"variables,omitempty"`
-	// Input plan of the revision.
-	InputPlan string `path:"-" query:"-" json:"inputPlan,omitempty"`
+	// Input plan configs of the revision.
+	InputPlanConfigs map[string][]uint8 `path:"-" query:"-" json:"inputPlanConfigs,omitempty"`
 	// Output of the revision.
 	Output string `path:"-" query:"-" json:"output,omitempty"`
 	// Type of deployer.
@@ -652,7 +652,7 @@ func (srui *ServiceRevisionUpdateInput) Model() *ServiceRevision {
 		TemplateVersion:           srui.TemplateVersion,
 		Attributes:                srui.Attributes,
 		Variables:                 srui.Variables,
-		InputPlan:                 srui.InputPlan,
+		InputPlanConfigs:          srui.InputPlanConfigs,
 		Output:                    srui.Output,
 		DeployerType:              srui.DeployerType,
 		Duration:                  srui.Duration,
@@ -696,8 +696,8 @@ type ServiceRevisionUpdateInputsItem struct {
 	Attributes property.Values `path:"-" query:"-" json:"attributes,omitempty"`
 	// Variables of the revision.
 	Variables crypto.Map[string, string] `path:"-" query:"-" json:"variables"`
-	// Input plan of the revision.
-	InputPlan string `path:"-" query:"-" json:"inputPlan"`
+	// Input plan configs of the revision.
+	InputPlanConfigs map[string][]uint8 `path:"-" query:"-" json:"inputPlanConfigs"`
 	// Output of the revision.
 	Output string `path:"-" query:"-" json:"output"`
 	// Type of deployer.
@@ -754,7 +754,7 @@ func (srui *ServiceRevisionUpdateInputs) Model() []*ServiceRevision {
 			TemplateVersion:           srui.Items[i].TemplateVersion,
 			Attributes:                srui.Items[i].Attributes,
 			Variables:                 srui.Items[i].Variables,
-			InputPlan:                 srui.Items[i].InputPlan,
+			InputPlanConfigs:          srui.Items[i].InputPlanConfigs,
 			Output:                    srui.Items[i].Output,
 			DeployerType:              srui.Items[i].DeployerType,
 			Duration:                  srui.Items[i].Duration,
