@@ -57,8 +57,8 @@ func (ServiceRevision) Fields() []ent.Field {
 		crypto.MapField[string, string]("variables").
 			Comment("Variables of the revision.").
 			Default(crypto.Map[string, string]{}),
-		field.String("input_plan").
-			Comment("Input plan of the revision.").
+		field.JSON("input_plan_configs", map[string][]byte{}).
+			Comment("Input plan configs of the revision.").
 			Sensitive(),
 		field.String("output").
 			Comment("Output of the revision.").
