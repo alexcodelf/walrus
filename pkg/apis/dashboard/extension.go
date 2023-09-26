@@ -21,7 +21,7 @@ import (
 
 var getServiceRevisionFields = servicerevision.WithoutFields(
 	servicerevision.FieldRecord,
-	servicerevision.FieldInputPlan,
+	servicerevision.FieldInputPlanConfigs,
 	servicerevision.FieldOutput,
 	servicerevision.FieldTemplateName,
 	servicerevision.FieldTemplateVersion,

@@ -30,12 +30,12 @@ const (
 	_backendAPI = "/v1/projects/%s/environments/%s/services/%s/revisions/%s/terraform-states"
 )
 
-type RevisionManager struct {
+type Manager struct {
 	modelClient model.ClientSet
 }
 
-func NewRevisionManager(mc model.ClientSet) *RevisionManager {
-	return &RevisionManager{
+func NewRevisionManager(mc model.ClientSet) *Manager {
+	return &Manager{
 		modelClient: mc,
 	}
 }
@@ -47,7 +47,7 @@ type CreateOptions struct {
 	JobType string
 }
 
-func (m RevisionManager) Create(ctx context.Context, opts CreateOptions) (*model.ServiceRevision, error) {
+func (m Manager) Create(ctx context.Context, opts CreateOptions) (*model.ServiceRevision, error) {
 	// Validate if there is a running revision.
 	prevEntity, err := m.modelClient.ServiceRevisions().Query().
 		Where(servicerevision.And(
@@ -122,7 +122,7 @@ func (m RevisionManager) Create(ctx context.Context, opts CreateOptions) (*model
 			entity.TemplateName = prevEntity.TemplateName
 			entity.TemplateVersion = prevEntity.TemplateVersion
 			entity.Attributes = prevEntity.Attributes
-			entity.InputPlan = prevEntity.InputPlan
+			entity.InputPlanConfigs = prevEntity.InputPlanConfigs
 		}
 	}
 
@@ -137,7 +137,7 @@ func (m RevisionManager) Create(ctx context.Context, opts CreateOptions) (*model
 	return entity, nil
 }
 
-func (m RevisionManager) Update(
+func (m Manager) Update(
 	ctx context.Context,
 	revision *model.ServiceRevision,
 ) error {
@@ -152,7 +152,7 @@ func (m RevisionManager) Update(
 }
 
 // getRequiredProviders get required providers of the service.
-func (m RevisionManager) getRequiredProviders(
+func (m Manager) getRequiredProviders(
 	ctx context.Context,
 	serviceID object.ID,
 	previousOutput string,
@@ -184,7 +184,7 @@ func (m RevisionManager) getRequiredProviders(
 
 // getPreviousRequiredProviders get previous succeed revision required providers.
 // NB(alex): the previous revision may be failed, the failed revision may not contain required providers of states.
-func (m RevisionManager) getPreviousRequiredProviders(
+func (m Manager) getPreviousRequiredProviders(
 	ctx context.Context,
 	serviceID object.ID,
 ) ([]types.ProviderRequirement, error) {

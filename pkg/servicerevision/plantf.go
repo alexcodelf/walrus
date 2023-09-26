@@ -13,15 +13,19 @@ import (
 
 	apiconfig "github.com/seal-io/walrus/pkg/apis/config"
 	"github.com/seal-io/walrus/pkg/auths"
+	revisionbus "github.com/seal-io/walrus/pkg/bus/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/types"
+	"github.com/seal-io/walrus/pkg/dao/types/crypto"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
+	opk8s "github.com/seal-io/walrus/pkg/operator/k8s"
 	pkgservice "github.com/seal-io/walrus/pkg/service"
 	"github.com/seal-io/walrus/pkg/settings"
 	"github.com/seal-io/walrus/pkg/terraform/config"
 	"github.com/seal-io/walrus/pkg/terraform/parser"
+	"github.com/seal-io/walrus/pkg/terraform/util"
 	"github.com/seal-io/walrus/utils/log"
 	"github.com/seal-io/walrus/utils/pointer"
 )
@@ -33,6 +37,7 @@ type TerraformPlan struct {
 	modelClient model.ClientSet
 }
 
+// NewTerraformPlan creates a new terraform plan of service revision.
 func NewTerraformPlan(mc model.ClientSet) *TerraformPlan {
 	return &TerraformPlan{
 		logger:      log.WithName("service.revision-plan"),
@@ -40,18 +45,22 @@ func NewTerraformPlan(mc model.ClientSet) *TerraformPlan {
 	}
 }
 
-// Plan will generate the revision input plan of terraform.
+// LoadPlan will get the revision input plan of terraform.
 // It will generate the main.tf for the revision.
-func (t TerraformPlan) Plan(ctx context.Context, opts PlanOptions) ([]byte, error) {
+func (t TerraformPlan) LoadPlan(ctx context.Context, opts PlanOptions) ([]byte, error) {
 	configBytes, err := t.LoadConfigs(ctx, opts)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	return configBytes[config.FileMain], nil
 }
 
 func (t TerraformPlan) LoadConfigs(ctx context.Context, opts PlanOptions) (map[string][]byte, error) {
+	if opts.ServiceRevision.InputPlanConfigs != nil {
+		return opts.ServiceRevision.InputPlanConfigs, nil
+	}
+
 	// Prepare terraform tfConfig.
 	//  get module configs from service revision.
 	moduleConfig, providerRequirements, err := t.getModuleConfig(ctx, opts)
@@ -72,7 +81,7 @@ func (t TerraformPlan) LoadConfigs(ctx context.Context, opts PlanOptions) (map[s
 		}
 	}
 
-	serviceOpts := pkgservice.ParseServiceOptions{
+	serviceOpts := pkgservice.ParseAttributesOptions{
 		ServiceRevision: opts.ServiceRevision,
 		ServiceName:     opts.ServiceName,
 		ProjectID:       opts.ProjectID,
@@ -107,7 +116,8 @@ func (t TerraformPlan) LoadConfigs(ctx context.Context, opts PlanOptions) (map[s
 		return nil, err
 	}
 
-	secretOptionMaps := map[string]config.CreateOptions{
+	// Options for create terraform config.
+	planConfigOptions := map[string]config.CreateOptions{
 		config.FileMain: {
 			TerraformOptions: &config.TerraformOptions{
 				Token:                token,
@@ -134,16 +144,62 @@ func (t TerraformPlan) LoadConfigs(ctx context.Context, opts PlanOptions) (map[s
 		},
 		config.FileVars: getVarConfigOptions(variables, dependencyOutputs),
 	}
-	secretMaps := make(map[string][]byte, 0)
+	planConfigs := make(map[string][]byte, 0)
 
-	for k, v := range secretOptionMaps {
-		secretMaps[k], err = config.CreateConfigToBytes(v)
+	for k, v := range planConfigOptions {
+		planConfigs[k], err = config.CreateConfigToBytes(v)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return secretMaps, nil
+	// Save input plan to service revision.
+	opts.ServiceRevision.InputPlanConfigs = planConfigs
+	// If service revision does not inherit variables from cloned revision,
+	// then save the parsed variables to service revision.
+	if len(opts.ServiceRevision.Variables) == 0 {
+		variableMap := make(crypto.Map[string, string], len(variables))
+		for _, s := range variables {
+			variableMap[s.Name] = string(s.Value)
+		}
+		opts.ServiceRevision.Variables = variableMap
+	}
+
+	revision, err := t.modelClient.ServiceRevisions().UpdateOne(opts.ServiceRevision).
+		Set(opts.ServiceRevision).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = revisionbus.Notify(ctx, t.modelClient, revision); err != nil {
+		return nil, err
+	}
+
+	return planConfigs, nil
+}
+
+// LoadConnectorConfigs loads the connector for terraform provider.
+func (t TerraformPlan) LoadConnectorConfigs(connectors model.Connectors) (map[string][]byte, error) {
+	secretData := make(map[string][]byte)
+
+	for _, c := range connectors {
+		if c.Type != types.ConnectorTypeK8s {
+			continue
+		}
+
+		_, s, err := opk8s.LoadApiConfig(*c)
+		if err != nil {
+			return nil, err
+		}
+
+		// NB(alex) the secret file name must be config + connector id to
+		// match with terraform provider in config convert.
+		secretFileName := util.GetK8sSecretName(c.ID.String())
+		secretData[secretFileName] = []byte(s)
+	}
+
+	return secretData, nil
 }
 
 func (t TerraformPlan) getBackendConfig(ctx context.Context, opts PlanOptions) (address, token string, err error) {

@@ -30,7 +30,8 @@ var (
 	_serviceReg = regexp.MustCompile(`\${service\.([^.}]+)\.([^.}]+)}`)
 )
 
-type ParseServiceOptions struct {
+// ParseAttributesOptions options for parse attributes.
+type ParseAttributesOptions struct {
 	ServiceRevision *model.ServiceRevision
 
 	ServiceName string
@@ -45,7 +46,7 @@ func ParseModuleAttributes(
 	mc model.ClientSet,
 	attributes map[string]any,
 	onlyValidated bool,
-	opts ParseServiceOptions,
+	opts ParseAttributesOptions,
 ) (variables model.Variables, outputs map[string]parser.OutputState, err error) {
 	var (
 		templateVariables        []string

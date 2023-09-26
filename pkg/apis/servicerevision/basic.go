@@ -20,7 +20,7 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 var (
 	getFields = servicerevision.WithoutFields(
 		servicerevision.FieldRecord,
-		servicerevision.FieldInputPlan,
+		servicerevision.FieldInputPlanConfigs,
 		servicerevision.FieldOutput,
 		servicerevision.FieldTemplateName,
 		servicerevision.FieldTemplateVersion,

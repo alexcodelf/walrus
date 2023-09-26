@@ -18,7 +18,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
-	"github.com/seal-io/walrus/pkg/deployer/terraform"
+	pkgservice "github.com/seal-io/walrus/pkg/service"
 	"github.com/seal-io/walrus/pkg/terraform/convertor"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/json"
@@ -351,12 +351,12 @@ func validateVariable(
 		attrs[k] = string(json.ShouldMarshal(v))
 	}
 
-	opts := terraform.ServiceOpts{
+	opts := pkgservice.ParseAttributesOptions{
 		ServiceName:   serviceName,
 		ProjectID:     projectID,
 		EnvironmentID: environmentID,
 	}
-	_, _, err := terraform.ParseModuleAttributes(ctx, mc, attrs, true, opts)
+	_, _, err := pkgservice.ParseModuleAttributes(ctx, mc, attrs, true, opts)
 
 	return err
 }
