@@ -31,6 +31,10 @@ import (
 const (
 	JobTypeApply   = "apply"
 	JobTypeDestroy = "destroy"
+
+	// SecretMountPath the path to mount the secret.
+	// TODO (alex) make it more general.
+	SecretMountPath = "/var/terraform/secrets"
 )
 
 type JobCreateOptions struct {
@@ -65,8 +69,7 @@ const (
 	_jobNameFormat = "tf-job-%s-%s"
 	// _jobSecretPrefix the prefix of secret name.
 	_jobSecretPrefix = "tf-secret-"
-	// _secretMountPath the path to mount the secret.
-	_secretMountPath = "/var/terraform/secrets"
+
 	// _workdir the working directory of the job.
 	_workdir = "/var/terraform/workspace"
 )
@@ -271,8 +274,8 @@ func CreateSecret(ctx context.Context, clientSet *kubernetes.Clientset, name str
 func getPodTemplate(applicationRevisionID, configName string, opts JobCreateOptions) corev1.PodTemplateSpec {
 	var (
 		command       = []string{"/bin/sh", "-c"}
-		deployCommand = fmt.Sprintf("cp %s/main.tf main.tf && ", _secretMountPath)
-		varfile       = fmt.Sprintf(" -var-file=%s/terraform.tfvars", _secretMountPath)
+		deployCommand = fmt.Sprintf("cp %s/main.tf main.tf && ", SecretMountPath)
+		varfile       = fmt.Sprintf(" -var-file=%s/terraform.tfvars", SecretMountPath)
 	)
 
 	switch opts.Type {
@@ -305,7 +308,7 @@ func getPodTemplate(applicationRevisionID, configName string, opts JobCreateOpti
 					VolumeMounts: []corev1.VolumeMount{
 						{
 							Name:      configName,
-							MountPath: _secretMountPath,
+							MountPath: SecretMountPath,
 							ReadOnly:  false,
 						},
 					},

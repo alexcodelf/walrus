@@ -345,6 +345,9 @@ const (
 
 	resourceRouteNameRoutePrefix           = "Route"
 	resourceRouteNameCollectionRoutePrefix = resourceRouteNameCollectionPrefix + resourceRouteNameRoutePrefix
+
+	resourceRouteNameStaticPrefix           = "Static"
+	resourceRouteNameCollectionStaticPrefix = resourceRouteNameCollectionPrefix + resourceRouteNameStaticPrefix
 )
 
 type (

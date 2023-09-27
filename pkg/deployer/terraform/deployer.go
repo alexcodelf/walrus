@@ -8,19 +8,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/seal-io/walrus/pkg/auths/session"
 	revisionbus "github.com/seal-io/walrus/pkg/bus/servicerevision"
-	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
-	"github.com/seal-io/walrus/pkg/dao/model/connector"
-	"github.com/seal-io/walrus/pkg/dao/model/environmentconnectorrelationship"
 	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
 	"github.com/seal-io/walrus/pkg/dao/types"
-	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	deptypes "github.com/seal-io/walrus/pkg/deployer/types"
-	pkgenv "github.com/seal-io/walrus/pkg/environment"
-	pkgservice "github.com/seal-io/walrus/pkg/service"
 	pkgrevision "github.com/seal-io/walrus/pkg/servicerevision"
 	"github.com/seal-io/walrus/pkg/settings"
 	"github.com/seal-io/walrus/utils/log"
@@ -142,60 +135,17 @@ type createK8sJobOptions struct {
 
 // createK8sJob creates a k8s job to deploy, destroy or rollback the service.
 func (d Deployer) createK8sJob(ctx context.Context, opts createK8sJobOptions) error {
-	revision := opts.ServiceRevision
-
-	connectors, err := d.getConnectors(ctx, revision.EnvironmentID)
-	if err != nil {
-		return err
-	}
-
-	proj, err := d.modelClient.Projects().Get(ctx, revision.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	env, err := dao.GetEnvironmentByID(ctx, d.modelClient, revision.EnvironmentID)
-	if err != nil {
-		return err
-	}
-
-	svc, err := d.modelClient.Services().Get(ctx, revision.ServiceID)
-	if err != nil {
-		return err
-	}
-
-	var subjectID object.ID
-
-	sj, _ := session.GetSubject(ctx)
-	if sj.ID != "" {
-		subjectID = sj.ID
-	} else {
-		subjectID, err = pkgservice.GetSubjectID(svc)
-		if err != nil {
-			return err
-		}
-	}
-
-	if subjectID == "" {
-		return errors.New("subject id is empty")
-	}
-
 	// Prepare tfConfig for deployment.
 	secretOpts := pkgrevision.PlanOptions{
-		SecretMountPath: _secretMountPath,
+		SecretMountPath: SecretMountPath,
 		ServiceRevision: opts.ServiceRevision,
-		Connectors:      connectors,
-		ProjectID:       proj.ID,
-		EnvironmentID:   env.ID,
-		SubjectID:       subjectID,
-		// Metadata.
-		ProjectName:          proj.Name,
-		EnvironmentName:      env.Name,
-		ServiceName:          svc.Name,
-		ServiceID:            svc.ID,
-		ManagedNamespaceName: pkgenv.GetManagedNamespaceName(env),
 	}
-	if err = d.createK8sSecrets(ctx, secretOpts); err != nil {
+
+	if err := pkgrevision.SetPlanOptions(ctx, d.modelClient, &secretOpts); err != nil {
+		return err
+	}
+
+	if err := d.createK8sSecrets(ctx, secretOpts); err != nil {
 		return err
 	}
 
@@ -336,29 +286,4 @@ func (d Deployer) createRevision(
 	opts pkgrevision.CreateOptions,
 ) (*model.ServiceRevision, error) {
 	return d.revisionManager.Create(ctx, opts)
-}
-
-func (d Deployer) getConnectors(ctx context.Context, environmentID object.ID) (model.Connectors, error) {
-	rs, err := d.modelClient.EnvironmentConnectorRelationships().Query().
-		Where(environmentconnectorrelationship.EnvironmentID(environmentID)).
-		WithConnector(func(cq *model.ConnectorQuery) {
-			cq.Select(
-				connector.FieldID,
-				connector.FieldName,
-				connector.FieldType,
-				connector.FieldCategory,
-				connector.FieldConfigVersion,
-				connector.FieldConfigData)
-		}).
-		All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var cs model.Connectors
-	for i := range rs {
-		cs = append(cs, rs[i].Edges.Connector)
-	}
-
-	return cs, nil
 }

@@ -29,7 +29,6 @@ func NewArgoWorkflowExecutor(mc *model.Client) *ArgoWorkflowExecutor {
 
 func (e *ArgoWorkflowExecutor) Execute(ctx context.Context, wf *model.Workflow) error {
 	// 1. Get workflow stages.
-
 	stages, err := e.mc.WorkflowStages().Query().
 		Where(workflowstage.WorkflowID(wf.ID)).
 		All(ctx)

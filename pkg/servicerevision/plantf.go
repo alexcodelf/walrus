@@ -184,6 +184,7 @@ func (t TerraformPlan) LoadConnectorConfigs(connectors model.Connectors) (map[st
 	secretData := make(map[string][]byte)
 
 	for _, c := range connectors {
+		// Note(alex) only load k8s connector config for deployment.
 		if c.Type != types.ConnectorTypeK8s {
 			continue
 		}
@@ -248,7 +249,6 @@ func (t TerraformPlan) getModuleConfig(
 		templateversion.Name(opts.ServiceRevision.TemplateName),
 		templateversion.Version(opts.ServiceRevision.TemplateVersion),
 	))
-
 	templateVersion, err := t.modelClient.TemplateVersions().
 		Query().
 		Select(
