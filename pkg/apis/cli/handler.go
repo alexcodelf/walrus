@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	cliPath = "/var/lib/walrus/cli"
+	cliPath = "/root/code/seal-repo/walrus/.dist/build/walrus"
 	cli     = "walrus"
 )
 

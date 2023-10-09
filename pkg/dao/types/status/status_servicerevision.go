@@ -1,7 +1,9 @@
 package status
 
 const (
-	ServiceRevisionStatusReady ConditionType = "Ready"
+	ServiceRevisionStatusPending   ConditionType = "Pending"
+	ServiceRevisionStatusDeploying ConditionType = "Deploying"
+	ServiceRevisionStatusReady     ConditionType = "Ready"
 
 	ServiceRevisionSummaryStatusRunning string = "Running"
 	ServiceRevisionSummaryStatusFailed  string = "Failed"
@@ -10,28 +12,24 @@ const (
 
 // serviceRevisionStatusPaths makes the following decision.
 //
-// |  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
-// | ---------------- | ----------------------- | --------------------- | --------------------- |
-// | Ready            | Unknown                 | Running               | Transitioning         |
-// | Ready            | False                   | Failed                | Error                 |
-// | Ready            | True                    | Succeed               |                       |.
+//	|  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
+//	| ---------------- | ----------------------- | --------------------- | --------------------- |
+//	| Pending          | Unknown                 | Pending               | Transitioning         |
+//	| Pending          | False                   | Failed                | Error                 |
+//	| Pending          | True                    | Pended                |                       |
+//	| Deploying        | Unknown                 | Deploying             | Transitioning         |
+//	| Deploying        | False                   | Failed                | Error                 |
+//	| Deploying        | True                    | Deployed              |                       |
+//	| Ready            | Unknown                 | Preparing             | Transitioning         |
+//	| Ready            | False                   | Failed                | Error                 |
+//	| Ready            | True                    | Ready                 |                       |
 var serviceRevisionStatusPaths = NewWalker(
 	[][]ConditionType{
 		{
+			ServiceRevisionStatusPending,
+			ServiceRevisionStatusDeploying,
 			ServiceRevisionStatusReady,
 		},
-	},
-	func(d Decision[ConditionType]) {
-		d.Make(ServiceRevisionStatusReady,
-			func(st ConditionStatus, reason string) (display string, isError, isTransitioning bool) {
-				switch st {
-				case ConditionStatusUnknown:
-					return ServiceRevisionSummaryStatusRunning, false, true
-				case ConditionStatusFalse:
-					return ServiceRevisionSummaryStatusFailed, true, false
-				}
-				return ServiceRevisionSummaryStatusSucceed, false, false
-			})
 	},
 )
 

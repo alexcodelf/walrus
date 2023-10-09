@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/master/api/jsonschema/schema.json
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: walrus-workflow
+spec:
+  entrypoint: init
+  templates:
+  - name: init
+    dag:
+      tasks:
+        - name: webservice
+          template: webservice
+  - name: webservice
+    inputs:
+      parameters:
+        - name: tls-verify
+          value: "false"
+        - name: deployer-image
+          value: "volterr/deployer:workflow"
+        - name: server
+          value: "https://alexcc.cf"
+        - name: project-id
+          value: "480121971162504616"
+        - name: environment-id
+          value: "480123459335118248"
+        - name: service-workflow-execution
+          value: '{"projectID":"480121971162504616","project":{"id":"480121971162504616","name":"default"},"environment":{"id":"480123459335118248","name":"dev"},"description":"","labels":{},"name":"acsssdsdfgsse1","template":{"id":"480121974350306728","name":"webservice","version":"v0.0.3"},"attributes":{"image":"nginx","ports":[80],"env":{},"replicas":1,"request_cpu":"0.1","request_memory":"128Mi","limit_cpu":"","limit_memory":"","namespace":"","name":""},"jobType":"apply"}'
+        - name: token
+          value: "d6CXLePcIxfNsyUAyqP0Pwqp4xbiws5hMU7OUrWKc_BWN07kddKrzt5E3j7yJ6ci1o1pE3OoFfFqcEsfOJjGwUrf37ysDES3544AmuQalqOQ82pCPjV2ywd6nyHJ8pO8nS0"
+        - name: tf-command
+          value: "init -no-color && terraform apply -auto-approve -no-color"
+    script:
+      imagePullPolicy: Always
+      image: "{{inputs.parameters.deployer-image}}"
+      command: [bash]
+      source: |
+        #!/bin/bash
+        set -e
+        set -o pipefail
+
+        # if skip tls verify
+        tlsVerify="-k"
+        if [ "{{inputs.parameters.tls-verify}}" == "false" ]; then
+          tlsVerify=""
+        fi
+
+        curl -o config.tar.gz -X POST {{inputs.parameters.server}}/v1/projects/{{inputs.parameters.project-id}}/environments/{{inputs.parameters.environment-id}}/services/_/workflow -H 'Content-Type: application/json' -H "Authorization: Bearer {{inputs.parameters.token}}" -d '{{inputs.parameters.service-workflow-execution}}' $tlsVerify -s
+
+        # file config.tar.gz
+        tar -xzf config.tar.gz
+
+        # run terraform
+        terraform {{inputs.parameters.tf-command}} 
+
+

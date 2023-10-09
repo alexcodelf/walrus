@@ -78,6 +78,8 @@ linters:
     # - funlen
 
 linters-settings:
+  typecheck:
+    
   staticcheck:
     checks: ["all", "-SA1019", "-SA2002"]
   stylecheck:
@@ -201,3 +203,5 @@ issues:
         - lll
         - funlen
         - wsl
+
+fast: true

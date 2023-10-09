@@ -14,6 +14,7 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/deployer/terraform"
+	"github.com/seal-io/walrus/pkg/workflow"
 )
 
 func init() {
@@ -63,6 +64,12 @@ func (m *Manager) Setup(ctx context.Context, opts SetupOptions) ([]Reconciler, e
 	return []Reconciler{
 		terraform.JobReconciler{
 			Logger:      opts.GetLogger().WithName("deployer").WithName("tf"),
+			KubeClient:  opts.GetClient(),
+			Kubeconfig:  opts.GetConfig(),
+			ModelClient: opts.ModelClient,
+		},
+		workflow.Reconciler{
+			Logger:      opts.GetLogger().WithName("workflow"),
 			KubeClient:  opts.GetClient(),
 			Kubeconfig:  opts.GetConfig(),
 			ModelClient: opts.ModelClient,

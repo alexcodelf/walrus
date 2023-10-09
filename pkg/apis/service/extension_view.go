@@ -158,3 +158,24 @@ type (
 		Edges    []GraphEdge   `json:"edges"`
 	}
 )
+
+type (
+	// RouteGetWorkflowRequest defines the request of execute service workflow step.
+	CollectionRouteWorkflowExecRequest struct {
+		_ struct{} `route:"POST=/workflow"`
+
+		model.ServiceCreateInput `path:",inline" json:",inline"`
+
+		JobType string `json:"jobType,omitempty"`
+	}
+)
+
+func (r *CollectionRouteWorkflowExecRequest) Validate() error {
+	// TODO.
+
+	if err := r.ServiceCreateInput.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -72,7 +72,7 @@ func (d Deployer) Apply(ctx context.Context, service *model.Service, opts deptyp
 		}
 
 		// Update a failure status.
-		status.ServiceRevisionStatusReady.False(revision, err.Error())
+		status.ServiceRevisionStatusPending.False(revision, err.Error())
 
 		// Report to service revision.
 		_ = d.updateRevisionStatus(ctx, revision)
@@ -101,7 +101,7 @@ func (d Deployer) Destroy(ctx context.Context, service *model.Service, opts dept
 		}
 
 		// Update a failure status.
-		status.ServiceRevisionStatusReady.False(revision, err.Error())
+		status.ServiceRevisionStatusPending.False(revision, err.Error())
 
 		// Report to service revision.
 		_ = d.updateRevisionStatus(ctx, revision)
@@ -116,7 +116,7 @@ func (d Deployer) Destroy(ctx context.Context, service *model.Service, opts dept
 	}
 
 	if !exist {
-		status.ServiceRevisionStatusReady.True(revision, "")
+		status.ServiceRevisionStatusPending.True(revision, "")
 		return d.updateRevisionStatus(ctx, revision)
 	}
 

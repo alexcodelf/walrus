@@ -32,6 +32,7 @@ import (
 	"github.com/seal-io/walrus/pkg/serviceresources"
 	pkgrevision "github.com/seal-io/walrus/pkg/servicerevision"
 	tfparser "github.com/seal-io/walrus/pkg/terraform/parser"
+	"github.com/seal-io/walrus/pkg/workflow/step"
 	"github.com/seal-io/walrus/utils/gopool"
 	"github.com/seal-io/walrus/utils/log"
 )
@@ -581,13 +582,13 @@ func createArchive(files map[string][]byte, w http.ResponseWriter) error {
 	// Create new Writers for gzip and tar
 	// These writers are chained. Writing to the tar writer will
 	// write to the gzip writer which in turn will write to
-	// the "buf" writer
+	// the "buf" writer.
 	gw := gzip.NewWriter(w)
 	defer gw.Close()
 	tw := tar.NewWriter(gw)
 	defer tw.Close()
 
-	// Iterate over files and add them to the tar archive
+	// Iterate over files and add them to the tar archive.
 	for name, content := range files {
 		err := addToArchive(tw, name, content)
 		if err != nil {
@@ -601,19 +602,26 @@ func createArchive(files map[string][]byte, w http.ResponseWriter) error {
 func addToArchive(tw *tar.Writer, filename string, fileContent []byte) error {
 	header := tar.Header{
 		Name: filename,
-		Mode: 0600,
+		Mode: 0o600,
 		Size: int64(len(fileContent)),
 	}
 
-	// Write file header to the tar archive
+	// Write file header to the tar archive.
 	err := tw.WriteHeader(&header)
 	if err != nil {
 		return err
 	}
 
-	// Write the file content to the tar archive:
+	// Write the file content to the tar archive.
 	if _, err := tw.Write(fileContent); err != nil {
 		log.Fatalf("Error writing file content to tar archive: %v", err)
 	}
 	return nil
+}
+
+func (h Handler) CollectionRouteGetWorkflowRequest(req CollectionRouteGetWorkflowRequest) (any, error) {
+	// TODO only specific token with once usage can access this API.
+	stepConfigService := step.NewConfigService(h.modelClient)
+
+	return stepConfigService.GenerateServiceTemplate(req.Context, nil)
 }

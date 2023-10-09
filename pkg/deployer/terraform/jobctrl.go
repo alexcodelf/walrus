@@ -121,7 +121,7 @@ func (r JobReconciler) syncApplicationRevisionStatus(ctx context.Context, job *b
 	}
 
 	// If the application revision status is not running, then skip it.
-	if !status.ServiceRevisionStatusReady.IsUnknown(appRevision) {
+	if !status.ServiceRevisionStatusDeploying.IsUnknown(appRevision) {
 		return nil
 	}
 

@@ -9,3 +9,7 @@ const (
 )
 
 type RetryStrategy map[string]any
+
+const (
+	WorkflowStepTypeService = "Service"
+)

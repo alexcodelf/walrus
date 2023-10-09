@@ -9,6 +9,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
+	"github.com/seal-io/walrus/pkg/dao/types/status"
 	pkgenv "github.com/seal-io/walrus/pkg/environment"
 	pkgservice "github.com/seal-io/walrus/pkg/service"
 )
@@ -53,6 +54,10 @@ func NewPlan(planType string, mc model.ClientSet) IPlan {
 
 // SetPlanOptions sets the plan options.
 func SetPlanOptions(ctx context.Context, mc model.ClientSet, opts *PlanOptions) error {
+	if !status.ServiceRevisionStatusPending.IsUnknown(opts.ServiceRevision) {
+		return errors.New("service revision is not pending")
+	}
+
 	connectors, err := pkgenv.GetConnectors(ctx, mc, opts.ServiceRevision.EnvironmentID)
 	if err != nil {
 		return err

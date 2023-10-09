@@ -20,6 +20,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/crypto"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
+	"github.com/seal-io/walrus/pkg/dao/types/status"
 	opk8s "github.com/seal-io/walrus/pkg/operator/k8s"
 	pkgservice "github.com/seal-io/walrus/pkg/service"
 	"github.com/seal-io/walrus/pkg/settings"
@@ -164,6 +165,9 @@ func (t TerraformPlan) LoadConfigs(ctx context.Context, opts PlanOptions) (map[s
 		}
 		opts.ServiceRevision.Variables = variableMap
 	}
+
+	status.ServiceRevisionStatusDeploying.Reset(opts.ServiceRevision, "")
+	opts.ServiceRevision.Status.SetSummary(status.WalkServiceRevision(&opts.ServiceRevision.Status))
 
 	revision, err := t.modelClient.ServiceRevisions().UpdateOne(opts.ServiceRevision).
 		Set(opts.ServiceRevision).

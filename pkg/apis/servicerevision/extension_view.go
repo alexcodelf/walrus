@@ -3,6 +3,7 @@ package servicerevision
 import (
 	"errors"
 
+	"github.com/gin-gonic/gin"
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
@@ -105,3 +106,11 @@ func (r *RouteGetInputPlanRequest) Validate() error {
 
 	return nil
 }
+
+type (
+	CollectionRouteGetWorkflowRequest struct {
+		_ struct{} `route:"GET=/workflow"`
+
+		Context *gin.Context
+	}
+)
