@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -31,8 +32,13 @@ func (WorkflowStepExecution) Fields() []ent.Field {
 		object.IDField("workflow_stage_execution_id").
 			Comment("ID of the workflow stage execution that this workflow step execution belongs to.").
 			Immutable(),
+		object.IDField("project_id").
+			Comment("ID of the project to belong.").
+			NotEmpty().
+			Immutable(),
 		object.IDField("workflow_id").
 			Comment("ID of the workflow that this workflow step execution belongs to.").
+			NotEmpty().
 			Immutable(),
 		field.String("type").
 			Comment("Type of the workflow step execution.").
@@ -78,5 +84,11 @@ func (WorkflowStepExecution) Edges() []ent.Edge {
 			Unique().
 			Required().
 			Immutable(),
+	}
+}
+
+func (WorkflowStepExecution) Interceptors() []ent.Interceptor {
+	return []ent.Interceptor{
+		intercept.ByProject("project_id"),
 	}
 }

@@ -30,6 +30,8 @@ type WorkflowStepExecutionCreateInput struct {
 	Type string `path:"-" query:"-" json:"type"`
 	// ID of the workflow that this workflow step execution belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// ID of the workflow execution that this workflow step execution belongs to.
 	WorkflowExecutionID object.ID `path:"-" query:"-" json:"workflowExecutionID"`
 	// Name holds the value of the "name" field.
@@ -60,6 +62,7 @@ func (wseci *WorkflowStepExecutionCreateInput) Model() *WorkflowStepExecution {
 	_wse := &WorkflowStepExecution{
 		Type:                wseci.Type,
 		WorkflowID:          wseci.WorkflowID,
+		ProjectID:           wseci.ProjectID,
 		WorkflowExecutionID: wseci.WorkflowExecutionID,
 		Name:                wseci.Name,
 		Description:         wseci.Description,
@@ -122,6 +125,8 @@ type WorkflowStepExecutionCreateInputsItem struct {
 	Type string `path:"-" query:"-" json:"type"`
 	// ID of the workflow that this workflow step execution belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// ID of the workflow execution that this workflow step execution belongs to.
 	WorkflowExecutionID object.ID `path:"-" query:"-" json:"workflowExecutionID"`
 	// Name holds the value of the "name" field.
@@ -182,6 +187,7 @@ func (wseci *WorkflowStepExecutionCreateInputs) Model() []*WorkflowStepExecution
 		_wse := &WorkflowStepExecution{
 			Type:                wseci.Items[i].Type,
 			WorkflowID:          wseci.Items[i].WorkflowID,
+			ProjectID:           wseci.Items[i].ProjectID,
 			WorkflowExecutionID: wseci.Items[i].WorkflowExecutionID,
 			Name:                wseci.Items[i].Name,
 			Description:         wseci.Items[i].Description,
@@ -801,6 +807,7 @@ type WorkflowStepExecutionOutput struct {
 	UpdateTime          *time.Time        `json:"updateTime,omitempty"`
 	Status              status.Status     `json:"status,omitempty"`
 	WorkflowExecutionID object.ID         `json:"workflowExecutionID,omitempty"`
+	ProjectID           object.ID         `json:"projectID,omitempty"`
 	WorkflowID          object.ID         `json:"workflowID,omitempty"`
 	Type                string            `json:"type,omitempty"`
 	Spec                map[string]any    `json:"spec,omitempty"`
@@ -838,6 +845,7 @@ func ExposeWorkflowStepExecution(_wse *WorkflowStepExecution) *WorkflowStepExecu
 		UpdateTime:          _wse.UpdateTime,
 		Status:              _wse.Status,
 		WorkflowExecutionID: _wse.WorkflowExecutionID,
+		ProjectID:           _wse.ProjectID,
 		WorkflowID:          _wse.WorkflowID,
 		Type:                _wse.Type,
 		Spec:                _wse.Spec,

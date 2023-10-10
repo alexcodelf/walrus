@@ -22829,6 +22829,7 @@ type WorkflowExecutionMutation struct {
 	create_time                      *time.Time
 	update_time                      *time.Time
 	status                           *status.Status
+	project_id                       *object.ID
 	subject                          *object.ID
 	progress                         *int
 	addprogress                      *int
@@ -23257,6 +23258,42 @@ func (m *WorkflowExecutionMutation) ResetStatus() {
 	delete(m.clearedFields, workflowexecution.FieldStatus)
 }
 
+// SetProjectID sets the "project_id" field.
+func (m *WorkflowExecutionMutation) SetProjectID(o object.ID) {
+	m.project_id = &o
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *WorkflowExecutionMutation) ProjectID() (r object.ID, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the WorkflowExecution entity.
+// If the WorkflowExecution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowExecutionMutation) OldProjectID(ctx context.Context) (v object.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *WorkflowExecutionMutation) ResetProjectID() {
+	m.project_id = nil
+}
+
 // SetWorkflowID sets the "workflow_id" field.
 func (m *WorkflowExecutionMutation) SetWorkflowID(o object.ID) {
 	m.workflow = &o
@@ -23678,7 +23715,7 @@ func (m *WorkflowExecutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowExecutionMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 15)
 	if m.name != nil {
 		fields = append(fields, workflowexecution.FieldName)
 	}
@@ -23699,6 +23736,9 @@ func (m *WorkflowExecutionMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, workflowexecution.FieldStatus)
+	}
+	if m.project_id != nil {
+		fields = append(fields, workflowexecution.FieldProjectID)
 	}
 	if m.workflow != nil {
 		fields = append(fields, workflowexecution.FieldWorkflowID)
@@ -23743,6 +23783,8 @@ func (m *WorkflowExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdateTime()
 	case workflowexecution.FieldStatus:
 		return m.Status()
+	case workflowexecution.FieldProjectID:
+		return m.ProjectID()
 	case workflowexecution.FieldWorkflowID:
 		return m.WorkflowID()
 	case workflowexecution.FieldSubject:
@@ -23780,6 +23822,8 @@ func (m *WorkflowExecutionMutation) OldField(ctx context.Context, name string) (
 		return m.OldUpdateTime(ctx)
 	case workflowexecution.FieldStatus:
 		return m.OldStatus(ctx)
+	case workflowexecution.FieldProjectID:
+		return m.OldProjectID(ctx)
 	case workflowexecution.FieldWorkflowID:
 		return m.OldWorkflowID(ctx)
 	case workflowexecution.FieldSubject:
@@ -23851,6 +23895,13 @@ func (m *WorkflowExecutionMutation) SetField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case workflowexecution.FieldProjectID:
+		v, ok := value.(object.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
 		return nil
 	case workflowexecution.FieldWorkflowID:
 		v, ok := value.(object.ID)
@@ -24025,6 +24076,9 @@ func (m *WorkflowExecutionMutation) ResetField(name string) error {
 	case workflowexecution.FieldStatus:
 		m.ResetStatus()
 		return nil
+	case workflowexecution.FieldProjectID:
+		m.ResetProjectID()
+		return nil
 	case workflowexecution.FieldWorkflowID:
 		m.ResetWorkflowID()
 		return nil
@@ -24165,6 +24219,7 @@ type WorkflowStageMutation struct {
 	create_time                      *time.Time
 	update_time                      *time.Time
 	status                           *status.Status
+	project_id                       *object.ID
 	workflow_step_ids                *[]object.ID
 	appendworkflow_step_ids          []object.ID
 	duration                         *int
@@ -24593,6 +24648,42 @@ func (m *WorkflowStageMutation) ResetStatus() {
 	delete(m.clearedFields, workflowstage.FieldStatus)
 }
 
+// SetProjectID sets the "project_id" field.
+func (m *WorkflowStageMutation) SetProjectID(o object.ID) {
+	m.project_id = &o
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *WorkflowStageMutation) ProjectID() (r object.ID, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the WorkflowStage entity.
+// If the WorkflowStage object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowStageMutation) OldProjectID(ctx context.Context) (v object.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *WorkflowStageMutation) ResetProjectID() {
+	m.project_id = nil
+}
+
 // SetWorkflowID sets the "workflow_id" field.
 func (m *WorkflowStageMutation) SetWorkflowID(o object.ID) {
 	m.workflow = &o
@@ -24955,7 +25046,7 @@ func (m *WorkflowStageMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStageMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.name != nil {
 		fields = append(fields, workflowstage.FieldName)
 	}
@@ -24976,6 +25067,9 @@ func (m *WorkflowStageMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, workflowstage.FieldStatus)
+	}
+	if m.project_id != nil {
+		fields = append(fields, workflowstage.FieldProjectID)
 	}
 	if m.workflow != nil {
 		fields = append(fields, workflowstage.FieldWorkflowID)
@@ -25011,6 +25105,8 @@ func (m *WorkflowStageMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdateTime()
 	case workflowstage.FieldStatus:
 		return m.Status()
+	case workflowstage.FieldProjectID:
+		return m.ProjectID()
 	case workflowstage.FieldWorkflowID:
 		return m.WorkflowID()
 	case workflowstage.FieldWorkflowStepIds:
@@ -25042,6 +25138,8 @@ func (m *WorkflowStageMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldUpdateTime(ctx)
 	case workflowstage.FieldStatus:
 		return m.OldStatus(ctx)
+	case workflowstage.FieldProjectID:
+		return m.OldProjectID(ctx)
 	case workflowstage.FieldWorkflowID:
 		return m.OldWorkflowID(ctx)
 	case workflowstage.FieldWorkflowStepIds:
@@ -25107,6 +25205,13 @@ func (m *WorkflowStageMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case workflowstage.FieldProjectID:
+		v, ok := value.(object.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
 		return nil
 	case workflowstage.FieldWorkflowID:
 		v, ok := value.(object.ID)
@@ -25247,6 +25352,9 @@ func (m *WorkflowStageMutation) ResetField(name string) error {
 		return nil
 	case workflowstage.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case workflowstage.FieldProjectID:
+		m.ResetProjectID()
 		return nil
 	case workflowstage.FieldWorkflowID:
 		m.ResetWorkflowID()
@@ -25405,6 +25513,7 @@ type WorkflowStageExecutionMutation struct {
 	create_time               *time.Time
 	update_time               *time.Time
 	status                    *status.Status
+	project_id                *object.ID
 	duration                  *int
 	addduration               *int
 	step_execution_ids        *[]object.ID
@@ -25832,6 +25941,42 @@ func (m *WorkflowStageExecutionMutation) ResetStatus() {
 	delete(m.clearedFields, workflowstageexecution.FieldStatus)
 }
 
+// SetProjectID sets the "project_id" field.
+func (m *WorkflowStageExecutionMutation) SetProjectID(o object.ID) {
+	m.project_id = &o
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *WorkflowStageExecutionMutation) ProjectID() (r object.ID, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the WorkflowStageExecution entity.
+// If the WorkflowStageExecution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowStageExecutionMutation) OldProjectID(ctx context.Context) (v object.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *WorkflowStageExecutionMutation) ResetProjectID() {
+	m.project_id = nil
+}
+
 // SetDuration sets the "duration" field.
 func (m *WorkflowStageExecutionMutation) SetDuration(i int) {
 	m.duration = &i
@@ -26223,7 +26368,7 @@ func (m *WorkflowStageExecutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStageExecutionMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.name != nil {
 		fields = append(fields, workflowstageexecution.FieldName)
 	}
@@ -26244,6 +26389,9 @@ func (m *WorkflowStageExecutionMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, workflowstageexecution.FieldStatus)
+	}
+	if m.project_id != nil {
+		fields = append(fields, workflowstageexecution.FieldProjectID)
 	}
 	if m.duration != nil {
 		fields = append(fields, workflowstageexecution.FieldDuration)
@@ -26285,6 +26433,8 @@ func (m *WorkflowStageExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdateTime()
 	case workflowstageexecution.FieldStatus:
 		return m.Status()
+	case workflowstageexecution.FieldProjectID:
+		return m.ProjectID()
 	case workflowstageexecution.FieldDuration:
 		return m.Duration()
 	case workflowstageexecution.FieldStageID:
@@ -26320,6 +26470,8 @@ func (m *WorkflowStageExecutionMutation) OldField(ctx context.Context, name stri
 		return m.OldUpdateTime(ctx)
 	case workflowstageexecution.FieldStatus:
 		return m.OldStatus(ctx)
+	case workflowstageexecution.FieldProjectID:
+		return m.OldProjectID(ctx)
 	case workflowstageexecution.FieldDuration:
 		return m.OldDuration(ctx)
 	case workflowstageexecution.FieldStageID:
@@ -26389,6 +26541,13 @@ func (m *WorkflowStageExecutionMutation) SetField(name string, value ent.Value) 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case workflowstageexecution.FieldProjectID:
+		v, ok := value.(object.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
 		return nil
 	case workflowstageexecution.FieldDuration:
 		v, ok := value.(int)
@@ -26543,6 +26702,9 @@ func (m *WorkflowStageExecutionMutation) ResetField(name string) error {
 		return nil
 	case workflowstageexecution.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case workflowstageexecution.FieldProjectID:
+		m.ResetProjectID()
 		return nil
 	case workflowstageexecution.FieldDuration:
 		m.ResetDuration()
@@ -26700,6 +26862,7 @@ type WorkflowStepMutation struct {
 	update_time        *time.Time
 	status             *status.Status
 	_type              *string
+	project_id         *object.ID
 	workflow_id        *object.ID
 	spec               *map[string]any
 	input              *map[string]any
@@ -27162,6 +27325,42 @@ func (m *WorkflowStepMutation) OldType(ctx context.Context) (v string, err error
 // ResetType resets all changes to the "type" field.
 func (m *WorkflowStepMutation) ResetType() {
 	m._type = nil
+}
+
+// SetProjectID sets the "project_id" field.
+func (m *WorkflowStepMutation) SetProjectID(o object.ID) {
+	m.project_id = &o
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *WorkflowStepMutation) ProjectID() (r object.ID, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the WorkflowStep entity.
+// If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowStepMutation) OldProjectID(ctx context.Context) (v object.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *WorkflowStepMutation) ResetProjectID() {
+	m.project_id = nil
 }
 
 // SetWorkflowID sets the "workflow_id" field.
@@ -27653,7 +27852,7 @@ func (m *WorkflowStepMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStepMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.name != nil {
 		fields = append(fields, workflowstep.FieldName)
 	}
@@ -27677,6 +27876,9 @@ func (m *WorkflowStepMutation) Fields() []string {
 	}
 	if m._type != nil {
 		fields = append(fields, workflowstep.FieldType)
+	}
+	if m.project_id != nil {
+		fields = append(fields, workflowstep.FieldProjectID)
 	}
 	if m.workflow_id != nil {
 		fields = append(fields, workflowstep.FieldWorkflowID)
@@ -27726,6 +27928,8 @@ func (m *WorkflowStepMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case workflowstep.FieldType:
 		return m.GetType()
+	case workflowstep.FieldProjectID:
+		return m.ProjectID()
 	case workflowstep.FieldWorkflowID:
 		return m.WorkflowID()
 	case workflowstep.FieldStageID:
@@ -27767,6 +27971,8 @@ func (m *WorkflowStepMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldStatus(ctx)
 	case workflowstep.FieldType:
 		return m.OldType(ctx)
+	case workflowstep.FieldProjectID:
+		return m.OldProjectID(ctx)
 	case workflowstep.FieldWorkflowID:
 		return m.OldWorkflowID(ctx)
 	case workflowstep.FieldStageID:
@@ -27847,6 +28053,13 @@ func (m *WorkflowStepMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetType(v)
+		return nil
+	case workflowstep.FieldProjectID:
+		v, ok := value.(object.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
 		return nil
 	case workflowstep.FieldWorkflowID:
 		v, ok := value.(object.ID)
@@ -28043,6 +28256,9 @@ func (m *WorkflowStepMutation) ResetField(name string) error {
 	case workflowstep.FieldType:
 		m.ResetType()
 		return nil
+	case workflowstep.FieldProjectID:
+		m.ResetProjectID()
+		return nil
 	case workflowstep.FieldWorkflowID:
 		m.ResetWorkflowID()
 		return nil
@@ -28187,6 +28403,7 @@ type WorkflowStepExecutionMutation struct {
 	update_time            *time.Time
 	status                 *status.Status
 	workflow_execution_id  *object.ID
+	project_id             *object.ID
 	workflow_id            *object.ID
 	_type                  *string
 	spec                   *map[string]any
@@ -28722,6 +28939,42 @@ func (m *WorkflowStepExecutionMutation) ResetWorkflowStageExecutionID() {
 	m.stage_execution = nil
 }
 
+// SetProjectID sets the "project_id" field.
+func (m *WorkflowStepExecutionMutation) SetProjectID(o object.ID) {
+	m.project_id = &o
+}
+
+// ProjectID returns the value of the "project_id" field in the mutation.
+func (m *WorkflowStepExecutionMutation) ProjectID() (r object.ID, exists bool) {
+	v := m.project_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectID returns the old "project_id" field's value of the WorkflowStepExecution entity.
+// If the WorkflowStepExecution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowStepExecutionMutation) OldProjectID(ctx context.Context) (v object.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectID: %w", err)
+	}
+	return oldValue.ProjectID, nil
+}
+
+// ResetProjectID resets all changes to the "project_id" field.
+func (m *WorkflowStepExecutionMutation) ResetProjectID() {
+	m.project_id = nil
+}
+
 // SetWorkflowID sets the "workflow_id" field.
 func (m *WorkflowStepExecutionMutation) SetWorkflowID(o object.ID) {
 	m.workflow_id = &o
@@ -29126,7 +29379,7 @@ func (m *WorkflowStepExecutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStepExecutionMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 18)
 	if m.name != nil {
 		fields = append(fields, workflowstepexecution.FieldName)
 	}
@@ -29156,6 +29409,9 @@ func (m *WorkflowStepExecutionMutation) Fields() []string {
 	}
 	if m.stage_execution != nil {
 		fields = append(fields, workflowstepexecution.FieldWorkflowStageExecutionID)
+	}
+	if m.project_id != nil {
+		fields = append(fields, workflowstepexecution.FieldProjectID)
 	}
 	if m.workflow_id != nil {
 		fields = append(fields, workflowstepexecution.FieldWorkflowID)
@@ -29206,6 +29462,8 @@ func (m *WorkflowStepExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.WorkflowExecutionID()
 	case workflowstepexecution.FieldWorkflowStageExecutionID:
 		return m.WorkflowStageExecutionID()
+	case workflowstepexecution.FieldProjectID:
+		return m.ProjectID()
 	case workflowstepexecution.FieldWorkflowID:
 		return m.WorkflowID()
 	case workflowstepexecution.FieldType:
@@ -29249,6 +29507,8 @@ func (m *WorkflowStepExecutionMutation) OldField(ctx context.Context, name strin
 		return m.OldWorkflowExecutionID(ctx)
 	case workflowstepexecution.FieldWorkflowStageExecutionID:
 		return m.OldWorkflowStageExecutionID(ctx)
+	case workflowstepexecution.FieldProjectID:
+		return m.OldProjectID(ctx)
 	case workflowstepexecution.FieldWorkflowID:
 		return m.OldWorkflowID(ctx)
 	case workflowstepexecution.FieldType:
@@ -29341,6 +29601,13 @@ func (m *WorkflowStepExecutionMutation) SetField(name string, value ent.Value) e
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetWorkflowStageExecutionID(v)
+		return nil
+	case workflowstepexecution.FieldProjectID:
+		v, ok := value.(object.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectID(v)
 		return nil
 	case workflowstepexecution.FieldWorkflowID:
 		v, ok := value.(object.ID)
@@ -29529,6 +29796,9 @@ func (m *WorkflowStepExecutionMutation) ResetField(name string) error {
 		return nil
 	case workflowstepexecution.FieldWorkflowStageExecutionID:
 		m.ResetWorkflowStageExecutionID()
+		return nil
+	case workflowstepexecution.FieldProjectID:
+		m.ResetProjectID()
 		return nil
 	case workflowstepexecution.FieldWorkflowID:
 		m.ResetWorkflowID()

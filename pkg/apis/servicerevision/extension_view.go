@@ -3,7 +3,6 @@ package servicerevision
 import (
 	"errors"
 
-	"github.com/gin-gonic/gin"
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
@@ -91,26 +90,26 @@ type (
 	}
 )
 
-type (
-	RouteGetInputPlanRequest struct {
-		_ struct{} `route:"GET=/input-plan"`
+// type (
+// 	RouteGetInputPlanRequest struct {
+// 		_ struct{} `route:"GET=/input-plan"`
 
-		model.ServiceRevisionQueryInput `path:",inline"`
-	}
-)
+// 		model.ServiceRevisionQueryInput `path:",inline"`
+// 	}
+// )
 
-func (r *RouteGetInputPlanRequest) Validate() error {
-	if err := r.ServiceRevisionQueryInput.Validate(); err != nil {
-		return err
-	}
+// func (r *RouteGetInputPlanRequest) Validate() error {
+// 	if err := r.ServiceRevisionQueryInput.Validate(); err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-type (
-	CollectionRouteGetWorkflowRequest struct {
-		_ struct{} `route:"GET=/workflow"`
+// type (
+// 	CollectionRouteGetWorkflowRequest struct {
+// 		_ struct{} `route:"GET=/workflow"`
 
-		Context *gin.Context
-	}
-)
+// 		Context *gin.Context
+// 	}
+// )

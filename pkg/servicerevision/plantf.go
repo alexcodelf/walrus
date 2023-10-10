@@ -253,6 +253,7 @@ func (t TerraformPlan) getModuleConfig(
 		templateversion.Name(opts.ServiceRevision.TemplateName),
 		templateversion.Version(opts.ServiceRevision.TemplateVersion),
 	))
+
 	templateVersion, err := t.modelClient.TemplateVersions().
 		Query().
 		Select(

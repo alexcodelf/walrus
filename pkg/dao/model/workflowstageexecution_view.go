@@ -26,6 +26,8 @@ type WorkflowStageExecutionCreateInput struct {
 	// WorkflowExecution indicates to create WorkflowStageExecution entity MUST under the WorkflowExecution route.
 	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -50,6 +52,7 @@ func (wseci *WorkflowStageExecutionCreateInput) Model() *WorkflowStageExecution 
 	}
 
 	_wse := &WorkflowStageExecution{
+		ProjectID:        wseci.ProjectID,
 		Name:             wseci.Name,
 		Description:      wseci.Description,
 		Labels:           wseci.Labels,
@@ -106,6 +109,8 @@ func (wseci *WorkflowStageExecutionCreateInput) ValidateWith(ctx context.Context
 
 // WorkflowStageExecutionCreateInputs holds the creation input item of the WorkflowStageExecution entities.
 type WorkflowStageExecutionCreateInputsItem struct {
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -160,6 +165,7 @@ func (wseci *WorkflowStageExecutionCreateInputs) Model() []*WorkflowStageExecuti
 
 	for i := range wseci.Items {
 		_wse := &WorkflowStageExecution{
+			ProjectID:        wseci.Items[i].ProjectID,
 			Name:             wseci.Items[i].Name,
 			Description:      wseci.Items[i].Description,
 			Labels:           wseci.Items[i].Labels,
@@ -770,6 +776,7 @@ type WorkflowStageExecutionOutput struct {
 	CreateTime       *time.Time        `json:"createTime,omitempty"`
 	UpdateTime       *time.Time        `json:"updateTime,omitempty"`
 	Status           status.Status     `json:"status,omitempty"`
+	ProjectID        object.ID         `json:"projectID,omitempty"`
 	Duration         int               `json:"duration,omitempty"`
 	StepExecutionIds []object.ID       `json:"stepExecutionIds,omitempty"`
 	Record           string            `json:"record,omitempty"`
@@ -803,6 +810,7 @@ func ExposeWorkflowStageExecution(_wse *WorkflowStageExecution) *WorkflowStageEx
 		CreateTime:       _wse.CreateTime,
 		UpdateTime:       _wse.UpdateTime,
 		Status:           _wse.Status,
+		ProjectID:        _wse.ProjectID,
 		Duration:         _wse.Duration,
 		StepExecutionIds: _wse.StepExecutionIds,
 		Record:           _wse.Record,

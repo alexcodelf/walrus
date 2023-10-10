@@ -81,6 +81,11 @@ func UpdateTime(v time.Time) predicate.WorkflowStage {
 	return predicate.WorkflowStage(sql.FieldEQ(FieldUpdateTime, v))
 }
 
+// ProjectID applies equality check predicate on the "project_id" field. It's identical to ProjectIDEQ.
+func ProjectID(v object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldEQ(FieldProjectID, v))
+}
+
 // WorkflowID applies equality check predicate on the "workflow_id" field. It's identical to WorkflowIDEQ.
 func WorkflowID(v object.ID) predicate.WorkflowStage {
 	return predicate.WorkflowStage(sql.FieldEQ(FieldWorkflowID, v))
@@ -339,6 +344,76 @@ func StatusIsNil() predicate.WorkflowStage {
 // StatusNotNil applies the NotNil predicate on the "status" field.
 func StatusNotNil() predicate.WorkflowStage {
 	return predicate.WorkflowStage(sql.FieldNotNull(FieldStatus))
+}
+
+// ProjectIDEQ applies the EQ predicate on the "project_id" field.
+func ProjectIDEQ(v object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldEQ(FieldProjectID, v))
+}
+
+// ProjectIDNEQ applies the NEQ predicate on the "project_id" field.
+func ProjectIDNEQ(v object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldNEQ(FieldProjectID, v))
+}
+
+// ProjectIDIn applies the In predicate on the "project_id" field.
+func ProjectIDIn(vs ...object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldIn(FieldProjectID, vs...))
+}
+
+// ProjectIDNotIn applies the NotIn predicate on the "project_id" field.
+func ProjectIDNotIn(vs ...object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldNotIn(FieldProjectID, vs...))
+}
+
+// ProjectIDGT applies the GT predicate on the "project_id" field.
+func ProjectIDGT(v object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldGT(FieldProjectID, v))
+}
+
+// ProjectIDGTE applies the GTE predicate on the "project_id" field.
+func ProjectIDGTE(v object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldGTE(FieldProjectID, v))
+}
+
+// ProjectIDLT applies the LT predicate on the "project_id" field.
+func ProjectIDLT(v object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldLT(FieldProjectID, v))
+}
+
+// ProjectIDLTE applies the LTE predicate on the "project_id" field.
+func ProjectIDLTE(v object.ID) predicate.WorkflowStage {
+	return predicate.WorkflowStage(sql.FieldLTE(FieldProjectID, v))
+}
+
+// ProjectIDContains applies the Contains predicate on the "project_id" field.
+func ProjectIDContains(v object.ID) predicate.WorkflowStage {
+	vc := string(v)
+	return predicate.WorkflowStage(sql.FieldContains(FieldProjectID, vc))
+}
+
+// ProjectIDHasPrefix applies the HasPrefix predicate on the "project_id" field.
+func ProjectIDHasPrefix(v object.ID) predicate.WorkflowStage {
+	vc := string(v)
+	return predicate.WorkflowStage(sql.FieldHasPrefix(FieldProjectID, vc))
+}
+
+// ProjectIDHasSuffix applies the HasSuffix predicate on the "project_id" field.
+func ProjectIDHasSuffix(v object.ID) predicate.WorkflowStage {
+	vc := string(v)
+	return predicate.WorkflowStage(sql.FieldHasSuffix(FieldProjectID, vc))
+}
+
+// ProjectIDEqualFold applies the EqualFold predicate on the "project_id" field.
+func ProjectIDEqualFold(v object.ID) predicate.WorkflowStage {
+	vc := string(v)
+	return predicate.WorkflowStage(sql.FieldEqualFold(FieldProjectID, vc))
+}
+
+// ProjectIDContainsFold applies the ContainsFold predicate on the "project_id" field.
+func ProjectIDContainsFold(v object.ID) predicate.WorkflowStage {
+	vc := string(v)
+	return predicate.WorkflowStage(sql.FieldContainsFold(FieldProjectID, vc))
 }
 
 // WorkflowIDEQ applies the EQ predicate on the "workflow_id" field.

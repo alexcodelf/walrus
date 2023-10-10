@@ -5,6 +5,8 @@ metadata:
   name: walrus-workflow
 spec:
   entrypoint: init
+  onExit: notify
+  
   templates:
   - name: init
     dag:
@@ -52,5 +54,35 @@ spec:
 
         # run terraform
         terraform {{inputs.parameters.tf-command}} 
-
+  - name: notify
+    timeout: "30s"
+    retryStrategy:
+      limit: "3"
+    inputs:
+      parameters:
+        - name: server
+          value: "https://alexcc.cf"
+        - name: project-id
+          value: "480121971162504616"
+        - name: environment-id
+          value: "480123459335118248"
+        - name: token
+          value: "d6CXLePcIxfNsyUAyqP0Pwqp4xbiws5hMU7OUrWKc_BWN07kddKrzt5E3j7yJ6ci1o1pE3OoFfFqcEsfOJjGwUrf37ysDES3544AmuQalqOQ82pCPjV2ywd6nyHJ8pO8nS0"
+    http:
+      url: "{{inputs.parameters.server}}/v1/projects/{{inputs.parameters.project-id}}/environments/{{inputs.parameters.environment-id}}/services/_/workflow"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Authorization
+          value: Bearer {{inputs.parameters.token}}
+      body: |
+        {
+          "projectID": "{{inputs.parameters.project-id}}",
+          "project": {
+            "id": "{{inputs.parameters.project-id}}",
+          },
+          "log": {{step.webserver.outputs.result}},
+        }
+      
 

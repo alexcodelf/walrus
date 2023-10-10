@@ -109,6 +109,12 @@ func (wsc *WorkflowStageCreate) SetNillableStatus(s *status.Status) *WorkflowSta
 	return wsc
 }
 
+// SetProjectID sets the "project_id" field.
+func (wsc *WorkflowStageCreate) SetProjectID(o object.ID) *WorkflowStageCreate {
+	wsc.mutation.SetProjectID(o)
+	return wsc
+}
+
 // SetWorkflowID sets the "workflow_id" field.
 func (wsc *WorkflowStageCreate) SetWorkflowID(o object.ID) *WorkflowStageCreate {
 	wsc.mutation.SetWorkflowID(o)
@@ -268,8 +274,21 @@ func (wsc *WorkflowStageCreate) check() error {
 	if _, ok := wsc.mutation.UpdateTime(); !ok {
 		return &ValidationError{Name: "update_time", err: errors.New(`model: missing required field "WorkflowStage.update_time"`)}
 	}
+	if _, ok := wsc.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project_id", err: errors.New(`model: missing required field "WorkflowStage.project_id"`)}
+	}
+	if v, ok := wsc.mutation.ProjectID(); ok {
+		if err := workflowstage.ProjectIDValidator(string(v)); err != nil {
+			return &ValidationError{Name: "project_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.project_id": %w`, err)}
+		}
+	}
 	if _, ok := wsc.mutation.WorkflowID(); !ok {
 		return &ValidationError{Name: "workflow_id", err: errors.New(`model: missing required field "WorkflowStage.workflow_id"`)}
+	}
+	if v, ok := wsc.mutation.WorkflowID(); ok {
+		if err := workflowstage.WorkflowIDValidator(string(v)); err != nil {
+			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.workflow_id": %w`, err)}
+		}
 	}
 	if _, ok := wsc.mutation.WorkflowStepIds(); !ok {
 		return &ValidationError{Name: "workflow_step_ids", err: errors.New(`model: missing required field "WorkflowStage.workflow_step_ids"`)}
@@ -352,6 +371,10 @@ func (wsc *WorkflowStageCreate) createSpec() (*WorkflowStage, *sqlgraph.CreateSp
 	if value, ok := wsc.mutation.Status(); ok {
 		_spec.SetField(workflowstage.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
+	}
+	if value, ok := wsc.mutation.ProjectID(); ok {
+		_spec.SetField(workflowstage.FieldProjectID, field.TypeString, value)
+		_node.ProjectID = value
 	}
 	if value, ok := wsc.mutation.WorkflowStepIds(); ok {
 		_spec.SetField(workflowstage.FieldWorkflowStepIds, field.TypeJSON, value)
@@ -441,6 +464,7 @@ func (wsc *WorkflowStageCreate) createSpec() (*WorkflowStage, *sqlgraph.CreateSp
 func (wsc *WorkflowStageCreate) Set(obj *WorkflowStage) *WorkflowStageCreate {
 	// Required.
 	wsc.SetName(obj.Name)
+	wsc.SetProjectID(obj.ProjectID)
 	wsc.SetWorkflowID(obj.WorkflowID)
 	wsc.SetWorkflowStepIds(obj.WorkflowStepIds)
 	wsc.SetDuration(obj.Duration)
@@ -509,6 +533,9 @@ func (wsc *WorkflowStageCreate) SaveE(ctx context.Context, cbs ...func(ctx conte
 		}
 		if _, set := wsc.mutation.Field(workflowstage.FieldStatus); set {
 			obj.Status = x.Status
+		}
+		if _, set := wsc.mutation.Field(workflowstage.FieldProjectID); set {
+			obj.ProjectID = x.ProjectID
 		}
 		if _, set := wsc.mutation.Field(workflowstage.FieldWorkflowID); set {
 			obj.WorkflowID = x.WorkflowID
@@ -623,6 +650,9 @@ func (wscb *WorkflowStageCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx 
 			}
 			if _, set := wscb.builders[i].mutation.Field(workflowstage.FieldStatus); set {
 				objs[i].Status = x[i].Status
+			}
+			if _, set := wscb.builders[i].mutation.Field(workflowstage.FieldProjectID); set {
+				objs[i].ProjectID = x[i].ProjectID
 			}
 			if _, set := wscb.builders[i].mutation.Field(workflowstage.FieldWorkflowID); set {
 				objs[i].WorkflowID = x[i].WorkflowID
@@ -892,6 +922,9 @@ func (u *WorkflowStageUpsertOne) UpdateNewValues() *WorkflowStageUpsertOne {
 		}
 		if _, exists := u.create.mutation.CreateTime(); exists {
 			s.SetIgnore(workflowstage.FieldCreateTime)
+		}
+		if _, exists := u.create.mutation.ProjectID(); exists {
+			s.SetIgnore(workflowstage.FieldProjectID)
 		}
 		if _, exists := u.create.mutation.WorkflowID(); exists {
 			s.SetIgnore(workflowstage.FieldWorkflowID)
@@ -1249,6 +1282,9 @@ func (u *WorkflowStageUpsertBulk) UpdateNewValues() *WorkflowStageUpsertBulk {
 			}
 			if _, exists := b.mutation.CreateTime(); exists {
 				s.SetIgnore(workflowstage.FieldCreateTime)
+			}
+			if _, exists := b.mutation.ProjectID(); exists {
+				s.SetIgnore(workflowstage.FieldProjectID)
 			}
 			if _, exists := b.mutation.WorkflowID(); exists {
 				s.SetIgnore(workflowstage.FieldWorkflowID)

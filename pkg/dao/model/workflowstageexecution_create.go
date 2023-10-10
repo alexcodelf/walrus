@@ -109,6 +109,12 @@ func (wsec *WorkflowStageExecutionCreate) SetNillableStatus(s *status.Status) *W
 	return wsec
 }
 
+// SetProjectID sets the "project_id" field.
+func (wsec *WorkflowStageExecutionCreate) SetProjectID(o object.ID) *WorkflowStageExecutionCreate {
+	wsec.mutation.SetProjectID(o)
+	return wsec
+}
+
 // SetDuration sets the "duration" field.
 func (wsec *WorkflowStageExecutionCreate) SetDuration(i int) *WorkflowStageExecutionCreate {
 	wsec.mutation.SetDuration(i)
@@ -294,6 +300,14 @@ func (wsec *WorkflowStageExecutionCreate) check() error {
 	if _, ok := wsec.mutation.UpdateTime(); !ok {
 		return &ValidationError{Name: "update_time", err: errors.New(`model: missing required field "WorkflowStageExecution.update_time"`)}
 	}
+	if _, ok := wsec.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project_id", err: errors.New(`model: missing required field "WorkflowStageExecution.project_id"`)}
+	}
+	if v, ok := wsec.mutation.ProjectID(); ok {
+		if err := workflowstageexecution.ProjectIDValidator(string(v)); err != nil {
+			return &ValidationError{Name: "project_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.project_id": %w`, err)}
+		}
+	}
 	if _, ok := wsec.mutation.Duration(); !ok {
 		return &ValidationError{Name: "duration", err: errors.New(`model: missing required field "WorkflowStageExecution.duration"`)}
 	}
@@ -388,6 +402,10 @@ func (wsec *WorkflowStageExecutionCreate) createSpec() (*WorkflowStageExecution,
 		_spec.SetField(workflowstageexecution.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
+	if value, ok := wsec.mutation.ProjectID(); ok {
+		_spec.SetField(workflowstageexecution.FieldProjectID, field.TypeString, value)
+		_node.ProjectID = value
+	}
 	if value, ok := wsec.mutation.Duration(); ok {
 		_spec.SetField(workflowstageexecution.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
@@ -481,6 +499,7 @@ func (wsec *WorkflowStageExecutionCreate) createSpec() (*WorkflowStageExecution,
 func (wsec *WorkflowStageExecutionCreate) Set(obj *WorkflowStageExecution) *WorkflowStageExecutionCreate {
 	// Required.
 	wsec.SetName(obj.Name)
+	wsec.SetProjectID(obj.ProjectID)
 	wsec.SetDuration(obj.Duration)
 	wsec.SetStageID(obj.StageID)
 	wsec.SetWorkflowExecutionID(obj.WorkflowExecutionID)
@@ -551,6 +570,9 @@ func (wsec *WorkflowStageExecutionCreate) SaveE(ctx context.Context, cbs ...func
 		}
 		if _, set := wsec.mutation.Field(workflowstageexecution.FieldStatus); set {
 			obj.Status = x.Status
+		}
+		if _, set := wsec.mutation.Field(workflowstageexecution.FieldProjectID); set {
+			obj.ProjectID = x.ProjectID
 		}
 		if _, set := wsec.mutation.Field(workflowstageexecution.FieldStageID); set {
 			obj.StageID = x.StageID
@@ -665,6 +687,9 @@ func (wsecb *WorkflowStageExecutionCreateBulk) SaveE(ctx context.Context, cbs ..
 			}
 			if _, set := wsecb.builders[i].mutation.Field(workflowstageexecution.FieldStatus); set {
 				objs[i].Status = x[i].Status
+			}
+			if _, set := wsecb.builders[i].mutation.Field(workflowstageexecution.FieldProjectID); set {
+				objs[i].ProjectID = x[i].ProjectID
 			}
 			if _, set := wsecb.builders[i].mutation.Field(workflowstageexecution.FieldStageID); set {
 				objs[i].StageID = x[i].StageID
@@ -958,6 +983,9 @@ func (u *WorkflowStageExecutionUpsertOne) UpdateNewValues() *WorkflowStageExecut
 		}
 		if _, exists := u.create.mutation.CreateTime(); exists {
 			s.SetIgnore(workflowstageexecution.FieldCreateTime)
+		}
+		if _, exists := u.create.mutation.ProjectID(); exists {
+			s.SetIgnore(workflowstageexecution.FieldProjectID)
 		}
 		if _, exists := u.create.mutation.StageID(); exists {
 			s.SetIgnore(workflowstageexecution.FieldStageID)
@@ -1343,6 +1371,9 @@ func (u *WorkflowStageExecutionUpsertBulk) UpdateNewValues() *WorkflowStageExecu
 			}
 			if _, exists := b.mutation.CreateTime(); exists {
 				s.SetIgnore(workflowstageexecution.FieldCreateTime)
+			}
+			if _, exists := b.mutation.ProjectID(); exists {
+				s.SetIgnore(workflowstageexecution.FieldProjectID)
 			}
 			if _, exists := b.mutation.StageID(); exists {
 				s.SetIgnore(workflowstageexecution.FieldStageID)

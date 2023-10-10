@@ -570,6 +570,7 @@ func (h Handler) CollectionRouteWorkflowExec(req CollectionRouteWorkflowExecRequ
 	for k, v := range inputPlanConfigs {
 		configs[k] = v
 	}
+
 	for k, v := range connectorConfigs {
 		configs[k] = v
 	}
@@ -593,6 +594,7 @@ func createArchive(files map[string][]byte, w http.ResponseWriter) error {
 	// the "buf" writer.
 	gw := gzip.NewWriter(w)
 	defer gw.Close()
+
 	tw := tar.NewWriter(gw)
 	defer tw.Close()
 
@@ -624,5 +626,6 @@ func addToArchive(tw *tar.Writer, filename string, fileContent []byte) error {
 	if _, err := tw.Write(fileContent); err != nil {
 		log.Fatalf("Error writing file content to tar archive: %v", err)
 	}
+
 	return nil
 }

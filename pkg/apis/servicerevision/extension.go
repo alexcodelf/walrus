@@ -1,14 +1,11 @@
 package servicerevision
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -30,9 +27,7 @@ import (
 	"github.com/seal-io/walrus/pkg/operator"
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
 	"github.com/seal-io/walrus/pkg/serviceresources"
-	pkgrevision "github.com/seal-io/walrus/pkg/servicerevision"
 	tfparser "github.com/seal-io/walrus/pkg/terraform/parser"
-	"github.com/seal-io/walrus/pkg/workflow/step"
 	"github.com/seal-io/walrus/utils/gopool"
 	"github.com/seal-io/walrus/utils/log"
 )
@@ -504,124 +499,119 @@ func (h Handler) RouteGetDiffPrevious(req RouteGetDiffPreviousRequest) (*RouteGe
 	}, nil
 }
 
-func (h Handler) RouteGetInputPlan(req RouteGetInputPlanRequest) (any, error) {
-	// TODO only specific token with once usage can access this API.
+// func (h Handler) RouteGetInputPlan(req RouteGetInputPlanRequest) (any, error) {
+// 	// TODO only specific token with once usage can access this API.
+// 	revision, err := h.modelClient.ServiceRevisions().Query().
+// 		Where(servicerevision.ID(req.ID)).
+// 		Only(req.Context)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	revision, err := h.modelClient.ServiceRevisions().Query().
-		Where(servicerevision.ID(req.ID)).
-		Only(req.Context)
-	if err != nil {
-		return nil, err
-	}
+// 	planner := pkgrevision.NewPlan(revision.DeployerType, h.modelClient)
+// 	opts := pkgrevision.PlanOptions{
+// 		ServiceRevision: revision,
+// 	}
 
-	planner := pkgrevision.NewPlan(revision.DeployerType, h.modelClient)
-	opts := pkgrevision.PlanOptions{
-		ServiceRevision: revision,
-	}
+// 	switch revision.DeployerType {
+// 	case terraform.DeployerType:
+// 		opts.SecretMountPath = terraform.SecretMountPath
+// 		// More types.
+// 	}
 
-	switch revision.DeployerType {
-	case terraform.DeployerType:
-		opts.SecretMountPath = terraform.SecretMountPath
-		// More types.
-	}
+// 	if err = pkgrevision.SetPlanOptions(req.Context, h.modelClient, &opts); err != nil {
+// 		return nil, err
+// 	}
 
-	if err = pkgrevision.SetPlanOptions(req.Context, h.modelClient, &opts); err != nil {
-		return nil, err
-	}
+// 	inputPlanConfigs := make(map[string][]byte)
+// 	if revision.InputPlanConfigs != nil {
+// 		inputPlanConfigs = revision.InputPlanConfigs
+// 	} else {
+// 		inputPlanConfigs, err = planner.LoadConfigs(req.Context, opts)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-	inputPlanConfigs := make(map[string][]byte)
-	if revision.InputPlanConfigs != nil {
-		inputPlanConfigs = revision.InputPlanConfigs
-	} else {
-		inputPlanConfigs, err = planner.LoadConfigs(req.Context, opts)
-		if err != nil {
-			return nil, err
-		}
+// 		// TODO (alex) update revision status.
 
-		// TODO (alex) update revision status.
+// 		// Save the input plan configs.
+// 		revision, err = h.modelClient.ServiceRevisions().UpdateOne(revision).
+// 			SetInputPlanConfigs(inputPlanConfigs).
+// 			Save(req.Context)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		// Save the input plan configs.
-		revision, err = h.modelClient.ServiceRevisions().UpdateOne(revision).
-			SetInputPlanConfigs(inputPlanConfigs).
-			Save(req.Context)
-		if err != nil {
-			return nil, err
-		}
+// 		if err = revisionbus.Notify(req.Context, h.modelClient, revision); err != nil {
+// 			return nil, err
+// 		}
+// 	}
 
-		if err = revisionbus.Notify(req.Context, h.modelClient, revision); err != nil {
-			return nil, err
-		}
-	}
+// 	connectorConfigs, err := planner.LoadConnectorConfigs(opts.Connectors)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	connectorConfigs, err := planner.LoadConnectorConfigs(opts.Connectors)
-	if err != nil {
-		return nil, err
-	}
+// 	configs := make(map[string][]byte, len(inputPlanConfigs)+len(connectorConfigs))
+// 	for k, v := range inputPlanConfigs {
+// 		configs[k] = v
+// 	}
 
-	configs := make(map[string][]byte, len(inputPlanConfigs)+len(connectorConfigs))
-	for k, v := range inputPlanConfigs {
-		configs[k] = v
-	}
-	for k, v := range connectorConfigs {
-		configs[k] = v
-	}
+// 	for k, v := range connectorConfigs {
+// 		configs[k] = v
+// 	}
 
-	fileName := "config.tar.gz"
-	req.Context.Header("Content-Disposition", "attachment; filename="+fileName)
-	req.Context.Header("Content-Type", "application/x-gzip")
+// 	fileName := "config.tar.gz"
+// 	req.Context.Header("Content-Disposition", "attachment; filename="+fileName)
+// 	req.Context.Header("Content-Type", "application/x-gzip")
 
-	err = createArchive(configs, req.Context.Writer)
-	if err != nil {
-		return nil, err
-	}
+// 	err = createArchive(configs, req.Context.Writer)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return nil, nil
-}
+// 	return nil, nil
+// }
 
-func createArchive(files map[string][]byte, w http.ResponseWriter) error {
-	// Create new Writers for gzip and tar
-	// These writers are chained. Writing to the tar writer will
-	// write to the gzip writer which in turn will write to
-	// the "buf" writer.
-	gw := gzip.NewWriter(w)
-	defer gw.Close()
-	tw := tar.NewWriter(gw)
-	defer tw.Close()
+// func createArchive(files map[string][]byte, w http.ResponseWriter) error {
+// 	// Create new Writers for gzip and tar
+// 	// These writers are chained. Writing to the tar writer will
+// 	// write to the gzip writer which in turn will write to
+// 	// the "buf" writer.
+// 	gw := gzip.NewWriter(w)
+// 	defer gw.Close()
 
-	// Iterate over files and add them to the tar archive.
-	for name, content := range files {
-		err := addToArchive(tw, name, content)
-		if err != nil {
-			return err
-		}
-	}
+// 	tw := tar.NewWriter(gw)
+// 	defer tw.Close()
 
-	return nil
-}
+// 	// Iterate over files and add them to the tar archive.
+// 	for name, content := range files {
+// 		err := addToArchive(tw, name, content)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-func addToArchive(tw *tar.Writer, filename string, fileContent []byte) error {
-	header := tar.Header{
-		Name: filename,
-		Mode: 0o600,
-		Size: int64(len(fileContent)),
-	}
+// 	return nil
+// }
 
-	// Write file header to the tar archive.
-	err := tw.WriteHeader(&header)
-	if err != nil {
-		return err
-	}
+// func addToArchive(tw *tar.Writer, filename string, fileContent []byte) error {
+// 	header := tar.Header{
+// 		Name: filename,
+// 		Mode: 0o600,
+// 		Size: int64(len(fileContent)),
+// 	}
 
-	// Write the file content to the tar archive.
-	if _, err := tw.Write(fileContent); err != nil {
-		log.Fatalf("Error writing file content to tar archive: %v", err)
-	}
-	return nil
-}
+// 	// Write file header to the tar archive.
+// 	err := tw.WriteHeader(&header)
+// 	if err != nil {
+// 		return err
+// 	}
 
-func (h Handler) CollectionRouteGetWorkflowRequest(req CollectionRouteGetWorkflowRequest) (any, error) {
-	// TODO only specific token with once usage can access this API.
-	stepConfigService := step.NewConfigService(h.modelClient)
+// 	// Write the file content to the tar archive.
+// 	if _, err := tw.Write(fileContent); err != nil {
+// 		log.Fatalf("Error writing file content to tar archive: %v", err)
+// 	}
 
-	return stepConfigService.GenerateServiceTemplate(req.Context, nil)
-}
+// 	return nil
+// }

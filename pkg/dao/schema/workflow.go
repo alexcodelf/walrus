@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema/index"
 
 	"github.com/seal-io/walrus/pkg/dao/entx"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -71,5 +72,11 @@ func (Workflow) Edges() []ent.Edge {
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),
 				entx.SkipIO()),
+	}
+}
+
+func (Workflow) Interceptors() []ent.Interceptor {
+	return []ent.Interceptor{
+		intercept.ByProject("project_id"),
 	}
 }

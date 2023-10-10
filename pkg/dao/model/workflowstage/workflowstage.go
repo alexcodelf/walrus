@@ -35,6 +35,8 @@ const (
 	FieldUpdateTime = "update_time"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldProjectID holds the string denoting the project_id field in the database.
+	FieldProjectID = "project_id"
 	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
 	FieldWorkflowID = "workflow_id"
 	// FieldWorkflowStepIds holds the string denoting the workflow_step_ids field in the database.
@@ -84,6 +86,7 @@ var Columns = []string{
 	FieldCreateTime,
 	FieldUpdateTime,
 	FieldStatus,
+	FieldProjectID,
 	FieldWorkflowID,
 	FieldWorkflowStepIds,
 	FieldDuration,
@@ -106,7 +109,8 @@ func ValidColumn(column string) bool {
 //
 //	import _ "github.com/seal-io/walrus/pkg/dao/model/runtime"
 var (
-	Hooks [1]ent.Hook
+	Hooks        [1]ent.Hook
+	Interceptors [1]ent.Interceptor
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// DefaultLabels holds the default value on creation for the "labels" field.
@@ -119,6 +123,10 @@ var (
 	DefaultUpdateTime func() time.Time
 	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
 	UpdateDefaultUpdateTime func() time.Time
+	// ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	ProjectIDValidator func(string) error
+	// WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	WorkflowIDValidator func(string) error
 	// DefaultDuration holds the default value on creation for the "duration" field.
 	DefaultDuration int
 	// DurationValidator is a validator for the "duration" field. It is called by the builders before save.
@@ -153,6 +161,11 @@ func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdateTime orders the results by the update_time field.
 func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
+}
+
+// ByProjectID orders the results by the project_id field.
+func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
 }
 
 // ByWorkflowID orders the results by the workflow_id field.

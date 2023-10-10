@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/field"
 
 	"github.com/seal-io/walrus/pkg/dao/entx"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -24,8 +25,13 @@ func (WorkflowExecution) Mixin() []ent.Mixin {
 
 func (WorkflowExecution) Fields() []ent.Field {
 	return []ent.Field{
+		object.IDField("project_id").
+			Comment("ID of the project to belong.").
+			NotEmpty().
+			Immutable(),
 		object.IDField("workflow_id").
 			Comment("ID of the workflow that this workflow execution belongs to.").
+			NotEmpty().
 			Immutable(),
 		object.IDField("subject").
 			Comment("ID of the subject that this workflow execution belongs to.").
@@ -68,5 +74,11 @@ func (WorkflowExecution) Edges() []ent.Edge {
 			Required().
 			Unique().
 			Immutable(),
+	}
+}
+
+func (WorkflowExecution) Interceptors() []ent.Interceptor {
+	return []ent.Interceptor{
+		intercept.ByProject("project_id"),
 	}
 }

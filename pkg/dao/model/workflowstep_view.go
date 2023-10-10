@@ -24,6 +24,8 @@ type WorkflowStepCreateInput struct {
 
 	// ID of the workflow that this workflow step belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Type of the workflow step.
 	Type string `path:"-" query:"-" json:"type"`
 	// Name holds the value of the "name" field.
@@ -55,6 +57,7 @@ func (wsci *WorkflowStepCreateInput) Model() *WorkflowStep {
 
 	_ws := &WorkflowStep{
 		WorkflowID:    wsci.WorkflowID,
+		ProjectID:     wsci.ProjectID,
 		Type:          wsci.Type,
 		Name:          wsci.Name,
 		Description:   wsci.Description,
@@ -96,6 +99,8 @@ func (wsci *WorkflowStepCreateInput) ValidateWith(ctx context.Context, cs Client
 type WorkflowStepCreateInputsItem struct {
 	// ID of the workflow that this workflow step belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Type of the workflow step.
 	Type string `path:"-" query:"-" json:"type"`
 	// Name holds the value of the "name" field.
@@ -152,6 +157,7 @@ func (wsci *WorkflowStepCreateInputs) Model() []*WorkflowStep {
 	for i := range wsci.Items {
 		_ws := &WorkflowStep{
 			WorkflowID:    wsci.Items[i].WorkflowID,
+			ProjectID:     wsci.Items[i].ProjectID,
 			Type:          wsci.Items[i].Type,
 			Name:          wsci.Items[i].Name,
 			Description:   wsci.Items[i].Description,
@@ -656,6 +662,7 @@ type WorkflowStepOutput struct {
 	UpdateTime    *time.Time          `json:"updateTime,omitempty"`
 	Status        status.Status       `json:"status,omitempty"`
 	Type          string              `json:"type,omitempty"`
+	ProjectID     object.ID           `json:"projectID,omitempty"`
 	WorkflowID    object.ID           `json:"workflowID,omitempty"`
 	Spec          map[string]any      `json:"spec,omitempty"`
 	Input         map[string]any      `json:"input,omitempty"`
@@ -690,6 +697,7 @@ func ExposeWorkflowStep(_ws *WorkflowStep) *WorkflowStepOutput {
 		UpdateTime:    _ws.UpdateTime,
 		Status:        _ws.Status,
 		Type:          _ws.Type,
+		ProjectID:     _ws.ProjectID,
 		WorkflowID:    _ws.WorkflowID,
 		Spec:          _ws.Spec,
 		Input:         _ws.Input,

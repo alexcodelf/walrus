@@ -172,7 +172,6 @@ type (
 
 func (r *CollectionRouteWorkflowExecRequest) Validate() error {
 	// TODO.
-
 	if err := r.ServiceCreateInput.Validate(); err != nil {
 		return err
 	}

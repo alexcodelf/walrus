@@ -2,23 +2,28 @@ package step
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
-	"github.com/seal-io/walrus/pkg/dao/model"
-	"github.com/seal-io/walrus/pkg/dao/types"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/settings"
+	"github.com/seal-io/walrus/pkg/workflow/step/types"
+
+	apiconfig "github.com/seal-io/walrus/pkg/apis/config"
 )
 
-// ConfigService is service to generate service configs.
-type ConfigService struct {
+// ServiceStepManager is service to generate service configs.
+type ServiceStepManager struct {
 	mc model.ClientSet
 }
 
-// NewConfigService.
-func NewConfigService(mc model.ClientSet) *ConfigService {
-	return &ConfigService{
-		mc: mc,
+// NewServiceStepManager.
+func NewServiceStepManager(opts types.CreateOptions) types.StepManager {
+	return &ServiceStepManager{
+		mc: opts.ModelClient,
 	}
 }
 
@@ -66,35 +71,103 @@ terraform init -no-color && terraform apply -auto-approve -no-color
 	},
 }
 
-var testSvcDemo = &model.WorkflowStep{
+var testSvcDemo = &model.WorkflowStepExecution{
 	Name:        "test-svc-demo",
 	Description: "test-svc-demo",
-	Type:        types.WorkflowStepTypeService,
+	Type:        types.StepTypeService.String(),
 	Spec: map[string]any{
-		"name":            "bac",
-		"attributes":      `{"env": {}, "name": "", "image": "nginx", "ports": [80], "replicas": 1, "limit_cpu": "", "namespace": "", "request_cpu": "0.1", "limit_memory": "", "request_memory": "128Mi"}`,
+		"name": "bac",
+		"attributes": map[string]any{
+			"env":            nil,
+			"name":           "",
+			"image":          "nginx",
+			"ports":          []int{80},
+			"replicas":       1,
+			"limit_cpu":      "",
+			"namespace":      "",
+			"request_cpu":    "0.1",
+			"limit_memory":   "",
+			"request_memory": "128Mi",
+		},
 		"templateName":    "webservice",
 		"templateVersion": "v0.0.3",
 		"deployerType":    "terraform",
 	},
 }
 
-func (s *ConfigService) GenerateServiceTemplate(
-	ctx context.Context, step *model.WorkflowStep,
+func (s *ServiceStepManager) GenerateTemplate(
+	ctx context.Context,
+	stepExec *model.WorkflowStepExecution,
 ) (*v1alpha1.Template, error) {
-	t := &v1alpha1.Template{
-		Name: step.Name,
-		Container: &apiv1.Container{
-			ImagePullPolicy: apiv1.PullIfNotPresent,
-			Image:           "sealio/terraform-deployer:v0.1.4",
+	tlsVerify := apiconfig.TlsCertified.Get()
+
+	deployerImage := settings.DeployerImage.ShouldValue(ctx, s.mc)
+
+	execSpec, err := json.Marshal(stepExec.Spec)
+	if err != nil {
+		return nil, err
+	}
+
+	st := &v1alpha1.Template{
+		Name: stepExec.Name, // TODO use stepExec.ID.String() as name.
+		Inputs: v1alpha1.Inputs{
+			Parameters: []v1alpha1.Parameter{
+				{
+					Name:  "tlsVerify",
+					Value: v1alpha1.AnyStringPtr(tlsVerify),
+				},
+				{
+					Name:  "projectID",
+					Value: v1alpha1.AnyStringPtr(stepExec.ProjectID.String()),
+				},
+				{
+					Name:  "workflowID",
+					Value: v1alpha1.AnyStringPtr(stepExec.WorkflowID.String()),
+				},
+				{
+					Name:  "workflowStepID",
+					Value: v1alpha1.AnyStringPtr(stepExec.WorkflowStepID.String()),
+				},
+				{
+					Name:  "executionSpec",
+					Value: v1alpha1.AnyStringPtr(string(execSpec)),
+				},
+				{
+					Name:  "tfCommand",
+					Value: v1alpha1.AnyStringPtr("init -no-color && terraform apply -auto-approve -no-color"),
+				},
+			},
 		},
+		//nolint:lll
 		Script: &v1alpha1.ScriptTemplate{
+			Container: apiv1.Container{
+				Image:           deployerImage,
+				ImagePullPolicy: apiv1.PullIfNotPresent,
+				Command:         []string{"sh"},
+			},
 			Source: `#!/bin/sh
 set -e
-terraform init -no-color && terraform apply -auto-approve -no-color
-`,
+set -o pipefail
+
+# if skip tls verify
+tlsVerify="-k"
+if [ "{{inputs.parameters.tls-verify}}" == "false" ]; then
+	tlsVerify=""
+fi
+
+# get config
+curl -o config.tar.gz -X POST \
+{{inputs.parameters.server}}/v1/projects/{{inputs.parameters.project-id}}/environments/{{inputs.parameters.environment-id}}/services/_/workflow \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer {{inputs.parameters.token}}" \
+-d '{{inputs.parameters.executionSpec}}' $tlsVerify -s
+
+tar -xzf config.tar.gz
+
+# run terraform
+terraform {{inputs.parameters.tfCommand}} `,
 		},
 	}
 
-	return t, nil
+	return st, nil
 }

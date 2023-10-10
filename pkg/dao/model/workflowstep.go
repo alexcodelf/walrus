@@ -42,6 +42,8 @@ type WorkflowStep struct {
 	Status status.Status `json:"status,omitempty"`
 	// Type of the workflow step.
 	Type string `json:"type,omitempty"`
+	// ID of the project to belong.
+	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the workflow that this workflow step belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// ID of the stage that this workflow step belongs to.
@@ -104,7 +106,7 @@ func (*WorkflowStep) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case workflowstep.FieldLabels, workflowstep.FieldAnnotations, workflowstep.FieldStatus, workflowstep.FieldSpec, workflowstep.FieldInput, workflowstep.FieldOutput, workflowstep.FieldDependencies, workflowstep.FieldRetryStrategy:
 			values[i] = new([]byte)
-		case workflowstep.FieldID, workflowstep.FieldWorkflowID, workflowstep.FieldStageID:
+		case workflowstep.FieldID, workflowstep.FieldProjectID, workflowstep.FieldWorkflowID, workflowstep.FieldStageID:
 			values[i] = new(object.ID)
 		case workflowstep.FieldTimeout:
 			values[i] = new(sql.NullInt64)
@@ -188,6 +190,12 @@ func (ws *WorkflowStep) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
 				ws.Type = value.String
+			}
+		case workflowstep.FieldProjectID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field project_id", values[i])
+			} else if value != nil {
+				ws.ProjectID = *value
 			}
 		case workflowstep.FieldWorkflowID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -320,6 +328,9 @@ func (ws *WorkflowStep) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(ws.Type)
+	builder.WriteString(", ")
+	builder.WriteString("project_id=")
+	builder.WriteString(fmt.Sprintf("%v", ws.ProjectID))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", ws.WorkflowID))

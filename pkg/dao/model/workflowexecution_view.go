@@ -30,6 +30,8 @@ type WorkflowExecutionCreateInput struct {
 	Progress int `path:"-" query:"-" json:"progress"`
 	// ID of the subject that this workflow execution belongs to.
 	Subject object.ID `path:"-" query:"-" json:"subject"`
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -55,6 +57,7 @@ func (weci *WorkflowExecutionCreateInput) Model() *WorkflowExecution {
 		Duration:                weci.Duration,
 		Progress:                weci.Progress,
 		Subject:                 weci.Subject,
+		ProjectID:               weci.ProjectID,
 		Name:                    weci.Name,
 		Description:             weci.Description,
 		Labels:                  weci.Labels,
@@ -107,6 +110,8 @@ type WorkflowExecutionCreateInputsItem struct {
 	Progress int `path:"-" query:"-" json:"progress"`
 	// ID of the subject that this workflow execution belongs to.
 	Subject object.ID `path:"-" query:"-" json:"subject"`
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -160,6 +165,7 @@ func (weci *WorkflowExecutionCreateInputs) Model() []*WorkflowExecution {
 			Duration:                weci.Items[i].Duration,
 			Progress:                weci.Items[i].Progress,
 			Subject:                 weci.Items[i].Subject,
+			ProjectID:               weci.Items[i].ProjectID,
 			Name:                    weci.Items[i].Name,
 			Description:             weci.Items[i].Description,
 			Labels:                  weci.Items[i].Labels,
@@ -705,6 +711,7 @@ type WorkflowExecutionOutput struct {
 	CreateTime              *time.Time        `json:"createTime,omitempty"`
 	UpdateTime              *time.Time        `json:"updateTime,omitempty"`
 	Status                  status.Status     `json:"status,omitempty"`
+	ProjectID               object.ID         `json:"projectID,omitempty"`
 	Subject                 object.ID         `json:"subject,omitempty"`
 	Progress                int               `json:"progress,omitempty"`
 	Duration                int               `json:"duration,omitempty"`
@@ -739,6 +746,7 @@ func ExposeWorkflowExecution(_we *WorkflowExecution) *WorkflowExecutionOutput {
 		CreateTime:              _we.CreateTime,
 		UpdateTime:              _we.UpdateTime,
 		Status:                  _we.Status,
+		ProjectID:               _we.ProjectID,
 		Subject:                 _we.Subject,
 		Progress:                _we.Progress,
 		Duration:                _we.Duration,

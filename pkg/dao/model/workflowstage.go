@@ -39,6 +39,8 @@ type WorkflowStage struct {
 	UpdateTime *time.Time `json:"update_time,omitempty"`
 	// Status holds the value of the "status" field.
 	Status status.Status `json:"status,omitempty"`
+	// ID of the project to belong.
+	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the workflow that this workflow stage belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// IDs of the workflow steps that belong to this workflow stage.
@@ -104,7 +106,7 @@ func (*WorkflowStage) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case workflowstage.FieldLabels, workflowstage.FieldAnnotations, workflowstage.FieldStatus, workflowstage.FieldWorkflowStepIds, workflowstage.FieldDependencies:
 			values[i] = new([]byte)
-		case workflowstage.FieldID, workflowstage.FieldWorkflowID:
+		case workflowstage.FieldID, workflowstage.FieldProjectID, workflowstage.FieldWorkflowID:
 			values[i] = new(object.ID)
 		case workflowstage.FieldDuration:
 			values[i] = new(sql.NullInt64)
@@ -182,6 +184,12 @@ func (ws *WorkflowStage) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &ws.Status); err != nil {
 					return fmt.Errorf("unmarshal field status: %w", err)
 				}
+			}
+		case workflowstage.FieldProjectID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field project_id", values[i])
+			} else if value != nil {
+				ws.ProjectID = *value
 			}
 		case workflowstage.FieldWorkflowID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -286,6 +294,9 @@ func (ws *WorkflowStage) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", ws.Status))
+	builder.WriteString(", ")
+	builder.WriteString("project_id=")
+	builder.WriteString(fmt.Sprintf("%v", ws.ProjectID))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", ws.WorkflowID))

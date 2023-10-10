@@ -58,9 +58,9 @@ func (m Manager) Create(ctx context.Context, opts CreateOptions) (*model.Service
 		return nil, err
 	}
 
-	// if prevEntity != nil && status.ServiceRevisionStatusDeploying.IsUnknown(prevEntity) {
+	// If prevEntity != nil && status.ServiceRevisionStatusDeploying.IsUnknown(prevEntity) {
 	// 	return nil, errors.New("service deployment is running")
-	// }
+	// }.
 
 	// Get the corresponding service and template version.
 	svc, err := m.modelClient.Services().Query().

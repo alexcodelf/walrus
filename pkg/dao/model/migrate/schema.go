@@ -872,6 +872,7 @@ var (
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "status", Type: field.TypeJSON, Nullable: true},
+		{Name: "project_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "subject", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "progress", Type: field.TypeInt},
 		{Name: "duration", Type: field.TypeInt},
@@ -888,7 +889,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflow_executions_workflows_executions",
-				Columns:    []*schema.Column{WorkflowExecutionsColumns[14]},
+				Columns:    []*schema.Column{WorkflowExecutionsColumns[15]},
 				RefColumns: []*schema.Column{WorkflowsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -904,6 +905,7 @@ var (
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "status", Type: field.TypeJSON, Nullable: true},
+		{Name: "project_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "workflow_step_ids", Type: field.TypeJSON},
 		{Name: "duration", Type: field.TypeInt, Default: 0},
 		{Name: "dependencies", Type: field.TypeJSON},
@@ -917,7 +919,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflow_stages_workflows_stages",
-				Columns:    []*schema.Column{WorkflowStagesColumns[11]},
+				Columns:    []*schema.Column{WorkflowStagesColumns[12]},
 				RefColumns: []*schema.Column{WorkflowsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -933,6 +935,7 @@ var (
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "status", Type: field.TypeJSON, Nullable: true},
+		{Name: "project_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "duration", Type: field.TypeInt, Default: 0},
 		{Name: "step_execution_ids", Type: field.TypeJSON},
 		{Name: "record", Type: field.TypeString, Default: ""},
@@ -948,13 +951,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflow_stage_executions_workflow_executions_workflow_stage_executions",
-				Columns:    []*schema.Column{WorkflowStageExecutionsColumns[12]},
+				Columns:    []*schema.Column{WorkflowStageExecutionsColumns[13]},
 				RefColumns: []*schema.Column{WorkflowExecutionsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "workflow_stage_executions_workflow_stages_workflow_stage_executions",
-				Columns:    []*schema.Column{WorkflowStageExecutionsColumns[13]},
+				Columns:    []*schema.Column{WorkflowStageExecutionsColumns[14]},
 				RefColumns: []*schema.Column{WorkflowStagesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -971,6 +974,7 @@ var (
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "status", Type: field.TypeJSON, Nullable: true},
 		{Name: "type", Type: field.TypeString},
+		{Name: "project_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "workflow_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "spec", Type: field.TypeJSON, Nullable: true},
 		{Name: "input", Type: field.TypeJSON, Nullable: true},
@@ -988,7 +992,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflow_steps_workflow_stages_steps",
-				Columns:    []*schema.Column{WorkflowStepsColumns[16]},
+				Columns:    []*schema.Column{WorkflowStepsColumns[17]},
 				RefColumns: []*schema.Column{WorkflowStagesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -1005,6 +1009,7 @@ var (
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "status", Type: field.TypeJSON, Nullable: true},
 		{Name: "workflow_execution_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
+		{Name: "project_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "workflow_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "type", Type: field.TypeString},
 		{Name: "spec", Type: field.TypeJSON, Nullable: true},
@@ -1023,13 +1028,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflow_step_executions_workflow_stage_executions_step_executions",
-				Columns:    []*schema.Column{WorkflowStepExecutionsColumns[16]},
+				Columns:    []*schema.Column{WorkflowStepExecutionsColumns[17]},
 				RefColumns: []*schema.Column{WorkflowStageExecutionsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "workflow_step_executions_workflow_steps_executions",
-				Columns:    []*schema.Column{WorkflowStepExecutionsColumns[17]},
+				Columns:    []*schema.Column{WorkflowStepExecutionsColumns[18]},
 				RefColumns: []*schema.Column{WorkflowStepsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},

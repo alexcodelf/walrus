@@ -4328,7 +4328,8 @@ func (c *WorkflowClient) Hooks() []Hook {
 
 // Interceptors returns the client interceptors.
 func (c *WorkflowClient) Interceptors() []Interceptor {
-	return c.inters.Workflow
+	inters := c.inters.Workflow
+	return append(inters[:len(inters):len(inters)], workflow.Interceptors[:]...)
 }
 
 func (c *WorkflowClient) mutate(ctx context.Context, m *WorkflowMutation) (Value, error) {
@@ -4485,7 +4486,8 @@ func (c *WorkflowExecutionClient) Hooks() []Hook {
 
 // Interceptors returns the client interceptors.
 func (c *WorkflowExecutionClient) Interceptors() []Interceptor {
-	return c.inters.WorkflowExecution
+	inters := c.inters.WorkflowExecution
+	return append(inters[:len(inters):len(inters)], workflowexecution.Interceptors[:]...)
 }
 
 func (c *WorkflowExecutionClient) mutate(ctx context.Context, m *WorkflowExecutionMutation) (Value, error) {
@@ -4661,7 +4663,8 @@ func (c *WorkflowStageClient) Hooks() []Hook {
 
 // Interceptors returns the client interceptors.
 func (c *WorkflowStageClient) Interceptors() []Interceptor {
-	return c.inters.WorkflowStage
+	inters := c.inters.WorkflowStage
+	return append(inters[:len(inters):len(inters)], workflowstage.Interceptors[:]...)
 }
 
 func (c *WorkflowStageClient) mutate(ctx context.Context, m *WorkflowStageMutation) (Value, error) {
@@ -4837,7 +4840,8 @@ func (c *WorkflowStageExecutionClient) Hooks() []Hook {
 
 // Interceptors returns the client interceptors.
 func (c *WorkflowStageExecutionClient) Interceptors() []Interceptor {
-	return c.inters.WorkflowStageExecution
+	inters := c.inters.WorkflowStageExecution
+	return append(inters[:len(inters):len(inters)], workflowstageexecution.Interceptors[:]...)
 }
 
 func (c *WorkflowStageExecutionClient) mutate(ctx context.Context, m *WorkflowStageExecutionMutation) (Value, error) {
@@ -4994,7 +4998,8 @@ func (c *WorkflowStepClient) Hooks() []Hook {
 
 // Interceptors returns the client interceptors.
 func (c *WorkflowStepClient) Interceptors() []Interceptor {
-	return c.inters.WorkflowStep
+	inters := c.inters.WorkflowStep
+	return append(inters[:len(inters):len(inters)], workflowstep.Interceptors[:]...)
 }
 
 func (c *WorkflowStepClient) mutate(ctx context.Context, m *WorkflowStepMutation) (Value, error) {
@@ -5151,7 +5156,8 @@ func (c *WorkflowStepExecutionClient) Hooks() []Hook {
 
 // Interceptors returns the client interceptors.
 func (c *WorkflowStepExecutionClient) Interceptors() []Interceptor {
-	return c.inters.WorkflowStepExecution
+	inters := c.inters.WorkflowStepExecution
+	return append(inters[:len(inters):len(inters)], workflowstepexecution.Interceptors[:]...)
 }
 
 func (c *WorkflowStepExecutionClient) mutate(ctx context.Context, m *WorkflowStepExecutionMutation) (Value, error) {

@@ -39,6 +39,8 @@ type WorkflowExecution struct {
 	UpdateTime *time.Time `json:"update_time,omitempty"`
 	// Status holds the value of the "status" field.
 	Status status.Status `json:"status,omitempty"`
+	// ID of the project to belong.
+	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the workflow that this workflow execution belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// ID of the subject that this workflow execution belongs to.
@@ -99,7 +101,7 @@ func (*WorkflowExecution) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case workflowexecution.FieldLabels, workflowexecution.FieldAnnotations, workflowexecution.FieldStatus, workflowexecution.FieldWorkflowStagesExecution:
 			values[i] = new([]byte)
-		case workflowexecution.FieldID, workflowexecution.FieldWorkflowID, workflowexecution.FieldSubject:
+		case workflowexecution.FieldID, workflowexecution.FieldProjectID, workflowexecution.FieldWorkflowID, workflowexecution.FieldSubject:
 			values[i] = new(object.ID)
 		case workflowexecution.FieldProgress, workflowexecution.FieldDuration:
 			values[i] = new(sql.NullInt64)
@@ -177,6 +179,12 @@ func (we *WorkflowExecution) assignValues(columns []string, values []any) error 
 				if err := json.Unmarshal(*value, &we.Status); err != nil {
 					return fmt.Errorf("unmarshal field status: %w", err)
 				}
+			}
+		case workflowexecution.FieldProjectID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field project_id", values[i])
+			} else if value != nil {
+				we.ProjectID = *value
 			}
 		case workflowexecution.FieldWorkflowID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -292,6 +300,9 @@ func (we *WorkflowExecution) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", we.Status))
+	builder.WriteString(", ")
+	builder.WriteString("project_id=")
+	builder.WriteString(fmt.Sprintf("%v", we.ProjectID))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", we.WorkflowID))

@@ -40,6 +40,8 @@ type WorkflowStageExecution struct {
 	UpdateTime *time.Time `json:"update_time,omitempty"`
 	// Status holds the value of the "status" field.
 	Status status.Status `json:"status,omitempty"`
+	// ID of the project to belong.
+	ProjectID object.ID `json:"project_id,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `json:"duration,omitempty"`
 	// ID of the workflow stage that this workflow stage execution belongs to.
@@ -113,7 +115,7 @@ func (*WorkflowStageExecution) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case workflowstageexecution.FieldLabels, workflowstageexecution.FieldAnnotations, workflowstageexecution.FieldStatus, workflowstageexecution.FieldStepExecutionIds:
 			values[i] = new([]byte)
-		case workflowstageexecution.FieldID, workflowstageexecution.FieldStageID, workflowstageexecution.FieldWorkflowExecutionID:
+		case workflowstageexecution.FieldID, workflowstageexecution.FieldProjectID, workflowstageexecution.FieldStageID, workflowstageexecution.FieldWorkflowExecutionID:
 			values[i] = new(object.ID)
 		case workflowstageexecution.FieldDuration:
 			values[i] = new(sql.NullInt64)
@@ -191,6 +193,12 @@ func (wse *WorkflowStageExecution) assignValues(columns []string, values []any) 
 				if err := json.Unmarshal(*value, &wse.Status); err != nil {
 					return fmt.Errorf("unmarshal field status: %w", err)
 				}
+			}
+		case workflowstageexecution.FieldProjectID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field project_id", values[i])
+			} else if value != nil {
+				wse.ProjectID = *value
 			}
 		case workflowstageexecution.FieldDuration:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -305,6 +313,9 @@ func (wse *WorkflowStageExecution) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", wse.Status))
+	builder.WriteString(", ")
+	builder.WriteString("project_id=")
+	builder.WriteString(fmt.Sprintf("%v", wse.ProjectID))
 	builder.WriteString(", ")
 	builder.WriteString("duration=")
 	builder.WriteString(fmt.Sprintf("%v", wse.Duration))

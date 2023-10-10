@@ -46,6 +46,8 @@ type WorkflowStepExecution struct {
 	WorkflowExecutionID object.ID `json:"workflow_execution_id,omitempty"`
 	// ID of the workflow stage execution that this workflow step execution belongs to.
 	WorkflowStageExecutionID object.ID `json:"workflow_stage_execution_id,omitempty"`
+	// ID of the project to belong.
+	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the workflow that this workflow step execution belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// Type of the workflow step execution.
@@ -110,7 +112,7 @@ func (*WorkflowStepExecution) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case workflowstepexecution.FieldLabels, workflowstepexecution.FieldAnnotations, workflowstepexecution.FieldStatus, workflowstepexecution.FieldSpec:
 			values[i] = new([]byte)
-		case workflowstepexecution.FieldID, workflowstepexecution.FieldWorkflowStepID, workflowstepexecution.FieldWorkflowExecutionID, workflowstepexecution.FieldWorkflowStageExecutionID, workflowstepexecution.FieldWorkflowID:
+		case workflowstepexecution.FieldID, workflowstepexecution.FieldWorkflowStepID, workflowstepexecution.FieldWorkflowExecutionID, workflowstepexecution.FieldWorkflowStageExecutionID, workflowstepexecution.FieldProjectID, workflowstepexecution.FieldWorkflowID:
 			values[i] = new(object.ID)
 		case workflowstepexecution.FieldTimes, workflowstepexecution.FieldDuration:
 			values[i] = new(sql.NullInt64)
@@ -206,6 +208,12 @@ func (wse *WorkflowStepExecution) assignValues(columns []string, values []any) e
 				return fmt.Errorf("unexpected type %T for field workflow_stage_execution_id", values[i])
 			} else if value != nil {
 				wse.WorkflowStageExecutionID = *value
+			}
+		case workflowstepexecution.FieldProjectID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field project_id", values[i])
+			} else if value != nil {
+				wse.ProjectID = *value
 			}
 		case workflowstepexecution.FieldWorkflowID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -330,6 +338,9 @@ func (wse *WorkflowStepExecution) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("workflow_stage_execution_id=")
 	builder.WriteString(fmt.Sprintf("%v", wse.WorkflowStageExecutionID))
+	builder.WriteString(", ")
+	builder.WriteString("project_id=")
+	builder.WriteString(fmt.Sprintf("%v", wse.ProjectID))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", wse.WorkflowID))

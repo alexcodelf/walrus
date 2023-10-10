@@ -115,6 +115,12 @@ func (wsc *WorkflowStepCreate) SetType(s string) *WorkflowStepCreate {
 	return wsc
 }
 
+// SetProjectID sets the "project_id" field.
+func (wsc *WorkflowStepCreate) SetProjectID(o object.ID) *WorkflowStepCreate {
+	wsc.mutation.SetProjectID(o)
+	return wsc
+}
+
 // SetWorkflowID sets the "workflow_id" field.
 func (wsc *WorkflowStepCreate) SetWorkflowID(o object.ID) *WorkflowStepCreate {
 	wsc.mutation.SetWorkflowID(o)
@@ -291,8 +297,21 @@ func (wsc *WorkflowStepCreate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`model: validator failed for field "WorkflowStep.type": %w`, err)}
 		}
 	}
+	if _, ok := wsc.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project_id", err: errors.New(`model: missing required field "WorkflowStep.project_id"`)}
+	}
+	if v, ok := wsc.mutation.ProjectID(); ok {
+		if err := workflowstep.ProjectIDValidator(string(v)); err != nil {
+			return &ValidationError{Name: "project_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStep.project_id": %w`, err)}
+		}
+	}
 	if _, ok := wsc.mutation.WorkflowID(); !ok {
 		return &ValidationError{Name: "workflow_id", err: errors.New(`model: missing required field "WorkflowStep.workflow_id"`)}
+	}
+	if v, ok := wsc.mutation.WorkflowID(); ok {
+		if err := workflowstep.WorkflowIDValidator(string(v)); err != nil {
+			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStep.workflow_id": %w`, err)}
+		}
 	}
 	if _, ok := wsc.mutation.StageID(); !ok {
 		return &ValidationError{Name: "stage_id", err: errors.New(`model: missing required field "WorkflowStep.stage_id"`)}
@@ -379,6 +398,10 @@ func (wsc *WorkflowStepCreate) createSpec() (*WorkflowStep, *sqlgraph.CreateSpec
 	if value, ok := wsc.mutation.GetType(); ok {
 		_spec.SetField(workflowstep.FieldType, field.TypeString, value)
 		_node.Type = value
+	}
+	if value, ok := wsc.mutation.ProjectID(); ok {
+		_spec.SetField(workflowstep.FieldProjectID, field.TypeString, value)
+		_node.ProjectID = value
 	}
 	if value, ok := wsc.mutation.WorkflowID(); ok {
 		_spec.SetField(workflowstep.FieldWorkflowID, field.TypeString, value)
@@ -468,6 +491,7 @@ func (wsc *WorkflowStepCreate) Set(obj *WorkflowStep) *WorkflowStepCreate {
 	// Required.
 	wsc.SetName(obj.Name)
 	wsc.SetType(obj.Type)
+	wsc.SetProjectID(obj.ProjectID)
 	wsc.SetWorkflowID(obj.WorkflowID)
 	wsc.SetStageID(obj.StageID)
 	wsc.SetDependencies(obj.Dependencies)
@@ -551,6 +575,9 @@ func (wsc *WorkflowStepCreate) SaveE(ctx context.Context, cbs ...func(ctx contex
 		}
 		if _, set := wsc.mutation.Field(workflowstep.FieldType); set {
 			obj.Type = x.Type
+		}
+		if _, set := wsc.mutation.Field(workflowstep.FieldProjectID); set {
+			obj.ProjectID = x.ProjectID
 		}
 		if _, set := wsc.mutation.Field(workflowstep.FieldWorkflowID); set {
 			obj.WorkflowID = x.WorkflowID
@@ -680,6 +707,9 @@ func (wscb *WorkflowStepCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx c
 			}
 			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldType); set {
 				objs[i].Type = x[i].Type
+			}
+			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldProjectID); set {
+				objs[i].ProjectID = x[i].ProjectID
 			}
 			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldWorkflowID); set {
 				objs[i].WorkflowID = x[i].WorkflowID
@@ -1036,6 +1066,9 @@ func (u *WorkflowStepUpsertOne) UpdateNewValues() *WorkflowStepUpsertOne {
 		}
 		if _, exists := u.create.mutation.GetType(); exists {
 			s.SetIgnore(workflowstep.FieldType)
+		}
+		if _, exists := u.create.mutation.ProjectID(); exists {
+			s.SetIgnore(workflowstep.FieldProjectID)
 		}
 		if _, exists := u.create.mutation.WorkflowID(); exists {
 			s.SetIgnore(workflowstep.FieldWorkflowID)
@@ -1480,6 +1513,9 @@ func (u *WorkflowStepUpsertBulk) UpdateNewValues() *WorkflowStepUpsertBulk {
 			}
 			if _, exists := b.mutation.GetType(); exists {
 				s.SetIgnore(workflowstep.FieldType)
+			}
+			if _, exists := b.mutation.ProjectID(); exists {
+				s.SetIgnore(workflowstep.FieldProjectID)
 			}
 			if _, exists := b.mutation.WorkflowID(); exists {
 				s.SetIgnore(workflowstep.FieldWorkflowID)

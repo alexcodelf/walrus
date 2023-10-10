@@ -23,6 +23,8 @@ type WorkflowStageCreateInput struct {
 
 	// IDs of the workflow steps that belong to this workflow stage.
 	WorkflowStepIds []object.ID `path:"-" query:"-" json:"workflowStepIds"`
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -44,6 +46,7 @@ func (wsci *WorkflowStageCreateInput) Model() *WorkflowStage {
 
 	_ws := &WorkflowStage{
 		WorkflowStepIds: wsci.WorkflowStepIds,
+		ProjectID:       wsci.ProjectID,
 		Name:            wsci.Name,
 		Description:     wsci.Description,
 		Labels:          wsci.Labels,
@@ -80,6 +83,8 @@ func (wsci *WorkflowStageCreateInput) ValidateWith(ctx context.Context, cs Clien
 type WorkflowStageCreateInputsItem struct {
 	// IDs of the workflow steps that belong to this workflow stage.
 	WorkflowStepIds []object.ID `path:"-" query:"-" json:"workflowStepIds"`
+	// ID of the project to belong.
+	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -126,6 +131,7 @@ func (wsci *WorkflowStageCreateInputs) Model() []*WorkflowStage {
 	for i := range wsci.Items {
 		_ws := &WorkflowStage{
 			WorkflowStepIds: wsci.Items[i].WorkflowStepIds,
+			ProjectID:       wsci.Items[i].ProjectID,
 			Name:            wsci.Items[i].Name,
 			Description:     wsci.Items[i].Description,
 			Labels:          wsci.Items[i].Labels,
@@ -600,6 +606,7 @@ type WorkflowStageOutput struct {
 	CreateTime      *time.Time        `json:"createTime,omitempty"`
 	UpdateTime      *time.Time        `json:"updateTime,omitempty"`
 	Status          status.Status     `json:"status,omitempty"`
+	ProjectID       object.ID         `json:"projectID,omitempty"`
 	WorkflowStepIds []object.ID       `json:"workflowStepIds,omitempty"`
 	Duration        int               `json:"duration,omitempty"`
 	Dependencies    []object.ID       `json:"dependencies,omitempty"`
@@ -629,6 +636,7 @@ func ExposeWorkflowStage(_ws *WorkflowStage) *WorkflowStageOutput {
 		CreateTime:      _ws.CreateTime,
 		UpdateTime:      _ws.UpdateTime,
 		Status:          _ws.Status,
+		ProjectID:       _ws.ProjectID,
 		WorkflowStepIds: _ws.WorkflowStepIds,
 		Duration:        _ws.Duration,
 		Dependencies:    _ws.Dependencies,

@@ -39,6 +39,8 @@ const (
 	FieldWorkflowExecutionID = "workflow_execution_id"
 	// FieldWorkflowStageExecutionID holds the string denoting the workflow_stage_execution_id field in the database.
 	FieldWorkflowStageExecutionID = "workflow_stage_execution_id"
+	// FieldProjectID holds the string denoting the project_id field in the database.
+	FieldProjectID = "project_id"
 	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
 	FieldWorkflowID = "workflow_id"
 	// FieldType holds the string denoting the type field in the database.
@@ -88,6 +90,7 @@ var Columns = []string{
 	FieldWorkflowStepID,
 	FieldWorkflowExecutionID,
 	FieldWorkflowStageExecutionID,
+	FieldProjectID,
 	FieldWorkflowID,
 	FieldType,
 	FieldSpec,
@@ -113,7 +116,8 @@ func ValidColumn(column string) bool {
 //
 //	import _ "github.com/seal-io/walrus/pkg/dao/model/runtime"
 var (
-	Hooks [1]ent.Hook
+	Hooks        [1]ent.Hook
+	Interceptors [1]ent.Interceptor
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// DefaultLabels holds the default value on creation for the "labels" field.
@@ -126,6 +130,10 @@ var (
 	DefaultUpdateTime func() time.Time
 	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
 	UpdateDefaultUpdateTime func() time.Time
+	// ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	ProjectIDValidator func(string) error
+	// WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	WorkflowIDValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
 	// DefaultTimes holds the default value on creation for the "times" field.
@@ -183,6 +191,11 @@ func ByWorkflowExecutionID(opts ...sql.OrderTermOption) OrderOption {
 // ByWorkflowStageExecutionID orders the results by the workflow_stage_execution_id field.
 func ByWorkflowStageExecutionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWorkflowStageExecutionID, opts...).ToFunc()
+}
+
+// ByProjectID orders the results by the project_id field.
+func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
 }
 
 // ByWorkflowID orders the results by the workflow_id field.

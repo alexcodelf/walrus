@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/field"
 
 	"github.com/seal-io/walrus/pkg/dao/entx"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -24,6 +25,10 @@ func (WorkflowStageExecution) Mixin() []ent.Mixin {
 
 func (WorkflowStageExecution) Fields() []ent.Field {
 	return []ent.Field{
+		object.IDField("project_id").
+			Comment("ID of the project to belong.").
+			NotEmpty().
+			Immutable(),
 		field.Int("duration").
 			Comment("Duration of the workflow stage execution.").
 			Positive().
@@ -71,5 +76,11 @@ func (WorkflowStageExecution) Edges() []ent.Edge {
 			Required().
 			Unique().
 			Immutable(),
+	}
+}
+
+func (WorkflowStageExecution) Interceptors() []ent.Interceptor {
+	return []ent.Interceptor{
+		intercept.ByProject("project_id"),
 	}
 }
