@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
@@ -181,6 +182,11 @@ func (wsec *WorkflowStageExecutionCreate) SetID(o object.ID) *WorkflowStageExecu
 	return wsec
 }
 
+// SetProject sets the "project" edge to the Project entity.
+func (wsec *WorkflowStageExecutionCreate) SetProject(p *Project) *WorkflowStageExecutionCreate {
+	return wsec.SetProjectID(p.ID)
+}
+
 // AddStepExecutionIDs adds the "step_executions" edge to the WorkflowStepExecution entity by IDs.
 func (wsec *WorkflowStageExecutionCreate) AddStepExecutionIDs(ids ...object.ID) *WorkflowStageExecutionCreate {
 	wsec.mutation.AddStepExecutionIDs(ids...)
@@ -331,6 +337,9 @@ func (wsec *WorkflowStageExecutionCreate) check() error {
 	if _, ok := wsec.mutation.Input(); !ok {
 		return &ValidationError{Name: "input", err: errors.New(`model: missing required field "WorkflowStageExecution.input"`)}
 	}
+	if _, ok := wsec.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowStageExecution.project"`)}
+	}
 	if _, ok := wsec.mutation.StageID(); !ok {
 		return &ValidationError{Name: "stage", err: errors.New(`model: missing required edge "WorkflowStageExecution.stage"`)}
 	}
@@ -402,10 +411,6 @@ func (wsec *WorkflowStageExecutionCreate) createSpec() (*WorkflowStageExecution,
 		_spec.SetField(workflowstageexecution.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
-	if value, ok := wsec.mutation.ProjectID(); ok {
-		_spec.SetField(workflowstageexecution.FieldProjectID, field.TypeString, value)
-		_node.ProjectID = value
-	}
 	if value, ok := wsec.mutation.Duration(); ok {
 		_spec.SetField(workflowstageexecution.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
@@ -421,6 +426,24 @@ func (wsec *WorkflowStageExecutionCreate) createSpec() (*WorkflowStageExecution,
 	if value, ok := wsec.mutation.Input(); ok {
 		_spec.SetField(workflowstageexecution.FieldInput, field.TypeString, value)
 		_node.Input = value
+	}
+	if nodes := wsec.mutation.ProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflowstageexecution.ProjectTable,
+			Columns: []string{workflowstageexecution.ProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = wsec.schemaConfig.WorkflowStageExecution
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProjectID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := wsec.mutation.StepExecutionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

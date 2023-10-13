@@ -741,6 +741,35 @@ func InputContainsFold(v string) predicate.WorkflowStageExecution {
 	return predicate.WorkflowStageExecution(sql.FieldContainsFold(FieldInput, v))
 }
 
+// HasProject applies the HasEdge predicate on the "project" edge.
+func HasProject() predicate.WorkflowStageExecution {
+	return predicate.WorkflowStageExecution(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProjectWith applies the HasEdge predicate on the "project" edge with a given conditions (other predicates).
+func HasProjectWith(preds ...predicate.Project) predicate.WorkflowStageExecution {
+	return predicate.WorkflowStageExecution(func(s *sql.Selector) {
+		step := newProjectStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasStepExecutions applies the HasEdge predicate on the "step_executions" edge.
 func HasStepExecutions() predicate.WorkflowStageExecution {
 	return predicate.WorkflowStageExecution(func(s *sql.Selector) {

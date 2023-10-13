@@ -119,15 +119,15 @@ func (wu *WorkflowUpdate) SetDisplayName(s string) *WorkflowUpdate {
 	return wu
 }
 
-// SetWorkflowStageIds sets the "workflow_stage_ids" field.
-func (wu *WorkflowUpdate) SetWorkflowStageIds(o []object.ID) *WorkflowUpdate {
-	wu.mutation.SetWorkflowStageIds(o)
+// SetStageIds sets the "stage_ids" field.
+func (wu *WorkflowUpdate) SetStageIds(o []object.ID) *WorkflowUpdate {
+	wu.mutation.SetStageIds(o)
 	return wu
 }
 
-// AppendWorkflowStageIds appends o to the "workflow_stage_ids" field.
-func (wu *WorkflowUpdate) AppendWorkflowStageIds(o []object.ID) *WorkflowUpdate {
-	wu.mutation.AppendWorkflowStageIds(o)
+// AppendStageIds appends o to the "stage_ids" field.
+func (wu *WorkflowUpdate) AppendStageIds(o []object.ID) *WorkflowUpdate {
+	wu.mutation.AppendStageIds(o)
 	return wu
 }
 
@@ -283,6 +283,9 @@ func (wu *WorkflowUpdate) check() error {
 			return &ValidationError{Name: "parallelism", err: fmt.Errorf(`model: validator failed for field "Workflow.parallelism": %w`, err)}
 		}
 	}
+	if _, ok := wu.mutation.ProjectID(); wu.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "Workflow.project"`)
+	}
 	return nil
 }
 
@@ -336,7 +339,7 @@ func (wu *WorkflowUpdate) Set(obj *Workflow) *WorkflowUpdate {
 		wu.SetStatus(obj.Status)
 	}
 	wu.SetDisplayName(obj.DisplayName)
-	wu.SetWorkflowStageIds(obj.WorkflowStageIds)
+	wu.SetStageIds(obj.StageIds)
 	wu.SetParallelism(obj.Parallelism)
 
 	// With Default.
@@ -401,12 +404,12 @@ func (wu *WorkflowUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := wu.mutation.DisplayName(); ok {
 		_spec.SetField(workflow.FieldDisplayName, field.TypeString, value)
 	}
-	if value, ok := wu.mutation.WorkflowStageIds(); ok {
-		_spec.SetField(workflow.FieldWorkflowStageIds, field.TypeJSON, value)
+	if value, ok := wu.mutation.StageIds(); ok {
+		_spec.SetField(workflow.FieldStageIds, field.TypeJSON, value)
 	}
-	if value, ok := wu.mutation.AppendedWorkflowStageIds(); ok {
+	if value, ok := wu.mutation.AppendedStageIds(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflow.FieldWorkflowStageIds, value)
+			sqljson.Append(u, workflow.FieldStageIds, value)
 		})
 	}
 	if value, ok := wu.mutation.Parallelism(); ok {
@@ -612,15 +615,15 @@ func (wuo *WorkflowUpdateOne) SetDisplayName(s string) *WorkflowUpdateOne {
 	return wuo
 }
 
-// SetWorkflowStageIds sets the "workflow_stage_ids" field.
-func (wuo *WorkflowUpdateOne) SetWorkflowStageIds(o []object.ID) *WorkflowUpdateOne {
-	wuo.mutation.SetWorkflowStageIds(o)
+// SetStageIds sets the "stage_ids" field.
+func (wuo *WorkflowUpdateOne) SetStageIds(o []object.ID) *WorkflowUpdateOne {
+	wuo.mutation.SetStageIds(o)
 	return wuo
 }
 
-// AppendWorkflowStageIds appends o to the "workflow_stage_ids" field.
-func (wuo *WorkflowUpdateOne) AppendWorkflowStageIds(o []object.ID) *WorkflowUpdateOne {
-	wuo.mutation.AppendWorkflowStageIds(o)
+// AppendStageIds appends o to the "stage_ids" field.
+func (wuo *WorkflowUpdateOne) AppendStageIds(o []object.ID) *WorkflowUpdateOne {
+	wuo.mutation.AppendStageIds(o)
 	return wuo
 }
 
@@ -789,6 +792,9 @@ func (wuo *WorkflowUpdateOne) check() error {
 			return &ValidationError{Name: "parallelism", err: fmt.Errorf(`model: validator failed for field "Workflow.parallelism": %w`, err)}
 		}
 	}
+	if _, ok := wuo.mutation.ProjectID(); wuo.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "Workflow.project"`)
+	}
 	return nil
 }
 
@@ -862,8 +868,8 @@ func (wuo *WorkflowUpdateOne) Set(obj *Workflow) *WorkflowUpdateOne {
 			if db.DisplayName != obj.DisplayName {
 				wuo.SetDisplayName(obj.DisplayName)
 			}
-			if !reflect.DeepEqual(db.WorkflowStageIds, obj.WorkflowStageIds) {
-				wuo.SetWorkflowStageIds(obj.WorkflowStageIds)
+			if !reflect.DeepEqual(db.StageIds, obj.StageIds) {
+				wuo.SetStageIds(obj.StageIds)
 			}
 			if db.Parallelism != obj.Parallelism {
 				wuo.SetParallelism(obj.Parallelism)
@@ -933,8 +939,8 @@ func (wuo *WorkflowUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx context
 		if _, set := wuo.mutation.Field(workflow.FieldDisplayName); set {
 			obj.DisplayName = x.DisplayName
 		}
-		if _, set := wuo.mutation.Field(workflow.FieldWorkflowStageIds); set {
-			obj.WorkflowStageIds = x.WorkflowStageIds
+		if _, set := wuo.mutation.Field(workflow.FieldStageIds); set {
+			obj.StageIds = x.StageIds
 		}
 		if _, set := wuo.mutation.Field(workflow.FieldParallelism); set {
 			obj.Parallelism = x.Parallelism
@@ -1042,12 +1048,12 @@ func (wuo *WorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Workflow, err
 	if value, ok := wuo.mutation.DisplayName(); ok {
 		_spec.SetField(workflow.FieldDisplayName, field.TypeString, value)
 	}
-	if value, ok := wuo.mutation.WorkflowStageIds(); ok {
-		_spec.SetField(workflow.FieldWorkflowStageIds, field.TypeJSON, value)
+	if value, ok := wuo.mutation.StageIds(); ok {
+		_spec.SetField(workflow.FieldStageIds, field.TypeJSON, value)
 	}
-	if value, ok := wuo.mutation.AppendedWorkflowStageIds(); ok {
+	if value, ok := wuo.mutation.AppendedStageIds(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflow.FieldWorkflowStageIds, value)
+			sqljson.Append(u, workflow.FieldStageIds, value)
 		})
 	}
 	if value, ok := wuo.mutation.Parallelism(); ok {

@@ -91,13 +91,13 @@ func WorkflowID(v object.ID) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldWorkflowID, v))
 }
 
-// Subject applies equality check predicate on the "subject" field. It's identical to SubjectEQ.
-func Subject(v object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEQ(FieldSubject, v))
+// SubjectID applies equality check predicate on the "subject_id" field. It's identical to SubjectIDEQ.
+func SubjectID(v object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldEQ(FieldSubjectID, v))
 }
 
 // Progress applies equality check predicate on the "progress" field. It's identical to ProgressEQ.
-func Progress(v int) predicate.WorkflowExecution {
+func Progress(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldProgress, v))
 }
 
@@ -506,114 +506,139 @@ func WorkflowIDContainsFold(v object.ID) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldWorkflowID, vc))
 }
 
-// SubjectEQ applies the EQ predicate on the "subject" field.
-func SubjectEQ(v object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEQ(FieldSubject, v))
+// SubjectIDEQ applies the EQ predicate on the "subject_id" field.
+func SubjectIDEQ(v object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldEQ(FieldSubjectID, v))
 }
 
-// SubjectNEQ applies the NEQ predicate on the "subject" field.
-func SubjectNEQ(v object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldNEQ(FieldSubject, v))
+// SubjectIDNEQ applies the NEQ predicate on the "subject_id" field.
+func SubjectIDNEQ(v object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldNEQ(FieldSubjectID, v))
 }
 
-// SubjectIn applies the In predicate on the "subject" field.
-func SubjectIn(vs ...object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldIn(FieldSubject, vs...))
+// SubjectIDIn applies the In predicate on the "subject_id" field.
+func SubjectIDIn(vs ...object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldIn(FieldSubjectID, vs...))
 }
 
-// SubjectNotIn applies the NotIn predicate on the "subject" field.
-func SubjectNotIn(vs ...object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldNotIn(FieldSubject, vs...))
+// SubjectIDNotIn applies the NotIn predicate on the "subject_id" field.
+func SubjectIDNotIn(vs ...object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldNotIn(FieldSubjectID, vs...))
 }
 
-// SubjectGT applies the GT predicate on the "subject" field.
-func SubjectGT(v object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldGT(FieldSubject, v))
+// SubjectIDGT applies the GT predicate on the "subject_id" field.
+func SubjectIDGT(v object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldGT(FieldSubjectID, v))
 }
 
-// SubjectGTE applies the GTE predicate on the "subject" field.
-func SubjectGTE(v object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldGTE(FieldSubject, v))
+// SubjectIDGTE applies the GTE predicate on the "subject_id" field.
+func SubjectIDGTE(v object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldGTE(FieldSubjectID, v))
 }
 
-// SubjectLT applies the LT predicate on the "subject" field.
-func SubjectLT(v object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldLT(FieldSubject, v))
+// SubjectIDLT applies the LT predicate on the "subject_id" field.
+func SubjectIDLT(v object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldLT(FieldSubjectID, v))
 }
 
-// SubjectLTE applies the LTE predicate on the "subject" field.
-func SubjectLTE(v object.ID) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldLTE(FieldSubject, v))
+// SubjectIDLTE applies the LTE predicate on the "subject_id" field.
+func SubjectIDLTE(v object.ID) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldLTE(FieldSubjectID, v))
 }
 
-// SubjectContains applies the Contains predicate on the "subject" field.
-func SubjectContains(v object.ID) predicate.WorkflowExecution {
+// SubjectIDContains applies the Contains predicate on the "subject_id" field.
+func SubjectIDContains(v object.ID) predicate.WorkflowExecution {
 	vc := string(v)
-	return predicate.WorkflowExecution(sql.FieldContains(FieldSubject, vc))
+	return predicate.WorkflowExecution(sql.FieldContains(FieldSubjectID, vc))
 }
 
-// SubjectHasPrefix applies the HasPrefix predicate on the "subject" field.
-func SubjectHasPrefix(v object.ID) predicate.WorkflowExecution {
+// SubjectIDHasPrefix applies the HasPrefix predicate on the "subject_id" field.
+func SubjectIDHasPrefix(v object.ID) predicate.WorkflowExecution {
 	vc := string(v)
-	return predicate.WorkflowExecution(sql.FieldHasPrefix(FieldSubject, vc))
+	return predicate.WorkflowExecution(sql.FieldHasPrefix(FieldSubjectID, vc))
 }
 
-// SubjectHasSuffix applies the HasSuffix predicate on the "subject" field.
-func SubjectHasSuffix(v object.ID) predicate.WorkflowExecution {
+// SubjectIDHasSuffix applies the HasSuffix predicate on the "subject_id" field.
+func SubjectIDHasSuffix(v object.ID) predicate.WorkflowExecution {
 	vc := string(v)
-	return predicate.WorkflowExecution(sql.FieldHasSuffix(FieldSubject, vc))
+	return predicate.WorkflowExecution(sql.FieldHasSuffix(FieldSubjectID, vc))
 }
 
-// SubjectEqualFold applies the EqualFold predicate on the "subject" field.
-func SubjectEqualFold(v object.ID) predicate.WorkflowExecution {
+// SubjectIDEqualFold applies the EqualFold predicate on the "subject_id" field.
+func SubjectIDEqualFold(v object.ID) predicate.WorkflowExecution {
 	vc := string(v)
-	return predicate.WorkflowExecution(sql.FieldEqualFold(FieldSubject, vc))
+	return predicate.WorkflowExecution(sql.FieldEqualFold(FieldSubjectID, vc))
 }
 
-// SubjectContainsFold applies the ContainsFold predicate on the "subject" field.
-func SubjectContainsFold(v object.ID) predicate.WorkflowExecution {
+// SubjectIDContainsFold applies the ContainsFold predicate on the "subject_id" field.
+func SubjectIDContainsFold(v object.ID) predicate.WorkflowExecution {
 	vc := string(v)
-	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldSubject, vc))
+	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldSubjectID, vc))
 }
 
 // ProgressEQ applies the EQ predicate on the "progress" field.
-func ProgressEQ(v int) predicate.WorkflowExecution {
+func ProgressEQ(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldProgress, v))
 }
 
 // ProgressNEQ applies the NEQ predicate on the "progress" field.
-func ProgressNEQ(v int) predicate.WorkflowExecution {
+func ProgressNEQ(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldNEQ(FieldProgress, v))
 }
 
 // ProgressIn applies the In predicate on the "progress" field.
-func ProgressIn(vs ...int) predicate.WorkflowExecution {
+func ProgressIn(vs ...string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldIn(FieldProgress, vs...))
 }
 
 // ProgressNotIn applies the NotIn predicate on the "progress" field.
-func ProgressNotIn(vs ...int) predicate.WorkflowExecution {
+func ProgressNotIn(vs ...string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldNotIn(FieldProgress, vs...))
 }
 
 // ProgressGT applies the GT predicate on the "progress" field.
-func ProgressGT(v int) predicate.WorkflowExecution {
+func ProgressGT(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldGT(FieldProgress, v))
 }
 
 // ProgressGTE applies the GTE predicate on the "progress" field.
-func ProgressGTE(v int) predicate.WorkflowExecution {
+func ProgressGTE(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldGTE(FieldProgress, v))
 }
 
 // ProgressLT applies the LT predicate on the "progress" field.
-func ProgressLT(v int) predicate.WorkflowExecution {
+func ProgressLT(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldLT(FieldProgress, v))
 }
 
 // ProgressLTE applies the LTE predicate on the "progress" field.
-func ProgressLTE(v int) predicate.WorkflowExecution {
+func ProgressLTE(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldLTE(FieldProgress, v))
+}
+
+// ProgressContains applies the Contains predicate on the "progress" field.
+func ProgressContains(v string) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldContains(FieldProgress, v))
+}
+
+// ProgressHasPrefix applies the HasPrefix predicate on the "progress" field.
+func ProgressHasPrefix(v string) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldHasPrefix(FieldProgress, v))
+}
+
+// ProgressHasSuffix applies the HasSuffix predicate on the "progress" field.
+func ProgressHasSuffix(v string) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldHasSuffix(FieldProgress, v))
+}
+
+// ProgressEqualFold applies the EqualFold predicate on the "progress" field.
+func ProgressEqualFold(v string) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldEqualFold(FieldProgress, v))
+}
+
+// ProgressContainsFold applies the ContainsFold predicate on the "progress" field.
+func ProgressContainsFold(v string) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldProgress, v))
 }
 
 // DurationEQ applies the EQ predicate on the "duration" field.
@@ -784,6 +809,35 @@ func InputEqualFold(v string) predicate.WorkflowExecution {
 // InputContainsFold applies the ContainsFold predicate on the "input" field.
 func InputContainsFold(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldInput, v))
+}
+
+// HasProject applies the HasEdge predicate on the "project" edge.
+func HasProject() predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowExecution
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProjectWith applies the HasEdge predicate on the "project" edge with a given conditions (other predicates).
+func HasProjectWith(preds ...predicate.Project) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(func(s *sql.Selector) {
+		step := newProjectStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowExecution
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // HasWorkflowStageExecutions applies the HasEdge predicate on the "workflow_stage_executions" edge.

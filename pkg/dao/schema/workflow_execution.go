@@ -33,18 +33,17 @@ func (WorkflowExecution) Fields() []ent.Field {
 			Comment("ID of the workflow that this workflow execution belongs to.").
 			NotEmpty().
 			Immutable(),
-		object.IDField("subject").
+		object.IDField("subject_id").
 			Comment("ID of the subject that this workflow execution belongs to.").
 			Immutable(),
-		field.Int("progress").
+		field.String("progress").
 			Comment("Progress of the workflow. N/M format," +
-				"N is number of stages completed, M is total number of stages.").
-			Positive().
-			Immutable(),
+				"N is number of stages completed, M is total number of stages."),
 		field.Int("duration").
 			Comment("Duration of the workflow execution.").
-			Immutable(),
-		field.JSON("workflow_stages_execution", []object.ID{}).
+			NonNegative().
+			Default(0),
+		field.JSON("stage_execution_ids", []object.ID{}).
 			Comment("ID list of the stage executions that belong to this workflow execution.").
 			Default([]object.ID{}),
 		field.Text("record").
@@ -59,6 +58,16 @@ func (WorkflowExecution) Fields() []ent.Field {
 
 func (WorkflowExecution) Edges() []ent.Edge {
 	return []ent.Edge{
+		// Project 1-* WorkflowExecutions.
+		edge.From("project", Project.Type).
+			Ref("workflow_executions").
+			Field("project_id").
+			Comment("Project to which the workflow execution belongs.").
+			Unique().
+			Required().
+			Immutable().
+			Annotations(
+				entx.ValidateContext(intercept.WithProjectInterceptor)),
 		// WorkflowExecution 1-* WorkflowStageExecutions.
 		edge.To("workflow_stage_executions", WorkflowStageExecution.Type).
 			Comment("Workflow stage executions that belong to this workflow execution.").

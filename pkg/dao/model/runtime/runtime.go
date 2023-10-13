@@ -829,6 +829,10 @@ func init() {
 	workflow.DefaultUpdateTime = workflowDescUpdateTime.Default.(func() time.Time)
 	// workflow.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	workflow.UpdateDefaultUpdateTime = workflowDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowDescProjectID is the schema descriptor for project_id field.
+	workflowDescProjectID := workflowFields[0].Descriptor()
+	// workflow.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	workflow.ProjectIDValidator = workflowDescProjectID.Validators[0].(func(string) error)
 	// workflowDescDisplayName is the schema descriptor for display_name field.
 	workflowDescDisplayName := workflowFields[2].Descriptor()
 	// workflow.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
@@ -837,10 +841,10 @@ func init() {
 	workflowDescType := workflowFields[3].Descriptor()
 	// workflow.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	workflow.TypeValidator = workflowDescType.Validators[0].(func(string) error)
-	// workflowDescWorkflowStageIds is the schema descriptor for workflow_stage_ids field.
-	workflowDescWorkflowStageIds := workflowFields[4].Descriptor()
-	// workflow.DefaultWorkflowStageIds holds the default value on creation for the workflow_stage_ids field.
-	workflow.DefaultWorkflowStageIds = workflowDescWorkflowStageIds.Default.([]object.ID)
+	// workflowDescStageIds is the schema descriptor for stage_ids field.
+	workflowDescStageIds := workflowFields[4].Descriptor()
+	// workflow.DefaultStageIds holds the default value on creation for the stage_ids field.
+	workflow.DefaultStageIds = workflowDescStageIds.Default.([]object.ID)
 	// workflowDescParallelism is the schema descriptor for parallelism field.
 	workflowDescParallelism := workflowFields[5].Descriptor()
 	// workflow.DefaultParallelism holds the default value on creation for the parallelism field.
@@ -886,14 +890,16 @@ func init() {
 	workflowexecutionDescWorkflowID := workflowexecutionFields[1].Descriptor()
 	// workflowexecution.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
 	workflowexecution.WorkflowIDValidator = workflowexecutionDescWorkflowID.Validators[0].(func(string) error)
-	// workflowexecutionDescProgress is the schema descriptor for progress field.
-	workflowexecutionDescProgress := workflowexecutionFields[3].Descriptor()
-	// workflowexecution.ProgressValidator is a validator for the "progress" field. It is called by the builders before save.
-	workflowexecution.ProgressValidator = workflowexecutionDescProgress.Validators[0].(func(int) error)
-	// workflowexecutionDescWorkflowStagesExecution is the schema descriptor for workflow_stages_execution field.
-	workflowexecutionDescWorkflowStagesExecution := workflowexecutionFields[5].Descriptor()
-	// workflowexecution.DefaultWorkflowStagesExecution holds the default value on creation for the workflow_stages_execution field.
-	workflowexecution.DefaultWorkflowStagesExecution = workflowexecutionDescWorkflowStagesExecution.Default.([]object.ID)
+	// workflowexecutionDescDuration is the schema descriptor for duration field.
+	workflowexecutionDescDuration := workflowexecutionFields[4].Descriptor()
+	// workflowexecution.DefaultDuration holds the default value on creation for the duration field.
+	workflowexecution.DefaultDuration = workflowexecutionDescDuration.Default.(int)
+	// workflowexecution.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	workflowexecution.DurationValidator = workflowexecutionDescDuration.Validators[0].(func(int) error)
+	// workflowexecutionDescStageExecutionIds is the schema descriptor for stage_execution_ids field.
+	workflowexecutionDescStageExecutionIds := workflowexecutionFields[5].Descriptor()
+	// workflowexecution.DefaultStageExecutionIds holds the default value on creation for the stage_execution_ids field.
+	workflowexecution.DefaultStageExecutionIds = workflowexecutionDescStageExecutionIds.Default.([]object.ID)
 	// workflowexecutionDescRecord is the schema descriptor for record field.
 	workflowexecutionDescRecord := workflowexecutionFields[6].Descriptor()
 	// workflowexecution.DefaultRecord holds the default value on creation for the record field.
@@ -941,14 +947,12 @@ func init() {
 	workflowstageDescWorkflowID := workflowstageFields[1].Descriptor()
 	// workflowstage.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
 	workflowstage.WorkflowIDValidator = workflowstageDescWorkflowID.Validators[0].(func(string) error)
-	// workflowstageDescDuration is the schema descriptor for duration field.
-	workflowstageDescDuration := workflowstageFields[3].Descriptor()
-	// workflowstage.DefaultDuration holds the default value on creation for the duration field.
-	workflowstage.DefaultDuration = workflowstageDescDuration.Default.(int)
-	// workflowstage.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
-	workflowstage.DurationValidator = workflowstageDescDuration.Validators[0].(func(int) error)
+	// workflowstageDescStepIds is the schema descriptor for step_ids field.
+	workflowstageDescStepIds := workflowstageFields[2].Descriptor()
+	// workflowstage.DefaultStepIds holds the default value on creation for the step_ids field.
+	workflowstage.DefaultStepIds = workflowstageDescStepIds.Default.([]object.ID)
 	// workflowstageDescDependencies is the schema descriptor for dependencies field.
-	workflowstageDescDependencies := workflowstageFields[4].Descriptor()
+	workflowstageDescDependencies := workflowstageFields[3].Descriptor()
 	// workflowstage.DefaultDependencies holds the default value on creation for the dependencies field.
 	workflowstage.DefaultDependencies = workflowstageDescDependencies.Default.([]object.ID)
 	workflowstageexecutionMixin := schema.WorkflowStageExecution{}.Mixin()

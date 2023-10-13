@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
@@ -121,23 +122,9 @@ func (wsc *WorkflowStageCreate) SetWorkflowID(o object.ID) *WorkflowStageCreate 
 	return wsc
 }
 
-// SetWorkflowStepIds sets the "workflow_step_ids" field.
-func (wsc *WorkflowStageCreate) SetWorkflowStepIds(o []object.ID) *WorkflowStageCreate {
-	wsc.mutation.SetWorkflowStepIds(o)
-	return wsc
-}
-
-// SetDuration sets the "duration" field.
-func (wsc *WorkflowStageCreate) SetDuration(i int) *WorkflowStageCreate {
-	wsc.mutation.SetDuration(i)
-	return wsc
-}
-
-// SetNillableDuration sets the "duration" field if the given value is not nil.
-func (wsc *WorkflowStageCreate) SetNillableDuration(i *int) *WorkflowStageCreate {
-	if i != nil {
-		wsc.SetDuration(*i)
-	}
+// SetStepIds sets the "step_ids" field.
+func (wsc *WorkflowStageCreate) SetStepIds(o []object.ID) *WorkflowStageCreate {
+	wsc.mutation.SetStepIds(o)
 	return wsc
 }
 
@@ -151,6 +138,11 @@ func (wsc *WorkflowStageCreate) SetDependencies(o []object.ID) *WorkflowStageCre
 func (wsc *WorkflowStageCreate) SetID(o object.ID) *WorkflowStageCreate {
 	wsc.mutation.SetID(o)
 	return wsc
+}
+
+// SetProject sets the "project" edge to the Project entity.
+func (wsc *WorkflowStageCreate) SetProject(p *Project) *WorkflowStageCreate {
+	return wsc.SetProjectID(p.ID)
 }
 
 // AddStepIDs adds the "steps" edge to the WorkflowStep entity by IDs.
@@ -247,9 +239,9 @@ func (wsc *WorkflowStageCreate) defaults() error {
 		v := workflowstage.DefaultUpdateTime()
 		wsc.mutation.SetUpdateTime(v)
 	}
-	if _, ok := wsc.mutation.Duration(); !ok {
-		v := workflowstage.DefaultDuration
-		wsc.mutation.SetDuration(v)
+	if _, ok := wsc.mutation.StepIds(); !ok {
+		v := workflowstage.DefaultStepIds
+		wsc.mutation.SetStepIds(v)
 	}
 	if _, ok := wsc.mutation.Dependencies(); !ok {
 		v := workflowstage.DefaultDependencies
@@ -290,19 +282,14 @@ func (wsc *WorkflowStageCreate) check() error {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.workflow_id": %w`, err)}
 		}
 	}
-	if _, ok := wsc.mutation.WorkflowStepIds(); !ok {
-		return &ValidationError{Name: "workflow_step_ids", err: errors.New(`model: missing required field "WorkflowStage.workflow_step_ids"`)}
-	}
-	if _, ok := wsc.mutation.Duration(); !ok {
-		return &ValidationError{Name: "duration", err: errors.New(`model: missing required field "WorkflowStage.duration"`)}
-	}
-	if v, ok := wsc.mutation.Duration(); ok {
-		if err := workflowstage.DurationValidator(v); err != nil {
-			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.duration": %w`, err)}
-		}
+	if _, ok := wsc.mutation.StepIds(); !ok {
+		return &ValidationError{Name: "step_ids", err: errors.New(`model: missing required field "WorkflowStage.step_ids"`)}
 	}
 	if _, ok := wsc.mutation.Dependencies(); !ok {
 		return &ValidationError{Name: "dependencies", err: errors.New(`model: missing required field "WorkflowStage.dependencies"`)}
+	}
+	if _, ok := wsc.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowStage.project"`)}
 	}
 	if _, ok := wsc.mutation.WorkflowID(); !ok {
 		return &ValidationError{Name: "workflow", err: errors.New(`model: missing required edge "WorkflowStage.workflow"`)}
@@ -372,21 +359,31 @@ func (wsc *WorkflowStageCreate) createSpec() (*WorkflowStage, *sqlgraph.CreateSp
 		_spec.SetField(workflowstage.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
-	if value, ok := wsc.mutation.ProjectID(); ok {
-		_spec.SetField(workflowstage.FieldProjectID, field.TypeString, value)
-		_node.ProjectID = value
-	}
-	if value, ok := wsc.mutation.WorkflowStepIds(); ok {
-		_spec.SetField(workflowstage.FieldWorkflowStepIds, field.TypeJSON, value)
-		_node.WorkflowStepIds = value
-	}
-	if value, ok := wsc.mutation.Duration(); ok {
-		_spec.SetField(workflowstage.FieldDuration, field.TypeInt, value)
-		_node.Duration = value
+	if value, ok := wsc.mutation.StepIds(); ok {
+		_spec.SetField(workflowstage.FieldStepIds, field.TypeJSON, value)
+		_node.StepIds = value
 	}
 	if value, ok := wsc.mutation.Dependencies(); ok {
 		_spec.SetField(workflowstage.FieldDependencies, field.TypeJSON, value)
 		_node.Dependencies = value
+	}
+	if nodes := wsc.mutation.ProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflowstage.ProjectTable,
+			Columns: []string{workflowstage.ProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = wsc.schemaConfig.WorkflowStage
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProjectID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := wsc.mutation.StepsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -466,8 +463,7 @@ func (wsc *WorkflowStageCreate) Set(obj *WorkflowStage) *WorkflowStageCreate {
 	wsc.SetName(obj.Name)
 	wsc.SetProjectID(obj.ProjectID)
 	wsc.SetWorkflowID(obj.WorkflowID)
-	wsc.SetWorkflowStepIds(obj.WorkflowStepIds)
-	wsc.SetDuration(obj.Duration)
+	wsc.SetStepIds(obj.StepIds)
 	wsc.SetDependencies(obj.Dependencies)
 
 	// Optional.
@@ -539,9 +535,6 @@ func (wsc *WorkflowStageCreate) SaveE(ctx context.Context, cbs ...func(ctx conte
 		}
 		if _, set := wsc.mutation.Field(workflowstage.FieldWorkflowID); set {
 			obj.WorkflowID = x.WorkflowID
-		}
-		if _, set := wsc.mutation.Field(workflowstage.FieldWorkflowStepIds); set {
-			obj.WorkflowStepIds = x.WorkflowStepIds
 		}
 		obj.Edges = x.Edges
 	}
@@ -656,9 +649,6 @@ func (wscb *WorkflowStageCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx 
 			}
 			if _, set := wscb.builders[i].mutation.Field(workflowstage.FieldWorkflowID); set {
 				objs[i].WorkflowID = x[i].WorkflowID
-			}
-			if _, set := wscb.builders[i].mutation.Field(workflowstage.FieldWorkflowStepIds); set {
-				objs[i].WorkflowStepIds = x[i].WorkflowStepIds
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -870,21 +860,15 @@ func (u *WorkflowStageUpsert) ClearStatus() *WorkflowStageUpsert {
 	return u
 }
 
-// SetDuration sets the "duration" field.
-func (u *WorkflowStageUpsert) SetDuration(v int) *WorkflowStageUpsert {
-	u.Set(workflowstage.FieldDuration, v)
+// SetStepIds sets the "step_ids" field.
+func (u *WorkflowStageUpsert) SetStepIds(v []object.ID) *WorkflowStageUpsert {
+	u.Set(workflowstage.FieldStepIds, v)
 	return u
 }
 
-// UpdateDuration sets the "duration" field to the value that was provided on create.
-func (u *WorkflowStageUpsert) UpdateDuration() *WorkflowStageUpsert {
-	u.SetExcluded(workflowstage.FieldDuration)
-	return u
-}
-
-// AddDuration adds v to the "duration" field.
-func (u *WorkflowStageUpsert) AddDuration(v int) *WorkflowStageUpsert {
-	u.Add(workflowstage.FieldDuration, v)
+// UpdateStepIds sets the "step_ids" field to the value that was provided on create.
+func (u *WorkflowStageUpsert) UpdateStepIds() *WorkflowStageUpsert {
+	u.SetExcluded(workflowstage.FieldStepIds)
 	return u
 }
 
@@ -928,9 +912,6 @@ func (u *WorkflowStageUpsertOne) UpdateNewValues() *WorkflowStageUpsertOne {
 		}
 		if _, exists := u.create.mutation.WorkflowID(); exists {
 			s.SetIgnore(workflowstage.FieldWorkflowID)
-		}
-		if _, exists := u.create.mutation.WorkflowStepIds(); exists {
-			s.SetIgnore(workflowstage.FieldWorkflowStepIds)
 		}
 	}))
 	return u
@@ -1061,24 +1042,17 @@ func (u *WorkflowStageUpsertOne) ClearStatus() *WorkflowStageUpsertOne {
 	})
 }
 
-// SetDuration sets the "duration" field.
-func (u *WorkflowStageUpsertOne) SetDuration(v int) *WorkflowStageUpsertOne {
+// SetStepIds sets the "step_ids" field.
+func (u *WorkflowStageUpsertOne) SetStepIds(v []object.ID) *WorkflowStageUpsertOne {
 	return u.Update(func(s *WorkflowStageUpsert) {
-		s.SetDuration(v)
+		s.SetStepIds(v)
 	})
 }
 
-// AddDuration adds v to the "duration" field.
-func (u *WorkflowStageUpsertOne) AddDuration(v int) *WorkflowStageUpsertOne {
+// UpdateStepIds sets the "step_ids" field to the value that was provided on create.
+func (u *WorkflowStageUpsertOne) UpdateStepIds() *WorkflowStageUpsertOne {
 	return u.Update(func(s *WorkflowStageUpsert) {
-		s.AddDuration(v)
-	})
-}
-
-// UpdateDuration sets the "duration" field to the value that was provided on create.
-func (u *WorkflowStageUpsertOne) UpdateDuration() *WorkflowStageUpsertOne {
-	return u.Update(func(s *WorkflowStageUpsert) {
-		s.UpdateDuration()
+		s.UpdateStepIds()
 	})
 }
 
@@ -1289,9 +1263,6 @@ func (u *WorkflowStageUpsertBulk) UpdateNewValues() *WorkflowStageUpsertBulk {
 			if _, exists := b.mutation.WorkflowID(); exists {
 				s.SetIgnore(workflowstage.FieldWorkflowID)
 			}
-			if _, exists := b.mutation.WorkflowStepIds(); exists {
-				s.SetIgnore(workflowstage.FieldWorkflowStepIds)
-			}
 		}
 	}))
 	return u
@@ -1422,24 +1393,17 @@ func (u *WorkflowStageUpsertBulk) ClearStatus() *WorkflowStageUpsertBulk {
 	})
 }
 
-// SetDuration sets the "duration" field.
-func (u *WorkflowStageUpsertBulk) SetDuration(v int) *WorkflowStageUpsertBulk {
+// SetStepIds sets the "step_ids" field.
+func (u *WorkflowStageUpsertBulk) SetStepIds(v []object.ID) *WorkflowStageUpsertBulk {
 	return u.Update(func(s *WorkflowStageUpsert) {
-		s.SetDuration(v)
+		s.SetStepIds(v)
 	})
 }
 
-// AddDuration adds v to the "duration" field.
-func (u *WorkflowStageUpsertBulk) AddDuration(v int) *WorkflowStageUpsertBulk {
+// UpdateStepIds sets the "step_ids" field to the value that was provided on create.
+func (u *WorkflowStageUpsertBulk) UpdateStepIds() *WorkflowStageUpsertBulk {
 	return u.Update(func(s *WorkflowStageUpsert) {
-		s.AddDuration(v)
-	})
-}
-
-// UpdateDuration sets the "duration" field to the value that was provided on create.
-func (u *WorkflowStageUpsertBulk) UpdateDuration() *WorkflowStageUpsertBulk {
-	return u.Update(func(s *WorkflowStageUpsert) {
-		s.UpdateDuration()
+		s.UpdateStepIds()
 	})
 }
 

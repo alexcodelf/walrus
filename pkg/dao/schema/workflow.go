@@ -26,7 +26,7 @@ func (Workflow) Mixin() []ent.Mixin {
 
 func (Workflow) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("name").
+		index.Fields("project_id", "name").
 			Unique(),
 	}
 }
@@ -35,6 +35,7 @@ func (Workflow) Fields() []ent.Field {
 	return []ent.Field{
 		object.IDField("project_id").
 			Comment("ID of the project that this workflow belongs to.").
+			NotEmpty().
 			Immutable(),
 		object.IDField("environment_id").
 			Comment("ID of the environment that this workflow belongs to.").
@@ -47,7 +48,7 @@ func (Workflow) Fields() []ent.Field {
 			Comment("Type of the workflow.").
 			NotEmpty().
 			Immutable(),
-		field.JSON("workflow_stage_ids", []object.ID{}).
+		field.JSON("stage_ids", []object.ID{}).
 			Comment("ID list of the stages that belong to this workflow.").
 			Default([]object.ID{}),
 		field.Int("parallelism").
@@ -59,19 +60,27 @@ func (Workflow) Fields() []ent.Field {
 
 func (Workflow) Edges() []ent.Edge {
 	return []ent.Edge{
+		// Project 1-* Environments.
+		edge.From("project", Project.Type).
+			Ref("workflows").
+			Field("project_id").
+			Comment("Project to which the workflow belongs.").
+			Unique().
+			Required().
+			Immutable().
+			Annotations(
+				entx.ValidateContext(intercept.WithProjectInterceptor)),
 		// Workflow 1-* WorkflowStages.
 		edge.To("stages", WorkflowStage.Type).
 			Comment("Stages that belong to this workflow.").
 			Annotations(
-				entsql.OnDelete(entsql.Cascade),
-				entx.SkipIO()),
-
+				entsql.OnDelete(entsql.Cascade)),
 		// Workflow 1-* WorkflowExecutions.
 		edge.To("executions", WorkflowExecution.Type).
 			Comment("Workflow executions that belong to this workflow.").
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),
-				entx.SkipIO()),
+				entx.SkipInput()),
 	}
 }
 

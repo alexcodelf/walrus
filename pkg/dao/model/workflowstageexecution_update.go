@@ -263,6 +263,9 @@ func (wseu *WorkflowStageExecutionUpdate) check() error {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.duration": %w`, err)}
 		}
 	}
+	if _, ok := wseu.mutation.ProjectID(); wseu.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.project"`)
+	}
 	if _, ok := wseu.mutation.StageID(); wseu.mutation.StageCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.stage"`)
 	}
@@ -708,6 +711,9 @@ func (wseuo *WorkflowStageExecutionUpdateOne) check() error {
 		if err := workflowstageexecution.DurationValidator(v); err != nil {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.duration": %w`, err)}
 		}
+	}
+	if _, ok := wseuo.mutation.ProjectID(); wseuo.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.project"`)
 	}
 	if _, ok := wseuo.mutation.StageID(); wseuo.mutation.StageCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.stage"`)

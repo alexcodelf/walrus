@@ -110,7 +110,7 @@ func (wseu *WorkflowStepExecutionUpdate) ClearStatus() *WorkflowStepExecutionUpd
 }
 
 // SetSpec sets the "spec" field.
-func (wseu *WorkflowStepExecutionUpdate) SetSpec(m map[string]any) *WorkflowStepExecutionUpdate {
+func (wseu *WorkflowStepExecutionUpdate) SetSpec(m map[string]interface{}) *WorkflowStepExecutionUpdate {
 	wseu.mutation.SetSpec(m)
 	return wseu
 }
@@ -249,6 +249,9 @@ func (wseu *WorkflowStepExecutionUpdate) check() error {
 		if err := workflowstepexecution.DurationValidator(v); err != nil {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStepExecution.duration": %w`, err)}
 		}
+	}
+	if _, ok := wseu.mutation.ProjectID(); wseu.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.project"`)
 	}
 	if _, ok := wseu.mutation.WorkflowStepID(); wseu.mutation.WorkflowStepCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.workflow_step"`)
@@ -494,7 +497,7 @@ func (wseuo *WorkflowStepExecutionUpdateOne) ClearStatus() *WorkflowStepExecutio
 }
 
 // SetSpec sets the "spec" field.
-func (wseuo *WorkflowStepExecutionUpdateOne) SetSpec(m map[string]any) *WorkflowStepExecutionUpdateOne {
+func (wseuo *WorkflowStepExecutionUpdateOne) SetSpec(m map[string]interface{}) *WorkflowStepExecutionUpdateOne {
 	wseuo.mutation.SetSpec(m)
 	return wseuo
 }
@@ -646,6 +649,9 @@ func (wseuo *WorkflowStepExecutionUpdateOne) check() error {
 		if err := workflowstepexecution.DurationValidator(v); err != nil {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStepExecution.duration": %w`, err)}
 		}
+	}
+	if _, ok := wseuo.mutation.ProjectID(); wseuo.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.project"`)
 	}
 	if _, ok := wseuo.mutation.WorkflowStepID(); wseuo.mutation.WorkflowStepCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.workflow_step"`)

@@ -55,12 +55,21 @@ const (
 	FieldRetryStrategy = "retry_strategy"
 	// FieldTimeout holds the string denoting the timeout field in the database.
 	FieldTimeout = "timeout"
+	// EdgeProject holds the string denoting the project edge name in mutations.
+	EdgeProject = "project"
 	// EdgeExecutions holds the string denoting the executions edge name in mutations.
 	EdgeExecutions = "executions"
 	// EdgeStage holds the string denoting the stage edge name in mutations.
 	EdgeStage = "stage"
 	// Table holds the table name of the workflowstep in the database.
 	Table = "workflow_steps"
+	// ProjectTable is the table that holds the project relation/edge.
+	ProjectTable = "workflow_steps"
+	// ProjectInverseTable is the table name for the Project entity.
+	// It exists in this package in order to avoid circular dependency with the "project" package.
+	ProjectInverseTable = "projects"
+	// ProjectColumn is the table column denoting the project relation/edge.
+	ProjectColumn = "project_id"
 	// ExecutionsTable is the table that holds the executions relation/edge.
 	ExecutionsTable = "workflow_step_executions"
 	// ExecutionsInverseTable is the table name for the WorkflowStepExecution entity.
@@ -196,6 +205,13 @@ func ByTimeout(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTimeout, opts...).ToFunc()
 }
 
+// ByProjectField orders the results by project field.
+func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProjectStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByExecutionsCount orders the results by executions count.
 func ByExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -215,6 +231,13 @@ func ByStageField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newStageStep(), sql.OrderByField(field, opts...))
 	}
+}
+func newProjectStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProjectInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+	)
 }
 func newExecutionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

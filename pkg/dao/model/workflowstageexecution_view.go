@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -21,13 +22,13 @@ import (
 type WorkflowStageExecutionCreateInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create WorkflowStageExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Stage indicates to create WorkflowStageExecution entity MUST under the Stage route.
 	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowExecution indicates to create WorkflowStageExecution entity MUST under the WorkflowExecution route.
 	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
-	// ID of the project to belong.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -52,7 +53,6 @@ func (wseci *WorkflowStageExecutionCreateInput) Model() *WorkflowStageExecution 
 	}
 
 	_wse := &WorkflowStageExecution{
-		ProjectID:        wseci.ProjectID,
 		Name:             wseci.Name,
 		Description:      wseci.Description,
 		Labels:           wseci.Labels,
@@ -62,6 +62,9 @@ func (wseci *WorkflowStageExecutionCreateInput) Model() *WorkflowStageExecution 
 		Input:            wseci.Input,
 	}
 
+	if wseci.Project != nil {
+		_wse.ProjectID = wseci.Project.ID
+	}
 	if wseci.Stage != nil {
 		_wse.StageID = wseci.Stage.ID
 	}
@@ -91,6 +94,12 @@ func (wseci *WorkflowStageExecutionCreateInput) ValidateWith(ctx context.Context
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if wseci.Project != nil {
+		if err := wseci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
 	// Validate when creating under the Stage route.
 	if wseci.Stage != nil {
 		if err := wseci.Stage.ValidateWith(ctx, cs, cache); err != nil {
@@ -109,8 +118,6 @@ func (wseci *WorkflowStageExecutionCreateInput) ValidateWith(ctx context.Context
 
 // WorkflowStageExecutionCreateInputs holds the creation input item of the WorkflowStageExecution entities.
 type WorkflowStageExecutionCreateInputsItem struct {
-	// ID of the project to belong.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -145,6 +152,8 @@ func (wseci *WorkflowStageExecutionCreateInputsItem) ValidateWith(ctx context.Co
 type WorkflowStageExecutionCreateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create WorkflowStageExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Stage indicates to create WorkflowStageExecution entity MUST under the Stage route.
 	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowExecution indicates to create WorkflowStageExecution entity MUST under the WorkflowExecution route.
@@ -165,7 +174,6 @@ func (wseci *WorkflowStageExecutionCreateInputs) Model() []*WorkflowStageExecuti
 
 	for i := range wseci.Items {
 		_wse := &WorkflowStageExecution{
-			ProjectID:        wseci.Items[i].ProjectID,
 			Name:             wseci.Items[i].Name,
 			Description:      wseci.Items[i].Description,
 			Labels:           wseci.Items[i].Labels,
@@ -175,6 +183,9 @@ func (wseci *WorkflowStageExecutionCreateInputs) Model() []*WorkflowStageExecuti
 			Input:            wseci.Items[i].Input,
 		}
 
+		if wseci.Project != nil {
+			_wse.ProjectID = wseci.Project.ID
+		}
 		if wseci.Stage != nil {
 			_wse.StageID = wseci.Stage.ID
 		}
@@ -211,6 +222,16 @@ func (wseci *WorkflowStageExecutionCreateInputs) ValidateWith(ctx context.Contex
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if wseci.Project != nil {
+		if err := wseci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.Project = nil
+			}
+		}
+	}
 	// Validate when creating under the Stage route.
 	if wseci.Stage != nil {
 		if err := wseci.Stage.ValidateWith(ctx, cs, cache); err != nil {
@@ -262,6 +283,8 @@ type WorkflowStageExecutionDeleteInputsItem struct {
 type WorkflowStageExecutionDeleteInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to delete WorkflowStageExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Stage indicates to delete WorkflowStageExecution entity MUST under the Stage route.
 	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowExecution indicates to delete WorkflowStageExecution entity MUST under the WorkflowExecution route.
@@ -326,6 +349,17 @@ func (wsedi *WorkflowStageExecutionDeleteInputs) ValidateWith(ctx context.Contex
 
 	q := cs.WorkflowStageExecutions().Query()
 
+	// Validate when deleting under the Project route.
+	if wsedi.Project != nil {
+		if err := wsedi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstageexecution.ProjectID(wsedi.Project.ID))
+		}
+	}
+
 	// Validate when deleting under the Stage route.
 	if wsedi.Stage != nil {
 		if err := wsedi.Stage.ValidateWith(ctx, cs, cache); err != nil {
@@ -382,6 +416,8 @@ func (wsedi *WorkflowStageExecutionDeleteInputs) ValidateWith(ctx context.Contex
 type WorkflowStageExecutionQueryInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to query WorkflowStageExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
 	// Stage indicates to query WorkflowStageExecution entity MUST under the Stage route.
 	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"stage"`
 	// WorkflowExecution indicates to query WorkflowStageExecution entity MUST under the WorkflowExecution route.
@@ -429,6 +465,17 @@ func (wseqi *WorkflowStageExecutionQueryInput) ValidateWith(ctx context.Context,
 	}
 
 	q := cs.WorkflowStageExecutions().Query()
+
+	// Validate when querying under the Project route.
+	if wseqi.Project != nil {
+		if err := wseqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstageexecution.ProjectID(wseqi.Project.ID))
+		}
+	}
 
 	// Validate when querying under the Stage route.
 	if wseqi.Stage != nil {
@@ -496,6 +543,8 @@ func (wseqi *WorkflowStageExecutionQueryInput) ValidateWith(ctx context.Context,
 type WorkflowStageExecutionQueryInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to query WorkflowStageExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Stage indicates to query WorkflowStageExecution entity MUST under the Stage route.
 	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowExecution indicates to query WorkflowStageExecution entity MUST under the WorkflowExecution route.
@@ -519,6 +568,13 @@ func (wseqi *WorkflowStageExecutionQueryInputs) ValidateWith(ctx context.Context
 
 	if cache == nil {
 		cache = map[string]any{}
+	}
+
+	// Validate when querying under the Project route.
+	if wseqi.Project != nil {
+		if err := wseqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
 	}
 
 	// Validate when querying under the Stage route.
@@ -636,6 +692,8 @@ func (wseui *WorkflowStageExecutionUpdateInputsItem) ValidateWith(ctx context.Co
 type WorkflowStageExecutionUpdateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to update WorkflowStageExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Stage indicates to update WorkflowStageExecution entity MUST under the Stage route.
 	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowExecution indicates to update WorkflowStageExecution entity MUST under the WorkflowExecution route.
@@ -710,6 +768,17 @@ func (wseui *WorkflowStageExecutionUpdateInputs) ValidateWith(ctx context.Contex
 
 	q := cs.WorkflowStageExecutions().Query()
 
+	// Validate when updating under the Project route.
+	if wseui.Project != nil {
+		if err := wseui.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstageexecution.ProjectID(wseui.Project.ID))
+		}
+	}
+
 	// Validate when updating under the Stage route.
 	if wseui.Stage != nil {
 		if err := wseui.Stage.ValidateWith(ctx, cs, cache); err != nil {
@@ -776,12 +845,12 @@ type WorkflowStageExecutionOutput struct {
 	CreateTime       *time.Time        `json:"createTime,omitempty"`
 	UpdateTime       *time.Time        `json:"updateTime,omitempty"`
 	Status           status.Status     `json:"status,omitempty"`
-	ProjectID        object.ID         `json:"projectID,omitempty"`
 	Duration         int               `json:"duration,omitempty"`
 	StepExecutionIds []object.ID       `json:"stepExecutionIds,omitempty"`
 	Record           string            `json:"record,omitempty"`
 	Input            string            `json:"input,omitempty"`
 
+	Project           *ProjectOutput           `json:"project,omitempty"`
 	Stage             *WorkflowStageOutput     `json:"stage,omitempty"`
 	WorkflowExecution *WorkflowExecutionOutput `json:"workflowExecution,omitempty"`
 }
@@ -810,13 +879,19 @@ func ExposeWorkflowStageExecution(_wse *WorkflowStageExecution) *WorkflowStageEx
 		CreateTime:       _wse.CreateTime,
 		UpdateTime:       _wse.UpdateTime,
 		Status:           _wse.Status,
-		ProjectID:        _wse.ProjectID,
 		Duration:         _wse.Duration,
 		StepExecutionIds: _wse.StepExecutionIds,
 		Record:           _wse.Record,
 		Input:            _wse.Input,
 	}
 
+	if _wse.Edges.Project != nil {
+		wseo.Project = ExposeProject(_wse.Edges.Project)
+	} else if _wse.ProjectID != "" {
+		wseo.Project = &ProjectOutput{
+			ID: _wse.ProjectID,
+		}
+	}
 	if _wse.Edges.Stage != nil {
 		wseo.Stage = ExposeWorkflowStage(_wse.Edges.Stage)
 	} else if _wse.StageID != "" {

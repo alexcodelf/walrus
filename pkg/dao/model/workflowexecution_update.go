@@ -112,15 +112,42 @@ func (weu *WorkflowExecutionUpdate) ClearStatus() *WorkflowExecutionUpdate {
 	return weu
 }
 
-// SetWorkflowStagesExecution sets the "workflow_stages_execution" field.
-func (weu *WorkflowExecutionUpdate) SetWorkflowStagesExecution(o []object.ID) *WorkflowExecutionUpdate {
-	weu.mutation.SetWorkflowStagesExecution(o)
+// SetProgress sets the "progress" field.
+func (weu *WorkflowExecutionUpdate) SetProgress(s string) *WorkflowExecutionUpdate {
+	weu.mutation.SetProgress(s)
 	return weu
 }
 
-// AppendWorkflowStagesExecution appends o to the "workflow_stages_execution" field.
-func (weu *WorkflowExecutionUpdate) AppendWorkflowStagesExecution(o []object.ID) *WorkflowExecutionUpdate {
-	weu.mutation.AppendWorkflowStagesExecution(o)
+// SetDuration sets the "duration" field.
+func (weu *WorkflowExecutionUpdate) SetDuration(i int) *WorkflowExecutionUpdate {
+	weu.mutation.ResetDuration()
+	weu.mutation.SetDuration(i)
+	return weu
+}
+
+// SetNillableDuration sets the "duration" field if the given value is not nil.
+func (weu *WorkflowExecutionUpdate) SetNillableDuration(i *int) *WorkflowExecutionUpdate {
+	if i != nil {
+		weu.SetDuration(*i)
+	}
+	return weu
+}
+
+// AddDuration adds i to the "duration" field.
+func (weu *WorkflowExecutionUpdate) AddDuration(i int) *WorkflowExecutionUpdate {
+	weu.mutation.AddDuration(i)
+	return weu
+}
+
+// SetStageExecutionIds sets the "stage_execution_ids" field.
+func (weu *WorkflowExecutionUpdate) SetStageExecutionIds(o []object.ID) *WorkflowExecutionUpdate {
+	weu.mutation.SetStageExecutionIds(o)
+	return weu
+}
+
+// AppendStageExecutionIds appends o to the "stage_execution_ids" field.
+func (weu *WorkflowExecutionUpdate) AppendStageExecutionIds(o []object.ID) *WorkflowExecutionUpdate {
+	weu.mutation.AppendStageExecutionIds(o)
 	return weu
 }
 
@@ -237,6 +264,14 @@ func (weu *WorkflowExecutionUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (weu *WorkflowExecutionUpdate) check() error {
+	if v, ok := weu.mutation.Duration(); ok {
+		if err := workflowexecution.DurationValidator(v); err != nil {
+			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.duration": %w`, err)}
+		}
+	}
+	if _, ok := weu.mutation.ProjectID(); weu.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowExecution.project"`)
+	}
 	if _, ok := weu.mutation.WorkflowID(); weu.mutation.WorkflowCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowExecution.workflow"`)
 	}
@@ -292,7 +327,9 @@ func (weu *WorkflowExecutionUpdate) Set(obj *WorkflowExecution) *WorkflowExecuti
 	if !reflect.ValueOf(obj.Status).IsZero() {
 		weu.SetStatus(obj.Status)
 	}
-	weu.SetWorkflowStagesExecution(obj.WorkflowStagesExecution)
+	weu.SetProgress(obj.Progress)
+	weu.SetDuration(obj.Duration)
+	weu.SetStageExecutionIds(obj.StageExecutionIds)
 	weu.SetRecord(obj.Record)
 	weu.SetInput(obj.Input)
 
@@ -352,12 +389,21 @@ func (weu *WorkflowExecutionUpdate) sqlSave(ctx context.Context) (n int, err err
 	if weu.mutation.StatusCleared() {
 		_spec.ClearField(workflowexecution.FieldStatus, field.TypeJSON)
 	}
-	if value, ok := weu.mutation.WorkflowStagesExecution(); ok {
-		_spec.SetField(workflowexecution.FieldWorkflowStagesExecution, field.TypeJSON, value)
+	if value, ok := weu.mutation.Progress(); ok {
+		_spec.SetField(workflowexecution.FieldProgress, field.TypeString, value)
 	}
-	if value, ok := weu.mutation.AppendedWorkflowStagesExecution(); ok {
+	if value, ok := weu.mutation.Duration(); ok {
+		_spec.SetField(workflowexecution.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := weu.mutation.AddedDuration(); ok {
+		_spec.AddField(workflowexecution.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := weu.mutation.StageExecutionIds(); ok {
+		_spec.SetField(workflowexecution.FieldStageExecutionIds, field.TypeJSON, value)
+	}
+	if value, ok := weu.mutation.AppendedStageExecutionIds(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflowexecution.FieldWorkflowStagesExecution, value)
+			sqljson.Append(u, workflowexecution.FieldStageExecutionIds, value)
 		})
 	}
 	if value, ok := weu.mutation.Record(); ok {
@@ -509,15 +555,42 @@ func (weuo *WorkflowExecutionUpdateOne) ClearStatus() *WorkflowExecutionUpdateOn
 	return weuo
 }
 
-// SetWorkflowStagesExecution sets the "workflow_stages_execution" field.
-func (weuo *WorkflowExecutionUpdateOne) SetWorkflowStagesExecution(o []object.ID) *WorkflowExecutionUpdateOne {
-	weuo.mutation.SetWorkflowStagesExecution(o)
+// SetProgress sets the "progress" field.
+func (weuo *WorkflowExecutionUpdateOne) SetProgress(s string) *WorkflowExecutionUpdateOne {
+	weuo.mutation.SetProgress(s)
 	return weuo
 }
 
-// AppendWorkflowStagesExecution appends o to the "workflow_stages_execution" field.
-func (weuo *WorkflowExecutionUpdateOne) AppendWorkflowStagesExecution(o []object.ID) *WorkflowExecutionUpdateOne {
-	weuo.mutation.AppendWorkflowStagesExecution(o)
+// SetDuration sets the "duration" field.
+func (weuo *WorkflowExecutionUpdateOne) SetDuration(i int) *WorkflowExecutionUpdateOne {
+	weuo.mutation.ResetDuration()
+	weuo.mutation.SetDuration(i)
+	return weuo
+}
+
+// SetNillableDuration sets the "duration" field if the given value is not nil.
+func (weuo *WorkflowExecutionUpdateOne) SetNillableDuration(i *int) *WorkflowExecutionUpdateOne {
+	if i != nil {
+		weuo.SetDuration(*i)
+	}
+	return weuo
+}
+
+// AddDuration adds i to the "duration" field.
+func (weuo *WorkflowExecutionUpdateOne) AddDuration(i int) *WorkflowExecutionUpdateOne {
+	weuo.mutation.AddDuration(i)
+	return weuo
+}
+
+// SetStageExecutionIds sets the "stage_execution_ids" field.
+func (weuo *WorkflowExecutionUpdateOne) SetStageExecutionIds(o []object.ID) *WorkflowExecutionUpdateOne {
+	weuo.mutation.SetStageExecutionIds(o)
+	return weuo
+}
+
+// AppendStageExecutionIds appends o to the "stage_execution_ids" field.
+func (weuo *WorkflowExecutionUpdateOne) AppendStageExecutionIds(o []object.ID) *WorkflowExecutionUpdateOne {
+	weuo.mutation.AppendStageExecutionIds(o)
 	return weuo
 }
 
@@ -647,6 +720,14 @@ func (weuo *WorkflowExecutionUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (weuo *WorkflowExecutionUpdateOne) check() error {
+	if v, ok := weuo.mutation.Duration(); ok {
+		if err := workflowexecution.DurationValidator(v); err != nil {
+			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.duration": %w`, err)}
+		}
+	}
+	if _, ok := weuo.mutation.ProjectID(); weuo.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowExecution.project"`)
+	}
 	if _, ok := weuo.mutation.WorkflowID(); weuo.mutation.WorkflowCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowExecution.workflow"`)
 	}
@@ -720,8 +801,14 @@ func (weuo *WorkflowExecutionUpdateOne) Set(obj *WorkflowExecution) *WorkflowExe
 					weuo.SetStatus(obj.Status)
 				}
 			}
-			if !reflect.DeepEqual(db.WorkflowStagesExecution, obj.WorkflowStagesExecution) {
-				weuo.SetWorkflowStagesExecution(obj.WorkflowStagesExecution)
+			if db.Progress != obj.Progress {
+				weuo.SetProgress(obj.Progress)
+			}
+			if db.Duration != obj.Duration {
+				weuo.SetDuration(obj.Duration)
+			}
+			if !reflect.DeepEqual(db.StageExecutionIds, obj.StageExecutionIds) {
+				weuo.SetStageExecutionIds(obj.StageExecutionIds)
 			}
 			if db.Record != obj.Record {
 				weuo.SetRecord(obj.Record)
@@ -791,8 +878,14 @@ func (weuo *WorkflowExecutionUpdateOne) SaveE(ctx context.Context, cbs ...func(c
 		if _, set := weuo.mutation.Field(workflowexecution.FieldStatus); set {
 			obj.Status = x.Status
 		}
-		if _, set := weuo.mutation.Field(workflowexecution.FieldWorkflowStagesExecution); set {
-			obj.WorkflowStagesExecution = x.WorkflowStagesExecution
+		if _, set := weuo.mutation.Field(workflowexecution.FieldProgress); set {
+			obj.Progress = x.Progress
+		}
+		if _, set := weuo.mutation.Field(workflowexecution.FieldDuration); set {
+			obj.Duration = x.Duration
+		}
+		if _, set := weuo.mutation.Field(workflowexecution.FieldStageExecutionIds); set {
+			obj.StageExecutionIds = x.StageExecutionIds
 		}
 		if _, set := weuo.mutation.Field(workflowexecution.FieldRecord); set {
 			obj.Record = x.Record
@@ -897,12 +990,21 @@ func (weuo *WorkflowExecutionUpdateOne) sqlSave(ctx context.Context) (_node *Wor
 	if weuo.mutation.StatusCleared() {
 		_spec.ClearField(workflowexecution.FieldStatus, field.TypeJSON)
 	}
-	if value, ok := weuo.mutation.WorkflowStagesExecution(); ok {
-		_spec.SetField(workflowexecution.FieldWorkflowStagesExecution, field.TypeJSON, value)
+	if value, ok := weuo.mutation.Progress(); ok {
+		_spec.SetField(workflowexecution.FieldProgress, field.TypeString, value)
 	}
-	if value, ok := weuo.mutation.AppendedWorkflowStagesExecution(); ok {
+	if value, ok := weuo.mutation.Duration(); ok {
+		_spec.SetField(workflowexecution.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := weuo.mutation.AddedDuration(); ok {
+		_spec.AddField(workflowexecution.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := weuo.mutation.StageExecutionIds(); ok {
+		_spec.SetField(workflowexecution.FieldStageExecutionIds, field.TypeJSON, value)
+	}
+	if value, ok := weuo.mutation.AppendedStageExecutionIds(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflowexecution.FieldWorkflowStagesExecution, value)
+			sqljson.Append(u, workflowexecution.FieldStageExecutionIds, value)
 		})
 	}
 	if value, ok := weuo.mutation.Record(); ok {

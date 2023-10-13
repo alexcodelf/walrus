@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
@@ -62,6 +63,8 @@ type WorkflowStageExecution struct {
 
 // WorkflowStageExecutionEdges holds the relations/edges for other nodes in the graph.
 type WorkflowStageExecutionEdges struct {
+	// Project to which the workflow stage executions belongs.
+	Project *Project `json:"project,omitempty"`
 	// Workflow step executions that belong to this workflow stage execution.
 	StepExecutions []*WorkflowStepExecution `json:"step_executions,omitempty"`
 	// Workflow stage that this workflow stage execution belongs to.
@@ -70,13 +73,26 @@ type WorkflowStageExecutionEdges struct {
 	WorkflowExecution *WorkflowExecution `json:"workflow_execution,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
+}
+
+// ProjectOrErr returns the Project value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e WorkflowStageExecutionEdges) ProjectOrErr() (*Project, error) {
+	if e.loadedTypes[0] {
+		if e.Project == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: project.Label}
+		}
+		return e.Project, nil
+	}
+	return nil, &NotLoadedError{edge: "project"}
 }
 
 // StepExecutionsOrErr returns the StepExecutions value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkflowStageExecutionEdges) StepExecutionsOrErr() ([]*WorkflowStepExecution, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.StepExecutions, nil
 	}
 	return nil, &NotLoadedError{edge: "step_executions"}
@@ -85,7 +101,7 @@ func (e WorkflowStageExecutionEdges) StepExecutionsOrErr() ([]*WorkflowStepExecu
 // StageOrErr returns the Stage value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowStageExecutionEdges) StageOrErr() (*WorkflowStage, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		if e.Stage == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflowstage.Label}
@@ -98,7 +114,7 @@ func (e WorkflowStageExecutionEdges) StageOrErr() (*WorkflowStage, error) {
 // WorkflowExecutionOrErr returns the WorkflowExecution value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowStageExecutionEdges) WorkflowExecutionOrErr() (*WorkflowExecution, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		if e.WorkflowExecution == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflowexecution.Label}
@@ -249,6 +265,11 @@ func (wse *WorkflowStageExecution) assignValues(columns []string, values []any) 
 // This includes values selected through modifiers, order, etc.
 func (wse *WorkflowStageExecution) Value(name string) (ent.Value, error) {
 	return wse.selectValues.Get(name)
+}
+
+// QueryProject queries the "project" edge of the WorkflowStageExecution entity.
+func (wse *WorkflowStageExecution) QueryProject() *ProjectQuery {
+	return NewWorkflowStageExecutionClient(wse.config).QueryProject(wse)
 }
 
 // QueryStepExecutions queries the "step_executions" edge of the WorkflowStageExecution entity.

@@ -113,24 +113,15 @@ func (wsu *WorkflowStageUpdate) ClearStatus() *WorkflowStageUpdate {
 	return wsu
 }
 
-// SetDuration sets the "duration" field.
-func (wsu *WorkflowStageUpdate) SetDuration(i int) *WorkflowStageUpdate {
-	wsu.mutation.ResetDuration()
-	wsu.mutation.SetDuration(i)
+// SetStepIds sets the "step_ids" field.
+func (wsu *WorkflowStageUpdate) SetStepIds(o []object.ID) *WorkflowStageUpdate {
+	wsu.mutation.SetStepIds(o)
 	return wsu
 }
 
-// SetNillableDuration sets the "duration" field if the given value is not nil.
-func (wsu *WorkflowStageUpdate) SetNillableDuration(i *int) *WorkflowStageUpdate {
-	if i != nil {
-		wsu.SetDuration(*i)
-	}
-	return wsu
-}
-
-// AddDuration adds i to the "duration" field.
-func (wsu *WorkflowStageUpdate) AddDuration(i int) *WorkflowStageUpdate {
-	wsu.mutation.AddDuration(i)
+// AppendStepIds appends o to the "step_ids" field.
+func (wsu *WorkflowStageUpdate) AppendStepIds(o []object.ID) *WorkflowStageUpdate {
+	wsu.mutation.AppendStepIds(o)
 	return wsu
 }
 
@@ -267,10 +258,8 @@ func (wsu *WorkflowStageUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (wsu *WorkflowStageUpdate) check() error {
-	if v, ok := wsu.mutation.Duration(); ok {
-		if err := workflowstage.DurationValidator(v); err != nil {
-			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.duration": %w`, err)}
-		}
+	if _, ok := wsu.mutation.ProjectID(); wsu.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStage.project"`)
 	}
 	if _, ok := wsu.mutation.WorkflowID(); wsu.mutation.WorkflowCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStage.workflow"`)
@@ -327,7 +316,7 @@ func (wsu *WorkflowStageUpdate) Set(obj *WorkflowStage) *WorkflowStageUpdate {
 	if !reflect.ValueOf(obj.Status).IsZero() {
 		wsu.SetStatus(obj.Status)
 	}
-	wsu.SetDuration(obj.Duration)
+	wsu.SetStepIds(obj.StepIds)
 	wsu.SetDependencies(obj.Dependencies)
 
 	// With Default.
@@ -386,11 +375,13 @@ func (wsu *WorkflowStageUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if wsu.mutation.StatusCleared() {
 		_spec.ClearField(workflowstage.FieldStatus, field.TypeJSON)
 	}
-	if value, ok := wsu.mutation.Duration(); ok {
-		_spec.SetField(workflowstage.FieldDuration, field.TypeInt, value)
+	if value, ok := wsu.mutation.StepIds(); ok {
+		_spec.SetField(workflowstage.FieldStepIds, field.TypeJSON, value)
 	}
-	if value, ok := wsu.mutation.AddedDuration(); ok {
-		_spec.AddField(workflowstage.FieldDuration, field.TypeInt, value)
+	if value, ok := wsu.mutation.AppendedStepIds(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, workflowstage.FieldStepIds, value)
+		})
 	}
 	if value, ok := wsu.mutation.Dependencies(); ok {
 		_spec.SetField(workflowstage.FieldDependencies, field.TypeJSON, value)
@@ -591,24 +582,15 @@ func (wsuo *WorkflowStageUpdateOne) ClearStatus() *WorkflowStageUpdateOne {
 	return wsuo
 }
 
-// SetDuration sets the "duration" field.
-func (wsuo *WorkflowStageUpdateOne) SetDuration(i int) *WorkflowStageUpdateOne {
-	wsuo.mutation.ResetDuration()
-	wsuo.mutation.SetDuration(i)
+// SetStepIds sets the "step_ids" field.
+func (wsuo *WorkflowStageUpdateOne) SetStepIds(o []object.ID) *WorkflowStageUpdateOne {
+	wsuo.mutation.SetStepIds(o)
 	return wsuo
 }
 
-// SetNillableDuration sets the "duration" field if the given value is not nil.
-func (wsuo *WorkflowStageUpdateOne) SetNillableDuration(i *int) *WorkflowStageUpdateOne {
-	if i != nil {
-		wsuo.SetDuration(*i)
-	}
-	return wsuo
-}
-
-// AddDuration adds i to the "duration" field.
-func (wsuo *WorkflowStageUpdateOne) AddDuration(i int) *WorkflowStageUpdateOne {
-	wsuo.mutation.AddDuration(i)
+// AppendStepIds appends o to the "step_ids" field.
+func (wsuo *WorkflowStageUpdateOne) AppendStepIds(o []object.ID) *WorkflowStageUpdateOne {
+	wsuo.mutation.AppendStepIds(o)
 	return wsuo
 }
 
@@ -758,10 +740,8 @@ func (wsuo *WorkflowStageUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (wsuo *WorkflowStageUpdateOne) check() error {
-	if v, ok := wsuo.mutation.Duration(); ok {
-		if err := workflowstage.DurationValidator(v); err != nil {
-			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.duration": %w`, err)}
-		}
+	if _, ok := wsuo.mutation.ProjectID(); wsuo.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStage.project"`)
 	}
 	if _, ok := wsuo.mutation.WorkflowID(); wsuo.mutation.WorkflowCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStage.workflow"`)
@@ -836,8 +816,8 @@ func (wsuo *WorkflowStageUpdateOne) Set(obj *WorkflowStage) *WorkflowStageUpdate
 					wsuo.SetStatus(obj.Status)
 				}
 			}
-			if db.Duration != obj.Duration {
-				wsuo.SetDuration(obj.Duration)
+			if !reflect.DeepEqual(db.StepIds, obj.StepIds) {
+				wsuo.SetStepIds(obj.StepIds)
 			}
 			if !reflect.DeepEqual(db.Dependencies, obj.Dependencies) {
 				wsuo.SetDependencies(obj.Dependencies)
@@ -904,8 +884,8 @@ func (wsuo *WorkflowStageUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx c
 		if _, set := wsuo.mutation.Field(workflowstage.FieldStatus); set {
 			obj.Status = x.Status
 		}
-		if _, set := wsuo.mutation.Field(workflowstage.FieldDuration); set {
-			obj.Duration = x.Duration
+		if _, set := wsuo.mutation.Field(workflowstage.FieldStepIds); set {
+			obj.StepIds = x.StepIds
 		}
 		if _, set := wsuo.mutation.Field(workflowstage.FieldDependencies); set {
 			obj.Dependencies = x.Dependencies
@@ -1007,11 +987,13 @@ func (wsuo *WorkflowStageUpdateOne) sqlSave(ctx context.Context) (_node *Workflo
 	if wsuo.mutation.StatusCleared() {
 		_spec.ClearField(workflowstage.FieldStatus, field.TypeJSON)
 	}
-	if value, ok := wsuo.mutation.Duration(); ok {
-		_spec.SetField(workflowstage.FieldDuration, field.TypeInt, value)
+	if value, ok := wsuo.mutation.StepIds(); ok {
+		_spec.SetField(workflowstage.FieldStepIds, field.TypeJSON, value)
 	}
-	if value, ok := wsuo.mutation.AddedDuration(); ok {
-		_spec.AddField(workflowstage.FieldDuration, field.TypeInt, value)
+	if value, ok := wsuo.mutation.AppendedStepIds(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, workflowstage.FieldStepIds, value)
+		})
 	}
 	if value, ok := wsuo.mutation.Dependencies(); ok {
 		_spec.SetField(workflowstage.FieldDependencies, field.TypeJSON, value)

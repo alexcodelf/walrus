@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -21,25 +22,25 @@ import (
 type WorkflowExecutionCreateInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create WorkflowExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to create WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
-	// Duration of the workflow execution.
-	Duration int `path:"-" query:"-" json:"duration"`
 	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
-	Progress int `path:"-" query:"-" json:"progress"`
+	Progress string `path:"-" query:"-" json:"progress"`
 	// ID of the subject that this workflow execution belongs to.
-	Subject object.ID `path:"-" query:"-" json:"subject"`
-	// ID of the project to belong.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
+	SubjectID object.ID `path:"-" query:"-" json:"subjectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
+	// Duration of the workflow execution.
+	Duration int `path:"-" query:"-" json:"duration,omitempty"`
 	// ID list of the stage executions that belong to this workflow execution.
-	WorkflowStagesExecution []object.ID `path:"-" query:"-" json:"workflowStagesExecution,omitempty"`
+	StageExecutionIds []object.ID `path:"-" query:"-" json:"stageExecutionIds,omitempty"`
 	// Log record of the workflow execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
@@ -54,18 +55,20 @@ func (weci *WorkflowExecutionCreateInput) Model() *WorkflowExecution {
 	}
 
 	_we := &WorkflowExecution{
-		Duration:                weci.Duration,
-		Progress:                weci.Progress,
-		Subject:                 weci.Subject,
-		ProjectID:               weci.ProjectID,
-		Name:                    weci.Name,
-		Description:             weci.Description,
-		Labels:                  weci.Labels,
-		WorkflowStagesExecution: weci.WorkflowStagesExecution,
-		Record:                  weci.Record,
-		Input:                   weci.Input,
+		Progress:          weci.Progress,
+		SubjectID:         weci.SubjectID,
+		Name:              weci.Name,
+		Description:       weci.Description,
+		Labels:            weci.Labels,
+		Duration:          weci.Duration,
+		StageExecutionIds: weci.StageExecutionIds,
+		Record:            weci.Record,
+		Input:             weci.Input,
 	}
 
+	if weci.Project != nil {
+		_we.ProjectID = weci.Project.ID
+	}
 	if weci.Workflow != nil {
 		_we.WorkflowID = weci.Workflow.ID
 	}
@@ -92,6 +95,12 @@ func (weci *WorkflowExecutionCreateInput) ValidateWith(ctx context.Context, cs C
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if weci.Project != nil {
+		if err := weci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
 	// Validate when creating under the Workflow route.
 	if weci.Workflow != nil {
 		if err := weci.Workflow.ValidateWith(ctx, cs, cache); err != nil {
@@ -104,22 +113,20 @@ func (weci *WorkflowExecutionCreateInput) ValidateWith(ctx context.Context, cs C
 
 // WorkflowExecutionCreateInputs holds the creation input item of the WorkflowExecution entities.
 type WorkflowExecutionCreateInputsItem struct {
-	// Duration of the workflow execution.
-	Duration int `path:"-" query:"-" json:"duration"`
 	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
-	Progress int `path:"-" query:"-" json:"progress"`
+	Progress string `path:"-" query:"-" json:"progress"`
 	// ID of the subject that this workflow execution belongs to.
-	Subject object.ID `path:"-" query:"-" json:"subject"`
-	// ID of the project to belong.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
+	SubjectID object.ID `path:"-" query:"-" json:"subjectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
+	// Duration of the workflow execution.
+	Duration int `path:"-" query:"-" json:"duration,omitempty"`
 	// ID list of the stage executions that belong to this workflow execution.
-	WorkflowStagesExecution []object.ID `path:"-" query:"-" json:"workflowStagesExecution,omitempty"`
+	StageExecutionIds []object.ID `path:"-" query:"-" json:"stageExecutionIds,omitempty"`
 	// Log record of the workflow execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
@@ -144,6 +151,8 @@ func (weci *WorkflowExecutionCreateInputsItem) ValidateWith(ctx context.Context,
 type WorkflowExecutionCreateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create WorkflowExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to create WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
@@ -162,18 +171,20 @@ func (weci *WorkflowExecutionCreateInputs) Model() []*WorkflowExecution {
 
 	for i := range weci.Items {
 		_we := &WorkflowExecution{
-			Duration:                weci.Items[i].Duration,
-			Progress:                weci.Items[i].Progress,
-			Subject:                 weci.Items[i].Subject,
-			ProjectID:               weci.Items[i].ProjectID,
-			Name:                    weci.Items[i].Name,
-			Description:             weci.Items[i].Description,
-			Labels:                  weci.Items[i].Labels,
-			WorkflowStagesExecution: weci.Items[i].WorkflowStagesExecution,
-			Record:                  weci.Items[i].Record,
-			Input:                   weci.Items[i].Input,
+			Progress:          weci.Items[i].Progress,
+			SubjectID:         weci.Items[i].SubjectID,
+			Name:              weci.Items[i].Name,
+			Description:       weci.Items[i].Description,
+			Labels:            weci.Items[i].Labels,
+			Duration:          weci.Items[i].Duration,
+			StageExecutionIds: weci.Items[i].StageExecutionIds,
+			Record:            weci.Items[i].Record,
+			Input:             weci.Items[i].Input,
 		}
 
+		if weci.Project != nil {
+			_we.ProjectID = weci.Project.ID
+		}
 		if weci.Workflow != nil {
 			_we.WorkflowID = weci.Workflow.ID
 		}
@@ -207,6 +218,16 @@ func (weci *WorkflowExecutionCreateInputs) ValidateWith(ctx context.Context, cs 
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if weci.Project != nil {
+		if err := weci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				weci.Project = nil
+			}
+		}
+	}
 	// Validate when creating under the Workflow route.
 	if weci.Workflow != nil {
 		if err := weci.Workflow.ValidateWith(ctx, cs, cache); err != nil {
@@ -248,6 +269,8 @@ type WorkflowExecutionDeleteInputsItem struct {
 type WorkflowExecutionDeleteInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to delete WorkflowExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to delete WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
@@ -310,6 +333,17 @@ func (wedi *WorkflowExecutionDeleteInputs) ValidateWith(ctx context.Context, cs 
 
 	q := cs.WorkflowExecutions().Query()
 
+	// Validate when deleting under the Project route.
+	if wedi.Project != nil {
+		if err := wedi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowexecution.ProjectID(wedi.Project.ID))
+		}
+	}
+
 	// Validate when deleting under the Workflow route.
 	if wedi.Workflow != nil {
 		if err := wedi.Workflow.ValidateWith(ctx, cs, cache); err != nil {
@@ -356,6 +390,8 @@ func (wedi *WorkflowExecutionDeleteInputs) ValidateWith(ctx context.Context, cs 
 type WorkflowExecutionQueryInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to query WorkflowExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
 	// Workflow indicates to query WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"workflow"`
 
@@ -401,6 +437,17 @@ func (weqi *WorkflowExecutionQueryInput) ValidateWith(ctx context.Context, cs Cl
 	}
 
 	q := cs.WorkflowExecutions().Query()
+
+	// Validate when querying under the Project route.
+	if weqi.Project != nil {
+		if err := weqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowexecution.ProjectID(weqi.Project.ID))
+		}
+	}
 
 	// Validate when querying under the Workflow route.
 	if weqi.Workflow != nil {
@@ -458,6 +505,8 @@ func (weqi *WorkflowExecutionQueryInput) ValidateWith(ctx context.Context, cs Cl
 type WorkflowExecutionQueryInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to query WorkflowExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to query WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 }
@@ -481,6 +530,13 @@ func (weqi *WorkflowExecutionQueryInputs) ValidateWith(ctx context.Context, cs C
 		cache = map[string]any{}
 	}
 
+	// Validate when querying under the Project route.
+	if weqi.Project != nil {
+		if err := weqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
 	// Validate when querying under the Workflow route.
 	if weqi.Workflow != nil {
 		if err := weqi.Workflow.ValidateWith(ctx, cs, cache); err != nil {
@@ -500,8 +556,12 @@ type WorkflowExecutionUpdateInput struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
+	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
+	Progress string `path:"-" query:"-" json:"progress,omitempty"`
+	// Duration of the workflow execution.
+	Duration int `path:"-" query:"-" json:"duration,omitempty"`
 	// ID list of the stage executions that belong to this workflow execution.
-	WorkflowStagesExecution []object.ID `path:"-" query:"-" json:"workflowStagesExecution,omitempty"`
+	StageExecutionIds []object.ID `path:"-" query:"-" json:"stageExecutionIds,omitempty"`
 	// Log record of the workflow execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
@@ -516,12 +576,14 @@ func (weui *WorkflowExecutionUpdateInput) Model() *WorkflowExecution {
 	}
 
 	_we := &WorkflowExecution{
-		ID:                      weui.ID,
-		Description:             weui.Description,
-		Labels:                  weui.Labels,
-		WorkflowStagesExecution: weui.WorkflowStagesExecution,
-		Record:                  weui.Record,
-		Input:                   weui.Input,
+		ID:                weui.ID,
+		Description:       weui.Description,
+		Labels:            weui.Labels,
+		Progress:          weui.Progress,
+		Duration:          weui.Duration,
+		StageExecutionIds: weui.StageExecutionIds,
+		Record:            weui.Record,
+		Input:             weui.Input,
 	}
 
 	return _we
@@ -558,8 +620,12 @@ type WorkflowExecutionUpdateInputsItem struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
+	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
+	Progress string `path:"-" query:"-" json:"progress"`
+	// Duration of the workflow execution.
+	Duration int `path:"-" query:"-" json:"duration"`
 	// ID list of the stage executions that belong to this workflow execution.
-	WorkflowStagesExecution []object.ID `path:"-" query:"-" json:"workflowStagesExecution"`
+	StageExecutionIds []object.ID `path:"-" query:"-" json:"stageExecutionIds"`
 	// Log record of the workflow execution.
 	Record string `path:"-" query:"-" json:"record"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
@@ -584,6 +650,8 @@ func (weui *WorkflowExecutionUpdateInputsItem) ValidateWith(ctx context.Context,
 type WorkflowExecutionUpdateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to update WorkflowExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to update WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
@@ -602,12 +670,14 @@ func (weui *WorkflowExecutionUpdateInputs) Model() []*WorkflowExecution {
 
 	for i := range weui.Items {
 		_we := &WorkflowExecution{
-			ID:                      weui.Items[i].ID,
-			Description:             weui.Items[i].Description,
-			Labels:                  weui.Items[i].Labels,
-			WorkflowStagesExecution: weui.Items[i].WorkflowStagesExecution,
-			Record:                  weui.Items[i].Record,
-			Input:                   weui.Items[i].Input,
+			ID:                weui.Items[i].ID,
+			Description:       weui.Items[i].Description,
+			Labels:            weui.Items[i].Labels,
+			Progress:          weui.Items[i].Progress,
+			Duration:          weui.Items[i].Duration,
+			StageExecutionIds: weui.Items[i].StageExecutionIds,
+			Record:            weui.Items[i].Record,
+			Input:             weui.Items[i].Input,
 		}
 
 		_wes[i] = _we
@@ -654,6 +724,17 @@ func (weui *WorkflowExecutionUpdateInputs) ValidateWith(ctx context.Context, cs 
 	}
 
 	q := cs.WorkflowExecutions().Query()
+
+	// Validate when updating under the Project route.
+	if weui.Project != nil {
+		if err := weui.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowexecution.ProjectID(weui.Project.ID))
+		}
+	}
 
 	// Validate when updating under the Workflow route.
 	if weui.Workflow != nil {
@@ -704,21 +785,21 @@ func (weui *WorkflowExecutionUpdateInputs) ValidateWith(ctx context.Context, cs 
 
 // WorkflowExecutionOutput holds the output of the WorkflowExecution entity.
 type WorkflowExecutionOutput struct {
-	ID                      object.ID         `json:"id,omitempty"`
-	Name                    string            `json:"name,omitempty"`
-	Description             string            `json:"description,omitempty"`
-	Labels                  map[string]string `json:"labels,omitempty"`
-	CreateTime              *time.Time        `json:"createTime,omitempty"`
-	UpdateTime              *time.Time        `json:"updateTime,omitempty"`
-	Status                  status.Status     `json:"status,omitempty"`
-	ProjectID               object.ID         `json:"projectID,omitempty"`
-	Subject                 object.ID         `json:"subject,omitempty"`
-	Progress                int               `json:"progress,omitempty"`
-	Duration                int               `json:"duration,omitempty"`
-	WorkflowStagesExecution []object.ID       `json:"workflowStagesExecution,omitempty"`
-	Record                  string            `json:"record,omitempty"`
-	Input                   string            `json:"input,omitempty"`
+	ID                object.ID         `json:"id,omitempty"`
+	Name              string            `json:"name,omitempty"`
+	Description       string            `json:"description,omitempty"`
+	Labels            map[string]string `json:"labels,omitempty"`
+	CreateTime        *time.Time        `json:"createTime,omitempty"`
+	UpdateTime        *time.Time        `json:"updateTime,omitempty"`
+	Status            status.Status     `json:"status,omitempty"`
+	SubjectID         object.ID         `json:"subjectID,omitempty"`
+	Progress          string            `json:"progress,omitempty"`
+	Duration          int               `json:"duration,omitempty"`
+	StageExecutionIds []object.ID       `json:"stageExecutionIds,omitempty"`
+	Record            string            `json:"record,omitempty"`
+	Input             string            `json:"input,omitempty"`
 
+	Project  *ProjectOutput  `json:"project,omitempty"`
 	Workflow *WorkflowOutput `json:"workflow,omitempty"`
 }
 
@@ -739,22 +820,28 @@ func ExposeWorkflowExecution(_we *WorkflowExecution) *WorkflowExecutionOutput {
 	}
 
 	weo := &WorkflowExecutionOutput{
-		ID:                      _we.ID,
-		Name:                    _we.Name,
-		Description:             _we.Description,
-		Labels:                  _we.Labels,
-		CreateTime:              _we.CreateTime,
-		UpdateTime:              _we.UpdateTime,
-		Status:                  _we.Status,
-		ProjectID:               _we.ProjectID,
-		Subject:                 _we.Subject,
-		Progress:                _we.Progress,
-		Duration:                _we.Duration,
-		WorkflowStagesExecution: _we.WorkflowStagesExecution,
-		Record:                  _we.Record,
-		Input:                   _we.Input,
+		ID:                _we.ID,
+		Name:              _we.Name,
+		Description:       _we.Description,
+		Labels:            _we.Labels,
+		CreateTime:        _we.CreateTime,
+		UpdateTime:        _we.UpdateTime,
+		Status:            _we.Status,
+		SubjectID:         _we.SubjectID,
+		Progress:          _we.Progress,
+		Duration:          _we.Duration,
+		StageExecutionIds: _we.StageExecutionIds,
+		Record:            _we.Record,
+		Input:             _we.Input,
 	}
 
+	if _we.Edges.Project != nil {
+		weo.Project = ExposeProject(_we.Edges.Project)
+	} else if _we.ProjectID != "" {
+		weo.Project = &ProjectOutput{
+			ID: _we.ProjectID,
+		}
+	}
 	if _we.Edges.Workflow != nil {
 		weo.Workflow = ExposeWorkflow(_we.Edges.Workflow)
 	} else if _we.WorkflowID != "" {

@@ -676,6 +676,35 @@ func ParallelismLTE(v int) predicate.Workflow {
 	return predicate.Workflow(sql.FieldLTE(FieldParallelism, v))
 }
 
+// HasProject applies the HasEdge predicate on the "project" edge.
+func HasProject() predicate.Workflow {
+	return predicate.Workflow(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.Workflow
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProjectWith applies the HasEdge predicate on the "project" edge with a given conditions (other predicates).
+func HasProjectWith(preds ...predicate.Project) predicate.Workflow {
+	return predicate.Workflow(func(s *sql.Selector) {
+		step := newProjectStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.Workflow
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasStages applies the HasEdge predicate on the "stages" edge.
 func HasStages() predicate.Workflow {
 	return predicate.Workflow(func(s *sql.Selector) {

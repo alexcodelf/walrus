@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -47,7 +48,7 @@ type Workflow struct {
 	// Type of the workflow.
 	Type string `json:"type,omitempty"`
 	// ID list of the stages that belong to this workflow.
-	WorkflowStageIds []object.ID `json:"workflow_stage_ids,omitempty"`
+	StageIds []object.ID `json:"stage_ids,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `json:"parallelism,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -58,19 +59,34 @@ type Workflow struct {
 
 // WorkflowEdges holds the relations/edges for other nodes in the graph.
 type WorkflowEdges struct {
+	// Project to which the workflow belongs.
+	Project *Project `json:"project,omitempty"`
 	// Stages that belong to this workflow.
 	Stages []*WorkflowStage `json:"stages,omitempty"`
 	// Workflow executions that belong to this workflow.
 	Executions []*WorkflowExecution `json:"executions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
+}
+
+// ProjectOrErr returns the Project value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e WorkflowEdges) ProjectOrErr() (*Project, error) {
+	if e.loadedTypes[0] {
+		if e.Project == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: project.Label}
+		}
+		return e.Project, nil
+	}
+	return nil, &NotLoadedError{edge: "project"}
 }
 
 // StagesOrErr returns the Stages value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkflowEdges) StagesOrErr() ([]*WorkflowStage, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Stages, nil
 	}
 	return nil, &NotLoadedError{edge: "stages"}
@@ -79,7 +95,7 @@ func (e WorkflowEdges) StagesOrErr() ([]*WorkflowStage, error) {
 // ExecutionsOrErr returns the Executions value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkflowEdges) ExecutionsOrErr() ([]*WorkflowExecution, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.Executions, nil
 	}
 	return nil, &NotLoadedError{edge: "executions"}
@@ -90,7 +106,7 @@ func (*Workflow) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflow.FieldLabels, workflow.FieldAnnotations, workflow.FieldStatus, workflow.FieldWorkflowStageIds:
+		case workflow.FieldLabels, workflow.FieldAnnotations, workflow.FieldStatus, workflow.FieldStageIds:
 			values[i] = new([]byte)
 		case workflow.FieldID, workflow.FieldProjectID, workflow.FieldEnvironmentID:
 			values[i] = new(object.ID)
@@ -195,12 +211,12 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				w.Type = value.String
 			}
-		case workflow.FieldWorkflowStageIds:
+		case workflow.FieldStageIds:
 			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field workflow_stage_ids", values[i])
+				return fmt.Errorf("unexpected type %T for field stage_ids", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &w.WorkflowStageIds); err != nil {
-					return fmt.Errorf("unmarshal field workflow_stage_ids: %w", err)
+				if err := json.Unmarshal(*value, &w.StageIds); err != nil {
+					return fmt.Errorf("unmarshal field stage_ids: %w", err)
 				}
 			}
 		case workflow.FieldParallelism:
@@ -220,6 +236,11 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (w *Workflow) Value(name string) (ent.Value, error) {
 	return w.selectValues.Get(name)
+}
+
+// QueryProject queries the "project" edge of the Workflow entity.
+func (w *Workflow) QueryProject() *ProjectQuery {
+	return NewWorkflowClient(w.config).QueryProject(w)
 }
 
 // QueryStages queries the "stages" edge of the Workflow entity.
@@ -292,8 +313,8 @@ func (w *Workflow) String() string {
 	builder.WriteString("type=")
 	builder.WriteString(w.Type)
 	builder.WriteString(", ")
-	builder.WriteString("workflow_stage_ids=")
-	builder.WriteString(fmt.Sprintf("%v", w.WorkflowStageIds))
+	builder.WriteString("stage_ids=")
+	builder.WriteString(fmt.Sprintf("%v", w.StageIds))
 	builder.WriteString(", ")
 	builder.WriteString("parallelism=")
 	builder.WriteString(fmt.Sprintf("%v", w.Parallelism))

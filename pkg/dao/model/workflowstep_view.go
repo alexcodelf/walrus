@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -22,10 +23,11 @@ import (
 type WorkflowStepCreateInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create WorkflowStep entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+
 	// ID of the workflow that this workflow step belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
-	// ID of the project to belong.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Type of the workflow step.
 	Type string `path:"-" query:"-" json:"type"`
 	// Name holds the value of the "name" field.
@@ -35,11 +37,11 @@ type WorkflowStepCreateInput struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step.
-	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
 	// Input of the workflow step.
-	Input map[string]any `path:"-" query:"-" json:"input,omitempty"`
+	Input map[string]interface{} `path:"-" query:"-" json:"input,omitempty"`
 	// Output of the workflow step.
-	Output map[string]any `path:"-" query:"-" json:"output,omitempty"`
+	Output map[string]interface{} `path:"-" query:"-" json:"output,omitempty"`
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.
@@ -57,7 +59,6 @@ func (wsci *WorkflowStepCreateInput) Model() *WorkflowStep {
 
 	_ws := &WorkflowStep{
 		WorkflowID:    wsci.WorkflowID,
-		ProjectID:     wsci.ProjectID,
 		Type:          wsci.Type,
 		Name:          wsci.Name,
 		Description:   wsci.Description,
@@ -68,6 +69,10 @@ func (wsci *WorkflowStepCreateInput) Model() *WorkflowStep {
 		Dependencies:  wsci.Dependencies,
 		RetryStrategy: wsci.RetryStrategy,
 		Timeout:       wsci.Timeout,
+	}
+
+	if wsci.Project != nil {
+		_ws.ProjectID = wsci.Project.ID
 	}
 
 	return _ws
@@ -92,6 +97,13 @@ func (wsci *WorkflowStepCreateInput) ValidateWith(ctx context.Context, cs Client
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if wsci.Project != nil {
+		if err := wsci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -99,8 +111,6 @@ func (wsci *WorkflowStepCreateInput) ValidateWith(ctx context.Context, cs Client
 type WorkflowStepCreateInputsItem struct {
 	// ID of the workflow that this workflow step belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
-	// ID of the project to belong.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Type of the workflow step.
 	Type string `path:"-" query:"-" json:"type"`
 	// Name holds the value of the "name" field.
@@ -110,11 +120,11 @@ type WorkflowStepCreateInputsItem struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step.
-	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
 	// Input of the workflow step.
-	Input map[string]any `path:"-" query:"-" json:"input,omitempty"`
+	Input map[string]interface{} `path:"-" query:"-" json:"input,omitempty"`
 	// Output of the workflow step.
-	Output map[string]any `path:"-" query:"-" json:"output,omitempty"`
+	Output map[string]interface{} `path:"-" query:"-" json:"output,omitempty"`
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.
@@ -141,6 +151,9 @@ func (wsci *WorkflowStepCreateInputsItem) ValidateWith(ctx context.Context, cs C
 type WorkflowStepCreateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create WorkflowStep entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepCreateInputsItem `path:"-" query:"-" json:"items"`
 }
@@ -157,7 +170,6 @@ func (wsci *WorkflowStepCreateInputs) Model() []*WorkflowStep {
 	for i := range wsci.Items {
 		_ws := &WorkflowStep{
 			WorkflowID:    wsci.Items[i].WorkflowID,
-			ProjectID:     wsci.Items[i].ProjectID,
 			Type:          wsci.Items[i].Type,
 			Name:          wsci.Items[i].Name,
 			Description:   wsci.Items[i].Description,
@@ -168,6 +180,10 @@ func (wsci *WorkflowStepCreateInputs) Model() []*WorkflowStep {
 			Dependencies:  wsci.Items[i].Dependencies,
 			RetryStrategy: wsci.Items[i].RetryStrategy,
 			Timeout:       wsci.Items[i].Timeout,
+		}
+
+		if wsci.Project != nil {
+			_ws.ProjectID = wsci.Project.ID
 		}
 
 		_wss[i] = _ws
@@ -199,6 +215,17 @@ func (wsci *WorkflowStepCreateInputs) ValidateWith(ctx context.Context, cs Clien
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if wsci.Project != nil {
+		if err := wsci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wsci.Project = nil
+			}
+		}
+	}
+
 	for i := range wsci.Items {
 		if wsci.Items[i] == nil {
 			continue
@@ -228,6 +255,9 @@ type WorkflowStepDeleteInputsItem struct {
 // please tags with `path:",inline" json:",inline"` if embedding.
 type WorkflowStepDeleteInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to delete WorkflowStep entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepDeleteInputsItem `path:"-" query:"-" json:"items"`
@@ -288,6 +318,17 @@ func (wsdi *WorkflowStepDeleteInputs) ValidateWith(ctx context.Context, cs Clien
 
 	q := cs.WorkflowSteps().Query()
 
+	// Validate when deleting under the Project route.
+	if wsdi.Project != nil {
+		if err := wsdi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstep.ProjectID(wsdi.Project.ID))
+		}
+	}
+
 	ids := make([]object.ID, 0, len(wsdi.Items))
 
 	for i := range wsdi.Items {
@@ -323,6 +364,9 @@ func (wsdi *WorkflowStepDeleteInputs) ValidateWith(ctx context.Context, cs Clien
 // please tags with `path:",inline"` if embedding.
 type WorkflowStepQueryInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to query WorkflowStep entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
 
 	// Refer holds the route path reference of the WorkflowStep entity.
 	Refer *object.Refer `path:"workflowstep,default=" query:"-" json:"-"`
@@ -366,6 +410,17 @@ func (wsqi *WorkflowStepQueryInput) ValidateWith(ctx context.Context, cs ClientS
 	}
 
 	q := cs.WorkflowSteps().Query()
+
+	// Validate when querying under the Project route.
+	if wsqi.Project != nil {
+		if err := wsqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstep.ProjectID(wsqi.Project.ID))
+		}
+	}
 
 	if wsqi.Refer != nil {
 		if wsqi.Refer.IsID() {
@@ -412,6 +467,9 @@ func (wsqi *WorkflowStepQueryInput) ValidateWith(ctx context.Context, cs ClientS
 // please tags with `path:",inline" query:",inline"` if embedding.
 type WorkflowStepQueryInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to query WorkflowStep entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 }
 
 // Validate checks the WorkflowStepQueryInputs entity.
@@ -433,6 +491,13 @@ func (wsqi *WorkflowStepQueryInputs) ValidateWith(ctx context.Context, cs Client
 		cache = map[string]any{}
 	}
 
+	// Validate when querying under the Project route.
+	if wsqi.Project != nil {
+		if err := wsqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -446,11 +511,11 @@ type WorkflowStepUpdateInput struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step.
-	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
 	// Input of the workflow step.
-	Input map[string]any `path:"-" query:"-" json:"input,omitempty"`
+	Input map[string]interface{} `path:"-" query:"-" json:"input,omitempty"`
 	// Output of the workflow step.
-	Output map[string]any `path:"-" query:"-" json:"output,omitempty"`
+	Output map[string]interface{} `path:"-" query:"-" json:"output,omitempty"`
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.
@@ -513,11 +578,11 @@ type WorkflowStepUpdateInputsItem struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step.
-	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
 	// Input of the workflow step.
-	Input map[string]any `path:"-" query:"-" json:"input,omitempty"`
+	Input map[string]interface{} `path:"-" query:"-" json:"input,omitempty"`
 	// Output of the workflow step.
-	Output map[string]any `path:"-" query:"-" json:"output,omitempty"`
+	Output map[string]interface{} `path:"-" query:"-" json:"output,omitempty"`
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies"`
 	// Retry policy of the workflow step.
@@ -543,6 +608,9 @@ func (wsui *WorkflowStepUpdateInputsItem) ValidateWith(ctx context.Context, cs C
 // please tags with `path:",inline" json:",inline"` if embedding.
 type WorkflowStepUpdateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to update WorkflowStep entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepUpdateInputsItem `path:"-" query:"-" json:"items"`
@@ -615,6 +683,17 @@ func (wsui *WorkflowStepUpdateInputs) ValidateWith(ctx context.Context, cs Clien
 
 	q := cs.WorkflowSteps().Query()
 
+	// Validate when updating under the Project route.
+	if wsui.Project != nil {
+		if err := wsui.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstep.ProjectID(wsui.Project.ID))
+		}
+	}
+
 	ids := make([]object.ID, 0, len(wsui.Items))
 
 	for i := range wsui.Items {
@@ -654,22 +733,23 @@ func (wsui *WorkflowStepUpdateInputs) ValidateWith(ctx context.Context, cs Clien
 
 // WorkflowStepOutput holds the output of the WorkflowStep entity.
 type WorkflowStepOutput struct {
-	ID            object.ID           `json:"id,omitempty"`
-	Name          string              `json:"name,omitempty"`
-	Description   string              `json:"description,omitempty"`
-	Labels        map[string]string   `json:"labels,omitempty"`
-	CreateTime    *time.Time          `json:"createTime,omitempty"`
-	UpdateTime    *time.Time          `json:"updateTime,omitempty"`
-	Status        status.Status       `json:"status,omitempty"`
-	Type          string              `json:"type,omitempty"`
-	ProjectID     object.ID           `json:"projectID,omitempty"`
-	WorkflowID    object.ID           `json:"workflowID,omitempty"`
-	Spec          map[string]any      `json:"spec,omitempty"`
-	Input         map[string]any      `json:"input,omitempty"`
-	Output        map[string]any      `json:"output,omitempty"`
-	Dependencies  []object.ID         `json:"dependencies,omitempty"`
-	RetryStrategy types.RetryStrategy `json:"retryStrategy,omitempty"`
-	Timeout       int                 `json:"timeout,omitempty"`
+	ID            object.ID              `json:"id,omitempty"`
+	Name          string                 `json:"name,omitempty"`
+	Description   string                 `json:"description,omitempty"`
+	Labels        map[string]string      `json:"labels,omitempty"`
+	CreateTime    *time.Time             `json:"createTime,omitempty"`
+	UpdateTime    *time.Time             `json:"updateTime,omitempty"`
+	Status        status.Status          `json:"status,omitempty"`
+	Type          string                 `json:"type,omitempty"`
+	WorkflowID    object.ID              `json:"workflowID,omitempty"`
+	Spec          map[string]interface{} `json:"spec,omitempty"`
+	Input         map[string]interface{} `json:"input,omitempty"`
+	Output        map[string]interface{} `json:"output,omitempty"`
+	Dependencies  []object.ID            `json:"dependencies,omitempty"`
+	RetryStrategy types.RetryStrategy    `json:"retryStrategy,omitempty"`
+	Timeout       int                    `json:"timeout,omitempty"`
+
+	Project *ProjectOutput `json:"project,omitempty"`
 }
 
 // View returns the output of WorkflowStep entity.
@@ -697,7 +777,6 @@ func ExposeWorkflowStep(_ws *WorkflowStep) *WorkflowStepOutput {
 		UpdateTime:    _ws.UpdateTime,
 		Status:        _ws.Status,
 		Type:          _ws.Type,
-		ProjectID:     _ws.ProjectID,
 		WorkflowID:    _ws.WorkflowID,
 		Spec:          _ws.Spec,
 		Input:         _ws.Input,
@@ -707,6 +786,13 @@ func ExposeWorkflowStep(_ws *WorkflowStep) *WorkflowStepOutput {
 		Timeout:       _ws.Timeout,
 	}
 
+	if _ws.Edges.Project != nil {
+		wso.Project = ExposeProject(_ws.Edges.Project)
+	} else if _ws.ProjectID != "" {
+		wso.Project = &ProjectOutput{
+			ID: _ws.ProjectID,
+		}
+	}
 	return wso
 }
 

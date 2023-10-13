@@ -23,5 +23,10 @@ func (m *ApprovalStepManager) GenerateTemplate(
 	ctx context.Context,
 	stepExec *model.WorkflowStepExecution,
 ) (*v1alpha1.Template, error) {
-	return nil, nil
+	suspend := &v1alpha1.Template{
+		Name:    "suspend" + stepExec.ID.String(),
+		Suspend: &v1alpha1.SuspendTemplate{},
+	}
+
+	return suspend, nil
 }

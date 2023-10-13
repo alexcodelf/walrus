@@ -8248,40 +8248,58 @@ func (m *PerspectiveMutation) ResetEdge(name string) error {
 // ProjectMutation represents an operation that mutates the Project nodes in the graph.
 type ProjectMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *object.ID
-	name                     *string
-	description              *string
-	labels                   *map[string]string
-	annotations              *map[string]string
-	create_time              *time.Time
-	update_time              *time.Time
-	clearedFields            map[string]struct{}
-	environments             map[object.ID]struct{}
-	removedenvironments      map[object.ID]struct{}
-	clearedenvironments      bool
-	connectors               map[object.ID]struct{}
-	removedconnectors        map[object.ID]struct{}
-	clearedconnectors        bool
-	subject_roles            map[object.ID]struct{}
-	removedsubject_roles     map[object.ID]struct{}
-	clearedsubject_roles     bool
-	services                 map[object.ID]struct{}
-	removedservices          map[object.ID]struct{}
-	clearedservices          bool
-	service_resources        map[object.ID]struct{}
-	removedservice_resources map[object.ID]struct{}
-	clearedservice_resources bool
-	service_revisions        map[object.ID]struct{}
-	removedservice_revisions map[object.ID]struct{}
-	clearedservice_revisions bool
-	variables                map[object.ID]struct{}
-	removedvariables         map[object.ID]struct{}
-	clearedvariables         bool
-	done                     bool
-	oldValue                 func(context.Context) (*Project, error)
-	predicates               []predicate.Project
+	op                               Op
+	typ                              string
+	id                               *object.ID
+	name                             *string
+	description                      *string
+	labels                           *map[string]string
+	annotations                      *map[string]string
+	create_time                      *time.Time
+	update_time                      *time.Time
+	clearedFields                    map[string]struct{}
+	environments                     map[object.ID]struct{}
+	removedenvironments              map[object.ID]struct{}
+	clearedenvironments              bool
+	connectors                       map[object.ID]struct{}
+	removedconnectors                map[object.ID]struct{}
+	clearedconnectors                bool
+	subject_roles                    map[object.ID]struct{}
+	removedsubject_roles             map[object.ID]struct{}
+	clearedsubject_roles             bool
+	services                         map[object.ID]struct{}
+	removedservices                  map[object.ID]struct{}
+	clearedservices                  bool
+	service_resources                map[object.ID]struct{}
+	removedservice_resources         map[object.ID]struct{}
+	clearedservice_resources         bool
+	service_revisions                map[object.ID]struct{}
+	removedservice_revisions         map[object.ID]struct{}
+	clearedservice_revisions         bool
+	variables                        map[object.ID]struct{}
+	removedvariables                 map[object.ID]struct{}
+	clearedvariables                 bool
+	workflows                        map[object.ID]struct{}
+	removedworkflows                 map[object.ID]struct{}
+	clearedworkflows                 bool
+	workflow_stages                  map[object.ID]struct{}
+	removedworkflow_stages           map[object.ID]struct{}
+	clearedworkflow_stages           bool
+	workflow_steps                   map[object.ID]struct{}
+	removedworkflow_steps            map[object.ID]struct{}
+	clearedworkflow_steps            bool
+	workflow_executions              map[object.ID]struct{}
+	removedworkflow_executions       map[object.ID]struct{}
+	clearedworkflow_executions       bool
+	workflow_stage_executions        map[object.ID]struct{}
+	removedworkflow_stage_executions map[object.ID]struct{}
+	clearedworkflow_stage_executions bool
+	workflow_step_executions         map[object.ID]struct{}
+	removedworkflow_step_executions  map[object.ID]struct{}
+	clearedworkflow_step_executions  bool
+	done                             bool
+	oldValue                         func(context.Context) (*Project, error)
+	predicates                       []predicate.Project
 }
 
 var _ ent.Mutation = (*ProjectMutation)(nil)
@@ -9021,6 +9039,330 @@ func (m *ProjectMutation) ResetVariables() {
 	m.removedvariables = nil
 }
 
+// AddWorkflowIDs adds the "workflows" edge to the Workflow entity by ids.
+func (m *ProjectMutation) AddWorkflowIDs(ids ...object.ID) {
+	if m.workflows == nil {
+		m.workflows = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		m.workflows[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWorkflows clears the "workflows" edge to the Workflow entity.
+func (m *ProjectMutation) ClearWorkflows() {
+	m.clearedworkflows = true
+}
+
+// WorkflowsCleared reports if the "workflows" edge to the Workflow entity was cleared.
+func (m *ProjectMutation) WorkflowsCleared() bool {
+	return m.clearedworkflows
+}
+
+// RemoveWorkflowIDs removes the "workflows" edge to the Workflow entity by IDs.
+func (m *ProjectMutation) RemoveWorkflowIDs(ids ...object.ID) {
+	if m.removedworkflows == nil {
+		m.removedworkflows = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		delete(m.workflows, ids[i])
+		m.removedworkflows[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWorkflows returns the removed IDs of the "workflows" edge to the Workflow entity.
+func (m *ProjectMutation) RemovedWorkflowsIDs() (ids []object.ID) {
+	for id := range m.removedworkflows {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WorkflowsIDs returns the "workflows" edge IDs in the mutation.
+func (m *ProjectMutation) WorkflowsIDs() (ids []object.ID) {
+	for id := range m.workflows {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWorkflows resets all changes to the "workflows" edge.
+func (m *ProjectMutation) ResetWorkflows() {
+	m.workflows = nil
+	m.clearedworkflows = false
+	m.removedworkflows = nil
+}
+
+// AddWorkflowStageIDs adds the "workflow_stages" edge to the WorkflowStage entity by ids.
+func (m *ProjectMutation) AddWorkflowStageIDs(ids ...object.ID) {
+	if m.workflow_stages == nil {
+		m.workflow_stages = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		m.workflow_stages[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWorkflowStages clears the "workflow_stages" edge to the WorkflowStage entity.
+func (m *ProjectMutation) ClearWorkflowStages() {
+	m.clearedworkflow_stages = true
+}
+
+// WorkflowStagesCleared reports if the "workflow_stages" edge to the WorkflowStage entity was cleared.
+func (m *ProjectMutation) WorkflowStagesCleared() bool {
+	return m.clearedworkflow_stages
+}
+
+// RemoveWorkflowStageIDs removes the "workflow_stages" edge to the WorkflowStage entity by IDs.
+func (m *ProjectMutation) RemoveWorkflowStageIDs(ids ...object.ID) {
+	if m.removedworkflow_stages == nil {
+		m.removedworkflow_stages = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		delete(m.workflow_stages, ids[i])
+		m.removedworkflow_stages[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWorkflowStages returns the removed IDs of the "workflow_stages" edge to the WorkflowStage entity.
+func (m *ProjectMutation) RemovedWorkflowStagesIDs() (ids []object.ID) {
+	for id := range m.removedworkflow_stages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WorkflowStagesIDs returns the "workflow_stages" edge IDs in the mutation.
+func (m *ProjectMutation) WorkflowStagesIDs() (ids []object.ID) {
+	for id := range m.workflow_stages {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWorkflowStages resets all changes to the "workflow_stages" edge.
+func (m *ProjectMutation) ResetWorkflowStages() {
+	m.workflow_stages = nil
+	m.clearedworkflow_stages = false
+	m.removedworkflow_stages = nil
+}
+
+// AddWorkflowStepIDs adds the "workflow_steps" edge to the WorkflowStep entity by ids.
+func (m *ProjectMutation) AddWorkflowStepIDs(ids ...object.ID) {
+	if m.workflow_steps == nil {
+		m.workflow_steps = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		m.workflow_steps[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWorkflowSteps clears the "workflow_steps" edge to the WorkflowStep entity.
+func (m *ProjectMutation) ClearWorkflowSteps() {
+	m.clearedworkflow_steps = true
+}
+
+// WorkflowStepsCleared reports if the "workflow_steps" edge to the WorkflowStep entity was cleared.
+func (m *ProjectMutation) WorkflowStepsCleared() bool {
+	return m.clearedworkflow_steps
+}
+
+// RemoveWorkflowStepIDs removes the "workflow_steps" edge to the WorkflowStep entity by IDs.
+func (m *ProjectMutation) RemoveWorkflowStepIDs(ids ...object.ID) {
+	if m.removedworkflow_steps == nil {
+		m.removedworkflow_steps = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		delete(m.workflow_steps, ids[i])
+		m.removedworkflow_steps[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWorkflowSteps returns the removed IDs of the "workflow_steps" edge to the WorkflowStep entity.
+func (m *ProjectMutation) RemovedWorkflowStepsIDs() (ids []object.ID) {
+	for id := range m.removedworkflow_steps {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WorkflowStepsIDs returns the "workflow_steps" edge IDs in the mutation.
+func (m *ProjectMutation) WorkflowStepsIDs() (ids []object.ID) {
+	for id := range m.workflow_steps {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWorkflowSteps resets all changes to the "workflow_steps" edge.
+func (m *ProjectMutation) ResetWorkflowSteps() {
+	m.workflow_steps = nil
+	m.clearedworkflow_steps = false
+	m.removedworkflow_steps = nil
+}
+
+// AddWorkflowExecutionIDs adds the "workflow_executions" edge to the WorkflowExecution entity by ids.
+func (m *ProjectMutation) AddWorkflowExecutionIDs(ids ...object.ID) {
+	if m.workflow_executions == nil {
+		m.workflow_executions = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		m.workflow_executions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWorkflowExecutions clears the "workflow_executions" edge to the WorkflowExecution entity.
+func (m *ProjectMutation) ClearWorkflowExecutions() {
+	m.clearedworkflow_executions = true
+}
+
+// WorkflowExecutionsCleared reports if the "workflow_executions" edge to the WorkflowExecution entity was cleared.
+func (m *ProjectMutation) WorkflowExecutionsCleared() bool {
+	return m.clearedworkflow_executions
+}
+
+// RemoveWorkflowExecutionIDs removes the "workflow_executions" edge to the WorkflowExecution entity by IDs.
+func (m *ProjectMutation) RemoveWorkflowExecutionIDs(ids ...object.ID) {
+	if m.removedworkflow_executions == nil {
+		m.removedworkflow_executions = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		delete(m.workflow_executions, ids[i])
+		m.removedworkflow_executions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWorkflowExecutions returns the removed IDs of the "workflow_executions" edge to the WorkflowExecution entity.
+func (m *ProjectMutation) RemovedWorkflowExecutionsIDs() (ids []object.ID) {
+	for id := range m.removedworkflow_executions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WorkflowExecutionsIDs returns the "workflow_executions" edge IDs in the mutation.
+func (m *ProjectMutation) WorkflowExecutionsIDs() (ids []object.ID) {
+	for id := range m.workflow_executions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWorkflowExecutions resets all changes to the "workflow_executions" edge.
+func (m *ProjectMutation) ResetWorkflowExecutions() {
+	m.workflow_executions = nil
+	m.clearedworkflow_executions = false
+	m.removedworkflow_executions = nil
+}
+
+// AddWorkflowStageExecutionIDs adds the "workflow_stage_executions" edge to the WorkflowStageExecution entity by ids.
+func (m *ProjectMutation) AddWorkflowStageExecutionIDs(ids ...object.ID) {
+	if m.workflow_stage_executions == nil {
+		m.workflow_stage_executions = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		m.workflow_stage_executions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWorkflowStageExecutions clears the "workflow_stage_executions" edge to the WorkflowStageExecution entity.
+func (m *ProjectMutation) ClearWorkflowStageExecutions() {
+	m.clearedworkflow_stage_executions = true
+}
+
+// WorkflowStageExecutionsCleared reports if the "workflow_stage_executions" edge to the WorkflowStageExecution entity was cleared.
+func (m *ProjectMutation) WorkflowStageExecutionsCleared() bool {
+	return m.clearedworkflow_stage_executions
+}
+
+// RemoveWorkflowStageExecutionIDs removes the "workflow_stage_executions" edge to the WorkflowStageExecution entity by IDs.
+func (m *ProjectMutation) RemoveWorkflowStageExecutionIDs(ids ...object.ID) {
+	if m.removedworkflow_stage_executions == nil {
+		m.removedworkflow_stage_executions = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		delete(m.workflow_stage_executions, ids[i])
+		m.removedworkflow_stage_executions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWorkflowStageExecutions returns the removed IDs of the "workflow_stage_executions" edge to the WorkflowStageExecution entity.
+func (m *ProjectMutation) RemovedWorkflowStageExecutionsIDs() (ids []object.ID) {
+	for id := range m.removedworkflow_stage_executions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WorkflowStageExecutionsIDs returns the "workflow_stage_executions" edge IDs in the mutation.
+func (m *ProjectMutation) WorkflowStageExecutionsIDs() (ids []object.ID) {
+	for id := range m.workflow_stage_executions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWorkflowStageExecutions resets all changes to the "workflow_stage_executions" edge.
+func (m *ProjectMutation) ResetWorkflowStageExecutions() {
+	m.workflow_stage_executions = nil
+	m.clearedworkflow_stage_executions = false
+	m.removedworkflow_stage_executions = nil
+}
+
+// AddWorkflowStepExecutionIDs adds the "workflow_step_executions" edge to the WorkflowStepExecution entity by ids.
+func (m *ProjectMutation) AddWorkflowStepExecutionIDs(ids ...object.ID) {
+	if m.workflow_step_executions == nil {
+		m.workflow_step_executions = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		m.workflow_step_executions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWorkflowStepExecutions clears the "workflow_step_executions" edge to the WorkflowStepExecution entity.
+func (m *ProjectMutation) ClearWorkflowStepExecutions() {
+	m.clearedworkflow_step_executions = true
+}
+
+// WorkflowStepExecutionsCleared reports if the "workflow_step_executions" edge to the WorkflowStepExecution entity was cleared.
+func (m *ProjectMutation) WorkflowStepExecutionsCleared() bool {
+	return m.clearedworkflow_step_executions
+}
+
+// RemoveWorkflowStepExecutionIDs removes the "workflow_step_executions" edge to the WorkflowStepExecution entity by IDs.
+func (m *ProjectMutation) RemoveWorkflowStepExecutionIDs(ids ...object.ID) {
+	if m.removedworkflow_step_executions == nil {
+		m.removedworkflow_step_executions = make(map[object.ID]struct{})
+	}
+	for i := range ids {
+		delete(m.workflow_step_executions, ids[i])
+		m.removedworkflow_step_executions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWorkflowStepExecutions returns the removed IDs of the "workflow_step_executions" edge to the WorkflowStepExecution entity.
+func (m *ProjectMutation) RemovedWorkflowStepExecutionsIDs() (ids []object.ID) {
+	for id := range m.removedworkflow_step_executions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WorkflowStepExecutionsIDs returns the "workflow_step_executions" edge IDs in the mutation.
+func (m *ProjectMutation) WorkflowStepExecutionsIDs() (ids []object.ID) {
+	for id := range m.workflow_step_executions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWorkflowStepExecutions resets all changes to the "workflow_step_executions" edge.
+func (m *ProjectMutation) ResetWorkflowStepExecutions() {
+	m.workflow_step_executions = nil
+	m.clearedworkflow_step_executions = false
+	m.removedworkflow_step_executions = nil
+}
+
 // Where appends a list predicates to the ProjectMutation builder.
 func (m *ProjectMutation) Where(ps ...predicate.Project) {
 	m.predicates = append(m.predicates, ps...)
@@ -9260,7 +9602,7 @@ func (m *ProjectMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProjectMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 13)
 	if m.environments != nil {
 		edges = append(edges, project.EdgeEnvironments)
 	}
@@ -9281,6 +9623,24 @@ func (m *ProjectMutation) AddedEdges() []string {
 	}
 	if m.variables != nil {
 		edges = append(edges, project.EdgeVariables)
+	}
+	if m.workflows != nil {
+		edges = append(edges, project.EdgeWorkflows)
+	}
+	if m.workflow_stages != nil {
+		edges = append(edges, project.EdgeWorkflowStages)
+	}
+	if m.workflow_steps != nil {
+		edges = append(edges, project.EdgeWorkflowSteps)
+	}
+	if m.workflow_executions != nil {
+		edges = append(edges, project.EdgeWorkflowExecutions)
+	}
+	if m.workflow_stage_executions != nil {
+		edges = append(edges, project.EdgeWorkflowStageExecutions)
+	}
+	if m.workflow_step_executions != nil {
+		edges = append(edges, project.EdgeWorkflowStepExecutions)
 	}
 	return edges
 }
@@ -9331,13 +9691,49 @@ func (m *ProjectMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case project.EdgeWorkflows:
+		ids := make([]ent.Value, 0, len(m.workflows))
+		for id := range m.workflows {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowStages:
+		ids := make([]ent.Value, 0, len(m.workflow_stages))
+		for id := range m.workflow_stages {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowSteps:
+		ids := make([]ent.Value, 0, len(m.workflow_steps))
+		for id := range m.workflow_steps {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowExecutions:
+		ids := make([]ent.Value, 0, len(m.workflow_executions))
+		for id := range m.workflow_executions {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowStageExecutions:
+		ids := make([]ent.Value, 0, len(m.workflow_stage_executions))
+		for id := range m.workflow_stage_executions {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowStepExecutions:
+		ids := make([]ent.Value, 0, len(m.workflow_step_executions))
+		for id := range m.workflow_step_executions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProjectMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 13)
 	if m.removedenvironments != nil {
 		edges = append(edges, project.EdgeEnvironments)
 	}
@@ -9358,6 +9754,24 @@ func (m *ProjectMutation) RemovedEdges() []string {
 	}
 	if m.removedvariables != nil {
 		edges = append(edges, project.EdgeVariables)
+	}
+	if m.removedworkflows != nil {
+		edges = append(edges, project.EdgeWorkflows)
+	}
+	if m.removedworkflow_stages != nil {
+		edges = append(edges, project.EdgeWorkflowStages)
+	}
+	if m.removedworkflow_steps != nil {
+		edges = append(edges, project.EdgeWorkflowSteps)
+	}
+	if m.removedworkflow_executions != nil {
+		edges = append(edges, project.EdgeWorkflowExecutions)
+	}
+	if m.removedworkflow_stage_executions != nil {
+		edges = append(edges, project.EdgeWorkflowStageExecutions)
+	}
+	if m.removedworkflow_step_executions != nil {
+		edges = append(edges, project.EdgeWorkflowStepExecutions)
 	}
 	return edges
 }
@@ -9408,13 +9822,49 @@ func (m *ProjectMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case project.EdgeWorkflows:
+		ids := make([]ent.Value, 0, len(m.removedworkflows))
+		for id := range m.removedworkflows {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowStages:
+		ids := make([]ent.Value, 0, len(m.removedworkflow_stages))
+		for id := range m.removedworkflow_stages {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowSteps:
+		ids := make([]ent.Value, 0, len(m.removedworkflow_steps))
+		for id := range m.removedworkflow_steps {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowExecutions:
+		ids := make([]ent.Value, 0, len(m.removedworkflow_executions))
+		for id := range m.removedworkflow_executions {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowStageExecutions:
+		ids := make([]ent.Value, 0, len(m.removedworkflow_stage_executions))
+		for id := range m.removedworkflow_stage_executions {
+			ids = append(ids, id)
+		}
+		return ids
+	case project.EdgeWorkflowStepExecutions:
+		ids := make([]ent.Value, 0, len(m.removedworkflow_step_executions))
+		for id := range m.removedworkflow_step_executions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProjectMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 13)
 	if m.clearedenvironments {
 		edges = append(edges, project.EdgeEnvironments)
 	}
@@ -9435,6 +9885,24 @@ func (m *ProjectMutation) ClearedEdges() []string {
 	}
 	if m.clearedvariables {
 		edges = append(edges, project.EdgeVariables)
+	}
+	if m.clearedworkflows {
+		edges = append(edges, project.EdgeWorkflows)
+	}
+	if m.clearedworkflow_stages {
+		edges = append(edges, project.EdgeWorkflowStages)
+	}
+	if m.clearedworkflow_steps {
+		edges = append(edges, project.EdgeWorkflowSteps)
+	}
+	if m.clearedworkflow_executions {
+		edges = append(edges, project.EdgeWorkflowExecutions)
+	}
+	if m.clearedworkflow_stage_executions {
+		edges = append(edges, project.EdgeWorkflowStageExecutions)
+	}
+	if m.clearedworkflow_step_executions {
+		edges = append(edges, project.EdgeWorkflowStepExecutions)
 	}
 	return edges
 }
@@ -9457,6 +9925,18 @@ func (m *ProjectMutation) EdgeCleared(name string) bool {
 		return m.clearedservice_revisions
 	case project.EdgeVariables:
 		return m.clearedvariables
+	case project.EdgeWorkflows:
+		return m.clearedworkflows
+	case project.EdgeWorkflowStages:
+		return m.clearedworkflow_stages
+	case project.EdgeWorkflowSteps:
+		return m.clearedworkflow_steps
+	case project.EdgeWorkflowExecutions:
+		return m.clearedworkflow_executions
+	case project.EdgeWorkflowStageExecutions:
+		return m.clearedworkflow_stage_executions
+	case project.EdgeWorkflowStepExecutions:
+		return m.clearedworkflow_step_executions
 	}
 	return false
 }
@@ -9493,6 +9973,24 @@ func (m *ProjectMutation) ResetEdge(name string) error {
 		return nil
 	case project.EdgeVariables:
 		m.ResetVariables()
+		return nil
+	case project.EdgeWorkflows:
+		m.ResetWorkflows()
+		return nil
+	case project.EdgeWorkflowStages:
+		m.ResetWorkflowStages()
+		return nil
+	case project.EdgeWorkflowSteps:
+		m.ResetWorkflowSteps()
+		return nil
+	case project.EdgeWorkflowExecutions:
+		m.ResetWorkflowExecutions()
+		return nil
+	case project.EdgeWorkflowStageExecutions:
+		m.ResetWorkflowStageExecutions()
+		return nil
+	case project.EdgeWorkflowStepExecutions:
+		m.ResetWorkflowStepExecutions()
 		return nil
 	}
 	return fmt.Errorf("unknown Project edge %s", name)
@@ -21513,34 +22011,35 @@ func (m *VariableMutation) ResetEdge(name string) error {
 // WorkflowMutation represents an operation that mutates the Workflow nodes in the graph.
 type WorkflowMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *object.ID
-	name                     *string
-	description              *string
-	labels                   *map[string]string
-	annotations              *map[string]string
-	create_time              *time.Time
-	update_time              *time.Time
-	status                   *status.Status
-	project_id               *object.ID
-	environment_id           *object.ID
-	display_name             *string
-	_type                    *string
-	workflow_stage_ids       *[]object.ID
-	appendworkflow_stage_ids []object.ID
-	parallelism              *int
-	addparallelism           *int
-	clearedFields            map[string]struct{}
-	stages                   map[object.ID]struct{}
-	removedstages            map[object.ID]struct{}
-	clearedstages            bool
-	executions               map[object.ID]struct{}
-	removedexecutions        map[object.ID]struct{}
-	clearedexecutions        bool
-	done                     bool
-	oldValue                 func(context.Context) (*Workflow, error)
-	predicates               []predicate.Workflow
+	op                Op
+	typ               string
+	id                *object.ID
+	name              *string
+	description       *string
+	labels            *map[string]string
+	annotations       *map[string]string
+	create_time       *time.Time
+	update_time       *time.Time
+	status            *status.Status
+	environment_id    *object.ID
+	display_name      *string
+	_type             *string
+	stage_ids         *[]object.ID
+	appendstage_ids   []object.ID
+	parallelism       *int
+	addparallelism    *int
+	clearedFields     map[string]struct{}
+	project           *object.ID
+	clearedproject    bool
+	stages            map[object.ID]struct{}
+	removedstages     map[object.ID]struct{}
+	clearedstages     bool
+	executions        map[object.ID]struct{}
+	removedexecutions map[object.ID]struct{}
+	clearedexecutions bool
+	done              bool
+	oldValue          func(context.Context) (*Workflow, error)
+	predicates        []predicate.Workflow
 }
 
 var _ ent.Mutation = (*WorkflowMutation)(nil)
@@ -21953,12 +22452,12 @@ func (m *WorkflowMutation) ResetStatus() {
 
 // SetProjectID sets the "project_id" field.
 func (m *WorkflowMutation) SetProjectID(o object.ID) {
-	m.project_id = &o
+	m.project = &o
 }
 
 // ProjectID returns the value of the "project_id" field in the mutation.
 func (m *WorkflowMutation) ProjectID() (r object.ID, exists bool) {
-	v := m.project_id
+	v := m.project
 	if v == nil {
 		return
 	}
@@ -21984,7 +22483,7 @@ func (m *WorkflowMutation) OldProjectID(ctx context.Context) (v object.ID, err e
 
 // ResetProjectID resets all changes to the "project_id" field.
 func (m *WorkflowMutation) ResetProjectID() {
-	m.project_id = nil
+	m.project = nil
 }
 
 // SetEnvironmentID sets the "environment_id" field.
@@ -22108,55 +22607,55 @@ func (m *WorkflowMutation) ResetType() {
 	m._type = nil
 }
 
-// SetWorkflowStageIds sets the "workflow_stage_ids" field.
-func (m *WorkflowMutation) SetWorkflowStageIds(o []object.ID) {
-	m.workflow_stage_ids = &o
-	m.appendworkflow_stage_ids = nil
+// SetStageIds sets the "stage_ids" field.
+func (m *WorkflowMutation) SetStageIds(o []object.ID) {
+	m.stage_ids = &o
+	m.appendstage_ids = nil
 }
 
-// WorkflowStageIds returns the value of the "workflow_stage_ids" field in the mutation.
-func (m *WorkflowMutation) WorkflowStageIds() (r []object.ID, exists bool) {
-	v := m.workflow_stage_ids
+// StageIds returns the value of the "stage_ids" field in the mutation.
+func (m *WorkflowMutation) StageIds() (r []object.ID, exists bool) {
+	v := m.stage_ids
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldWorkflowStageIds returns the old "workflow_stage_ids" field's value of the Workflow entity.
+// OldStageIds returns the old "stage_ids" field's value of the Workflow entity.
 // If the Workflow object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowMutation) OldWorkflowStageIds(ctx context.Context) (v []object.ID, err error) {
+func (m *WorkflowMutation) OldStageIds(ctx context.Context) (v []object.ID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWorkflowStageIds is only allowed on UpdateOne operations")
+		return v, errors.New("OldStageIds is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWorkflowStageIds requires an ID field in the mutation")
+		return v, errors.New("OldStageIds requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWorkflowStageIds: %w", err)
+		return v, fmt.Errorf("querying old value for OldStageIds: %w", err)
 	}
-	return oldValue.WorkflowStageIds, nil
+	return oldValue.StageIds, nil
 }
 
-// AppendWorkflowStageIds adds o to the "workflow_stage_ids" field.
-func (m *WorkflowMutation) AppendWorkflowStageIds(o []object.ID) {
-	m.appendworkflow_stage_ids = append(m.appendworkflow_stage_ids, o...)
+// AppendStageIds adds o to the "stage_ids" field.
+func (m *WorkflowMutation) AppendStageIds(o []object.ID) {
+	m.appendstage_ids = append(m.appendstage_ids, o...)
 }
 
-// AppendedWorkflowStageIds returns the list of values that were appended to the "workflow_stage_ids" field in this mutation.
-func (m *WorkflowMutation) AppendedWorkflowStageIds() ([]object.ID, bool) {
-	if len(m.appendworkflow_stage_ids) == 0 {
+// AppendedStageIds returns the list of values that were appended to the "stage_ids" field in this mutation.
+func (m *WorkflowMutation) AppendedStageIds() ([]object.ID, bool) {
+	if len(m.appendstage_ids) == 0 {
 		return nil, false
 	}
-	return m.appendworkflow_stage_ids, true
+	return m.appendstage_ids, true
 }
 
-// ResetWorkflowStageIds resets all changes to the "workflow_stage_ids" field.
-func (m *WorkflowMutation) ResetWorkflowStageIds() {
-	m.workflow_stage_ids = nil
-	m.appendworkflow_stage_ids = nil
+// ResetStageIds resets all changes to the "stage_ids" field.
+func (m *WorkflowMutation) ResetStageIds() {
+	m.stage_ids = nil
+	m.appendstage_ids = nil
 }
 
 // SetParallelism sets the "parallelism" field.
@@ -22213,6 +22712,32 @@ func (m *WorkflowMutation) AddedParallelism() (r int, exists bool) {
 func (m *WorkflowMutation) ResetParallelism() {
 	m.parallelism = nil
 	m.addparallelism = nil
+}
+
+// ClearProject clears the "project" edge to the Project entity.
+func (m *WorkflowMutation) ClearProject() {
+	m.clearedproject = true
+}
+
+// ProjectCleared reports if the "project" edge to the Project entity was cleared.
+func (m *WorkflowMutation) ProjectCleared() bool {
+	return m.clearedproject
+}
+
+// ProjectIDs returns the "project" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProjectID instead. It exists only for internal usage by the builders.
+func (m *WorkflowMutation) ProjectIDs() (ids []object.ID) {
+	if id := m.project; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProject resets all changes to the "project" edge.
+func (m *WorkflowMutation) ResetProject() {
+	m.project = nil
+	m.clearedproject = false
 }
 
 // AddStageIDs adds the "stages" edge to the WorkflowStage entity by ids.
@@ -22379,7 +22904,7 @@ func (m *WorkflowMutation) Fields() []string {
 	if m.status != nil {
 		fields = append(fields, workflow.FieldStatus)
 	}
-	if m.project_id != nil {
+	if m.project != nil {
 		fields = append(fields, workflow.FieldProjectID)
 	}
 	if m.environment_id != nil {
@@ -22391,8 +22916,8 @@ func (m *WorkflowMutation) Fields() []string {
 	if m._type != nil {
 		fields = append(fields, workflow.FieldType)
 	}
-	if m.workflow_stage_ids != nil {
-		fields = append(fields, workflow.FieldWorkflowStageIds)
+	if m.stage_ids != nil {
+		fields = append(fields, workflow.FieldStageIds)
 	}
 	if m.parallelism != nil {
 		fields = append(fields, workflow.FieldParallelism)
@@ -22427,8 +22952,8 @@ func (m *WorkflowMutation) Field(name string) (ent.Value, bool) {
 		return m.DisplayName()
 	case workflow.FieldType:
 		return m.GetType()
-	case workflow.FieldWorkflowStageIds:
-		return m.WorkflowStageIds()
+	case workflow.FieldStageIds:
+		return m.StageIds()
 	case workflow.FieldParallelism:
 		return m.Parallelism()
 	}
@@ -22462,8 +22987,8 @@ func (m *WorkflowMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldDisplayName(ctx)
 	case workflow.FieldType:
 		return m.OldType(ctx)
-	case workflow.FieldWorkflowStageIds:
-		return m.OldWorkflowStageIds(ctx)
+	case workflow.FieldStageIds:
+		return m.OldStageIds(ctx)
 	case workflow.FieldParallelism:
 		return m.OldParallelism(ctx)
 	}
@@ -22552,12 +23077,12 @@ func (m *WorkflowMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetType(v)
 		return nil
-	case workflow.FieldWorkflowStageIds:
+	case workflow.FieldStageIds:
 		v, ok := value.([]object.ID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetWorkflowStageIds(v)
+		m.SetStageIds(v)
 		return nil
 	case workflow.FieldParallelism:
 		v, ok := value.(int)
@@ -22696,8 +23221,8 @@ func (m *WorkflowMutation) ResetField(name string) error {
 	case workflow.FieldType:
 		m.ResetType()
 		return nil
-	case workflow.FieldWorkflowStageIds:
-		m.ResetWorkflowStageIds()
+	case workflow.FieldStageIds:
+		m.ResetStageIds()
 		return nil
 	case workflow.FieldParallelism:
 		m.ResetParallelism()
@@ -22708,7 +23233,10 @@ func (m *WorkflowMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkflowMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.project != nil {
+		edges = append(edges, workflow.EdgeProject)
+	}
 	if m.stages != nil {
 		edges = append(edges, workflow.EdgeStages)
 	}
@@ -22722,6 +23250,10 @@ func (m *WorkflowMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *WorkflowMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case workflow.EdgeProject:
+		if id := m.project; id != nil {
+			return []ent.Value{*id}
+		}
 	case workflow.EdgeStages:
 		ids := make([]ent.Value, 0, len(m.stages))
 		for id := range m.stages {
@@ -22740,7 +23272,7 @@ func (m *WorkflowMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkflowMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedstages != nil {
 		edges = append(edges, workflow.EdgeStages)
 	}
@@ -22772,7 +23304,10 @@ func (m *WorkflowMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkflowMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.clearedproject {
+		edges = append(edges, workflow.EdgeProject)
+	}
 	if m.clearedstages {
 		edges = append(edges, workflow.EdgeStages)
 	}
@@ -22786,6 +23321,8 @@ func (m *WorkflowMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *WorkflowMutation) EdgeCleared(name string) bool {
 	switch name {
+	case workflow.EdgeProject:
+		return m.clearedproject
 	case workflow.EdgeStages:
 		return m.clearedstages
 	case workflow.EdgeExecutions:
@@ -22798,6 +23335,9 @@ func (m *WorkflowMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *WorkflowMutation) ClearEdge(name string) error {
 	switch name {
+	case workflow.EdgeProject:
+		m.ClearProject()
+		return nil
 	}
 	return fmt.Errorf("unknown Workflow unique edge %s", name)
 }
@@ -22806,6 +23346,9 @@ func (m *WorkflowMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *WorkflowMutation) ResetEdge(name string) error {
 	switch name {
+	case workflow.EdgeProject:
+		m.ResetProject()
+		return nil
 	case workflow.EdgeStages:
 		m.ResetStages()
 		return nil
@@ -22829,17 +23372,17 @@ type WorkflowExecutionMutation struct {
 	create_time                      *time.Time
 	update_time                      *time.Time
 	status                           *status.Status
-	project_id                       *object.ID
-	subject                          *object.ID
-	progress                         *int
-	addprogress                      *int
+	subject_id                       *object.ID
+	progress                         *string
 	duration                         *int
 	addduration                      *int
-	workflow_stages_execution        *[]object.ID
-	appendworkflow_stages_execution  []object.ID
+	stage_execution_ids              *[]object.ID
+	appendstage_execution_ids        []object.ID
 	record                           *string
 	input                            *string
 	clearedFields                    map[string]struct{}
+	project                          *object.ID
+	clearedproject                   bool
 	workflow_stage_executions        map[object.ID]struct{}
 	removedworkflow_stage_executions map[object.ID]struct{}
 	clearedworkflow_stage_executions bool
@@ -23260,12 +23803,12 @@ func (m *WorkflowExecutionMutation) ResetStatus() {
 
 // SetProjectID sets the "project_id" field.
 func (m *WorkflowExecutionMutation) SetProjectID(o object.ID) {
-	m.project_id = &o
+	m.project = &o
 }
 
 // ProjectID returns the value of the "project_id" field in the mutation.
 func (m *WorkflowExecutionMutation) ProjectID() (r object.ID, exists bool) {
-	v := m.project_id
+	v := m.project
 	if v == nil {
 		return
 	}
@@ -23291,7 +23834,7 @@ func (m *WorkflowExecutionMutation) OldProjectID(ctx context.Context) (v object.
 
 // ResetProjectID resets all changes to the "project_id" field.
 func (m *WorkflowExecutionMutation) ResetProjectID() {
-	m.project_id = nil
+	m.project = nil
 }
 
 // SetWorkflowID sets the "workflow_id" field.
@@ -23330,50 +23873,49 @@ func (m *WorkflowExecutionMutation) ResetWorkflowID() {
 	m.workflow = nil
 }
 
-// SetSubject sets the "subject" field.
-func (m *WorkflowExecutionMutation) SetSubject(o object.ID) {
-	m.subject = &o
+// SetSubjectID sets the "subject_id" field.
+func (m *WorkflowExecutionMutation) SetSubjectID(o object.ID) {
+	m.subject_id = &o
 }
 
-// Subject returns the value of the "subject" field in the mutation.
-func (m *WorkflowExecutionMutation) Subject() (r object.ID, exists bool) {
-	v := m.subject
+// SubjectID returns the value of the "subject_id" field in the mutation.
+func (m *WorkflowExecutionMutation) SubjectID() (r object.ID, exists bool) {
+	v := m.subject_id
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSubject returns the old "subject" field's value of the WorkflowExecution entity.
+// OldSubjectID returns the old "subject_id" field's value of the WorkflowExecution entity.
 // If the WorkflowExecution object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowExecutionMutation) OldSubject(ctx context.Context) (v object.ID, err error) {
+func (m *WorkflowExecutionMutation) OldSubjectID(ctx context.Context) (v object.ID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSubject is only allowed on UpdateOne operations")
+		return v, errors.New("OldSubjectID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSubject requires an ID field in the mutation")
+		return v, errors.New("OldSubjectID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSubject: %w", err)
+		return v, fmt.Errorf("querying old value for OldSubjectID: %w", err)
 	}
-	return oldValue.Subject, nil
+	return oldValue.SubjectID, nil
 }
 
-// ResetSubject resets all changes to the "subject" field.
-func (m *WorkflowExecutionMutation) ResetSubject() {
-	m.subject = nil
+// ResetSubjectID resets all changes to the "subject_id" field.
+func (m *WorkflowExecutionMutation) ResetSubjectID() {
+	m.subject_id = nil
 }
 
 // SetProgress sets the "progress" field.
-func (m *WorkflowExecutionMutation) SetProgress(i int) {
-	m.progress = &i
-	m.addprogress = nil
+func (m *WorkflowExecutionMutation) SetProgress(s string) {
+	m.progress = &s
 }
 
 // Progress returns the value of the "progress" field in the mutation.
-func (m *WorkflowExecutionMutation) Progress() (r int, exists bool) {
+func (m *WorkflowExecutionMutation) Progress() (r string, exists bool) {
 	v := m.progress
 	if v == nil {
 		return
@@ -23384,7 +23926,7 @@ func (m *WorkflowExecutionMutation) Progress() (r int, exists bool) {
 // OldProgress returns the old "progress" field's value of the WorkflowExecution entity.
 // If the WorkflowExecution object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowExecutionMutation) OldProgress(ctx context.Context) (v int, err error) {
+func (m *WorkflowExecutionMutation) OldProgress(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldProgress is only allowed on UpdateOne operations")
 	}
@@ -23398,28 +23940,9 @@ func (m *WorkflowExecutionMutation) OldProgress(ctx context.Context) (v int, err
 	return oldValue.Progress, nil
 }
 
-// AddProgress adds i to the "progress" field.
-func (m *WorkflowExecutionMutation) AddProgress(i int) {
-	if m.addprogress != nil {
-		*m.addprogress += i
-	} else {
-		m.addprogress = &i
-	}
-}
-
-// AddedProgress returns the value that was added to the "progress" field in this mutation.
-func (m *WorkflowExecutionMutation) AddedProgress() (r int, exists bool) {
-	v := m.addprogress
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetProgress resets all changes to the "progress" field.
 func (m *WorkflowExecutionMutation) ResetProgress() {
 	m.progress = nil
-	m.addprogress = nil
 }
 
 // SetDuration sets the "duration" field.
@@ -23478,55 +24001,55 @@ func (m *WorkflowExecutionMutation) ResetDuration() {
 	m.addduration = nil
 }
 
-// SetWorkflowStagesExecution sets the "workflow_stages_execution" field.
-func (m *WorkflowExecutionMutation) SetWorkflowStagesExecution(o []object.ID) {
-	m.workflow_stages_execution = &o
-	m.appendworkflow_stages_execution = nil
+// SetStageExecutionIds sets the "stage_execution_ids" field.
+func (m *WorkflowExecutionMutation) SetStageExecutionIds(o []object.ID) {
+	m.stage_execution_ids = &o
+	m.appendstage_execution_ids = nil
 }
 
-// WorkflowStagesExecution returns the value of the "workflow_stages_execution" field in the mutation.
-func (m *WorkflowExecutionMutation) WorkflowStagesExecution() (r []object.ID, exists bool) {
-	v := m.workflow_stages_execution
+// StageExecutionIds returns the value of the "stage_execution_ids" field in the mutation.
+func (m *WorkflowExecutionMutation) StageExecutionIds() (r []object.ID, exists bool) {
+	v := m.stage_execution_ids
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldWorkflowStagesExecution returns the old "workflow_stages_execution" field's value of the WorkflowExecution entity.
+// OldStageExecutionIds returns the old "stage_execution_ids" field's value of the WorkflowExecution entity.
 // If the WorkflowExecution object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowExecutionMutation) OldWorkflowStagesExecution(ctx context.Context) (v []object.ID, err error) {
+func (m *WorkflowExecutionMutation) OldStageExecutionIds(ctx context.Context) (v []object.ID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWorkflowStagesExecution is only allowed on UpdateOne operations")
+		return v, errors.New("OldStageExecutionIds is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWorkflowStagesExecution requires an ID field in the mutation")
+		return v, errors.New("OldStageExecutionIds requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWorkflowStagesExecution: %w", err)
+		return v, fmt.Errorf("querying old value for OldStageExecutionIds: %w", err)
 	}
-	return oldValue.WorkflowStagesExecution, nil
+	return oldValue.StageExecutionIds, nil
 }
 
-// AppendWorkflowStagesExecution adds o to the "workflow_stages_execution" field.
-func (m *WorkflowExecutionMutation) AppendWorkflowStagesExecution(o []object.ID) {
-	m.appendworkflow_stages_execution = append(m.appendworkflow_stages_execution, o...)
+// AppendStageExecutionIds adds o to the "stage_execution_ids" field.
+func (m *WorkflowExecutionMutation) AppendStageExecutionIds(o []object.ID) {
+	m.appendstage_execution_ids = append(m.appendstage_execution_ids, o...)
 }
 
-// AppendedWorkflowStagesExecution returns the list of values that were appended to the "workflow_stages_execution" field in this mutation.
-func (m *WorkflowExecutionMutation) AppendedWorkflowStagesExecution() ([]object.ID, bool) {
-	if len(m.appendworkflow_stages_execution) == 0 {
+// AppendedStageExecutionIds returns the list of values that were appended to the "stage_execution_ids" field in this mutation.
+func (m *WorkflowExecutionMutation) AppendedStageExecutionIds() ([]object.ID, bool) {
+	if len(m.appendstage_execution_ids) == 0 {
 		return nil, false
 	}
-	return m.appendworkflow_stages_execution, true
+	return m.appendstage_execution_ids, true
 }
 
-// ResetWorkflowStagesExecution resets all changes to the "workflow_stages_execution" field.
-func (m *WorkflowExecutionMutation) ResetWorkflowStagesExecution() {
-	m.workflow_stages_execution = nil
-	m.appendworkflow_stages_execution = nil
+// ResetStageExecutionIds resets all changes to the "stage_execution_ids" field.
+func (m *WorkflowExecutionMutation) ResetStageExecutionIds() {
+	m.stage_execution_ids = nil
+	m.appendstage_execution_ids = nil
 }
 
 // SetRecord sets the "record" field.
@@ -23599,6 +24122,32 @@ func (m *WorkflowExecutionMutation) OldInput(ctx context.Context) (v string, err
 // ResetInput resets all changes to the "input" field.
 func (m *WorkflowExecutionMutation) ResetInput() {
 	m.input = nil
+}
+
+// ClearProject clears the "project" edge to the Project entity.
+func (m *WorkflowExecutionMutation) ClearProject() {
+	m.clearedproject = true
+}
+
+// ProjectCleared reports if the "project" edge to the Project entity was cleared.
+func (m *WorkflowExecutionMutation) ProjectCleared() bool {
+	return m.clearedproject
+}
+
+// ProjectIDs returns the "project" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProjectID instead. It exists only for internal usage by the builders.
+func (m *WorkflowExecutionMutation) ProjectIDs() (ids []object.ID) {
+	if id := m.project; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProject resets all changes to the "project" edge.
+func (m *WorkflowExecutionMutation) ResetProject() {
+	m.project = nil
+	m.clearedproject = false
 }
 
 // AddWorkflowStageExecutionIDs adds the "workflow_stage_executions" edge to the WorkflowStageExecution entity by ids.
@@ -23737,14 +24286,14 @@ func (m *WorkflowExecutionMutation) Fields() []string {
 	if m.status != nil {
 		fields = append(fields, workflowexecution.FieldStatus)
 	}
-	if m.project_id != nil {
+	if m.project != nil {
 		fields = append(fields, workflowexecution.FieldProjectID)
 	}
 	if m.workflow != nil {
 		fields = append(fields, workflowexecution.FieldWorkflowID)
 	}
-	if m.subject != nil {
-		fields = append(fields, workflowexecution.FieldSubject)
+	if m.subject_id != nil {
+		fields = append(fields, workflowexecution.FieldSubjectID)
 	}
 	if m.progress != nil {
 		fields = append(fields, workflowexecution.FieldProgress)
@@ -23752,8 +24301,8 @@ func (m *WorkflowExecutionMutation) Fields() []string {
 	if m.duration != nil {
 		fields = append(fields, workflowexecution.FieldDuration)
 	}
-	if m.workflow_stages_execution != nil {
-		fields = append(fields, workflowexecution.FieldWorkflowStagesExecution)
+	if m.stage_execution_ids != nil {
+		fields = append(fields, workflowexecution.FieldStageExecutionIds)
 	}
 	if m.record != nil {
 		fields = append(fields, workflowexecution.FieldRecord)
@@ -23787,14 +24336,14 @@ func (m *WorkflowExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.ProjectID()
 	case workflowexecution.FieldWorkflowID:
 		return m.WorkflowID()
-	case workflowexecution.FieldSubject:
-		return m.Subject()
+	case workflowexecution.FieldSubjectID:
+		return m.SubjectID()
 	case workflowexecution.FieldProgress:
 		return m.Progress()
 	case workflowexecution.FieldDuration:
 		return m.Duration()
-	case workflowexecution.FieldWorkflowStagesExecution:
-		return m.WorkflowStagesExecution()
+	case workflowexecution.FieldStageExecutionIds:
+		return m.StageExecutionIds()
 	case workflowexecution.FieldRecord:
 		return m.Record()
 	case workflowexecution.FieldInput:
@@ -23826,14 +24375,14 @@ func (m *WorkflowExecutionMutation) OldField(ctx context.Context, name string) (
 		return m.OldProjectID(ctx)
 	case workflowexecution.FieldWorkflowID:
 		return m.OldWorkflowID(ctx)
-	case workflowexecution.FieldSubject:
-		return m.OldSubject(ctx)
+	case workflowexecution.FieldSubjectID:
+		return m.OldSubjectID(ctx)
 	case workflowexecution.FieldProgress:
 		return m.OldProgress(ctx)
 	case workflowexecution.FieldDuration:
 		return m.OldDuration(ctx)
-	case workflowexecution.FieldWorkflowStagesExecution:
-		return m.OldWorkflowStagesExecution(ctx)
+	case workflowexecution.FieldStageExecutionIds:
+		return m.OldStageExecutionIds(ctx)
 	case workflowexecution.FieldRecord:
 		return m.OldRecord(ctx)
 	case workflowexecution.FieldInput:
@@ -23910,15 +24459,15 @@ func (m *WorkflowExecutionMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetWorkflowID(v)
 		return nil
-	case workflowexecution.FieldSubject:
+	case workflowexecution.FieldSubjectID:
 		v, ok := value.(object.ID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSubject(v)
+		m.SetSubjectID(v)
 		return nil
 	case workflowexecution.FieldProgress:
-		v, ok := value.(int)
+		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -23931,12 +24480,12 @@ func (m *WorkflowExecutionMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetDuration(v)
 		return nil
-	case workflowexecution.FieldWorkflowStagesExecution:
+	case workflowexecution.FieldStageExecutionIds:
 		v, ok := value.([]object.ID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetWorkflowStagesExecution(v)
+		m.SetStageExecutionIds(v)
 		return nil
 	case workflowexecution.FieldRecord:
 		v, ok := value.(string)
@@ -23960,9 +24509,6 @@ func (m *WorkflowExecutionMutation) SetField(name string, value ent.Value) error
 // this mutation.
 func (m *WorkflowExecutionMutation) AddedFields() []string {
 	var fields []string
-	if m.addprogress != nil {
-		fields = append(fields, workflowexecution.FieldProgress)
-	}
 	if m.addduration != nil {
 		fields = append(fields, workflowexecution.FieldDuration)
 	}
@@ -23974,8 +24520,6 @@ func (m *WorkflowExecutionMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *WorkflowExecutionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case workflowexecution.FieldProgress:
-		return m.AddedProgress()
 	case workflowexecution.FieldDuration:
 		return m.AddedDuration()
 	}
@@ -23987,13 +24531,6 @@ func (m *WorkflowExecutionMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *WorkflowExecutionMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case workflowexecution.FieldProgress:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddProgress(v)
-		return nil
 	case workflowexecution.FieldDuration:
 		v, ok := value.(int)
 		if !ok {
@@ -24082,8 +24619,8 @@ func (m *WorkflowExecutionMutation) ResetField(name string) error {
 	case workflowexecution.FieldWorkflowID:
 		m.ResetWorkflowID()
 		return nil
-	case workflowexecution.FieldSubject:
-		m.ResetSubject()
+	case workflowexecution.FieldSubjectID:
+		m.ResetSubjectID()
 		return nil
 	case workflowexecution.FieldProgress:
 		m.ResetProgress()
@@ -24091,8 +24628,8 @@ func (m *WorkflowExecutionMutation) ResetField(name string) error {
 	case workflowexecution.FieldDuration:
 		m.ResetDuration()
 		return nil
-	case workflowexecution.FieldWorkflowStagesExecution:
-		m.ResetWorkflowStagesExecution()
+	case workflowexecution.FieldStageExecutionIds:
+		m.ResetStageExecutionIds()
 		return nil
 	case workflowexecution.FieldRecord:
 		m.ResetRecord()
@@ -24106,7 +24643,10 @@ func (m *WorkflowExecutionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkflowExecutionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.project != nil {
+		edges = append(edges, workflowexecution.EdgeProject)
+	}
 	if m.workflow_stage_executions != nil {
 		edges = append(edges, workflowexecution.EdgeWorkflowStageExecutions)
 	}
@@ -24120,6 +24660,10 @@ func (m *WorkflowExecutionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *WorkflowExecutionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case workflowexecution.EdgeProject:
+		if id := m.project; id != nil {
+			return []ent.Value{*id}
+		}
 	case workflowexecution.EdgeWorkflowStageExecutions:
 		ids := make([]ent.Value, 0, len(m.workflow_stage_executions))
 		for id := range m.workflow_stage_executions {
@@ -24136,7 +24680,7 @@ func (m *WorkflowExecutionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkflowExecutionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedworkflow_stage_executions != nil {
 		edges = append(edges, workflowexecution.EdgeWorkflowStageExecutions)
 	}
@@ -24159,7 +24703,10 @@ func (m *WorkflowExecutionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkflowExecutionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.clearedproject {
+		edges = append(edges, workflowexecution.EdgeProject)
+	}
 	if m.clearedworkflow_stage_executions {
 		edges = append(edges, workflowexecution.EdgeWorkflowStageExecutions)
 	}
@@ -24173,6 +24720,8 @@ func (m *WorkflowExecutionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *WorkflowExecutionMutation) EdgeCleared(name string) bool {
 	switch name {
+	case workflowexecution.EdgeProject:
+		return m.clearedproject
 	case workflowexecution.EdgeWorkflowStageExecutions:
 		return m.clearedworkflow_stage_executions
 	case workflowexecution.EdgeWorkflow:
@@ -24185,6 +24734,9 @@ func (m *WorkflowExecutionMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *WorkflowExecutionMutation) ClearEdge(name string) error {
 	switch name {
+	case workflowexecution.EdgeProject:
+		m.ClearProject()
+		return nil
 	case workflowexecution.EdgeWorkflow:
 		m.ClearWorkflow()
 		return nil
@@ -24196,6 +24748,9 @@ func (m *WorkflowExecutionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *WorkflowExecutionMutation) ResetEdge(name string) error {
 	switch name {
+	case workflowexecution.EdgeProject:
+		m.ResetProject()
+		return nil
 	case workflowexecution.EdgeWorkflowStageExecutions:
 		m.ResetWorkflowStageExecutions()
 		return nil
@@ -24219,14 +24774,13 @@ type WorkflowStageMutation struct {
 	create_time                      *time.Time
 	update_time                      *time.Time
 	status                           *status.Status
-	project_id                       *object.ID
-	workflow_step_ids                *[]object.ID
-	appendworkflow_step_ids          []object.ID
-	duration                         *int
-	addduration                      *int
+	step_ids                         *[]object.ID
+	appendstep_ids                   []object.ID
 	dependencies                     *[]object.ID
 	appenddependencies               []object.ID
 	clearedFields                    map[string]struct{}
+	project                          *object.ID
+	clearedproject                   bool
 	steps                            map[object.ID]struct{}
 	removedsteps                     map[object.ID]struct{}
 	clearedsteps                     bool
@@ -24650,12 +25204,12 @@ func (m *WorkflowStageMutation) ResetStatus() {
 
 // SetProjectID sets the "project_id" field.
 func (m *WorkflowStageMutation) SetProjectID(o object.ID) {
-	m.project_id = &o
+	m.project = &o
 }
 
 // ProjectID returns the value of the "project_id" field in the mutation.
 func (m *WorkflowStageMutation) ProjectID() (r object.ID, exists bool) {
-	v := m.project_id
+	v := m.project
 	if v == nil {
 		return
 	}
@@ -24681,7 +25235,7 @@ func (m *WorkflowStageMutation) OldProjectID(ctx context.Context) (v object.ID, 
 
 // ResetProjectID resets all changes to the "project_id" field.
 func (m *WorkflowStageMutation) ResetProjectID() {
-	m.project_id = nil
+	m.project = nil
 }
 
 // SetWorkflowID sets the "workflow_id" field.
@@ -24720,111 +25274,55 @@ func (m *WorkflowStageMutation) ResetWorkflowID() {
 	m.workflow = nil
 }
 
-// SetWorkflowStepIds sets the "workflow_step_ids" field.
-func (m *WorkflowStageMutation) SetWorkflowStepIds(o []object.ID) {
-	m.workflow_step_ids = &o
-	m.appendworkflow_step_ids = nil
+// SetStepIds sets the "step_ids" field.
+func (m *WorkflowStageMutation) SetStepIds(o []object.ID) {
+	m.step_ids = &o
+	m.appendstep_ids = nil
 }
 
-// WorkflowStepIds returns the value of the "workflow_step_ids" field in the mutation.
-func (m *WorkflowStageMutation) WorkflowStepIds() (r []object.ID, exists bool) {
-	v := m.workflow_step_ids
+// StepIds returns the value of the "step_ids" field in the mutation.
+func (m *WorkflowStageMutation) StepIds() (r []object.ID, exists bool) {
+	v := m.step_ids
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldWorkflowStepIds returns the old "workflow_step_ids" field's value of the WorkflowStage entity.
+// OldStepIds returns the old "step_ids" field's value of the WorkflowStage entity.
 // If the WorkflowStage object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStageMutation) OldWorkflowStepIds(ctx context.Context) (v []object.ID, err error) {
+func (m *WorkflowStageMutation) OldStepIds(ctx context.Context) (v []object.ID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWorkflowStepIds is only allowed on UpdateOne operations")
+		return v, errors.New("OldStepIds is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWorkflowStepIds requires an ID field in the mutation")
+		return v, errors.New("OldStepIds requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWorkflowStepIds: %w", err)
+		return v, fmt.Errorf("querying old value for OldStepIds: %w", err)
 	}
-	return oldValue.WorkflowStepIds, nil
+	return oldValue.StepIds, nil
 }
 
-// AppendWorkflowStepIds adds o to the "workflow_step_ids" field.
-func (m *WorkflowStageMutation) AppendWorkflowStepIds(o []object.ID) {
-	m.appendworkflow_step_ids = append(m.appendworkflow_step_ids, o...)
+// AppendStepIds adds o to the "step_ids" field.
+func (m *WorkflowStageMutation) AppendStepIds(o []object.ID) {
+	m.appendstep_ids = append(m.appendstep_ids, o...)
 }
 
-// AppendedWorkflowStepIds returns the list of values that were appended to the "workflow_step_ids" field in this mutation.
-func (m *WorkflowStageMutation) AppendedWorkflowStepIds() ([]object.ID, bool) {
-	if len(m.appendworkflow_step_ids) == 0 {
+// AppendedStepIds returns the list of values that were appended to the "step_ids" field in this mutation.
+func (m *WorkflowStageMutation) AppendedStepIds() ([]object.ID, bool) {
+	if len(m.appendstep_ids) == 0 {
 		return nil, false
 	}
-	return m.appendworkflow_step_ids, true
+	return m.appendstep_ids, true
 }
 
-// ResetWorkflowStepIds resets all changes to the "workflow_step_ids" field.
-func (m *WorkflowStageMutation) ResetWorkflowStepIds() {
-	m.workflow_step_ids = nil
-	m.appendworkflow_step_ids = nil
-}
-
-// SetDuration sets the "duration" field.
-func (m *WorkflowStageMutation) SetDuration(i int) {
-	m.duration = &i
-	m.addduration = nil
-}
-
-// Duration returns the value of the "duration" field in the mutation.
-func (m *WorkflowStageMutation) Duration() (r int, exists bool) {
-	v := m.duration
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDuration returns the old "duration" field's value of the WorkflowStage entity.
-// If the WorkflowStage object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStageMutation) OldDuration(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDuration is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDuration requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDuration: %w", err)
-	}
-	return oldValue.Duration, nil
-}
-
-// AddDuration adds i to the "duration" field.
-func (m *WorkflowStageMutation) AddDuration(i int) {
-	if m.addduration != nil {
-		*m.addduration += i
-	} else {
-		m.addduration = &i
-	}
-}
-
-// AddedDuration returns the value that was added to the "duration" field in this mutation.
-func (m *WorkflowStageMutation) AddedDuration() (r int, exists bool) {
-	v := m.addduration
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetDuration resets all changes to the "duration" field.
-func (m *WorkflowStageMutation) ResetDuration() {
-	m.duration = nil
-	m.addduration = nil
+// ResetStepIds resets all changes to the "step_ids" field.
+func (m *WorkflowStageMutation) ResetStepIds() {
+	m.step_ids = nil
+	m.appendstep_ids = nil
 }
 
 // SetDependencies sets the "dependencies" field.
@@ -24876,6 +25374,32 @@ func (m *WorkflowStageMutation) AppendedDependencies() ([]object.ID, bool) {
 func (m *WorkflowStageMutation) ResetDependencies() {
 	m.dependencies = nil
 	m.appenddependencies = nil
+}
+
+// ClearProject clears the "project" edge to the Project entity.
+func (m *WorkflowStageMutation) ClearProject() {
+	m.clearedproject = true
+}
+
+// ProjectCleared reports if the "project" edge to the Project entity was cleared.
+func (m *WorkflowStageMutation) ProjectCleared() bool {
+	return m.clearedproject
+}
+
+// ProjectIDs returns the "project" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProjectID instead. It exists only for internal usage by the builders.
+func (m *WorkflowStageMutation) ProjectIDs() (ids []object.ID) {
+	if id := m.project; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProject resets all changes to the "project" edge.
+func (m *WorkflowStageMutation) ResetProject() {
+	m.project = nil
+	m.clearedproject = false
 }
 
 // AddStepIDs adds the "steps" edge to the WorkflowStep entity by ids.
@@ -25046,7 +25570,7 @@ func (m *WorkflowStageMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStageMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 11)
 	if m.name != nil {
 		fields = append(fields, workflowstage.FieldName)
 	}
@@ -25068,17 +25592,14 @@ func (m *WorkflowStageMutation) Fields() []string {
 	if m.status != nil {
 		fields = append(fields, workflowstage.FieldStatus)
 	}
-	if m.project_id != nil {
+	if m.project != nil {
 		fields = append(fields, workflowstage.FieldProjectID)
 	}
 	if m.workflow != nil {
 		fields = append(fields, workflowstage.FieldWorkflowID)
 	}
-	if m.workflow_step_ids != nil {
-		fields = append(fields, workflowstage.FieldWorkflowStepIds)
-	}
-	if m.duration != nil {
-		fields = append(fields, workflowstage.FieldDuration)
+	if m.step_ids != nil {
+		fields = append(fields, workflowstage.FieldStepIds)
 	}
 	if m.dependencies != nil {
 		fields = append(fields, workflowstage.FieldDependencies)
@@ -25109,10 +25630,8 @@ func (m *WorkflowStageMutation) Field(name string) (ent.Value, bool) {
 		return m.ProjectID()
 	case workflowstage.FieldWorkflowID:
 		return m.WorkflowID()
-	case workflowstage.FieldWorkflowStepIds:
-		return m.WorkflowStepIds()
-	case workflowstage.FieldDuration:
-		return m.Duration()
+	case workflowstage.FieldStepIds:
+		return m.StepIds()
 	case workflowstage.FieldDependencies:
 		return m.Dependencies()
 	}
@@ -25142,10 +25661,8 @@ func (m *WorkflowStageMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldProjectID(ctx)
 	case workflowstage.FieldWorkflowID:
 		return m.OldWorkflowID(ctx)
-	case workflowstage.FieldWorkflowStepIds:
-		return m.OldWorkflowStepIds(ctx)
-	case workflowstage.FieldDuration:
-		return m.OldDuration(ctx)
+	case workflowstage.FieldStepIds:
+		return m.OldStepIds(ctx)
 	case workflowstage.FieldDependencies:
 		return m.OldDependencies(ctx)
 	}
@@ -25220,19 +25737,12 @@ func (m *WorkflowStageMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetWorkflowID(v)
 		return nil
-	case workflowstage.FieldWorkflowStepIds:
+	case workflowstage.FieldStepIds:
 		v, ok := value.([]object.ID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetWorkflowStepIds(v)
-		return nil
-	case workflowstage.FieldDuration:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDuration(v)
+		m.SetStepIds(v)
 		return nil
 	case workflowstage.FieldDependencies:
 		v, ok := value.([]object.ID)
@@ -25248,21 +25758,13 @@ func (m *WorkflowStageMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *WorkflowStageMutation) AddedFields() []string {
-	var fields []string
-	if m.addduration != nil {
-		fields = append(fields, workflowstage.FieldDuration)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *WorkflowStageMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case workflowstage.FieldDuration:
-		return m.AddedDuration()
-	}
 	return nil, false
 }
 
@@ -25271,13 +25773,6 @@ func (m *WorkflowStageMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *WorkflowStageMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case workflowstage.FieldDuration:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddDuration(v)
-		return nil
 	}
 	return fmt.Errorf("unknown WorkflowStage numeric field %s", name)
 }
@@ -25359,11 +25854,8 @@ func (m *WorkflowStageMutation) ResetField(name string) error {
 	case workflowstage.FieldWorkflowID:
 		m.ResetWorkflowID()
 		return nil
-	case workflowstage.FieldWorkflowStepIds:
-		m.ResetWorkflowStepIds()
-		return nil
-	case workflowstage.FieldDuration:
-		m.ResetDuration()
+	case workflowstage.FieldStepIds:
+		m.ResetStepIds()
 		return nil
 	case workflowstage.FieldDependencies:
 		m.ResetDependencies()
@@ -25374,7 +25866,10 @@ func (m *WorkflowStageMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkflowStageMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.project != nil {
+		edges = append(edges, workflowstage.EdgeProject)
+	}
 	if m.steps != nil {
 		edges = append(edges, workflowstage.EdgeSteps)
 	}
@@ -25391,6 +25886,10 @@ func (m *WorkflowStageMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *WorkflowStageMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case workflowstage.EdgeProject:
+		if id := m.project; id != nil {
+			return []ent.Value{*id}
+		}
 	case workflowstage.EdgeSteps:
 		ids := make([]ent.Value, 0, len(m.steps))
 		for id := range m.steps {
@@ -25413,7 +25912,7 @@ func (m *WorkflowStageMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkflowStageMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedsteps != nil {
 		edges = append(edges, workflowstage.EdgeSteps)
 	}
@@ -25445,7 +25944,10 @@ func (m *WorkflowStageMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkflowStageMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.clearedproject {
+		edges = append(edges, workflowstage.EdgeProject)
+	}
 	if m.clearedsteps {
 		edges = append(edges, workflowstage.EdgeSteps)
 	}
@@ -25462,6 +25964,8 @@ func (m *WorkflowStageMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *WorkflowStageMutation) EdgeCleared(name string) bool {
 	switch name {
+	case workflowstage.EdgeProject:
+		return m.clearedproject
 	case workflowstage.EdgeSteps:
 		return m.clearedsteps
 	case workflowstage.EdgeWorkflowStageExecutions:
@@ -25476,6 +25980,9 @@ func (m *WorkflowStageMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *WorkflowStageMutation) ClearEdge(name string) error {
 	switch name {
+	case workflowstage.EdgeProject:
+		m.ClearProject()
+		return nil
 	case workflowstage.EdgeWorkflow:
 		m.ClearWorkflow()
 		return nil
@@ -25487,6 +25994,9 @@ func (m *WorkflowStageMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *WorkflowStageMutation) ResetEdge(name string) error {
 	switch name {
+	case workflowstage.EdgeProject:
+		m.ResetProject()
+		return nil
 	case workflowstage.EdgeSteps:
 		m.ResetSteps()
 		return nil
@@ -25513,7 +26023,6 @@ type WorkflowStageExecutionMutation struct {
 	create_time               *time.Time
 	update_time               *time.Time
 	status                    *status.Status
-	project_id                *object.ID
 	duration                  *int
 	addduration               *int
 	step_execution_ids        *[]object.ID
@@ -25521,6 +26030,8 @@ type WorkflowStageExecutionMutation struct {
 	record                    *string
 	input                     *string
 	clearedFields             map[string]struct{}
+	project                   *object.ID
+	clearedproject            bool
 	step_executions           map[object.ID]struct{}
 	removedstep_executions    map[object.ID]struct{}
 	clearedstep_executions    bool
@@ -25943,12 +26454,12 @@ func (m *WorkflowStageExecutionMutation) ResetStatus() {
 
 // SetProjectID sets the "project_id" field.
 func (m *WorkflowStageExecutionMutation) SetProjectID(o object.ID) {
-	m.project_id = &o
+	m.project = &o
 }
 
 // ProjectID returns the value of the "project_id" field in the mutation.
 func (m *WorkflowStageExecutionMutation) ProjectID() (r object.ID, exists bool) {
-	v := m.project_id
+	v := m.project
 	if v == nil {
 		return
 	}
@@ -25974,7 +26485,7 @@ func (m *WorkflowStageExecutionMutation) OldProjectID(ctx context.Context) (v ob
 
 // ResetProjectID resets all changes to the "project_id" field.
 func (m *WorkflowStageExecutionMutation) ResetProjectID() {
-	m.project_id = nil
+	m.project = nil
 }
 
 // SetDuration sets the "duration" field.
@@ -26228,6 +26739,32 @@ func (m *WorkflowStageExecutionMutation) ResetInput() {
 	m.input = nil
 }
 
+// ClearProject clears the "project" edge to the Project entity.
+func (m *WorkflowStageExecutionMutation) ClearProject() {
+	m.clearedproject = true
+}
+
+// ProjectCleared reports if the "project" edge to the Project entity was cleared.
+func (m *WorkflowStageExecutionMutation) ProjectCleared() bool {
+	return m.clearedproject
+}
+
+// ProjectIDs returns the "project" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProjectID instead. It exists only for internal usage by the builders.
+func (m *WorkflowStageExecutionMutation) ProjectIDs() (ids []object.ID) {
+	if id := m.project; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProject resets all changes to the "project" edge.
+func (m *WorkflowStageExecutionMutation) ResetProject() {
+	m.project = nil
+	m.clearedproject = false
+}
+
 // AddStepExecutionIDs adds the "step_executions" edge to the WorkflowStepExecution entity by ids.
 func (m *WorkflowStageExecutionMutation) AddStepExecutionIDs(ids ...object.ID) {
 	if m.step_executions == nil {
@@ -26390,7 +26927,7 @@ func (m *WorkflowStageExecutionMutation) Fields() []string {
 	if m.status != nil {
 		fields = append(fields, workflowstageexecution.FieldStatus)
 	}
-	if m.project_id != nil {
+	if m.project != nil {
 		fields = append(fields, workflowstageexecution.FieldProjectID)
 	}
 	if m.duration != nil {
@@ -26730,7 +27267,10 @@ func (m *WorkflowStageExecutionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkflowStageExecutionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.project != nil {
+		edges = append(edges, workflowstageexecution.EdgeProject)
+	}
 	if m.step_executions != nil {
 		edges = append(edges, workflowstageexecution.EdgeStepExecutions)
 	}
@@ -26747,6 +27287,10 @@ func (m *WorkflowStageExecutionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *WorkflowStageExecutionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case workflowstageexecution.EdgeProject:
+		if id := m.project; id != nil {
+			return []ent.Value{*id}
+		}
 	case workflowstageexecution.EdgeStepExecutions:
 		ids := make([]ent.Value, 0, len(m.step_executions))
 		for id := range m.step_executions {
@@ -26767,7 +27311,7 @@ func (m *WorkflowStageExecutionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkflowStageExecutionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedstep_executions != nil {
 		edges = append(edges, workflowstageexecution.EdgeStepExecutions)
 	}
@@ -26790,7 +27334,10 @@ func (m *WorkflowStageExecutionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkflowStageExecutionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.clearedproject {
+		edges = append(edges, workflowstageexecution.EdgeProject)
+	}
 	if m.clearedstep_executions {
 		edges = append(edges, workflowstageexecution.EdgeStepExecutions)
 	}
@@ -26807,6 +27354,8 @@ func (m *WorkflowStageExecutionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *WorkflowStageExecutionMutation) EdgeCleared(name string) bool {
 	switch name {
+	case workflowstageexecution.EdgeProject:
+		return m.clearedproject
 	case workflowstageexecution.EdgeStepExecutions:
 		return m.clearedstep_executions
 	case workflowstageexecution.EdgeStage:
@@ -26821,6 +27370,9 @@ func (m *WorkflowStageExecutionMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *WorkflowStageExecutionMutation) ClearEdge(name string) error {
 	switch name {
+	case workflowstageexecution.EdgeProject:
+		m.ClearProject()
+		return nil
 	case workflowstageexecution.EdgeStage:
 		m.ClearStage()
 		return nil
@@ -26835,6 +27387,9 @@ func (m *WorkflowStageExecutionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *WorkflowStageExecutionMutation) ResetEdge(name string) error {
 	switch name {
+	case workflowstageexecution.EdgeProject:
+		m.ResetProject()
+		return nil
 	case workflowstageexecution.EdgeStepExecutions:
 		m.ResetStepExecutions()
 		return nil
@@ -26862,17 +27417,18 @@ type WorkflowStepMutation struct {
 	update_time        *time.Time
 	status             *status.Status
 	_type              *string
-	project_id         *object.ID
 	workflow_id        *object.ID
-	spec               *map[string]any
-	input              *map[string]any
-	output             *map[string]any
+	spec               *map[string]interface{}
+	input              *map[string]interface{}
+	output             *map[string]interface{}
 	dependencies       *[]object.ID
 	appenddependencies []object.ID
 	retryStrategy      *types.RetryStrategy
 	timeout            *int
 	addtimeout         *int
 	clearedFields      map[string]struct{}
+	project            *object.ID
+	clearedproject     bool
 	executions         map[object.ID]struct{}
 	removedexecutions  map[object.ID]struct{}
 	clearedexecutions  bool
@@ -27329,12 +27885,12 @@ func (m *WorkflowStepMutation) ResetType() {
 
 // SetProjectID sets the "project_id" field.
 func (m *WorkflowStepMutation) SetProjectID(o object.ID) {
-	m.project_id = &o
+	m.project = &o
 }
 
 // ProjectID returns the value of the "project_id" field in the mutation.
 func (m *WorkflowStepMutation) ProjectID() (r object.ID, exists bool) {
-	v := m.project_id
+	v := m.project
 	if v == nil {
 		return
 	}
@@ -27360,7 +27916,7 @@ func (m *WorkflowStepMutation) OldProjectID(ctx context.Context) (v object.ID, e
 
 // ResetProjectID resets all changes to the "project_id" field.
 func (m *WorkflowStepMutation) ResetProjectID() {
-	m.project_id = nil
+	m.project = nil
 }
 
 // SetWorkflowID sets the "workflow_id" field.
@@ -27436,12 +27992,12 @@ func (m *WorkflowStepMutation) ResetStageID() {
 }
 
 // SetSpec sets the "spec" field.
-func (m *WorkflowStepMutation) SetSpec(value map[string]any) {
+func (m *WorkflowStepMutation) SetSpec(value map[string]interface{}) {
 	m.spec = &value
 }
 
 // Spec returns the value of the "spec" field in the mutation.
-func (m *WorkflowStepMutation) Spec() (r map[string]any, exists bool) {
+func (m *WorkflowStepMutation) Spec() (r map[string]interface{}, exists bool) {
 	v := m.spec
 	if v == nil {
 		return
@@ -27452,7 +28008,7 @@ func (m *WorkflowStepMutation) Spec() (r map[string]any, exists bool) {
 // OldSpec returns the old "spec" field's value of the WorkflowStep entity.
 // If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepMutation) OldSpec(ctx context.Context) (v map[string]any, err error) {
+func (m *WorkflowStepMutation) OldSpec(ctx context.Context) (v map[string]interface{}, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldSpec is only allowed on UpdateOne operations")
 	}
@@ -27485,12 +28041,12 @@ func (m *WorkflowStepMutation) ResetSpec() {
 }
 
 // SetInput sets the "input" field.
-func (m *WorkflowStepMutation) SetInput(value map[string]any) {
+func (m *WorkflowStepMutation) SetInput(value map[string]interface{}) {
 	m.input = &value
 }
 
 // Input returns the value of the "input" field in the mutation.
-func (m *WorkflowStepMutation) Input() (r map[string]any, exists bool) {
+func (m *WorkflowStepMutation) Input() (r map[string]interface{}, exists bool) {
 	v := m.input
 	if v == nil {
 		return
@@ -27501,7 +28057,7 @@ func (m *WorkflowStepMutation) Input() (r map[string]any, exists bool) {
 // OldInput returns the old "input" field's value of the WorkflowStep entity.
 // If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepMutation) OldInput(ctx context.Context) (v map[string]any, err error) {
+func (m *WorkflowStepMutation) OldInput(ctx context.Context) (v map[string]interface{}, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldInput is only allowed on UpdateOne operations")
 	}
@@ -27534,12 +28090,12 @@ func (m *WorkflowStepMutation) ResetInput() {
 }
 
 // SetOutput sets the "output" field.
-func (m *WorkflowStepMutation) SetOutput(value map[string]any) {
+func (m *WorkflowStepMutation) SetOutput(value map[string]interface{}) {
 	m.output = &value
 }
 
 // Output returns the value of the "output" field in the mutation.
-func (m *WorkflowStepMutation) Output() (r map[string]any, exists bool) {
+func (m *WorkflowStepMutation) Output() (r map[string]interface{}, exists bool) {
 	v := m.output
 	if v == nil {
 		return
@@ -27550,7 +28106,7 @@ func (m *WorkflowStepMutation) Output() (r map[string]any, exists bool) {
 // OldOutput returns the old "output" field's value of the WorkflowStep entity.
 // If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepMutation) OldOutput(ctx context.Context) (v map[string]any, err error) {
+func (m *WorkflowStepMutation) OldOutput(ctx context.Context) (v map[string]interface{}, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldOutput is only allowed on UpdateOne operations")
 	}
@@ -27738,6 +28294,32 @@ func (m *WorkflowStepMutation) ResetTimeout() {
 	m.addtimeout = nil
 }
 
+// ClearProject clears the "project" edge to the Project entity.
+func (m *WorkflowStepMutation) ClearProject() {
+	m.clearedproject = true
+}
+
+// ProjectCleared reports if the "project" edge to the Project entity was cleared.
+func (m *WorkflowStepMutation) ProjectCleared() bool {
+	return m.clearedproject
+}
+
+// ProjectIDs returns the "project" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProjectID instead. It exists only for internal usage by the builders.
+func (m *WorkflowStepMutation) ProjectIDs() (ids []object.ID) {
+	if id := m.project; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProject resets all changes to the "project" edge.
+func (m *WorkflowStepMutation) ResetProject() {
+	m.project = nil
+	m.clearedproject = false
+}
+
 // AddExecutionIDs adds the "executions" edge to the WorkflowStepExecution entity by ids.
 func (m *WorkflowStepMutation) AddExecutionIDs(ids ...object.ID) {
 	if m.executions == nil {
@@ -27877,7 +28459,7 @@ func (m *WorkflowStepMutation) Fields() []string {
 	if m._type != nil {
 		fields = append(fields, workflowstep.FieldType)
 	}
-	if m.project_id != nil {
+	if m.project != nil {
 		fields = append(fields, workflowstep.FieldProjectID)
 	}
 	if m.workflow_id != nil {
@@ -28076,21 +28658,21 @@ func (m *WorkflowStepMutation) SetField(name string, value ent.Value) error {
 		m.SetStageID(v)
 		return nil
 	case workflowstep.FieldSpec:
-		v, ok := value.(map[string]any)
+		v, ok := value.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSpec(v)
 		return nil
 	case workflowstep.FieldInput:
-		v, ok := value.(map[string]any)
+		v, ok := value.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetInput(v)
 		return nil
 	case workflowstep.FieldOutput:
-		v, ok := value.(map[string]any)
+		v, ok := value.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -28289,7 +28871,10 @@ func (m *WorkflowStepMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkflowStepMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.project != nil {
+		edges = append(edges, workflowstep.EdgeProject)
+	}
 	if m.executions != nil {
 		edges = append(edges, workflowstep.EdgeExecutions)
 	}
@@ -28303,6 +28888,10 @@ func (m *WorkflowStepMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *WorkflowStepMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case workflowstep.EdgeProject:
+		if id := m.project; id != nil {
+			return []ent.Value{*id}
+		}
 	case workflowstep.EdgeExecutions:
 		ids := make([]ent.Value, 0, len(m.executions))
 		for id := range m.executions {
@@ -28319,7 +28908,7 @@ func (m *WorkflowStepMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkflowStepMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedexecutions != nil {
 		edges = append(edges, workflowstep.EdgeExecutions)
 	}
@@ -28342,7 +28931,10 @@ func (m *WorkflowStepMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkflowStepMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.clearedproject {
+		edges = append(edges, workflowstep.EdgeProject)
+	}
 	if m.clearedexecutions {
 		edges = append(edges, workflowstep.EdgeExecutions)
 	}
@@ -28356,6 +28948,8 @@ func (m *WorkflowStepMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *WorkflowStepMutation) EdgeCleared(name string) bool {
 	switch name {
+	case workflowstep.EdgeProject:
+		return m.clearedproject
 	case workflowstep.EdgeExecutions:
 		return m.clearedexecutions
 	case workflowstep.EdgeStage:
@@ -28368,6 +28962,9 @@ func (m *WorkflowStepMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *WorkflowStepMutation) ClearEdge(name string) error {
 	switch name {
+	case workflowstep.EdgeProject:
+		m.ClearProject()
+		return nil
 	case workflowstep.EdgeStage:
 		m.ClearStage()
 		return nil
@@ -28379,6 +28976,9 @@ func (m *WorkflowStepMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *WorkflowStepMutation) ResetEdge(name string) error {
 	switch name {
+	case workflowstep.EdgeProject:
+		m.ResetProject()
+		return nil
 	case workflowstep.EdgeExecutions:
 		m.ResetExecutions()
 		return nil
@@ -28403,10 +29003,9 @@ type WorkflowStepExecutionMutation struct {
 	update_time            *time.Time
 	status                 *status.Status
 	workflow_execution_id  *object.ID
-	project_id             *object.ID
 	workflow_id            *object.ID
 	_type                  *string
-	spec                   *map[string]any
+	spec                   *map[string]interface{}
 	times                  *int
 	addtimes               *int
 	duration               *int
@@ -28414,6 +29013,8 @@ type WorkflowStepExecutionMutation struct {
 	record                 *string
 	input                  *string
 	clearedFields          map[string]struct{}
+	project                *object.ID
+	clearedproject         bool
 	workflow_step          *object.ID
 	clearedworkflow_step   bool
 	stage_execution        *object.ID
@@ -28941,12 +29542,12 @@ func (m *WorkflowStepExecutionMutation) ResetWorkflowStageExecutionID() {
 
 // SetProjectID sets the "project_id" field.
 func (m *WorkflowStepExecutionMutation) SetProjectID(o object.ID) {
-	m.project_id = &o
+	m.project = &o
 }
 
 // ProjectID returns the value of the "project_id" field in the mutation.
 func (m *WorkflowStepExecutionMutation) ProjectID() (r object.ID, exists bool) {
-	v := m.project_id
+	v := m.project
 	if v == nil {
 		return
 	}
@@ -28972,7 +29573,7 @@ func (m *WorkflowStepExecutionMutation) OldProjectID(ctx context.Context) (v obj
 
 // ResetProjectID resets all changes to the "project_id" field.
 func (m *WorkflowStepExecutionMutation) ResetProjectID() {
-	m.project_id = nil
+	m.project = nil
 }
 
 // SetWorkflowID sets the "workflow_id" field.
@@ -29048,12 +29649,12 @@ func (m *WorkflowStepExecutionMutation) ResetType() {
 }
 
 // SetSpec sets the "spec" field.
-func (m *WorkflowStepExecutionMutation) SetSpec(value map[string]any) {
+func (m *WorkflowStepExecutionMutation) SetSpec(value map[string]interface{}) {
 	m.spec = &value
 }
 
 // Spec returns the value of the "spec" field in the mutation.
-func (m *WorkflowStepExecutionMutation) Spec() (r map[string]any, exists bool) {
+func (m *WorkflowStepExecutionMutation) Spec() (r map[string]interface{}, exists bool) {
 	v := m.spec
 	if v == nil {
 		return
@@ -29064,7 +29665,7 @@ func (m *WorkflowStepExecutionMutation) Spec() (r map[string]any, exists bool) {
 // OldSpec returns the old "spec" field's value of the WorkflowStepExecution entity.
 // If the WorkflowStepExecution object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepExecutionMutation) OldSpec(ctx context.Context) (v map[string]any, err error) {
+func (m *WorkflowStepExecutionMutation) OldSpec(ctx context.Context) (v map[string]interface{}, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldSpec is only allowed on UpdateOne operations")
 	}
@@ -29280,6 +29881,32 @@ func (m *WorkflowStepExecutionMutation) ResetInput() {
 	m.input = nil
 }
 
+// ClearProject clears the "project" edge to the Project entity.
+func (m *WorkflowStepExecutionMutation) ClearProject() {
+	m.clearedproject = true
+}
+
+// ProjectCleared reports if the "project" edge to the Project entity was cleared.
+func (m *WorkflowStepExecutionMutation) ProjectCleared() bool {
+	return m.clearedproject
+}
+
+// ProjectIDs returns the "project" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProjectID instead. It exists only for internal usage by the builders.
+func (m *WorkflowStepExecutionMutation) ProjectIDs() (ids []object.ID) {
+	if id := m.project; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProject resets all changes to the "project" edge.
+func (m *WorkflowStepExecutionMutation) ResetProject() {
+	m.project = nil
+	m.clearedproject = false
+}
+
 // ClearWorkflowStep clears the "workflow_step" edge to the WorkflowStep entity.
 func (m *WorkflowStepExecutionMutation) ClearWorkflowStep() {
 	m.clearedworkflow_step = true
@@ -29410,7 +30037,7 @@ func (m *WorkflowStepExecutionMutation) Fields() []string {
 	if m.stage_execution != nil {
 		fields = append(fields, workflowstepexecution.FieldWorkflowStageExecutionID)
 	}
-	if m.project_id != nil {
+	if m.project != nil {
 		fields = append(fields, workflowstepexecution.FieldProjectID)
 	}
 	if m.workflow_id != nil {
@@ -29624,7 +30251,7 @@ func (m *WorkflowStepExecutionMutation) SetField(name string, value ent.Value) e
 		m.SetType(v)
 		return nil
 	case workflowstepexecution.FieldSpec:
-		v, ok := value.(map[string]any)
+		v, ok := value.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -29827,7 +30454,10 @@ func (m *WorkflowStepExecutionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *WorkflowStepExecutionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.project != nil {
+		edges = append(edges, workflowstepexecution.EdgeProject)
+	}
 	if m.workflow_step != nil {
 		edges = append(edges, workflowstepexecution.EdgeWorkflowStep)
 	}
@@ -29841,6 +30471,10 @@ func (m *WorkflowStepExecutionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *WorkflowStepExecutionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case workflowstepexecution.EdgeProject:
+		if id := m.project; id != nil {
+			return []ent.Value{*id}
+		}
 	case workflowstepexecution.EdgeWorkflowStep:
 		if id := m.workflow_step; id != nil {
 			return []ent.Value{*id}
@@ -29855,7 +30489,7 @@ func (m *WorkflowStepExecutionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *WorkflowStepExecutionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	return edges
 }
 
@@ -29867,7 +30501,10 @@ func (m *WorkflowStepExecutionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *WorkflowStepExecutionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.clearedproject {
+		edges = append(edges, workflowstepexecution.EdgeProject)
+	}
 	if m.clearedworkflow_step {
 		edges = append(edges, workflowstepexecution.EdgeWorkflowStep)
 	}
@@ -29881,6 +30518,8 @@ func (m *WorkflowStepExecutionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *WorkflowStepExecutionMutation) EdgeCleared(name string) bool {
 	switch name {
+	case workflowstepexecution.EdgeProject:
+		return m.clearedproject
 	case workflowstepexecution.EdgeWorkflowStep:
 		return m.clearedworkflow_step
 	case workflowstepexecution.EdgeStageExecution:
@@ -29893,6 +30532,9 @@ func (m *WorkflowStepExecutionMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *WorkflowStepExecutionMutation) ClearEdge(name string) error {
 	switch name {
+	case workflowstepexecution.EdgeProject:
+		m.ClearProject()
+		return nil
 	case workflowstepexecution.EdgeWorkflowStep:
 		m.ClearWorkflowStep()
 		return nil
@@ -29907,6 +30549,9 @@ func (m *WorkflowStepExecutionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *WorkflowStepExecutionMutation) ResetEdge(name string) error {
 	switch name {
+	case workflowstepexecution.EdgeProject:
+		m.ResetProject()
+		return nil
 	case workflowstepexecution.EdgeWorkflowStep:
 		m.ResetWorkflowStep()
 		return nil

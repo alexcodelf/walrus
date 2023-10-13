@@ -18,6 +18,7 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model/internal"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
@@ -32,6 +33,7 @@ type WorkflowStageQuery struct {
 	order                       []workflowstage.OrderOption
 	inters                      []Interceptor
 	predicates                  []predicate.WorkflowStage
+	withProject                 *ProjectQuery
 	withSteps                   *WorkflowStepQuery
 	withWorkflowStageExecutions *WorkflowStageExecutionQuery
 	withWorkflow                *WorkflowQuery
@@ -70,6 +72,31 @@ func (wsq *WorkflowStageQuery) Unique(unique bool) *WorkflowStageQuery {
 func (wsq *WorkflowStageQuery) Order(o ...workflowstage.OrderOption) *WorkflowStageQuery {
 	wsq.order = append(wsq.order, o...)
 	return wsq
+}
+
+// QueryProject chains the current query on the "project" edge.
+func (wsq *WorkflowStageQuery) QueryProject() *ProjectQuery {
+	query := (&ProjectClient{config: wsq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wsq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wsq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstage.Table, workflowstage.FieldID, selector),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstage.ProjectTable, workflowstage.ProjectColumn),
+		)
+		schemaConfig := wsq.schemaConfig
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStage
+		fromU = sqlgraph.SetNeighbors(wsq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QuerySteps chains the current query on the "steps" edge.
@@ -339,6 +366,7 @@ func (wsq *WorkflowStageQuery) Clone() *WorkflowStageQuery {
 		order:                       append([]workflowstage.OrderOption{}, wsq.order...),
 		inters:                      append([]Interceptor{}, wsq.inters...),
 		predicates:                  append([]predicate.WorkflowStage{}, wsq.predicates...),
+		withProject:                 wsq.withProject.Clone(),
 		withSteps:                   wsq.withSteps.Clone(),
 		withWorkflowStageExecutions: wsq.withWorkflowStageExecutions.Clone(),
 		withWorkflow:                wsq.withWorkflow.Clone(),
@@ -346,6 +374,17 @@ func (wsq *WorkflowStageQuery) Clone() *WorkflowStageQuery {
 		sql:  wsq.sql.Clone(),
 		path: wsq.path,
 	}
+}
+
+// WithProject tells the query-builder to eager-load the nodes that are connected to
+// the "project" edge. The optional arguments are used to configure the query builder of the edge.
+func (wsq *WorkflowStageQuery) WithProject(opts ...func(*ProjectQuery)) *WorkflowStageQuery {
+	query := (&ProjectClient{config: wsq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	wsq.withProject = query
+	return wsq
 }
 
 // WithSteps tells the query-builder to eager-load the nodes that are connected to
@@ -459,7 +498,8 @@ func (wsq *WorkflowStageQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	var (
 		nodes       = []*WorkflowStage{}
 		_spec       = wsq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
+			wsq.withProject != nil,
 			wsq.withSteps != nil,
 			wsq.withWorkflowStageExecutions != nil,
 			wsq.withWorkflow != nil,
@@ -488,6 +528,12 @@ func (wsq *WorkflowStageQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := wsq.withProject; query != nil {
+		if err := wsq.loadProject(ctx, query, nodes, nil,
+			func(n *WorkflowStage, e *Project) { n.Edges.Project = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := wsq.withSteps; query != nil {
 		if err := wsq.loadSteps(ctx, query, nodes,
 			func(n *WorkflowStage) { n.Edges.Steps = []*WorkflowStep{} },
@@ -513,6 +559,35 @@ func (wsq *WorkflowStageQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	return nodes, nil
 }
 
+func (wsq *WorkflowStageQuery) loadProject(ctx context.Context, query *ProjectQuery, nodes []*WorkflowStage, init func(*WorkflowStage), assign func(*WorkflowStage, *Project)) error {
+	ids := make([]object.ID, 0, len(nodes))
+	nodeids := make(map[object.ID][]*WorkflowStage)
+	for i := range nodes {
+		fk := nodes[i].ProjectID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(project.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "project_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (wsq *WorkflowStageQuery) loadSteps(ctx context.Context, query *WorkflowStepQuery, nodes []*WorkflowStage, init func(*WorkflowStage), assign func(*WorkflowStage, *WorkflowStep)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[object.ID]*WorkflowStage)
@@ -632,6 +707,9 @@ func (wsq *WorkflowStageQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != workflowstage.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if wsq.withProject != nil {
+			_spec.Node.AddColumnOnce(workflowstage.FieldProjectID)
 		}
 		if wsq.withWorkflow != nil {
 			_spec.Node.AddColumnOnce(workflowstage.FieldWorkflowID)

@@ -43,16 +43,25 @@ const (
 	FieldDisplayName = "display_name"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
-	// FieldWorkflowStageIds holds the string denoting the workflow_stage_ids field in the database.
-	FieldWorkflowStageIds = "workflow_stage_ids"
+	// FieldStageIds holds the string denoting the stage_ids field in the database.
+	FieldStageIds = "stage_ids"
 	// FieldParallelism holds the string denoting the parallelism field in the database.
 	FieldParallelism = "parallelism"
+	// EdgeProject holds the string denoting the project edge name in mutations.
+	EdgeProject = "project"
 	// EdgeStages holds the string denoting the stages edge name in mutations.
 	EdgeStages = "stages"
 	// EdgeExecutions holds the string denoting the executions edge name in mutations.
 	EdgeExecutions = "executions"
 	// Table holds the table name of the workflow in the database.
 	Table = "workflows"
+	// ProjectTable is the table that holds the project relation/edge.
+	ProjectTable = "workflows"
+	// ProjectInverseTable is the table name for the Project entity.
+	// It exists in this package in order to avoid circular dependency with the "project" package.
+	ProjectInverseTable = "projects"
+	// ProjectColumn is the table column denoting the project relation/edge.
+	ProjectColumn = "project_id"
 	// StagesTable is the table that holds the stages relation/edge.
 	StagesTable = "workflow_stages"
 	// StagesInverseTable is the table name for the WorkflowStage entity.
@@ -83,7 +92,7 @@ var Columns = []string{
 	FieldEnvironmentID,
 	FieldDisplayName,
 	FieldType,
-	FieldWorkflowStageIds,
+	FieldStageIds,
 	FieldParallelism,
 }
 
@@ -117,12 +126,14 @@ var (
 	DefaultUpdateTime func() time.Time
 	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
 	UpdateDefaultUpdateTime func() time.Time
+	// ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	ProjectIDValidator func(string) error
 	// DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
 	DisplayNameValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
-	// DefaultWorkflowStageIds holds the default value on creation for the "workflow_stage_ids" field.
-	DefaultWorkflowStageIds []object.ID
+	// DefaultStageIds holds the default value on creation for the "stage_ids" field.
+	DefaultStageIds []object.ID
 	// DefaultParallelism holds the default value on creation for the "parallelism" field.
 	DefaultParallelism int
 	// ParallelismValidator is a validator for the "parallelism" field. It is called by the builders before save.
@@ -182,6 +193,13 @@ func ByParallelism(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldParallelism, opts...).ToFunc()
 }
 
+// ByProjectField orders the results by project field.
+func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProjectStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByStagesCount orders the results by stages count.
 func ByStagesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -208,6 +226,13 @@ func ByExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newProjectStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProjectInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+	)
 }
 func newStagesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -21,6 +22,8 @@ import (
 type WorkflowStepExecutionCreateInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create WorkflowStepExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowStep indicates to create WorkflowStepExecution entity MUST under the WorkflowStep route.
 	WorkflowStep *WorkflowStepQueryInput `path:",inline" query:"-" json:"-"`
 	// StageExecution indicates to create WorkflowStepExecution entity MUST under the StageExecution route.
@@ -30,8 +33,6 @@ type WorkflowStepExecutionCreateInput struct {
 	Type string `path:"-" query:"-" json:"type"`
 	// ID of the workflow that this workflow step execution belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
-	// ID of the project to belong.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// ID of the workflow execution that this workflow step execution belongs to.
 	WorkflowExecutionID object.ID `path:"-" query:"-" json:"workflowExecutionID"`
 	// Name holds the value of the "name" field.
@@ -41,7 +42,7 @@ type WorkflowStepExecutionCreateInput struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
@@ -62,7 +63,6 @@ func (wseci *WorkflowStepExecutionCreateInput) Model() *WorkflowStepExecution {
 	_wse := &WorkflowStepExecution{
 		Type:                wseci.Type,
 		WorkflowID:          wseci.WorkflowID,
-		ProjectID:           wseci.ProjectID,
 		WorkflowExecutionID: wseci.WorkflowExecutionID,
 		Name:                wseci.Name,
 		Description:         wseci.Description,
@@ -79,6 +79,9 @@ func (wseci *WorkflowStepExecutionCreateInput) Model() *WorkflowStepExecution {
 	}
 	if wseci.StageExecution != nil {
 		_wse.WorkflowStageExecutionID = wseci.StageExecution.ID
+	}
+	if wseci.Project != nil {
+		_wse.ProjectID = wseci.Project.ID
 	}
 
 	return _wse
@@ -103,6 +106,12 @@ func (wseci *WorkflowStepExecutionCreateInput) ValidateWith(ctx context.Context,
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if wseci.Project != nil {
+		if err := wseci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
 	// Validate when creating under the WorkflowStep route.
 	if wseci.WorkflowStep != nil {
 		if err := wseci.WorkflowStep.ValidateWith(ctx, cs, cache); err != nil {
@@ -125,8 +134,6 @@ type WorkflowStepExecutionCreateInputsItem struct {
 	Type string `path:"-" query:"-" json:"type"`
 	// ID of the workflow that this workflow step execution belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
-	// ID of the project to belong.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// ID of the workflow execution that this workflow step execution belongs to.
 	WorkflowExecutionID object.ID `path:"-" query:"-" json:"workflowExecutionID"`
 	// Name holds the value of the "name" field.
@@ -136,7 +143,7 @@ type WorkflowStepExecutionCreateInputsItem struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
@@ -165,6 +172,8 @@ func (wseci *WorkflowStepExecutionCreateInputsItem) ValidateWith(ctx context.Con
 type WorkflowStepExecutionCreateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create WorkflowStepExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowStep indicates to create WorkflowStepExecution entity MUST under the WorkflowStep route.
 	WorkflowStep *WorkflowStepQueryInput `path:",inline" query:"-" json:"-"`
 	// StageExecution indicates to create WorkflowStepExecution entity MUST under the StageExecution route.
@@ -187,7 +196,6 @@ func (wseci *WorkflowStepExecutionCreateInputs) Model() []*WorkflowStepExecution
 		_wse := &WorkflowStepExecution{
 			Type:                wseci.Items[i].Type,
 			WorkflowID:          wseci.Items[i].WorkflowID,
-			ProjectID:           wseci.Items[i].ProjectID,
 			WorkflowExecutionID: wseci.Items[i].WorkflowExecutionID,
 			Name:                wseci.Items[i].Name,
 			Description:         wseci.Items[i].Description,
@@ -204,6 +212,9 @@ func (wseci *WorkflowStepExecutionCreateInputs) Model() []*WorkflowStepExecution
 		}
 		if wseci.StageExecution != nil {
 			_wse.WorkflowStageExecutionID = wseci.StageExecution.ID
+		}
+		if wseci.Project != nil {
+			_wse.ProjectID = wseci.Project.ID
 		}
 
 		_wses[i] = _wse
@@ -235,6 +246,16 @@ func (wseci *WorkflowStepExecutionCreateInputs) ValidateWith(ctx context.Context
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if wseci.Project != nil {
+		if err := wseci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.Project = nil
+			}
+		}
+	}
 	// Validate when creating under the WorkflowStep route.
 	if wseci.WorkflowStep != nil {
 		if err := wseci.WorkflowStep.ValidateWith(ctx, cs, cache); err != nil {
@@ -286,6 +307,8 @@ type WorkflowStepExecutionDeleteInputsItem struct {
 type WorkflowStepExecutionDeleteInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to delete WorkflowStepExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowStep indicates to delete WorkflowStepExecution entity MUST under the WorkflowStep route.
 	WorkflowStep *WorkflowStepQueryInput `path:",inline" query:"-" json:"-"`
 	// StageExecution indicates to delete WorkflowStepExecution entity MUST under the StageExecution route.
@@ -350,6 +373,17 @@ func (wsedi *WorkflowStepExecutionDeleteInputs) ValidateWith(ctx context.Context
 
 	q := cs.WorkflowStepExecutions().Query()
 
+	// Validate when deleting under the Project route.
+	if wsedi.Project != nil {
+		if err := wsedi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstepexecution.ProjectID(wsedi.Project.ID))
+		}
+	}
+
 	// Validate when deleting under the WorkflowStep route.
 	if wsedi.WorkflowStep != nil {
 		if err := wsedi.WorkflowStep.ValidateWith(ctx, cs, cache); err != nil {
@@ -406,6 +440,8 @@ func (wsedi *WorkflowStepExecutionDeleteInputs) ValidateWith(ctx context.Context
 type WorkflowStepExecutionQueryInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to query WorkflowStepExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
 	// WorkflowStep indicates to query WorkflowStepExecution entity MUST under the WorkflowStep route.
 	WorkflowStep *WorkflowStepQueryInput `path:",inline" query:"-" json:"workflowStep"`
 	// StageExecution indicates to query WorkflowStepExecution entity MUST under the StageExecution route.
@@ -453,6 +489,17 @@ func (wseqi *WorkflowStepExecutionQueryInput) ValidateWith(ctx context.Context, 
 	}
 
 	q := cs.WorkflowStepExecutions().Query()
+
+	// Validate when querying under the Project route.
+	if wseqi.Project != nil {
+		if err := wseqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstepexecution.ProjectID(wseqi.Project.ID))
+		}
+	}
 
 	// Validate when querying under the WorkflowStep route.
 	if wseqi.WorkflowStep != nil {
@@ -520,6 +567,8 @@ func (wseqi *WorkflowStepExecutionQueryInput) ValidateWith(ctx context.Context, 
 type WorkflowStepExecutionQueryInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to query WorkflowStepExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowStep indicates to query WorkflowStepExecution entity MUST under the WorkflowStep route.
 	WorkflowStep *WorkflowStepQueryInput `path:",inline" query:"-" json:"-"`
 	// StageExecution indicates to query WorkflowStepExecution entity MUST under the StageExecution route.
@@ -543,6 +592,13 @@ func (wseqi *WorkflowStepExecutionQueryInputs) ValidateWith(ctx context.Context,
 
 	if cache == nil {
 		cache = map[string]any{}
+	}
+
+	// Validate when querying under the Project route.
+	if wseqi.Project != nil {
+		if err := wseqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
 	}
 
 	// Validate when querying under the WorkflowStep route.
@@ -572,7 +628,7 @@ type WorkflowStepExecutionUpdateInput struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
@@ -636,7 +692,7 @@ type WorkflowStepExecutionUpdateInputsItem struct {
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]any `path:"-" query:"-" json:"spec,omitempty"`
+	Spec map[string]interface{} `path:"-" query:"-" json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `path:"-" query:"-" json:"times"`
 	// Duration of the workflow step execution.
@@ -665,6 +721,8 @@ func (wseui *WorkflowStepExecutionUpdateInputsItem) ValidateWith(ctx context.Con
 type WorkflowStepExecutionUpdateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to update WorkflowStepExecution entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// WorkflowStep indicates to update WorkflowStepExecution entity MUST under the WorkflowStep route.
 	WorkflowStep *WorkflowStepQueryInput `path:",inline" query:"-" json:"-"`
 	// StageExecution indicates to update WorkflowStepExecution entity MUST under the StageExecution route.
@@ -740,6 +798,17 @@ func (wseui *WorkflowStepExecutionUpdateInputs) ValidateWith(ctx context.Context
 
 	q := cs.WorkflowStepExecutions().Query()
 
+	// Validate when updating under the Project route.
+	if wseui.Project != nil {
+		if err := wseui.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflowstepexecution.ProjectID(wseui.Project.ID))
+		}
+	}
+
 	// Validate when updating under the WorkflowStep route.
 	if wseui.WorkflowStep != nil {
 		if err := wseui.WorkflowStep.ValidateWith(ctx, cs, cache); err != nil {
@@ -799,23 +868,23 @@ func (wseui *WorkflowStepExecutionUpdateInputs) ValidateWith(ctx context.Context
 
 // WorkflowStepExecutionOutput holds the output of the WorkflowStepExecution entity.
 type WorkflowStepExecutionOutput struct {
-	ID                  object.ID         `json:"id,omitempty"`
-	Name                string            `json:"name,omitempty"`
-	Description         string            `json:"description,omitempty"`
-	Labels              map[string]string `json:"labels,omitempty"`
-	CreateTime          *time.Time        `json:"createTime,omitempty"`
-	UpdateTime          *time.Time        `json:"updateTime,omitempty"`
-	Status              status.Status     `json:"status,omitempty"`
-	WorkflowExecutionID object.ID         `json:"workflowExecutionID,omitempty"`
-	ProjectID           object.ID         `json:"projectID,omitempty"`
-	WorkflowID          object.ID         `json:"workflowID,omitempty"`
-	Type                string            `json:"type,omitempty"`
-	Spec                map[string]any    `json:"spec,omitempty"`
-	Times               int               `json:"times,omitempty"`
-	Duration            int               `json:"duration,omitempty"`
-	Record              string            `json:"record,omitempty"`
-	Input               string            `json:"input,omitempty"`
+	ID                  object.ID              `json:"id,omitempty"`
+	Name                string                 `json:"name,omitempty"`
+	Description         string                 `json:"description,omitempty"`
+	Labels              map[string]string      `json:"labels,omitempty"`
+	CreateTime          *time.Time             `json:"createTime,omitempty"`
+	UpdateTime          *time.Time             `json:"updateTime,omitempty"`
+	Status              status.Status          `json:"status,omitempty"`
+	WorkflowExecutionID object.ID              `json:"workflowExecutionID,omitempty"`
+	WorkflowID          object.ID              `json:"workflowID,omitempty"`
+	Type                string                 `json:"type,omitempty"`
+	Spec                map[string]interface{} `json:"spec,omitempty"`
+	Times               int                    `json:"times,omitempty"`
+	Duration            int                    `json:"duration,omitempty"`
+	Record              string                 `json:"record,omitempty"`
+	Input               string                 `json:"input,omitempty"`
 
+	Project        *ProjectOutput                `json:"project,omitempty"`
 	WorkflowStep   *WorkflowStepOutput           `json:"workflowStep,omitempty"`
 	StageExecution *WorkflowStageExecutionOutput `json:"stageExecution,omitempty"`
 }
@@ -845,7 +914,6 @@ func ExposeWorkflowStepExecution(_wse *WorkflowStepExecution) *WorkflowStepExecu
 		UpdateTime:          _wse.UpdateTime,
 		Status:              _wse.Status,
 		WorkflowExecutionID: _wse.WorkflowExecutionID,
-		ProjectID:           _wse.ProjectID,
 		WorkflowID:          _wse.WorkflowID,
 		Type:                _wse.Type,
 		Spec:                _wse.Spec,
@@ -855,6 +923,13 @@ func ExposeWorkflowStepExecution(_wse *WorkflowStepExecution) *WorkflowStepExecu
 		Input:               _wse.Input,
 	}
 
+	if _wse.Edges.Project != nil {
+		wseo.Project = ExposeProject(_wse.Edges.Project)
+	} else if _wse.ProjectID != "" {
+		wseo.Project = &ProjectOutput{
+			ID: _wse.ProjectID,
+		}
+	}
 	if _wse.Edges.WorkflowStep != nil {
 		wseo.WorkflowStep = ExposeWorkflowStep(_wse.Edges.WorkflowStep)
 	} else if _wse.WorkflowStepID != "" {

@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
@@ -145,7 +146,7 @@ func (wsec *WorkflowStepExecutionCreate) SetType(s string) *WorkflowStepExecutio
 }
 
 // SetSpec sets the "spec" field.
-func (wsec *WorkflowStepExecutionCreate) SetSpec(m map[string]any) *WorkflowStepExecutionCreate {
+func (wsec *WorkflowStepExecutionCreate) SetSpec(m map[string]interface{}) *WorkflowStepExecutionCreate {
 	wsec.mutation.SetSpec(m)
 	return wsec
 }
@@ -210,6 +211,11 @@ func (wsec *WorkflowStepExecutionCreate) SetNillableInput(s *string) *WorkflowSt
 func (wsec *WorkflowStepExecutionCreate) SetID(o object.ID) *WorkflowStepExecutionCreate {
 	wsec.mutation.SetID(o)
 	return wsec
+}
+
+// SetProject sets the "project" edge to the Project entity.
+func (wsec *WorkflowStepExecutionCreate) SetProject(p *Project) *WorkflowStepExecutionCreate {
+	return wsec.SetProjectID(p.ID)
 }
 
 // SetWorkflowStep sets the "workflow_step" edge to the WorkflowStep entity.
@@ -377,6 +383,9 @@ func (wsec *WorkflowStepExecutionCreate) check() error {
 	if _, ok := wsec.mutation.Input(); !ok {
 		return &ValidationError{Name: "input", err: errors.New(`model: missing required field "WorkflowStepExecution.input"`)}
 	}
+	if _, ok := wsec.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowStepExecution.project"`)}
+	}
 	if _, ok := wsec.mutation.WorkflowStepID(); !ok {
 		return &ValidationError{Name: "workflow_step", err: errors.New(`model: missing required edge "WorkflowStepExecution.workflow_step"`)}
 	}
@@ -452,10 +461,6 @@ func (wsec *WorkflowStepExecutionCreate) createSpec() (*WorkflowStepExecution, *
 		_spec.SetField(workflowstepexecution.FieldWorkflowExecutionID, field.TypeString, value)
 		_node.WorkflowExecutionID = value
 	}
-	if value, ok := wsec.mutation.ProjectID(); ok {
-		_spec.SetField(workflowstepexecution.FieldProjectID, field.TypeString, value)
-		_node.ProjectID = value
-	}
 	if value, ok := wsec.mutation.WorkflowID(); ok {
 		_spec.SetField(workflowstepexecution.FieldWorkflowID, field.TypeString, value)
 		_node.WorkflowID = value
@@ -483,6 +488,24 @@ func (wsec *WorkflowStepExecutionCreate) createSpec() (*WorkflowStepExecution, *
 	if value, ok := wsec.mutation.Input(); ok {
 		_spec.SetField(workflowstepexecution.FieldInput, field.TypeString, value)
 		_node.Input = value
+	}
+	if nodes := wsec.mutation.ProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflowstepexecution.ProjectTable,
+			Columns: []string{workflowstepexecution.ProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = wsec.schemaConfig.WorkflowStepExecution
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProjectID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := wsec.mutation.WorkflowStepIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -983,7 +1006,7 @@ func (u *WorkflowStepExecutionUpsert) ClearStatus() *WorkflowStepExecutionUpsert
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepExecutionUpsert) SetSpec(v map[string]any) *WorkflowStepExecutionUpsert {
+func (u *WorkflowStepExecutionUpsert) SetSpec(v map[string]interface{}) *WorkflowStepExecutionUpsert {
 	u.Set(workflowstepexecution.FieldSpec, v)
 	return u
 }
@@ -1231,7 +1254,7 @@ func (u *WorkflowStepExecutionUpsertOne) ClearStatus() *WorkflowStepExecutionUps
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepExecutionUpsertOne) SetSpec(v map[string]any) *WorkflowStepExecutionUpsertOne {
+func (u *WorkflowStepExecutionUpsertOne) SetSpec(v map[string]interface{}) *WorkflowStepExecutionUpsertOne {
 	return u.Update(func(s *WorkflowStepExecutionUpsert) {
 		s.SetSpec(v)
 	})
@@ -1657,7 +1680,7 @@ func (u *WorkflowStepExecutionUpsertBulk) ClearStatus() *WorkflowStepExecutionUp
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepExecutionUpsertBulk) SetSpec(v map[string]any) *WorkflowStepExecutionUpsertBulk {
+func (u *WorkflowStepExecutionUpsertBulk) SetSpec(v map[string]interface{}) *WorkflowStepExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowStepExecutionUpsert) {
 		s.SetSpec(v)
 	})

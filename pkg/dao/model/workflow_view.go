@@ -13,6 +13,7 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -22,12 +23,13 @@ import (
 type WorkflowCreateInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create Workflow entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+
 	// Type of the workflow.
 	Type string `path:"-" query:"-" json:"type"`
 	// Display name is the human readable name that is shown to the user.
 	DisplayName string `path:"-" query:"-" json:"displayName"`
-	// ID of the project that this workflow belongs to.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -37,9 +39,12 @@ type WorkflowCreateInput struct {
 	// ID of the environment that this workflow belongs to.
 	EnvironmentID object.ID `path:"-" query:"-" json:"environmentID,omitempty"`
 	// ID list of the stages that belong to this workflow.
-	WorkflowStageIds []object.ID `path:"-" query:"-" json:"workflowStageIds,omitempty"`
+	StageIds []object.ID `path:"-" query:"-" json:"stageIds,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `path:"-" query:"-" json:"parallelism,omitempty"`
+
+	// Stages specifies full inserting the new WorkflowStage entities of the Workflow entity.
+	Stages []*WorkflowStageCreateInput `uri:"-" query:"-" json:"stages,omitempty"`
 }
 
 // Model returns the Workflow entity for creating,
@@ -50,17 +55,31 @@ func (wci *WorkflowCreateInput) Model() *Workflow {
 	}
 
 	_w := &Workflow{
-		Type:             wci.Type,
-		DisplayName:      wci.DisplayName,
-		ProjectID:        wci.ProjectID,
-		Name:             wci.Name,
-		Description:      wci.Description,
-		Labels:           wci.Labels,
-		EnvironmentID:    wci.EnvironmentID,
-		WorkflowStageIds: wci.WorkflowStageIds,
-		Parallelism:      wci.Parallelism,
+		Type:          wci.Type,
+		DisplayName:   wci.DisplayName,
+		Name:          wci.Name,
+		Description:   wci.Description,
+		Labels:        wci.Labels,
+		EnvironmentID: wci.EnvironmentID,
+		StageIds:      wci.StageIds,
+		Parallelism:   wci.Parallelism,
 	}
 
+	if wci.Project != nil {
+		_w.ProjectID = wci.Project.ID
+	}
+
+	if wci.Stages != nil {
+		// Empty slice is used for clearing the edge.
+		_w.Edges.Stages = make([]*WorkflowStage, 0, len(wci.Stages))
+	}
+	for j := range wci.Stages {
+		if wci.Stages[j] == nil {
+			continue
+		}
+		_w.Edges.Stages = append(_w.Edges.Stages,
+			wci.Stages[j].Model())
+	}
 	return _w
 }
 
@@ -83,6 +102,27 @@ func (wci *WorkflowCreateInput) ValidateWith(ctx context.Context, cs ClientSet, 
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the Project route.
+	if wci.Project != nil {
+		if err := wci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
+	for i := range wci.Stages {
+		if wci.Stages[i] == nil {
+			continue
+		}
+
+		if err := wci.Stages[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wci.Stages[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -92,8 +132,6 @@ type WorkflowCreateInputsItem struct {
 	Type string `path:"-" query:"-" json:"type"`
 	// Display name is the human readable name that is shown to the user.
 	DisplayName string `path:"-" query:"-" json:"displayName"`
-	// ID of the project that this workflow belongs to.
-	ProjectID object.ID `path:"-" query:"-" json:"projectID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -103,9 +141,12 @@ type WorkflowCreateInputsItem struct {
 	// ID of the environment that this workflow belongs to.
 	EnvironmentID object.ID `path:"-" query:"-" json:"environmentID,omitempty"`
 	// ID list of the stages that belong to this workflow.
-	WorkflowStageIds []object.ID `path:"-" query:"-" json:"workflowStageIds,omitempty"`
+	StageIds []object.ID `path:"-" query:"-" json:"stageIds,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `path:"-" query:"-" json:"parallelism,omitempty"`
+
+	// Stages specifies full inserting the new WorkflowStage entities.
+	Stages []*WorkflowStageCreateInput `uri:"-" query:"-" json:"stages,omitempty"`
 }
 
 // ValidateWith checks the WorkflowCreateInputsItem entity with the given context and client set.
@@ -118,6 +159,20 @@ func (wci *WorkflowCreateInputsItem) ValidateWith(ctx context.Context, cs Client
 		cache = map[string]any{}
 	}
 
+	for i := range wci.Stages {
+		if wci.Stages[i] == nil {
+			continue
+		}
+
+		if err := wci.Stages[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wci.Stages[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -125,6 +180,9 @@ func (wci *WorkflowCreateInputsItem) ValidateWith(ctx context.Context, cs Client
 // please tags with `path:",inline" json:",inline"` if embedding.
 type WorkflowCreateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to create Workflow entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowCreateInputsItem `path:"-" query:"-" json:"items"`
@@ -141,15 +199,30 @@ func (wci *WorkflowCreateInputs) Model() []*Workflow {
 
 	for i := range wci.Items {
 		_w := &Workflow{
-			Type:             wci.Items[i].Type,
-			DisplayName:      wci.Items[i].DisplayName,
-			ProjectID:        wci.Items[i].ProjectID,
-			Name:             wci.Items[i].Name,
-			Description:      wci.Items[i].Description,
-			Labels:           wci.Items[i].Labels,
-			EnvironmentID:    wci.Items[i].EnvironmentID,
-			WorkflowStageIds: wci.Items[i].WorkflowStageIds,
-			Parallelism:      wci.Items[i].Parallelism,
+			Type:          wci.Items[i].Type,
+			DisplayName:   wci.Items[i].DisplayName,
+			Name:          wci.Items[i].Name,
+			Description:   wci.Items[i].Description,
+			Labels:        wci.Items[i].Labels,
+			EnvironmentID: wci.Items[i].EnvironmentID,
+			StageIds:      wci.Items[i].StageIds,
+			Parallelism:   wci.Items[i].Parallelism,
+		}
+
+		if wci.Project != nil {
+			_w.ProjectID = wci.Project.ID
+		}
+
+		if wci.Items[i].Stages != nil {
+			// Empty slice is used for clearing the edge.
+			_w.Edges.Stages = make([]*WorkflowStage, 0, len(wci.Items[i].Stages))
+		}
+		for j := range wci.Items[i].Stages {
+			if wci.Items[i].Stages[j] == nil {
+				continue
+			}
+			_w.Edges.Stages = append(_w.Edges.Stages,
+				wci.Items[i].Stages[j].Model())
 		}
 
 		_ws[i] = _w
@@ -179,6 +252,17 @@ func (wci *WorkflowCreateInputs) ValidateWith(ctx context.Context, cs ClientSet,
 
 	if cache == nil {
 		cache = map[string]any{}
+	}
+
+	// Validate when creating under the Project route.
+	if wci.Project != nil {
+		if err := wci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wci.Project = nil
+			}
+		}
 	}
 
 	for i := range wci.Items {
@@ -212,6 +296,9 @@ type WorkflowDeleteInputsItem struct {
 // please tags with `path:",inline" json:",inline"` if embedding.
 type WorkflowDeleteInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to delete Workflow entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowDeleteInputsItem `path:"-" query:"-" json:"items"`
@@ -271,6 +358,17 @@ func (wdi *WorkflowDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet,
 	}
 
 	q := cs.Workflows().Query()
+
+	// Validate when deleting under the Project route.
+	if wdi.Project != nil {
+		if err := wdi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflow.ProjectID(wdi.Project.ID))
+		}
+	}
 
 	ids := make([]object.ID, 0, len(wdi.Items))
 	ors := make([]predicate.Workflow, 0, len(wdi.Items))
@@ -335,6 +433,9 @@ func (wdi *WorkflowDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet,
 type WorkflowQueryInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to query Workflow entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
+
 	// Refer holds the route path reference of the Workflow entity.
 	Refer *object.Refer `path:"workflow,default=" query:"-" json:"-"`
 	// ID of the Workflow entity, tries to retrieve the entity with the following unique index parts if no ID provided.
@@ -380,6 +481,17 @@ func (wqi *WorkflowQueryInput) ValidateWith(ctx context.Context, cs ClientSet, c
 	}
 
 	q := cs.Workflows().Query()
+
+	// Validate when querying under the Project route.
+	if wqi.Project != nil {
+		if err := wqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflow.ProjectID(wqi.Project.ID))
+		}
+	}
 
 	if wqi.Refer != nil {
 		if wqi.Refer.IsID() {
@@ -434,6 +546,9 @@ func (wqi *WorkflowQueryInput) ValidateWith(ctx context.Context, cs ClientSet, c
 // please tags with `path:",inline" query:",inline"` if embedding.
 type WorkflowQueryInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to query Workflow entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 }
 
 // Validate checks the WorkflowQueryInputs entity.
@@ -455,6 +570,13 @@ func (wqi *WorkflowQueryInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 		cache = map[string]any{}
 	}
 
+	// Validate when querying under the Project route.
+	if wqi.Project != nil {
+		if err := wqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -470,9 +592,12 @@ type WorkflowUpdateInput struct {
 	// Display name is the human readable name that is shown to the user.
 	DisplayName string `path:"-" query:"-" json:"displayName,omitempty"`
 	// ID list of the stages that belong to this workflow.
-	WorkflowStageIds []object.ID `path:"-" query:"-" json:"workflowStageIds,omitempty"`
+	StageIds []object.ID `path:"-" query:"-" json:"stageIds,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `path:"-" query:"-" json:"parallelism,omitempty"`
+
+	// Stages indicates replacing the stale WorkflowStage entities.
+	Stages []*WorkflowStageCreateInput `uri:"-" query:"-" json:"stages,omitempty"`
 }
 
 // Model returns the Workflow entity for modifying,
@@ -483,15 +608,26 @@ func (wui *WorkflowUpdateInput) Model() *Workflow {
 	}
 
 	_w := &Workflow{
-		ID:               wui.ID,
-		Name:             wui.Name,
-		Description:      wui.Description,
-		Labels:           wui.Labels,
-		DisplayName:      wui.DisplayName,
-		WorkflowStageIds: wui.WorkflowStageIds,
-		Parallelism:      wui.Parallelism,
+		ID:          wui.ID,
+		Name:        wui.Name,
+		Description: wui.Description,
+		Labels:      wui.Labels,
+		DisplayName: wui.DisplayName,
+		StageIds:    wui.StageIds,
+		Parallelism: wui.Parallelism,
 	}
 
+	if wui.Stages != nil {
+		// Empty slice is used for clearing the edge.
+		_w.Edges.Stages = make([]*WorkflowStage, 0, len(wui.Stages))
+	}
+	for j := range wui.Stages {
+		if wui.Stages[j] == nil {
+			continue
+		}
+		_w.Edges.Stages = append(_w.Edges.Stages,
+			wui.Stages[j].Model())
+	}
 	return _w
 }
 
@@ -514,6 +650,20 @@ func (wui *WorkflowUpdateInput) ValidateWith(ctx context.Context, cs ClientSet, 
 		return err
 	}
 
+	for i := range wui.Stages {
+		if wui.Stages[i] == nil {
+			continue
+		}
+
+		if err := wui.Stages[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wui.Stages[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -531,9 +681,12 @@ type WorkflowUpdateInputsItem struct {
 	// Display name is the human readable name that is shown to the user.
 	DisplayName string `path:"-" query:"-" json:"displayName"`
 	// ID list of the stages that belong to this workflow.
-	WorkflowStageIds []object.ID `path:"-" query:"-" json:"workflowStageIds"`
+	StageIds []object.ID `path:"-" query:"-" json:"stageIds"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `path:"-" query:"-" json:"parallelism"`
+
+	// Stages indicates replacing the stale WorkflowStage entities.
+	Stages []*WorkflowStageCreateInput `uri:"-" query:"-" json:"stages,omitempty"`
 }
 
 // ValidateWith checks the WorkflowUpdateInputsItem entity with the given context and client set.
@@ -546,6 +699,20 @@ func (wui *WorkflowUpdateInputsItem) ValidateWith(ctx context.Context, cs Client
 		cache = map[string]any{}
 	}
 
+	for i := range wui.Stages {
+		if wui.Stages[i] == nil {
+			continue
+		}
+
+		if err := wui.Stages[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wui.Stages[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -553,6 +720,9 @@ func (wui *WorkflowUpdateInputsItem) ValidateWith(ctx context.Context, cs Client
 // please tags with `path:",inline" json:",inline"` if embedding.
 type WorkflowUpdateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to update Workflow entity MUST under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowUpdateInputsItem `path:"-" query:"-" json:"items"`
@@ -569,13 +739,25 @@ func (wui *WorkflowUpdateInputs) Model() []*Workflow {
 
 	for i := range wui.Items {
 		_w := &Workflow{
-			ID:               wui.Items[i].ID,
-			Name:             wui.Items[i].Name,
-			Description:      wui.Items[i].Description,
-			Labels:           wui.Items[i].Labels,
-			DisplayName:      wui.Items[i].DisplayName,
-			WorkflowStageIds: wui.Items[i].WorkflowStageIds,
-			Parallelism:      wui.Items[i].Parallelism,
+			ID:          wui.Items[i].ID,
+			Name:        wui.Items[i].Name,
+			Description: wui.Items[i].Description,
+			Labels:      wui.Items[i].Labels,
+			DisplayName: wui.Items[i].DisplayName,
+			StageIds:    wui.Items[i].StageIds,
+			Parallelism: wui.Items[i].Parallelism,
+		}
+
+		if wui.Items[i].Stages != nil {
+			// Empty slice is used for clearing the edge.
+			_w.Edges.Stages = make([]*WorkflowStage, 0, len(wui.Items[i].Stages))
+		}
+		for j := range wui.Items[i].Stages {
+			if wui.Items[i].Stages[j] == nil {
+				continue
+			}
+			_w.Edges.Stages = append(_w.Edges.Stages,
+				wui.Items[i].Stages[j].Model())
 		}
 
 		_ws[i] = _w
@@ -622,6 +804,17 @@ func (wui *WorkflowUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet,
 	}
 
 	q := cs.Workflows().Query()
+
+	// Validate when updating under the Project route.
+	if wui.Project != nil {
+		if err := wui.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				workflow.ProjectID(wui.Project.ID))
+		}
+	}
 
 	ids := make([]object.ID, 0, len(wui.Items))
 	ors := make([]predicate.Workflow, 0, len(wui.Items))
@@ -689,19 +882,22 @@ func (wui *WorkflowUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet,
 
 // WorkflowOutput holds the output of the Workflow entity.
 type WorkflowOutput struct {
-	ID               object.ID         `json:"id,omitempty"`
-	Name             string            `json:"name,omitempty"`
-	Description      string            `json:"description,omitempty"`
-	Labels           map[string]string `json:"labels,omitempty"`
-	CreateTime       *time.Time        `json:"createTime,omitempty"`
-	UpdateTime       *time.Time        `json:"updateTime,omitempty"`
-	Status           status.Status     `json:"status,omitempty"`
-	ProjectID        object.ID         `json:"projectID,omitempty"`
-	EnvironmentID    object.ID         `json:"environmentID,omitempty"`
-	DisplayName      string            `json:"displayName,omitempty"`
-	Type             string            `json:"type,omitempty"`
-	WorkflowStageIds []object.ID       `json:"workflowStageIds,omitempty"`
-	Parallelism      int               `json:"parallelism,omitempty"`
+	ID            object.ID         `json:"id,omitempty"`
+	Name          string            `json:"name,omitempty"`
+	Description   string            `json:"description,omitempty"`
+	Labels        map[string]string `json:"labels,omitempty"`
+	CreateTime    *time.Time        `json:"createTime,omitempty"`
+	UpdateTime    *time.Time        `json:"updateTime,omitempty"`
+	Status        status.Status     `json:"status,omitempty"`
+	EnvironmentID object.ID         `json:"environmentID,omitempty"`
+	DisplayName   string            `json:"displayName,omitempty"`
+	Type          string            `json:"type,omitempty"`
+	StageIds      []object.ID       `json:"stageIds,omitempty"`
+	Parallelism   int               `json:"parallelism,omitempty"`
+
+	Project    *ProjectOutput             `json:"project,omitempty"`
+	Stages     []*WorkflowStageOutput     `json:"stages,omitempty"`
+	Executions []*WorkflowExecutionOutput `json:"executions,omitempty"`
 }
 
 // View returns the output of Workflow entity.
@@ -721,21 +917,33 @@ func ExposeWorkflow(_w *Workflow) *WorkflowOutput {
 	}
 
 	wo := &WorkflowOutput{
-		ID:               _w.ID,
-		Name:             _w.Name,
-		Description:      _w.Description,
-		Labels:           _w.Labels,
-		CreateTime:       _w.CreateTime,
-		UpdateTime:       _w.UpdateTime,
-		Status:           _w.Status,
-		ProjectID:        _w.ProjectID,
-		EnvironmentID:    _w.EnvironmentID,
-		DisplayName:      _w.DisplayName,
-		Type:             _w.Type,
-		WorkflowStageIds: _w.WorkflowStageIds,
-		Parallelism:      _w.Parallelism,
+		ID:            _w.ID,
+		Name:          _w.Name,
+		Description:   _w.Description,
+		Labels:        _w.Labels,
+		CreateTime:    _w.CreateTime,
+		UpdateTime:    _w.UpdateTime,
+		Status:        _w.Status,
+		EnvironmentID: _w.EnvironmentID,
+		DisplayName:   _w.DisplayName,
+		Type:          _w.Type,
+		StageIds:      _w.StageIds,
+		Parallelism:   _w.Parallelism,
 	}
 
+	if _w.Edges.Project != nil {
+		wo.Project = ExposeProject(_w.Edges.Project)
+	} else if _w.ProjectID != "" {
+		wo.Project = &ProjectOutput{
+			ID: _w.ProjectID,
+		}
+	}
+	if _w.Edges.Stages != nil {
+		wo.Stages = ExposeWorkflowStages(_w.Edges.Stages)
+	}
+	if _w.Edges.Executions != nil {
+		wo.Executions = ExposeWorkflowExecutions(_w.Edges.Executions)
+	}
 	return wo
 }
 

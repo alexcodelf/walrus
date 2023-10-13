@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
@@ -120,15 +121,15 @@ func (wec *WorkflowExecutionCreate) SetWorkflowID(o object.ID) *WorkflowExecutio
 	return wec
 }
 
-// SetSubject sets the "subject" field.
-func (wec *WorkflowExecutionCreate) SetSubject(o object.ID) *WorkflowExecutionCreate {
-	wec.mutation.SetSubject(o)
+// SetSubjectID sets the "subject_id" field.
+func (wec *WorkflowExecutionCreate) SetSubjectID(o object.ID) *WorkflowExecutionCreate {
+	wec.mutation.SetSubjectID(o)
 	return wec
 }
 
 // SetProgress sets the "progress" field.
-func (wec *WorkflowExecutionCreate) SetProgress(i int) *WorkflowExecutionCreate {
-	wec.mutation.SetProgress(i)
+func (wec *WorkflowExecutionCreate) SetProgress(s string) *WorkflowExecutionCreate {
+	wec.mutation.SetProgress(s)
 	return wec
 }
 
@@ -138,9 +139,17 @@ func (wec *WorkflowExecutionCreate) SetDuration(i int) *WorkflowExecutionCreate 
 	return wec
 }
 
-// SetWorkflowStagesExecution sets the "workflow_stages_execution" field.
-func (wec *WorkflowExecutionCreate) SetWorkflowStagesExecution(o []object.ID) *WorkflowExecutionCreate {
-	wec.mutation.SetWorkflowStagesExecution(o)
+// SetNillableDuration sets the "duration" field if the given value is not nil.
+func (wec *WorkflowExecutionCreate) SetNillableDuration(i *int) *WorkflowExecutionCreate {
+	if i != nil {
+		wec.SetDuration(*i)
+	}
+	return wec
+}
+
+// SetStageExecutionIds sets the "stage_execution_ids" field.
+func (wec *WorkflowExecutionCreate) SetStageExecutionIds(o []object.ID) *WorkflowExecutionCreate {
+	wec.mutation.SetStageExecutionIds(o)
 	return wec
 }
 
@@ -176,6 +185,11 @@ func (wec *WorkflowExecutionCreate) SetNillableInput(s *string) *WorkflowExecuti
 func (wec *WorkflowExecutionCreate) SetID(o object.ID) *WorkflowExecutionCreate {
 	wec.mutation.SetID(o)
 	return wec
+}
+
+// SetProject sets the "project" edge to the Project entity.
+func (wec *WorkflowExecutionCreate) SetProject(p *Project) *WorkflowExecutionCreate {
+	return wec.SetProjectID(p.ID)
 }
 
 // AddWorkflowStageExecutionIDs adds the "workflow_stage_executions" edge to the WorkflowStageExecution entity by IDs.
@@ -257,9 +271,13 @@ func (wec *WorkflowExecutionCreate) defaults() error {
 		v := workflowexecution.DefaultUpdateTime()
 		wec.mutation.SetUpdateTime(v)
 	}
-	if _, ok := wec.mutation.WorkflowStagesExecution(); !ok {
-		v := workflowexecution.DefaultWorkflowStagesExecution
-		wec.mutation.SetWorkflowStagesExecution(v)
+	if _, ok := wec.mutation.Duration(); !ok {
+		v := workflowexecution.DefaultDuration
+		wec.mutation.SetDuration(v)
+	}
+	if _, ok := wec.mutation.StageExecutionIds(); !ok {
+		v := workflowexecution.DefaultStageExecutionIds
+		wec.mutation.SetStageExecutionIds(v)
 	}
 	if _, ok := wec.mutation.Record(); !ok {
 		v := workflowexecution.DefaultRecord
@@ -304,28 +322,31 @@ func (wec *WorkflowExecutionCreate) check() error {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.workflow_id": %w`, err)}
 		}
 	}
-	if _, ok := wec.mutation.Subject(); !ok {
-		return &ValidationError{Name: "subject", err: errors.New(`model: missing required field "WorkflowExecution.subject"`)}
+	if _, ok := wec.mutation.SubjectID(); !ok {
+		return &ValidationError{Name: "subject_id", err: errors.New(`model: missing required field "WorkflowExecution.subject_id"`)}
 	}
 	if _, ok := wec.mutation.Progress(); !ok {
 		return &ValidationError{Name: "progress", err: errors.New(`model: missing required field "WorkflowExecution.progress"`)}
 	}
-	if v, ok := wec.mutation.Progress(); ok {
-		if err := workflowexecution.ProgressValidator(v); err != nil {
-			return &ValidationError{Name: "progress", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.progress": %w`, err)}
-		}
-	}
 	if _, ok := wec.mutation.Duration(); !ok {
 		return &ValidationError{Name: "duration", err: errors.New(`model: missing required field "WorkflowExecution.duration"`)}
 	}
-	if _, ok := wec.mutation.WorkflowStagesExecution(); !ok {
-		return &ValidationError{Name: "workflow_stages_execution", err: errors.New(`model: missing required field "WorkflowExecution.workflow_stages_execution"`)}
+	if v, ok := wec.mutation.Duration(); ok {
+		if err := workflowexecution.DurationValidator(v); err != nil {
+			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.duration": %w`, err)}
+		}
+	}
+	if _, ok := wec.mutation.StageExecutionIds(); !ok {
+		return &ValidationError{Name: "stage_execution_ids", err: errors.New(`model: missing required field "WorkflowExecution.stage_execution_ids"`)}
 	}
 	if _, ok := wec.mutation.Record(); !ok {
 		return &ValidationError{Name: "record", err: errors.New(`model: missing required field "WorkflowExecution.record"`)}
 	}
 	if _, ok := wec.mutation.Input(); !ok {
 		return &ValidationError{Name: "input", err: errors.New(`model: missing required field "WorkflowExecution.input"`)}
+	}
+	if _, ok := wec.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowExecution.project"`)}
 	}
 	if _, ok := wec.mutation.WorkflowID(); !ok {
 		return &ValidationError{Name: "workflow", err: errors.New(`model: missing required edge "WorkflowExecution.workflow"`)}
@@ -395,25 +416,21 @@ func (wec *WorkflowExecutionCreate) createSpec() (*WorkflowExecution, *sqlgraph.
 		_spec.SetField(workflowexecution.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
-	if value, ok := wec.mutation.ProjectID(); ok {
-		_spec.SetField(workflowexecution.FieldProjectID, field.TypeString, value)
-		_node.ProjectID = value
-	}
-	if value, ok := wec.mutation.Subject(); ok {
-		_spec.SetField(workflowexecution.FieldSubject, field.TypeString, value)
-		_node.Subject = value
+	if value, ok := wec.mutation.SubjectID(); ok {
+		_spec.SetField(workflowexecution.FieldSubjectID, field.TypeString, value)
+		_node.SubjectID = value
 	}
 	if value, ok := wec.mutation.Progress(); ok {
-		_spec.SetField(workflowexecution.FieldProgress, field.TypeInt, value)
+		_spec.SetField(workflowexecution.FieldProgress, field.TypeString, value)
 		_node.Progress = value
 	}
 	if value, ok := wec.mutation.Duration(); ok {
 		_spec.SetField(workflowexecution.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
 	}
-	if value, ok := wec.mutation.WorkflowStagesExecution(); ok {
-		_spec.SetField(workflowexecution.FieldWorkflowStagesExecution, field.TypeJSON, value)
-		_node.WorkflowStagesExecution = value
+	if value, ok := wec.mutation.StageExecutionIds(); ok {
+		_spec.SetField(workflowexecution.FieldStageExecutionIds, field.TypeJSON, value)
+		_node.StageExecutionIds = value
 	}
 	if value, ok := wec.mutation.Record(); ok {
 		_spec.SetField(workflowexecution.FieldRecord, field.TypeString, value)
@@ -422,6 +439,24 @@ func (wec *WorkflowExecutionCreate) createSpec() (*WorkflowExecution, *sqlgraph.
 	if value, ok := wec.mutation.Input(); ok {
 		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
 		_node.Input = value
+	}
+	if nodes := wec.mutation.ProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflowexecution.ProjectTable,
+			Columns: []string{workflowexecution.ProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = wec.schemaConfig.WorkflowExecution
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProjectID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := wec.mutation.WorkflowStageExecutionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -484,10 +519,10 @@ func (wec *WorkflowExecutionCreate) Set(obj *WorkflowExecution) *WorkflowExecuti
 	wec.SetName(obj.Name)
 	wec.SetProjectID(obj.ProjectID)
 	wec.SetWorkflowID(obj.WorkflowID)
-	wec.SetSubject(obj.Subject)
+	wec.SetSubjectID(obj.SubjectID)
 	wec.SetProgress(obj.Progress)
 	wec.SetDuration(obj.Duration)
-	wec.SetWorkflowStagesExecution(obj.WorkflowStagesExecution)
+	wec.SetStageExecutionIds(obj.StageExecutionIds)
 	wec.SetRecord(obj.Record)
 	wec.SetInput(obj.Input)
 
@@ -561,14 +596,11 @@ func (wec *WorkflowExecutionCreate) SaveE(ctx context.Context, cbs ...func(ctx c
 		if _, set := wec.mutation.Field(workflowexecution.FieldWorkflowID); set {
 			obj.WorkflowID = x.WorkflowID
 		}
-		if _, set := wec.mutation.Field(workflowexecution.FieldSubject); set {
-			obj.Subject = x.Subject
+		if _, set := wec.mutation.Field(workflowexecution.FieldSubjectID); set {
+			obj.SubjectID = x.SubjectID
 		}
 		if _, set := wec.mutation.Field(workflowexecution.FieldProgress); set {
 			obj.Progress = x.Progress
-		}
-		if _, set := wec.mutation.Field(workflowexecution.FieldDuration); set {
-			obj.Duration = x.Duration
 		}
 		obj.Edges = x.Edges
 	}
@@ -684,14 +716,11 @@ func (wecb *WorkflowExecutionCreateBulk) SaveE(ctx context.Context, cbs ...func(
 			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldWorkflowID); set {
 				objs[i].WorkflowID = x[i].WorkflowID
 			}
-			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldSubject); set {
-				objs[i].Subject = x[i].Subject
+			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldSubjectID); set {
+				objs[i].SubjectID = x[i].SubjectID
 			}
 			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldProgress); set {
 				objs[i].Progress = x[i].Progress
-			}
-			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldDuration); set {
-				objs[i].Duration = x[i].Duration
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -903,15 +932,45 @@ func (u *WorkflowExecutionUpsert) ClearStatus() *WorkflowExecutionUpsert {
 	return u
 }
 
-// SetWorkflowStagesExecution sets the "workflow_stages_execution" field.
-func (u *WorkflowExecutionUpsert) SetWorkflowStagesExecution(v []object.ID) *WorkflowExecutionUpsert {
-	u.Set(workflowexecution.FieldWorkflowStagesExecution, v)
+// SetProgress sets the "progress" field.
+func (u *WorkflowExecutionUpsert) SetProgress(v string) *WorkflowExecutionUpsert {
+	u.Set(workflowexecution.FieldProgress, v)
 	return u
 }
 
-// UpdateWorkflowStagesExecution sets the "workflow_stages_execution" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsert) UpdateWorkflowStagesExecution() *WorkflowExecutionUpsert {
-	u.SetExcluded(workflowexecution.FieldWorkflowStagesExecution)
+// UpdateProgress sets the "progress" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsert) UpdateProgress() *WorkflowExecutionUpsert {
+	u.SetExcluded(workflowexecution.FieldProgress)
+	return u
+}
+
+// SetDuration sets the "duration" field.
+func (u *WorkflowExecutionUpsert) SetDuration(v int) *WorkflowExecutionUpsert {
+	u.Set(workflowexecution.FieldDuration, v)
+	return u
+}
+
+// UpdateDuration sets the "duration" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsert) UpdateDuration() *WorkflowExecutionUpsert {
+	u.SetExcluded(workflowexecution.FieldDuration)
+	return u
+}
+
+// AddDuration adds v to the "duration" field.
+func (u *WorkflowExecutionUpsert) AddDuration(v int) *WorkflowExecutionUpsert {
+	u.Add(workflowexecution.FieldDuration, v)
+	return u
+}
+
+// SetStageExecutionIds sets the "stage_execution_ids" field.
+func (u *WorkflowExecutionUpsert) SetStageExecutionIds(v []object.ID) *WorkflowExecutionUpsert {
+	u.Set(workflowexecution.FieldStageExecutionIds, v)
+	return u
+}
+
+// UpdateStageExecutionIds sets the "stage_execution_ids" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsert) UpdateStageExecutionIds() *WorkflowExecutionUpsert {
+	u.SetExcluded(workflowexecution.FieldStageExecutionIds)
 	return u
 }
 
@@ -968,14 +1027,8 @@ func (u *WorkflowExecutionUpsertOne) UpdateNewValues() *WorkflowExecutionUpsertO
 		if _, exists := u.create.mutation.WorkflowID(); exists {
 			s.SetIgnore(workflowexecution.FieldWorkflowID)
 		}
-		if _, exists := u.create.mutation.Subject(); exists {
-			s.SetIgnore(workflowexecution.FieldSubject)
-		}
-		if _, exists := u.create.mutation.Progress(); exists {
-			s.SetIgnore(workflowexecution.FieldProgress)
-		}
-		if _, exists := u.create.mutation.Duration(); exists {
-			s.SetIgnore(workflowexecution.FieldDuration)
+		if _, exists := u.create.mutation.SubjectID(); exists {
+			s.SetIgnore(workflowexecution.FieldSubjectID)
 		}
 	}))
 	return u
@@ -1106,17 +1159,52 @@ func (u *WorkflowExecutionUpsertOne) ClearStatus() *WorkflowExecutionUpsertOne {
 	})
 }
 
-// SetWorkflowStagesExecution sets the "workflow_stages_execution" field.
-func (u *WorkflowExecutionUpsertOne) SetWorkflowStagesExecution(v []object.ID) *WorkflowExecutionUpsertOne {
+// SetProgress sets the "progress" field.
+func (u *WorkflowExecutionUpsertOne) SetProgress(v string) *WorkflowExecutionUpsertOne {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetWorkflowStagesExecution(v)
+		s.SetProgress(v)
 	})
 }
 
-// UpdateWorkflowStagesExecution sets the "workflow_stages_execution" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertOne) UpdateWorkflowStagesExecution() *WorkflowExecutionUpsertOne {
+// UpdateProgress sets the "progress" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertOne) UpdateProgress() *WorkflowExecutionUpsertOne {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateWorkflowStagesExecution()
+		s.UpdateProgress()
+	})
+}
+
+// SetDuration sets the "duration" field.
+func (u *WorkflowExecutionUpsertOne) SetDuration(v int) *WorkflowExecutionUpsertOne {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.SetDuration(v)
+	})
+}
+
+// AddDuration adds v to the "duration" field.
+func (u *WorkflowExecutionUpsertOne) AddDuration(v int) *WorkflowExecutionUpsertOne {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.AddDuration(v)
+	})
+}
+
+// UpdateDuration sets the "duration" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertOne) UpdateDuration() *WorkflowExecutionUpsertOne {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.UpdateDuration()
+	})
+}
+
+// SetStageExecutionIds sets the "stage_execution_ids" field.
+func (u *WorkflowExecutionUpsertOne) SetStageExecutionIds(v []object.ID) *WorkflowExecutionUpsertOne {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.SetStageExecutionIds(v)
+	})
+}
+
+// UpdateStageExecutionIds sets the "stage_execution_ids" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertOne) UpdateStageExecutionIds() *WorkflowExecutionUpsertOne {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.UpdateStageExecutionIds()
 	})
 }
 
@@ -1341,14 +1429,8 @@ func (u *WorkflowExecutionUpsertBulk) UpdateNewValues() *WorkflowExecutionUpsert
 			if _, exists := b.mutation.WorkflowID(); exists {
 				s.SetIgnore(workflowexecution.FieldWorkflowID)
 			}
-			if _, exists := b.mutation.Subject(); exists {
-				s.SetIgnore(workflowexecution.FieldSubject)
-			}
-			if _, exists := b.mutation.Progress(); exists {
-				s.SetIgnore(workflowexecution.FieldProgress)
-			}
-			if _, exists := b.mutation.Duration(); exists {
-				s.SetIgnore(workflowexecution.FieldDuration)
+			if _, exists := b.mutation.SubjectID(); exists {
+				s.SetIgnore(workflowexecution.FieldSubjectID)
 			}
 		}
 	}))
@@ -1480,17 +1562,52 @@ func (u *WorkflowExecutionUpsertBulk) ClearStatus() *WorkflowExecutionUpsertBulk
 	})
 }
 
-// SetWorkflowStagesExecution sets the "workflow_stages_execution" field.
-func (u *WorkflowExecutionUpsertBulk) SetWorkflowStagesExecution(v []object.ID) *WorkflowExecutionUpsertBulk {
+// SetProgress sets the "progress" field.
+func (u *WorkflowExecutionUpsertBulk) SetProgress(v string) *WorkflowExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetWorkflowStagesExecution(v)
+		s.SetProgress(v)
 	})
 }
 
-// UpdateWorkflowStagesExecution sets the "workflow_stages_execution" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertBulk) UpdateWorkflowStagesExecution() *WorkflowExecutionUpsertBulk {
+// UpdateProgress sets the "progress" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertBulk) UpdateProgress() *WorkflowExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateWorkflowStagesExecution()
+		s.UpdateProgress()
+	})
+}
+
+// SetDuration sets the "duration" field.
+func (u *WorkflowExecutionUpsertBulk) SetDuration(v int) *WorkflowExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.SetDuration(v)
+	})
+}
+
+// AddDuration adds v to the "duration" field.
+func (u *WorkflowExecutionUpsertBulk) AddDuration(v int) *WorkflowExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.AddDuration(v)
+	})
+}
+
+// UpdateDuration sets the "duration" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertBulk) UpdateDuration() *WorkflowExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.UpdateDuration()
+	})
+}
+
+// SetStageExecutionIds sets the "stage_execution_ids" field.
+func (u *WorkflowExecutionUpsertBulk) SetStageExecutionIds(v []object.ID) *WorkflowExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.SetStageExecutionIds(v)
+	})
+}
+
+// UpdateStageExecutionIds sets the "stage_execution_ids" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertBulk) UpdateStageExecutionIds() *WorkflowExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.UpdateStageExecutionIds()
 	})
 }
 

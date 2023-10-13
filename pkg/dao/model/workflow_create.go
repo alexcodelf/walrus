@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
@@ -140,9 +141,9 @@ func (wc *WorkflowCreate) SetType(s string) *WorkflowCreate {
 	return wc
 }
 
-// SetWorkflowStageIds sets the "workflow_stage_ids" field.
-func (wc *WorkflowCreate) SetWorkflowStageIds(o []object.ID) *WorkflowCreate {
-	wc.mutation.SetWorkflowStageIds(o)
+// SetStageIds sets the "stage_ids" field.
+func (wc *WorkflowCreate) SetStageIds(o []object.ID) *WorkflowCreate {
+	wc.mutation.SetStageIds(o)
 	return wc
 }
 
@@ -164,6 +165,11 @@ func (wc *WorkflowCreate) SetNillableParallelism(i *int) *WorkflowCreate {
 func (wc *WorkflowCreate) SetID(o object.ID) *WorkflowCreate {
 	wc.mutation.SetID(o)
 	return wc
+}
+
+// SetProject sets the "project" edge to the Project entity.
+func (wc *WorkflowCreate) SetProject(p *Project) *WorkflowCreate {
+	return wc.SetProjectID(p.ID)
 }
 
 // AddStageIDs adds the "stages" edge to the WorkflowStage entity by IDs.
@@ -255,9 +261,9 @@ func (wc *WorkflowCreate) defaults() error {
 		v := workflow.DefaultUpdateTime()
 		wc.mutation.SetUpdateTime(v)
 	}
-	if _, ok := wc.mutation.WorkflowStageIds(); !ok {
-		v := workflow.DefaultWorkflowStageIds
-		wc.mutation.SetWorkflowStageIds(v)
+	if _, ok := wc.mutation.StageIds(); !ok {
+		v := workflow.DefaultStageIds
+		wc.mutation.SetStageIds(v)
 	}
 	if _, ok := wc.mutation.Parallelism(); !ok {
 		v := workflow.DefaultParallelism
@@ -285,6 +291,11 @@ func (wc *WorkflowCreate) check() error {
 	if _, ok := wc.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project_id", err: errors.New(`model: missing required field "Workflow.project_id"`)}
 	}
+	if v, ok := wc.mutation.ProjectID(); ok {
+		if err := workflow.ProjectIDValidator(string(v)); err != nil {
+			return &ValidationError{Name: "project_id", err: fmt.Errorf(`model: validator failed for field "Workflow.project_id": %w`, err)}
+		}
+	}
 	if _, ok := wc.mutation.DisplayName(); !ok {
 		return &ValidationError{Name: "display_name", err: errors.New(`model: missing required field "Workflow.display_name"`)}
 	}
@@ -301,8 +312,8 @@ func (wc *WorkflowCreate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`model: validator failed for field "Workflow.type": %w`, err)}
 		}
 	}
-	if _, ok := wc.mutation.WorkflowStageIds(); !ok {
-		return &ValidationError{Name: "workflow_stage_ids", err: errors.New(`model: missing required field "Workflow.workflow_stage_ids"`)}
+	if _, ok := wc.mutation.StageIds(); !ok {
+		return &ValidationError{Name: "stage_ids", err: errors.New(`model: missing required field "Workflow.stage_ids"`)}
 	}
 	if _, ok := wc.mutation.Parallelism(); !ok {
 		return &ValidationError{Name: "parallelism", err: errors.New(`model: missing required field "Workflow.parallelism"`)}
@@ -311,6 +322,9 @@ func (wc *WorkflowCreate) check() error {
 		if err := workflow.ParallelismValidator(v); err != nil {
 			return &ValidationError{Name: "parallelism", err: fmt.Errorf(`model: validator failed for field "Workflow.parallelism": %w`, err)}
 		}
+	}
+	if _, ok := wc.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "Workflow.project"`)}
 	}
 	return nil
 }
@@ -377,10 +391,6 @@ func (wc *WorkflowCreate) createSpec() (*Workflow, *sqlgraph.CreateSpec) {
 		_spec.SetField(workflow.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
-	if value, ok := wc.mutation.ProjectID(); ok {
-		_spec.SetField(workflow.FieldProjectID, field.TypeString, value)
-		_node.ProjectID = value
-	}
 	if value, ok := wc.mutation.EnvironmentID(); ok {
 		_spec.SetField(workflow.FieldEnvironmentID, field.TypeString, value)
 		_node.EnvironmentID = value
@@ -393,13 +403,31 @@ func (wc *WorkflowCreate) createSpec() (*Workflow, *sqlgraph.CreateSpec) {
 		_spec.SetField(workflow.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := wc.mutation.WorkflowStageIds(); ok {
-		_spec.SetField(workflow.FieldWorkflowStageIds, field.TypeJSON, value)
-		_node.WorkflowStageIds = value
+	if value, ok := wc.mutation.StageIds(); ok {
+		_spec.SetField(workflow.FieldStageIds, field.TypeJSON, value)
+		_node.StageIds = value
 	}
 	if value, ok := wc.mutation.Parallelism(); ok {
 		_spec.SetField(workflow.FieldParallelism, field.TypeInt, value)
 		_node.Parallelism = value
+	}
+	if nodes := wc.mutation.ProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflow.ProjectTable,
+			Columns: []string{workflow.ProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = wc.schemaConfig.Workflow
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProjectID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := wc.mutation.StagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -462,7 +490,7 @@ func (wc *WorkflowCreate) Set(obj *Workflow) *WorkflowCreate {
 	wc.SetProjectID(obj.ProjectID)
 	wc.SetDisplayName(obj.DisplayName)
 	wc.SetType(obj.Type)
-	wc.SetWorkflowStageIds(obj.WorkflowStageIds)
+	wc.SetStageIds(obj.StageIds)
 	wc.SetParallelism(obj.Parallelism)
 
 	// Optional.
@@ -524,6 +552,7 @@ func (wc *WorkflowCreate) SaveE(ctx context.Context, cbs ...func(ctx context.Con
 	if wc.fromUpsert {
 		q := mc.Workflows().Query().
 			Where(
+				workflow.ProjectID(obj.ProjectID),
 				workflow.Name(obj.Name),
 			)
 		obj.ID, err = q.OnlyID(ctx)
@@ -655,6 +684,7 @@ func (wcb *WorkflowCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx contex
 			obj := objs[i]
 			q := mc.Workflows().Query().
 				Where(
+					workflow.ProjectID(obj.ProjectID),
 					workflow.Name(obj.Name),
 				)
 			objs[i].ID, err = q.OnlyID(ctx)
@@ -909,15 +939,15 @@ func (u *WorkflowUpsert) UpdateDisplayName() *WorkflowUpsert {
 	return u
 }
 
-// SetWorkflowStageIds sets the "workflow_stage_ids" field.
-func (u *WorkflowUpsert) SetWorkflowStageIds(v []object.ID) *WorkflowUpsert {
-	u.Set(workflow.FieldWorkflowStageIds, v)
+// SetStageIds sets the "stage_ids" field.
+func (u *WorkflowUpsert) SetStageIds(v []object.ID) *WorkflowUpsert {
+	u.Set(workflow.FieldStageIds, v)
 	return u
 }
 
-// UpdateWorkflowStageIds sets the "workflow_stage_ids" field to the value that was provided on create.
-func (u *WorkflowUpsert) UpdateWorkflowStageIds() *WorkflowUpsert {
-	u.SetExcluded(workflow.FieldWorkflowStageIds)
+// UpdateStageIds sets the "stage_ids" field to the value that was provided on create.
+func (u *WorkflowUpsert) UpdateStageIds() *WorkflowUpsert {
+	u.SetExcluded(workflow.FieldStageIds)
 	return u
 }
 
@@ -1114,17 +1144,17 @@ func (u *WorkflowUpsertOne) UpdateDisplayName() *WorkflowUpsertOne {
 	})
 }
 
-// SetWorkflowStageIds sets the "workflow_stage_ids" field.
-func (u *WorkflowUpsertOne) SetWorkflowStageIds(v []object.ID) *WorkflowUpsertOne {
+// SetStageIds sets the "stage_ids" field.
+func (u *WorkflowUpsertOne) SetStageIds(v []object.ID) *WorkflowUpsertOne {
 	return u.Update(func(s *WorkflowUpsert) {
-		s.SetWorkflowStageIds(v)
+		s.SetStageIds(v)
 	})
 }
 
-// UpdateWorkflowStageIds sets the "workflow_stage_ids" field to the value that was provided on create.
-func (u *WorkflowUpsertOne) UpdateWorkflowStageIds() *WorkflowUpsertOne {
+// UpdateStageIds sets the "stage_ids" field to the value that was provided on create.
+func (u *WorkflowUpsertOne) UpdateStageIds() *WorkflowUpsertOne {
 	return u.Update(func(s *WorkflowUpsert) {
-		s.UpdateWorkflowStageIds()
+		s.UpdateStageIds()
 	})
 }
 
@@ -1489,17 +1519,17 @@ func (u *WorkflowUpsertBulk) UpdateDisplayName() *WorkflowUpsertBulk {
 	})
 }
 
-// SetWorkflowStageIds sets the "workflow_stage_ids" field.
-func (u *WorkflowUpsertBulk) SetWorkflowStageIds(v []object.ID) *WorkflowUpsertBulk {
+// SetStageIds sets the "stage_ids" field.
+func (u *WorkflowUpsertBulk) SetStageIds(v []object.ID) *WorkflowUpsertBulk {
 	return u.Update(func(s *WorkflowUpsert) {
-		s.SetWorkflowStageIds(v)
+		s.SetStageIds(v)
 	})
 }
 
-// UpdateWorkflowStageIds sets the "workflow_stage_ids" field to the value that was provided on create.
-func (u *WorkflowUpsertBulk) UpdateWorkflowStageIds() *WorkflowUpsertBulk {
+// UpdateStageIds sets the "stage_ids" field to the value that was provided on create.
+func (u *WorkflowUpsertBulk) UpdateStageIds() *WorkflowUpsertBulk {
 	return u.Update(func(s *WorkflowUpsert) {
-		s.UpdateWorkflowStageIds()
+		s.UpdateStageIds()
 	})
 }
 

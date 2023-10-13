@@ -114,7 +114,7 @@ func (wsu *WorkflowStepUpdate) ClearStatus() *WorkflowStepUpdate {
 }
 
 // SetSpec sets the "spec" field.
-func (wsu *WorkflowStepUpdate) SetSpec(m map[string]any) *WorkflowStepUpdate {
+func (wsu *WorkflowStepUpdate) SetSpec(m map[string]interface{}) *WorkflowStepUpdate {
 	wsu.mutation.SetSpec(m)
 	return wsu
 }
@@ -126,7 +126,7 @@ func (wsu *WorkflowStepUpdate) ClearSpec() *WorkflowStepUpdate {
 }
 
 // SetInput sets the "input" field.
-func (wsu *WorkflowStepUpdate) SetInput(m map[string]any) *WorkflowStepUpdate {
+func (wsu *WorkflowStepUpdate) SetInput(m map[string]interface{}) *WorkflowStepUpdate {
 	wsu.mutation.SetInput(m)
 	return wsu
 }
@@ -138,7 +138,7 @@ func (wsu *WorkflowStepUpdate) ClearInput() *WorkflowStepUpdate {
 }
 
 // SetOutput sets the "output" field.
-func (wsu *WorkflowStepUpdate) SetOutput(m map[string]any) *WorkflowStepUpdate {
+func (wsu *WorkflowStepUpdate) SetOutput(m map[string]interface{}) *WorkflowStepUpdate {
 	wsu.mutation.SetOutput(m)
 	return wsu
 }
@@ -283,6 +283,9 @@ func (wsu *WorkflowStepUpdate) check() error {
 		if err := workflowstep.TimeoutValidator(v); err != nil {
 			return &ValidationError{Name: "timeout", err: fmt.Errorf(`model: validator failed for field "WorkflowStep.timeout": %w`, err)}
 		}
+	}
+	if _, ok := wsu.mutation.ProjectID(); wsu.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStep.project"`)
 	}
 	if _, ok := wsu.mutation.StageID(); wsu.mutation.StageCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStep.stage"`)
@@ -600,7 +603,7 @@ func (wsuo *WorkflowStepUpdateOne) ClearStatus() *WorkflowStepUpdateOne {
 }
 
 // SetSpec sets the "spec" field.
-func (wsuo *WorkflowStepUpdateOne) SetSpec(m map[string]any) *WorkflowStepUpdateOne {
+func (wsuo *WorkflowStepUpdateOne) SetSpec(m map[string]interface{}) *WorkflowStepUpdateOne {
 	wsuo.mutation.SetSpec(m)
 	return wsuo
 }
@@ -612,7 +615,7 @@ func (wsuo *WorkflowStepUpdateOne) ClearSpec() *WorkflowStepUpdateOne {
 }
 
 // SetInput sets the "input" field.
-func (wsuo *WorkflowStepUpdateOne) SetInput(m map[string]any) *WorkflowStepUpdateOne {
+func (wsuo *WorkflowStepUpdateOne) SetInput(m map[string]interface{}) *WorkflowStepUpdateOne {
 	wsuo.mutation.SetInput(m)
 	return wsuo
 }
@@ -624,7 +627,7 @@ func (wsuo *WorkflowStepUpdateOne) ClearInput() *WorkflowStepUpdateOne {
 }
 
 // SetOutput sets the "output" field.
-func (wsuo *WorkflowStepUpdateOne) SetOutput(m map[string]any) *WorkflowStepUpdateOne {
+func (wsuo *WorkflowStepUpdateOne) SetOutput(m map[string]interface{}) *WorkflowStepUpdateOne {
 	wsuo.mutation.SetOutput(m)
 	return wsuo
 }
@@ -782,6 +785,9 @@ func (wsuo *WorkflowStepUpdateOne) check() error {
 		if err := workflowstep.TimeoutValidator(v); err != nil {
 			return &ValidationError{Name: "timeout", err: fmt.Errorf(`model: validator failed for field "WorkflowStep.timeout": %w`, err)}
 		}
+	}
+	if _, ok := wsuo.mutation.ProjectID(); wsuo.mutation.ProjectCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStep.project"`)
 	}
 	if _, ok := wsuo.mutation.StageID(); wsuo.mutation.StageCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStep.stage"`)

@@ -24,6 +24,7 @@ import (
 	"github.com/seal-io/walrus/pkg/apis/templatecompletion"
 	"github.com/seal-io/walrus/pkg/apis/ui"
 	"github.com/seal-io/walrus/pkg/apis/variable"
+	"github.com/seal-io/walrus/pkg/apis/workflow"
 	"github.com/seal-io/walrus/pkg/auths"
 	"github.com/seal-io/walrus/pkg/dao/model"
 )
@@ -97,6 +98,7 @@ func (s *Server) Setup(ctx context.Context, opts SetupOptions) (http.Handler, er
 		r.Routes(template.Handle(opts.ModelClient))
 		r.Routes(templatecompletion.Handle(opts.ModelClient))
 		r.Routes(variable.Handle(opts.ModelClient))
+		r.Routes(workflow.Handle(opts.ModelClient, opts.K8sConfig))
 	}
 
 	cliApis := apis.Group("")

@@ -91,11 +91,6 @@ func WorkflowID(v object.ID) predicate.WorkflowStage {
 	return predicate.WorkflowStage(sql.FieldEQ(FieldWorkflowID, v))
 }
 
-// Duration applies equality check predicate on the "duration" field. It's identical to DurationEQ.
-func Duration(v int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldEQ(FieldDuration, v))
-}
-
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.WorkflowStage {
 	return predicate.WorkflowStage(sql.FieldEQ(FieldName, v))
@@ -486,44 +481,33 @@ func WorkflowIDContainsFold(v object.ID) predicate.WorkflowStage {
 	return predicate.WorkflowStage(sql.FieldContainsFold(FieldWorkflowID, vc))
 }
 
-// DurationEQ applies the EQ predicate on the "duration" field.
-func DurationEQ(v int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldEQ(FieldDuration, v))
+// HasProject applies the HasEdge predicate on the "project" edge.
+func HasProject() predicate.WorkflowStage {
+	return predicate.WorkflowStage(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStage
+		sqlgraph.HasNeighbors(s, step)
+	})
 }
 
-// DurationNEQ applies the NEQ predicate on the "duration" field.
-func DurationNEQ(v int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldNEQ(FieldDuration, v))
-}
-
-// DurationIn applies the In predicate on the "duration" field.
-func DurationIn(vs ...int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldIn(FieldDuration, vs...))
-}
-
-// DurationNotIn applies the NotIn predicate on the "duration" field.
-func DurationNotIn(vs ...int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldNotIn(FieldDuration, vs...))
-}
-
-// DurationGT applies the GT predicate on the "duration" field.
-func DurationGT(v int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldGT(FieldDuration, v))
-}
-
-// DurationGTE applies the GTE predicate on the "duration" field.
-func DurationGTE(v int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldGTE(FieldDuration, v))
-}
-
-// DurationLT applies the LT predicate on the "duration" field.
-func DurationLT(v int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldLT(FieldDuration, v))
-}
-
-// DurationLTE applies the LTE predicate on the "duration" field.
-func DurationLTE(v int) predicate.WorkflowStage {
-	return predicate.WorkflowStage(sql.FieldLTE(FieldDuration, v))
+// HasProjectWith applies the HasEdge predicate on the "project" edge with a given conditions (other predicates).
+func HasProjectWith(preds ...predicate.Project) predicate.WorkflowStage {
+	return predicate.WorkflowStage(func(s *sql.Selector) {
+		step := newProjectStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStage
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // HasSteps applies the HasEdge predicate on the "steps" edge.

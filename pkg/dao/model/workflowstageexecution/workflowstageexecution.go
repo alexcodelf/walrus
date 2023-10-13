@@ -49,6 +49,8 @@ const (
 	FieldRecord = "record"
 	// FieldInput holds the string denoting the input field in the database.
 	FieldInput = "input"
+	// EdgeProject holds the string denoting the project edge name in mutations.
+	EdgeProject = "project"
 	// EdgeStepExecutions holds the string denoting the step_executions edge name in mutations.
 	EdgeStepExecutions = "step_executions"
 	// EdgeStage holds the string denoting the stage edge name in mutations.
@@ -57,6 +59,13 @@ const (
 	EdgeWorkflowExecution = "workflow_execution"
 	// Table holds the table name of the workflowstageexecution in the database.
 	Table = "workflow_stage_executions"
+	// ProjectTable is the table that holds the project relation/edge.
+	ProjectTable = "workflow_stage_executions"
+	// ProjectInverseTable is the table name for the Project entity.
+	// It exists in this package in order to avoid circular dependency with the "project" package.
+	ProjectInverseTable = "projects"
+	// ProjectColumn is the table column denoting the project relation/edge.
+	ProjectColumn = "project_id"
 	// StepExecutionsTable is the table that holds the step_executions relation/edge.
 	StepExecutionsTable = "workflow_step_executions"
 	// StepExecutionsInverseTable is the table name for the WorkflowStepExecution entity.
@@ -201,6 +210,13 @@ func ByInput(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldInput, opts...).ToFunc()
 }
 
+// ByProjectField orders the results by project field.
+func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProjectStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByStepExecutionsCount orders the results by step_executions count.
 func ByStepExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -227,6 +243,13 @@ func ByWorkflowExecutionField(field string, opts ...sql.OrderTermOption) OrderOp
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newWorkflowExecutionStep(), sql.OrderByField(field, opts...))
 	}
+}
+func newProjectStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProjectInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+	)
 }
 func newStepExecutionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

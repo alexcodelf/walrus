@@ -711,6 +711,35 @@ func TimeoutLTE(v int) predicate.WorkflowStep {
 	return predicate.WorkflowStep(sql.FieldLTE(FieldTimeout, v))
 }
 
+// HasProject applies the HasEdge predicate on the "project" edge.
+func HasProject() predicate.WorkflowStep {
+	return predicate.WorkflowStep(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStep
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProjectWith applies the HasEdge predicate on the "project" edge with a given conditions (other predicates).
+func HasProjectWith(preds ...predicate.Project) predicate.WorkflowStep {
+	return predicate.WorkflowStep(func(s *sql.Selector) {
+		step := newProjectStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStep
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasExecutions applies the HasEdge predicate on the "executions" edge.
 func HasExecutions() predicate.WorkflowStep {
 	return predicate.WorkflowStep(func(s *sql.Selector) {

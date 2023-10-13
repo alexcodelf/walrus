@@ -1944,6 +1944,120 @@ func (c *ProjectClient) QueryVariables(pr *Project) *VariableQuery {
 	return query
 }
 
+// QueryWorkflows queries the workflows edge of a Project.
+func (c *ProjectClient) QueryWorkflows(pr *Project) *WorkflowQuery {
+	query := (&WorkflowClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, id),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowsTable, project.WorkflowsColumn),
+		)
+		schemaConfig := pr.schemaConfig
+		step.To.Schema = schemaConfig.Workflow
+		step.Edge.Schema = schemaConfig.Workflow
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflowStages queries the workflow_stages edge of a Project.
+func (c *ProjectClient) QueryWorkflowStages(pr *Project) *WorkflowStageQuery {
+	query := (&WorkflowStageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, id),
+			sqlgraph.To(workflowstage.Table, workflowstage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowStagesTable, project.WorkflowStagesColumn),
+		)
+		schemaConfig := pr.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStage
+		step.Edge.Schema = schemaConfig.WorkflowStage
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflowSteps queries the workflow_steps edge of a Project.
+func (c *ProjectClient) QueryWorkflowSteps(pr *Project) *WorkflowStepQuery {
+	query := (&WorkflowStepClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, id),
+			sqlgraph.To(workflowstep.Table, workflowstep.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowStepsTable, project.WorkflowStepsColumn),
+		)
+		schemaConfig := pr.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStep
+		step.Edge.Schema = schemaConfig.WorkflowStep
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflowExecutions queries the workflow_executions edge of a Project.
+func (c *ProjectClient) QueryWorkflowExecutions(pr *Project) *WorkflowExecutionQuery {
+	query := (&WorkflowExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, id),
+			sqlgraph.To(workflowexecution.Table, workflowexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowExecutionsTable, project.WorkflowExecutionsColumn),
+		)
+		schemaConfig := pr.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowExecution
+		step.Edge.Schema = schemaConfig.WorkflowExecution
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflowStageExecutions queries the workflow_stage_executions edge of a Project.
+func (c *ProjectClient) QueryWorkflowStageExecutions(pr *Project) *WorkflowStageExecutionQuery {
+	query := (&WorkflowStageExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, id),
+			sqlgraph.To(workflowstageexecution.Table, workflowstageexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowStageExecutionsTable, project.WorkflowStageExecutionsColumn),
+		)
+		schemaConfig := pr.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStageExecution
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflowStepExecutions queries the workflow_step_executions edge of a Project.
+func (c *ProjectClient) QueryWorkflowStepExecutions(pr *Project) *WorkflowStepExecutionQuery {
+	query := (&WorkflowStepExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, id),
+			sqlgraph.To(workflowstepexecution.Table, workflowstepexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowStepExecutionsTable, project.WorkflowStepExecutionsColumn),
+		)
+		schemaConfig := pr.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStepExecution
+		step.Edge.Schema = schemaConfig.WorkflowStepExecution
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ProjectClient) Hooks() []Hook {
 	hooks := c.hooks.Project
@@ -4282,6 +4396,25 @@ func (c *WorkflowClient) GetX(ctx context.Context, id object.ID) *Workflow {
 	return obj
 }
 
+// QueryProject queries the project edge of a Workflow.
+func (c *WorkflowClient) QueryProject(w *Workflow) *ProjectQuery {
+	query := (&ProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflow.Table, workflow.FieldID, id),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflow.ProjectTable, workflow.ProjectColumn),
+		)
+		schemaConfig := w.schemaConfig
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.Workflow
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryStages queries the stages edge of a Workflow.
 func (c *WorkflowClient) QueryStages(w *Workflow) *WorkflowStageQuery {
 	query := (&WorkflowStageClient{config: c.config}).Query()
@@ -4440,6 +4573,25 @@ func (c *WorkflowExecutionClient) GetX(ctx context.Context, id object.ID) *Workf
 	return obj
 }
 
+// QueryProject queries the project edge of a WorkflowExecution.
+func (c *WorkflowExecutionClient) QueryProject(we *WorkflowExecution) *ProjectQuery {
+	query := (&ProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := we.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowexecution.Table, workflowexecution.FieldID, id),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowexecution.ProjectTable, workflowexecution.ProjectColumn),
+		)
+		schemaConfig := we.schemaConfig
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowExecution
+		fromV = sqlgraph.Neighbors(we.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryWorkflowStageExecutions queries the workflow_stage_executions edge of a WorkflowExecution.
 func (c *WorkflowExecutionClient) QueryWorkflowStageExecutions(we *WorkflowExecution) *WorkflowStageExecutionQuery {
 	query := (&WorkflowStageExecutionClient{config: c.config}).Query()
@@ -4596,6 +4748,25 @@ func (c *WorkflowStageClient) GetX(ctx context.Context, id object.ID) *WorkflowS
 		panic(err)
 	}
 	return obj
+}
+
+// QueryProject queries the project edge of a WorkflowStage.
+func (c *WorkflowStageClient) QueryProject(ws *WorkflowStage) *ProjectQuery {
+	query := (&ProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ws.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstage.Table, workflowstage.FieldID, id),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstage.ProjectTable, workflowstage.ProjectColumn),
+		)
+		schemaConfig := ws.schemaConfig
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStage
+		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // QuerySteps queries the steps edge of a WorkflowStage.
@@ -4775,6 +4946,25 @@ func (c *WorkflowStageExecutionClient) GetX(ctx context.Context, id object.ID) *
 	return obj
 }
 
+// QueryProject queries the project edge of a WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) QueryProject(wse *WorkflowStageExecution) *ProjectQuery {
+	query := (&ProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wse.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstageexecution.Table, workflowstageexecution.FieldID, id),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstageexecution.ProjectTable, workflowstageexecution.ProjectColumn),
+		)
+		schemaConfig := wse.schemaConfig
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryStepExecutions queries the step_executions edge of a WorkflowStageExecution.
 func (c *WorkflowStageExecutionClient) QueryStepExecutions(wse *WorkflowStageExecution) *WorkflowStepExecutionQuery {
 	query := (&WorkflowStepExecutionClient{config: c.config}).Query()
@@ -4952,6 +5142,25 @@ func (c *WorkflowStepClient) GetX(ctx context.Context, id object.ID) *WorkflowSt
 	return obj
 }
 
+// QueryProject queries the project edge of a WorkflowStep.
+func (c *WorkflowStepClient) QueryProject(ws *WorkflowStep) *ProjectQuery {
+	query := (&ProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ws.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstep.Table, workflowstep.FieldID, id),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstep.ProjectTable, workflowstep.ProjectColumn),
+		)
+		schemaConfig := ws.schemaConfig
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStep
+		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryExecutions queries the executions edge of a WorkflowStep.
 func (c *WorkflowStepClient) QueryExecutions(ws *WorkflowStep) *WorkflowStepExecutionQuery {
 	query := (&WorkflowStepExecutionClient{config: c.config}).Query()
@@ -5108,6 +5317,25 @@ func (c *WorkflowStepExecutionClient) GetX(ctx context.Context, id object.ID) *W
 		panic(err)
 	}
 	return obj
+}
+
+// QueryProject queries the project edge of a WorkflowStepExecution.
+func (c *WorkflowStepExecutionClient) QueryProject(wse *WorkflowStepExecution) *ProjectQuery {
+	query := (&ProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wse.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowstepexecution.Table, workflowstepexecution.FieldID, id),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstepexecution.ProjectTable, workflowstepexecution.ProjectColumn),
+		)
+		schemaConfig := wse.schemaConfig
+		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.WorkflowStepExecution
+		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // QueryWorkflowStep queries the workflow_step edge of a WorkflowStepExecution.

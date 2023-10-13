@@ -12,6 +12,9 @@ spec:
     dag:
       tasks:
         - name: webservice
+          hooks:
+            running:
+              template: webservice
           template: webservice
   - name: webservice
     inputs:

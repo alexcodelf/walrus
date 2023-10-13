@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/entx"
 	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
@@ -49,11 +50,11 @@ func (WorkflowStepExecution) Fields() []ent.Field {
 			Optional(),
 		field.Int("times").
 			Comment("Number of times that this workflow step execution has been executed.").
-			Positive().
+			NonNegative().
 			Default(0),
 		field.Int("duration").
 			Comment("Duration of the workflow step execution.").
-			Positive().
+			NonNegative().
 			Default(0),
 		field.Text("record").
 			Comment("Log record of the workflow step execution.").
@@ -67,6 +68,16 @@ func (WorkflowStepExecution) Fields() []ent.Field {
 
 func (WorkflowStepExecution) Edges() []ent.Edge {
 	return []ent.Edge{
+		// Project 1-* WorkflowStepExecutions.
+		edge.From("project", Project.Type).
+			Ref("workflow_step_executions").
+			Field("project_id").
+			Comment("Project to which the workflow step execution belongs.").
+			Unique().
+			Required().
+			Immutable().
+			Annotations(
+				entx.ValidateContext(intercept.WithProjectInterceptor)),
 		// WorkflowStep 1-* WorkflowStepExecutions.
 		edge.From("workflow_step", WorkflowStep.Type).
 			Ref("executions").

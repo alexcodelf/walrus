@@ -26,24 +26,36 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/subjectrolerelationship"
 	"github.com/seal-io/walrus/pkg/dao/model/variable"
+	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
 // ProjectQuery is the builder for querying Project entities.
 type ProjectQuery struct {
 	config
-	ctx                  *QueryContext
-	order                []project.OrderOption
-	inters               []Interceptor
-	predicates           []predicate.Project
-	withEnvironments     *EnvironmentQuery
-	withConnectors       *ConnectorQuery
-	withSubjectRoles     *SubjectRoleRelationshipQuery
-	withServices         *ServiceQuery
-	withServiceResources *ServiceResourceQuery
-	withServiceRevisions *ServiceRevisionQuery
-	withVariables        *VariableQuery
-	modifiers            []func(*sql.Selector)
+	ctx                         *QueryContext
+	order                       []project.OrderOption
+	inters                      []Interceptor
+	predicates                  []predicate.Project
+	withEnvironments            *EnvironmentQuery
+	withConnectors              *ConnectorQuery
+	withSubjectRoles            *SubjectRoleRelationshipQuery
+	withServices                *ServiceQuery
+	withServiceResources        *ServiceResourceQuery
+	withServiceRevisions        *ServiceRevisionQuery
+	withVariables               *VariableQuery
+	withWorkflows               *WorkflowQuery
+	withWorkflowStages          *WorkflowStageQuery
+	withWorkflowSteps           *WorkflowStepQuery
+	withWorkflowExecutions      *WorkflowExecutionQuery
+	withWorkflowStageExecutions *WorkflowStageExecutionQuery
+	withWorkflowStepExecutions  *WorkflowStepExecutionQuery
+	modifiers                   []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -255,6 +267,156 @@ func (pq *ProjectQuery) QueryVariables() *VariableQuery {
 	return query
 }
 
+// QueryWorkflows chains the current query on the "workflows" edge.
+func (pq *ProjectQuery) QueryWorkflows() *WorkflowQuery {
+	query := (&WorkflowClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, selector),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowsTable, project.WorkflowsColumn),
+		)
+		schemaConfig := pq.schemaConfig
+		step.To.Schema = schemaConfig.Workflow
+		step.Edge.Schema = schemaConfig.Workflow
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflowStages chains the current query on the "workflow_stages" edge.
+func (pq *ProjectQuery) QueryWorkflowStages() *WorkflowStageQuery {
+	query := (&WorkflowStageClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, selector),
+			sqlgraph.To(workflowstage.Table, workflowstage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowStagesTable, project.WorkflowStagesColumn),
+		)
+		schemaConfig := pq.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStage
+		step.Edge.Schema = schemaConfig.WorkflowStage
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflowSteps chains the current query on the "workflow_steps" edge.
+func (pq *ProjectQuery) QueryWorkflowSteps() *WorkflowStepQuery {
+	query := (&WorkflowStepClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, selector),
+			sqlgraph.To(workflowstep.Table, workflowstep.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowStepsTable, project.WorkflowStepsColumn),
+		)
+		schemaConfig := pq.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStep
+		step.Edge.Schema = schemaConfig.WorkflowStep
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflowExecutions chains the current query on the "workflow_executions" edge.
+func (pq *ProjectQuery) QueryWorkflowExecutions() *WorkflowExecutionQuery {
+	query := (&WorkflowExecutionClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, selector),
+			sqlgraph.To(workflowexecution.Table, workflowexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowExecutionsTable, project.WorkflowExecutionsColumn),
+		)
+		schemaConfig := pq.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowExecution
+		step.Edge.Schema = schemaConfig.WorkflowExecution
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflowStageExecutions chains the current query on the "workflow_stage_executions" edge.
+func (pq *ProjectQuery) QueryWorkflowStageExecutions() *WorkflowStageExecutionQuery {
+	query := (&WorkflowStageExecutionClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, selector),
+			sqlgraph.To(workflowstageexecution.Table, workflowstageexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowStageExecutionsTable, project.WorkflowStageExecutionsColumn),
+		)
+		schemaConfig := pq.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStageExecution
+		step.Edge.Schema = schemaConfig.WorkflowStageExecution
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflowStepExecutions chains the current query on the "workflow_step_executions" edge.
+func (pq *ProjectQuery) QueryWorkflowStepExecutions() *WorkflowStepExecutionQuery {
+	query := (&WorkflowStepExecutionClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, selector),
+			sqlgraph.To(workflowstepexecution.Table, workflowstepexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.WorkflowStepExecutionsTable, project.WorkflowStepExecutionsColumn),
+		)
+		schemaConfig := pq.schemaConfig
+		step.To.Schema = schemaConfig.WorkflowStepExecution
+		step.Edge.Schema = schemaConfig.WorkflowStepExecution
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Project entity from the query.
 // Returns a *NotFoundError when no Project was found.
 func (pq *ProjectQuery) First(ctx context.Context) (*Project, error) {
@@ -442,18 +604,24 @@ func (pq *ProjectQuery) Clone() *ProjectQuery {
 		return nil
 	}
 	return &ProjectQuery{
-		config:               pq.config,
-		ctx:                  pq.ctx.Clone(),
-		order:                append([]project.OrderOption{}, pq.order...),
-		inters:               append([]Interceptor{}, pq.inters...),
-		predicates:           append([]predicate.Project{}, pq.predicates...),
-		withEnvironments:     pq.withEnvironments.Clone(),
-		withConnectors:       pq.withConnectors.Clone(),
-		withSubjectRoles:     pq.withSubjectRoles.Clone(),
-		withServices:         pq.withServices.Clone(),
-		withServiceResources: pq.withServiceResources.Clone(),
-		withServiceRevisions: pq.withServiceRevisions.Clone(),
-		withVariables:        pq.withVariables.Clone(),
+		config:                      pq.config,
+		ctx:                         pq.ctx.Clone(),
+		order:                       append([]project.OrderOption{}, pq.order...),
+		inters:                      append([]Interceptor{}, pq.inters...),
+		predicates:                  append([]predicate.Project{}, pq.predicates...),
+		withEnvironments:            pq.withEnvironments.Clone(),
+		withConnectors:              pq.withConnectors.Clone(),
+		withSubjectRoles:            pq.withSubjectRoles.Clone(),
+		withServices:                pq.withServices.Clone(),
+		withServiceResources:        pq.withServiceResources.Clone(),
+		withServiceRevisions:        pq.withServiceRevisions.Clone(),
+		withVariables:               pq.withVariables.Clone(),
+		withWorkflows:               pq.withWorkflows.Clone(),
+		withWorkflowStages:          pq.withWorkflowStages.Clone(),
+		withWorkflowSteps:           pq.withWorkflowSteps.Clone(),
+		withWorkflowExecutions:      pq.withWorkflowExecutions.Clone(),
+		withWorkflowStageExecutions: pq.withWorkflowStageExecutions.Clone(),
+		withWorkflowStepExecutions:  pq.withWorkflowStepExecutions.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
@@ -537,6 +705,72 @@ func (pq *ProjectQuery) WithVariables(opts ...func(*VariableQuery)) *ProjectQuer
 	return pq
 }
 
+// WithWorkflows tells the query-builder to eager-load the nodes that are connected to
+// the "workflows" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProjectQuery) WithWorkflows(opts ...func(*WorkflowQuery)) *ProjectQuery {
+	query := (&WorkflowClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withWorkflows = query
+	return pq
+}
+
+// WithWorkflowStages tells the query-builder to eager-load the nodes that are connected to
+// the "workflow_stages" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProjectQuery) WithWorkflowStages(opts ...func(*WorkflowStageQuery)) *ProjectQuery {
+	query := (&WorkflowStageClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withWorkflowStages = query
+	return pq
+}
+
+// WithWorkflowSteps tells the query-builder to eager-load the nodes that are connected to
+// the "workflow_steps" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProjectQuery) WithWorkflowSteps(opts ...func(*WorkflowStepQuery)) *ProjectQuery {
+	query := (&WorkflowStepClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withWorkflowSteps = query
+	return pq
+}
+
+// WithWorkflowExecutions tells the query-builder to eager-load the nodes that are connected to
+// the "workflow_executions" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProjectQuery) WithWorkflowExecutions(opts ...func(*WorkflowExecutionQuery)) *ProjectQuery {
+	query := (&WorkflowExecutionClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withWorkflowExecutions = query
+	return pq
+}
+
+// WithWorkflowStageExecutions tells the query-builder to eager-load the nodes that are connected to
+// the "workflow_stage_executions" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProjectQuery) WithWorkflowStageExecutions(opts ...func(*WorkflowStageExecutionQuery)) *ProjectQuery {
+	query := (&WorkflowStageExecutionClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withWorkflowStageExecutions = query
+	return pq
+}
+
+// WithWorkflowStepExecutions tells the query-builder to eager-load the nodes that are connected to
+// the "workflow_step_executions" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProjectQuery) WithWorkflowStepExecutions(opts ...func(*WorkflowStepExecutionQuery)) *ProjectQuery {
+	query := (&WorkflowStepExecutionClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withWorkflowStepExecutions = query
+	return pq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -615,7 +849,7 @@ func (pq *ProjectQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Proj
 	var (
 		nodes       = []*Project{}
 		_spec       = pq.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [13]bool{
 			pq.withEnvironments != nil,
 			pq.withConnectors != nil,
 			pq.withSubjectRoles != nil,
@@ -623,6 +857,12 @@ func (pq *ProjectQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Proj
 			pq.withServiceResources != nil,
 			pq.withServiceRevisions != nil,
 			pq.withVariables != nil,
+			pq.withWorkflows != nil,
+			pq.withWorkflowStages != nil,
+			pq.withWorkflowSteps != nil,
+			pq.withWorkflowExecutions != nil,
+			pq.withWorkflowStageExecutions != nil,
+			pq.withWorkflowStepExecutions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -694,6 +934,54 @@ func (pq *ProjectQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Proj
 		if err := pq.loadVariables(ctx, query, nodes,
 			func(n *Project) { n.Edges.Variables = []*Variable{} },
 			func(n *Project, e *Variable) { n.Edges.Variables = append(n.Edges.Variables, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withWorkflows; query != nil {
+		if err := pq.loadWorkflows(ctx, query, nodes,
+			func(n *Project) { n.Edges.Workflows = []*Workflow{} },
+			func(n *Project, e *Workflow) { n.Edges.Workflows = append(n.Edges.Workflows, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withWorkflowStages; query != nil {
+		if err := pq.loadWorkflowStages(ctx, query, nodes,
+			func(n *Project) { n.Edges.WorkflowStages = []*WorkflowStage{} },
+			func(n *Project, e *WorkflowStage) { n.Edges.WorkflowStages = append(n.Edges.WorkflowStages, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withWorkflowSteps; query != nil {
+		if err := pq.loadWorkflowSteps(ctx, query, nodes,
+			func(n *Project) { n.Edges.WorkflowSteps = []*WorkflowStep{} },
+			func(n *Project, e *WorkflowStep) { n.Edges.WorkflowSteps = append(n.Edges.WorkflowSteps, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withWorkflowExecutions; query != nil {
+		if err := pq.loadWorkflowExecutions(ctx, query, nodes,
+			func(n *Project) { n.Edges.WorkflowExecutions = []*WorkflowExecution{} },
+			func(n *Project, e *WorkflowExecution) {
+				n.Edges.WorkflowExecutions = append(n.Edges.WorkflowExecutions, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withWorkflowStageExecutions; query != nil {
+		if err := pq.loadWorkflowStageExecutions(ctx, query, nodes,
+			func(n *Project) { n.Edges.WorkflowStageExecutions = []*WorkflowStageExecution{} },
+			func(n *Project, e *WorkflowStageExecution) {
+				n.Edges.WorkflowStageExecutions = append(n.Edges.WorkflowStageExecutions, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withWorkflowStepExecutions; query != nil {
+		if err := pq.loadWorkflowStepExecutions(ctx, query, nodes,
+			func(n *Project) { n.Edges.WorkflowStepExecutions = []*WorkflowStepExecution{} },
+			func(n *Project, e *WorkflowStepExecution) {
+				n.Edges.WorkflowStepExecutions = append(n.Edges.WorkflowStepExecutions, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -895,6 +1183,186 @@ func (pq *ProjectQuery) loadVariables(ctx context.Context, query *VariableQuery,
 	}
 	query.Where(predicate.Variable(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(project.VariablesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProjectID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "project_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *ProjectQuery) loadWorkflows(ctx context.Context, query *WorkflowQuery, nodes []*Project, init func(*Project), assign func(*Project, *Workflow)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[object.ID]*Project)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflow.FieldProjectID)
+	}
+	query.Where(predicate.Workflow(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(project.WorkflowsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProjectID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "project_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *ProjectQuery) loadWorkflowStages(ctx context.Context, query *WorkflowStageQuery, nodes []*Project, init func(*Project), assign func(*Project, *WorkflowStage)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[object.ID]*Project)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflowstage.FieldProjectID)
+	}
+	query.Where(predicate.WorkflowStage(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(project.WorkflowStagesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProjectID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "project_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *ProjectQuery) loadWorkflowSteps(ctx context.Context, query *WorkflowStepQuery, nodes []*Project, init func(*Project), assign func(*Project, *WorkflowStep)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[object.ID]*Project)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflowstep.FieldProjectID)
+	}
+	query.Where(predicate.WorkflowStep(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(project.WorkflowStepsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProjectID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "project_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *ProjectQuery) loadWorkflowExecutions(ctx context.Context, query *WorkflowExecutionQuery, nodes []*Project, init func(*Project), assign func(*Project, *WorkflowExecution)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[object.ID]*Project)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflowexecution.FieldProjectID)
+	}
+	query.Where(predicate.WorkflowExecution(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(project.WorkflowExecutionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProjectID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "project_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *ProjectQuery) loadWorkflowStageExecutions(ctx context.Context, query *WorkflowStageExecutionQuery, nodes []*Project, init func(*Project), assign func(*Project, *WorkflowStageExecution)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[object.ID]*Project)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflowstageexecution.FieldProjectID)
+	}
+	query.Where(predicate.WorkflowStageExecution(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(project.WorkflowStageExecutionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProjectID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "project_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *ProjectQuery) loadWorkflowStepExecutions(ctx context.Context, query *WorkflowStepExecutionQuery, nodes []*Project, init func(*Project), assign func(*Project, *WorkflowStepExecution)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[object.ID]*Project)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflowstepexecution.FieldProjectID)
+	}
+	query.Where(predicate.WorkflowStepExecution(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(project.WorkflowStepExecutionsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

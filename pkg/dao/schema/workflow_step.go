@@ -58,13 +58,23 @@ func (WorkflowStep) Fields() []ent.Field {
 			Optional(),
 		field.Int("timeout").
 			Comment("Timeout seconds of the workflow step, 0 means no timeout.").
-			Positive().
+			NonNegative().
 			Default(0),
 	}
 }
 
 func (WorkflowStep) Edges() []ent.Edge {
 	return []ent.Edge{
+		// Project 1-* WorkflowSteps.
+		edge.From("project", Project.Type).
+			Ref("workflow_steps").
+			Field("project_id").
+			Comment("Project to which the step belongs.").
+			Unique().
+			Required().
+			Immutable().
+			Annotations(
+				entx.ValidateContext(intercept.WithProjectInterceptor)),
 		// WorkflowStep 1-* WorkflowStepExecutions.
 		edge.To("executions", WorkflowStepExecution.Type).
 			Comment("Workflow step executions that belong to this workflow step.").

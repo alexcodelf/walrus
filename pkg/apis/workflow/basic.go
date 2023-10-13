@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"github.com/seal-io/walrus/pkg/apis/runtime"
+	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
@@ -12,9 +13,17 @@ import (
 func (h Handler) Create(req CreateRequest) (CreateResponse, error) {
 	entity := req.Model()
 
-	entity, err := h.modelClient.Workflows().Create().
-		Set(entity).
-		Save(req.Context)
+	var err error
+	err = h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
+		entity, err = tx.Workflows().Create().
+			Set(entity).
+			SaveE(req.Context, dao.WorkflowStagesEdgeSave)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}

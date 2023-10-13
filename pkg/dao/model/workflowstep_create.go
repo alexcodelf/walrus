@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
@@ -134,19 +135,19 @@ func (wsc *WorkflowStepCreate) SetStageID(o object.ID) *WorkflowStepCreate {
 }
 
 // SetSpec sets the "spec" field.
-func (wsc *WorkflowStepCreate) SetSpec(m map[string]any) *WorkflowStepCreate {
+func (wsc *WorkflowStepCreate) SetSpec(m map[string]interface{}) *WorkflowStepCreate {
 	wsc.mutation.SetSpec(m)
 	return wsc
 }
 
 // SetInput sets the "input" field.
-func (wsc *WorkflowStepCreate) SetInput(m map[string]any) *WorkflowStepCreate {
+func (wsc *WorkflowStepCreate) SetInput(m map[string]interface{}) *WorkflowStepCreate {
 	wsc.mutation.SetInput(m)
 	return wsc
 }
 
 // SetOutput sets the "output" field.
-func (wsc *WorkflowStepCreate) SetOutput(m map[string]any) *WorkflowStepCreate {
+func (wsc *WorkflowStepCreate) SetOutput(m map[string]interface{}) *WorkflowStepCreate {
 	wsc.mutation.SetOutput(m)
 	return wsc
 }
@@ -181,6 +182,11 @@ func (wsc *WorkflowStepCreate) SetNillableTimeout(i *int) *WorkflowStepCreate {
 func (wsc *WorkflowStepCreate) SetID(o object.ID) *WorkflowStepCreate {
 	wsc.mutation.SetID(o)
 	return wsc
+}
+
+// SetProject sets the "project" edge to the Project entity.
+func (wsc *WorkflowStepCreate) SetProject(p *Project) *WorkflowStepCreate {
+	return wsc.SetProjectID(p.ID)
 }
 
 // AddExecutionIDs adds the "executions" edge to the WorkflowStepExecution entity by IDs.
@@ -327,6 +333,9 @@ func (wsc *WorkflowStepCreate) check() error {
 			return &ValidationError{Name: "timeout", err: fmt.Errorf(`model: validator failed for field "WorkflowStep.timeout": %w`, err)}
 		}
 	}
+	if _, ok := wsc.mutation.ProjectID(); !ok {
+		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowStep.project"`)}
+	}
 	if _, ok := wsc.mutation.StageID(); !ok {
 		return &ValidationError{Name: "stage", err: errors.New(`model: missing required edge "WorkflowStep.stage"`)}
 	}
@@ -399,10 +408,6 @@ func (wsc *WorkflowStepCreate) createSpec() (*WorkflowStep, *sqlgraph.CreateSpec
 		_spec.SetField(workflowstep.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := wsc.mutation.ProjectID(); ok {
-		_spec.SetField(workflowstep.FieldProjectID, field.TypeString, value)
-		_node.ProjectID = value
-	}
 	if value, ok := wsc.mutation.WorkflowID(); ok {
 		_spec.SetField(workflowstep.FieldWorkflowID, field.TypeString, value)
 		_node.WorkflowID = value
@@ -430,6 +435,24 @@ func (wsc *WorkflowStepCreate) createSpec() (*WorkflowStep, *sqlgraph.CreateSpec
 	if value, ok := wsc.mutation.Timeout(); ok {
 		_spec.SetField(workflowstep.FieldTimeout, field.TypeInt, value)
 		_node.Timeout = value
+	}
+	if nodes := wsc.mutation.ProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflowstep.ProjectTable,
+			Columns: []string{workflowstep.ProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = wsc.schemaConfig.WorkflowStep
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProjectID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := wsc.mutation.ExecutionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -940,7 +963,7 @@ func (u *WorkflowStepUpsert) ClearStatus() *WorkflowStepUpsert {
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepUpsert) SetSpec(v map[string]any) *WorkflowStepUpsert {
+func (u *WorkflowStepUpsert) SetSpec(v map[string]interface{}) *WorkflowStepUpsert {
 	u.Set(workflowstep.FieldSpec, v)
 	return u
 }
@@ -958,7 +981,7 @@ func (u *WorkflowStepUpsert) ClearSpec() *WorkflowStepUpsert {
 }
 
 // SetInput sets the "input" field.
-func (u *WorkflowStepUpsert) SetInput(v map[string]any) *WorkflowStepUpsert {
+func (u *WorkflowStepUpsert) SetInput(v map[string]interface{}) *WorkflowStepUpsert {
 	u.Set(workflowstep.FieldInput, v)
 	return u
 }
@@ -976,7 +999,7 @@ func (u *WorkflowStepUpsert) ClearInput() *WorkflowStepUpsert {
 }
 
 // SetOutput sets the "output" field.
-func (u *WorkflowStepUpsert) SetOutput(v map[string]any) *WorkflowStepUpsert {
+func (u *WorkflowStepUpsert) SetOutput(v map[string]interface{}) *WorkflowStepUpsert {
 	u.Set(workflowstep.FieldOutput, v)
 	return u
 }
@@ -1206,7 +1229,7 @@ func (u *WorkflowStepUpsertOne) ClearStatus() *WorkflowStepUpsertOne {
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepUpsertOne) SetSpec(v map[string]any) *WorkflowStepUpsertOne {
+func (u *WorkflowStepUpsertOne) SetSpec(v map[string]interface{}) *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetSpec(v)
 	})
@@ -1227,7 +1250,7 @@ func (u *WorkflowStepUpsertOne) ClearSpec() *WorkflowStepUpsertOne {
 }
 
 // SetInput sets the "input" field.
-func (u *WorkflowStepUpsertOne) SetInput(v map[string]any) *WorkflowStepUpsertOne {
+func (u *WorkflowStepUpsertOne) SetInput(v map[string]interface{}) *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetInput(v)
 	})
@@ -1248,7 +1271,7 @@ func (u *WorkflowStepUpsertOne) ClearInput() *WorkflowStepUpsertOne {
 }
 
 // SetOutput sets the "output" field.
-func (u *WorkflowStepUpsertOne) SetOutput(v map[string]any) *WorkflowStepUpsertOne {
+func (u *WorkflowStepUpsertOne) SetOutput(v map[string]interface{}) *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetOutput(v)
 	})
@@ -1654,7 +1677,7 @@ func (u *WorkflowStepUpsertBulk) ClearStatus() *WorkflowStepUpsertBulk {
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepUpsertBulk) SetSpec(v map[string]any) *WorkflowStepUpsertBulk {
+func (u *WorkflowStepUpsertBulk) SetSpec(v map[string]interface{}) *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetSpec(v)
 	})
@@ -1675,7 +1698,7 @@ func (u *WorkflowStepUpsertBulk) ClearSpec() *WorkflowStepUpsertBulk {
 }
 
 // SetInput sets the "input" field.
-func (u *WorkflowStepUpsertBulk) SetInput(v map[string]any) *WorkflowStepUpsertBulk {
+func (u *WorkflowStepUpsertBulk) SetInput(v map[string]interface{}) *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetInput(v)
 	})
@@ -1696,7 +1719,7 @@ func (u *WorkflowStepUpsertBulk) ClearInput() *WorkflowStepUpsertBulk {
 }
 
 // SetOutput sets the "output" field.
-func (u *WorkflowStepUpsertBulk) SetOutput(v map[string]any) *WorkflowStepUpsertBulk {
+func (u *WorkflowStepUpsertBulk) SetOutput(v map[string]interface{}) *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetOutput(v)
 	})

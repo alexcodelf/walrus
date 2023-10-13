@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
@@ -44,9 +45,7 @@ type WorkflowStage struct {
 	// ID of the workflow that this workflow stage belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// IDs of the workflow steps that belong to this workflow stage.
-	WorkflowStepIds []object.ID `json:"workflow_step_ids,omitempty"`
-	// Duration of the workflow stage.
-	Duration int `json:"duration,omitempty"`
+	StepIds []object.ID `json:"step_ids,omitempty"`
 	// ID list of the workflow stages that this workflow stage depends on.
 	Dependencies []object.ID `json:"dependencies,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -57,6 +56,8 @@ type WorkflowStage struct {
 
 // WorkflowStageEdges holds the relations/edges for other nodes in the graph.
 type WorkflowStageEdges struct {
+	// Project to which the workflow stage belongs.
+	Project *Project `json:"project,omitempty"`
 	// Workflow steps that belong to this workflow stage.
 	Steps []*WorkflowStep `json:"steps,omitempty"`
 	// Workflow stage executions that belong to this workflow stage.
@@ -65,13 +66,26 @@ type WorkflowStageEdges struct {
 	Workflow *Workflow `json:"workflow,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
+}
+
+// ProjectOrErr returns the Project value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e WorkflowStageEdges) ProjectOrErr() (*Project, error) {
+	if e.loadedTypes[0] {
+		if e.Project == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: project.Label}
+		}
+		return e.Project, nil
+	}
+	return nil, &NotLoadedError{edge: "project"}
 }
 
 // StepsOrErr returns the Steps value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkflowStageEdges) StepsOrErr() ([]*WorkflowStep, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Steps, nil
 	}
 	return nil, &NotLoadedError{edge: "steps"}
@@ -80,7 +94,7 @@ func (e WorkflowStageEdges) StepsOrErr() ([]*WorkflowStep, error) {
 // WorkflowStageExecutionsOrErr returns the WorkflowStageExecutions value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkflowStageEdges) WorkflowStageExecutionsOrErr() ([]*WorkflowStageExecution, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.WorkflowStageExecutions, nil
 	}
 	return nil, &NotLoadedError{edge: "workflow_stage_executions"}
@@ -89,7 +103,7 @@ func (e WorkflowStageEdges) WorkflowStageExecutionsOrErr() ([]*WorkflowStageExec
 // WorkflowOrErr returns the Workflow value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowStageEdges) WorkflowOrErr() (*Workflow, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		if e.Workflow == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflow.Label}
@@ -104,12 +118,10 @@ func (*WorkflowStage) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflowstage.FieldLabels, workflowstage.FieldAnnotations, workflowstage.FieldStatus, workflowstage.FieldWorkflowStepIds, workflowstage.FieldDependencies:
+		case workflowstage.FieldLabels, workflowstage.FieldAnnotations, workflowstage.FieldStatus, workflowstage.FieldStepIds, workflowstage.FieldDependencies:
 			values[i] = new([]byte)
 		case workflowstage.FieldID, workflowstage.FieldProjectID, workflowstage.FieldWorkflowID:
 			values[i] = new(object.ID)
-		case workflowstage.FieldDuration:
-			values[i] = new(sql.NullInt64)
 		case workflowstage.FieldName, workflowstage.FieldDescription:
 			values[i] = new(sql.NullString)
 		case workflowstage.FieldCreateTime, workflowstage.FieldUpdateTime:
@@ -197,19 +209,13 @@ func (ws *WorkflowStage) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				ws.WorkflowID = *value
 			}
-		case workflowstage.FieldWorkflowStepIds:
+		case workflowstage.FieldStepIds:
 			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field workflow_step_ids", values[i])
+				return fmt.Errorf("unexpected type %T for field step_ids", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ws.WorkflowStepIds); err != nil {
-					return fmt.Errorf("unmarshal field workflow_step_ids: %w", err)
+				if err := json.Unmarshal(*value, &ws.StepIds); err != nil {
+					return fmt.Errorf("unmarshal field step_ids: %w", err)
 				}
-			}
-		case workflowstage.FieldDuration:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field duration", values[i])
-			} else if value.Valid {
-				ws.Duration = int(value.Int64)
 			}
 		case workflowstage.FieldDependencies:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -230,6 +236,11 @@ func (ws *WorkflowStage) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (ws *WorkflowStage) Value(name string) (ent.Value, error) {
 	return ws.selectValues.Get(name)
+}
+
+// QueryProject queries the "project" edge of the WorkflowStage entity.
+func (ws *WorkflowStage) QueryProject() *ProjectQuery {
+	return NewWorkflowStageClient(ws.config).QueryProject(ws)
 }
 
 // QuerySteps queries the "steps" edge of the WorkflowStage entity.
@@ -301,11 +312,8 @@ func (ws *WorkflowStage) String() string {
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", ws.WorkflowID))
 	builder.WriteString(", ")
-	builder.WriteString("workflow_step_ids=")
-	builder.WriteString(fmt.Sprintf("%v", ws.WorkflowStepIds))
-	builder.WriteString(", ")
-	builder.WriteString("duration=")
-	builder.WriteString(fmt.Sprintf("%v", ws.Duration))
+	builder.WriteString("step_ids=")
+	builder.WriteString(fmt.Sprintf("%v", ws.StepIds))
 	builder.WriteString(", ")
 	builder.WriteString("dependencies=")
 	builder.WriteString(fmt.Sprintf("%v", ws.Dependencies))

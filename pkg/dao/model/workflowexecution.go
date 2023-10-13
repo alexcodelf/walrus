@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
@@ -44,13 +45,13 @@ type WorkflowExecution struct {
 	// ID of the workflow that this workflow execution belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// ID of the subject that this workflow execution belongs to.
-	Subject object.ID `json:"subject,omitempty"`
+	SubjectID object.ID `json:"subject_id,omitempty"`
 	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
-	Progress int `json:"progress,omitempty"`
+	Progress string `json:"progress,omitempty"`
 	// Duration of the workflow execution.
 	Duration int `json:"duration,omitempty"`
 	// ID list of the stage executions that belong to this workflow execution.
-	WorkflowStagesExecution []object.ID `json:"workflow_stages_execution,omitempty"`
+	StageExecutionIds []object.ID `json:"stage_execution_ids,omitempty"`
 	// Log record of the workflow execution.
 	Record string `json:"record,omitempty"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
@@ -63,19 +64,34 @@ type WorkflowExecution struct {
 
 // WorkflowExecutionEdges holds the relations/edges for other nodes in the graph.
 type WorkflowExecutionEdges struct {
+	// Project to which the workflow execution belongs.
+	Project *Project `json:"project,omitempty"`
 	// Workflow stage executions that belong to this workflow execution.
 	WorkflowStageExecutions []*WorkflowStageExecution `json:"workflow_stage_executions,omitempty"`
 	// Workflow that this workflow execution belongs to.
 	Workflow *Workflow `json:"workflow,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
+}
+
+// ProjectOrErr returns the Project value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e WorkflowExecutionEdges) ProjectOrErr() (*Project, error) {
+	if e.loadedTypes[0] {
+		if e.Project == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: project.Label}
+		}
+		return e.Project, nil
+	}
+	return nil, &NotLoadedError{edge: "project"}
 }
 
 // WorkflowStageExecutionsOrErr returns the WorkflowStageExecutions value or an error if the edge
 // was not loaded in eager-loading.
 func (e WorkflowExecutionEdges) WorkflowStageExecutionsOrErr() ([]*WorkflowStageExecution, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.WorkflowStageExecutions, nil
 	}
 	return nil, &NotLoadedError{edge: "workflow_stage_executions"}
@@ -84,7 +100,7 @@ func (e WorkflowExecutionEdges) WorkflowStageExecutionsOrErr() ([]*WorkflowStage
 // WorkflowOrErr returns the Workflow value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowExecutionEdges) WorkflowOrErr() (*Workflow, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		if e.Workflow == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflow.Label}
@@ -99,13 +115,13 @@ func (*WorkflowExecution) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflowexecution.FieldLabels, workflowexecution.FieldAnnotations, workflowexecution.FieldStatus, workflowexecution.FieldWorkflowStagesExecution:
+		case workflowexecution.FieldLabels, workflowexecution.FieldAnnotations, workflowexecution.FieldStatus, workflowexecution.FieldStageExecutionIds:
 			values[i] = new([]byte)
-		case workflowexecution.FieldID, workflowexecution.FieldProjectID, workflowexecution.FieldWorkflowID, workflowexecution.FieldSubject:
+		case workflowexecution.FieldID, workflowexecution.FieldProjectID, workflowexecution.FieldWorkflowID, workflowexecution.FieldSubjectID:
 			values[i] = new(object.ID)
-		case workflowexecution.FieldProgress, workflowexecution.FieldDuration:
+		case workflowexecution.FieldDuration:
 			values[i] = new(sql.NullInt64)
-		case workflowexecution.FieldName, workflowexecution.FieldDescription, workflowexecution.FieldRecord, workflowexecution.FieldInput:
+		case workflowexecution.FieldName, workflowexecution.FieldDescription, workflowexecution.FieldProgress, workflowexecution.FieldRecord, workflowexecution.FieldInput:
 			values[i] = new(sql.NullString)
 		case workflowexecution.FieldCreateTime, workflowexecution.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -192,17 +208,17 @@ func (we *WorkflowExecution) assignValues(columns []string, values []any) error 
 			} else if value != nil {
 				we.WorkflowID = *value
 			}
-		case workflowexecution.FieldSubject:
+		case workflowexecution.FieldSubjectID:
 			if value, ok := values[i].(*object.ID); !ok {
-				return fmt.Errorf("unexpected type %T for field subject", values[i])
+				return fmt.Errorf("unexpected type %T for field subject_id", values[i])
 			} else if value != nil {
-				we.Subject = *value
+				we.SubjectID = *value
 			}
 		case workflowexecution.FieldProgress:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field progress", values[i])
 			} else if value.Valid {
-				we.Progress = int(value.Int64)
+				we.Progress = value.String
 			}
 		case workflowexecution.FieldDuration:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -210,12 +226,12 @@ func (we *WorkflowExecution) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				we.Duration = int(value.Int64)
 			}
-		case workflowexecution.FieldWorkflowStagesExecution:
+		case workflowexecution.FieldStageExecutionIds:
 			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field workflow_stages_execution", values[i])
+				return fmt.Errorf("unexpected type %T for field stage_execution_ids", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &we.WorkflowStagesExecution); err != nil {
-					return fmt.Errorf("unmarshal field workflow_stages_execution: %w", err)
+				if err := json.Unmarshal(*value, &we.StageExecutionIds); err != nil {
+					return fmt.Errorf("unmarshal field stage_execution_ids: %w", err)
 				}
 			}
 		case workflowexecution.FieldRecord:
@@ -241,6 +257,11 @@ func (we *WorkflowExecution) assignValues(columns []string, values []any) error 
 // This includes values selected through modifiers, order, etc.
 func (we *WorkflowExecution) Value(name string) (ent.Value, error) {
 	return we.selectValues.Get(name)
+}
+
+// QueryProject queries the "project" edge of the WorkflowExecution entity.
+func (we *WorkflowExecution) QueryProject() *ProjectQuery {
+	return NewWorkflowExecutionClient(we.config).QueryProject(we)
 }
 
 // QueryWorkflowStageExecutions queries the "workflow_stage_executions" edge of the WorkflowExecution entity.
@@ -307,17 +328,17 @@ func (we *WorkflowExecution) String() string {
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", we.WorkflowID))
 	builder.WriteString(", ")
-	builder.WriteString("subject=")
-	builder.WriteString(fmt.Sprintf("%v", we.Subject))
+	builder.WriteString("subject_id=")
+	builder.WriteString(fmt.Sprintf("%v", we.SubjectID))
 	builder.WriteString(", ")
 	builder.WriteString("progress=")
-	builder.WriteString(fmt.Sprintf("%v", we.Progress))
+	builder.WriteString(we.Progress)
 	builder.WriteString(", ")
 	builder.WriteString("duration=")
 	builder.WriteString(fmt.Sprintf("%v", we.Duration))
 	builder.WriteString(", ")
-	builder.WriteString("workflow_stages_execution=")
-	builder.WriteString(fmt.Sprintf("%v", we.WorkflowStagesExecution))
+	builder.WriteString("stage_execution_ids=")
+	builder.WriteString(fmt.Sprintf("%v", we.StageExecutionIds))
 	builder.WriteString(", ")
 	builder.WriteString("record=")
 	builder.WriteString(we.Record)

@@ -39,12 +39,12 @@ const (
 	FieldProjectID = "project_id"
 	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
 	FieldWorkflowID = "workflow_id"
-	// FieldWorkflowStepIds holds the string denoting the workflow_step_ids field in the database.
-	FieldWorkflowStepIds = "workflow_step_ids"
-	// FieldDuration holds the string denoting the duration field in the database.
-	FieldDuration = "duration"
+	// FieldStepIds holds the string denoting the step_ids field in the database.
+	FieldStepIds = "step_ids"
 	// FieldDependencies holds the string denoting the dependencies field in the database.
 	FieldDependencies = "dependencies"
+	// EdgeProject holds the string denoting the project edge name in mutations.
+	EdgeProject = "project"
 	// EdgeSteps holds the string denoting the steps edge name in mutations.
 	EdgeSteps = "steps"
 	// EdgeWorkflowStageExecutions holds the string denoting the workflow_stage_executions edge name in mutations.
@@ -53,6 +53,13 @@ const (
 	EdgeWorkflow = "workflow"
 	// Table holds the table name of the workflowstage in the database.
 	Table = "workflow_stages"
+	// ProjectTable is the table that holds the project relation/edge.
+	ProjectTable = "workflow_stages"
+	// ProjectInverseTable is the table name for the Project entity.
+	// It exists in this package in order to avoid circular dependency with the "project" package.
+	ProjectInverseTable = "projects"
+	// ProjectColumn is the table column denoting the project relation/edge.
+	ProjectColumn = "project_id"
 	// StepsTable is the table that holds the steps relation/edge.
 	StepsTable = "workflow_steps"
 	// StepsInverseTable is the table name for the WorkflowStep entity.
@@ -88,8 +95,7 @@ var Columns = []string{
 	FieldStatus,
 	FieldProjectID,
 	FieldWorkflowID,
-	FieldWorkflowStepIds,
-	FieldDuration,
+	FieldStepIds,
 	FieldDependencies,
 }
 
@@ -127,10 +133,8 @@ var (
 	ProjectIDValidator func(string) error
 	// WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
 	WorkflowIDValidator func(string) error
-	// DefaultDuration holds the default value on creation for the "duration" field.
-	DefaultDuration int
-	// DurationValidator is a validator for the "duration" field. It is called by the builders before save.
-	DurationValidator func(int) error
+	// DefaultStepIds holds the default value on creation for the "step_ids" field.
+	DefaultStepIds []object.ID
 	// DefaultDependencies holds the default value on creation for the "dependencies" field.
 	DefaultDependencies []object.ID
 )
@@ -173,9 +177,11 @@ func ByWorkflowID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWorkflowID, opts...).ToFunc()
 }
 
-// ByDuration orders the results by the duration field.
-func ByDuration(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDuration, opts...).ToFunc()
+// ByProjectField orders the results by project field.
+func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProjectStep(), sql.OrderByField(field, opts...))
+	}
 }
 
 // ByStepsCount orders the results by steps count.
@@ -211,6 +217,13 @@ func ByWorkflowField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newWorkflowStep(), sql.OrderByField(field, opts...))
 	}
+}
+func newProjectStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProjectInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+	)
 }
 func newStepsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
