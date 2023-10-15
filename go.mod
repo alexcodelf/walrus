@@ -76,13 +76,12 @@ require (
 require (
 	github.com/apache/arrow/go/v12 v12.0.0 // indirect
 	github.com/apache/thrift v0.16.0 // indirect
-	github.com/argoproj/argo v2.5.2+incompatible // indirect
-	github.com/go-openapi/spec v0.20.9 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v2.0.8+incompatible // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/klauspost/asmfmt v1.3.2 // indirect
+	github.com/leonelquinteros/gotext v1.5.2 // indirect
 	github.com/minio/asm2plan9s v0.0.0-20200509001527-cdd76441f9d8 // indirect
 	github.com/minio/c2goasm v0.0.0-20190812172519-36a3d3bbc4f3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
@@ -129,7 +128,6 @@ require (
 	github.com/allegro/bigcache/v3 v3.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/argoproj/argo-workflows v2.5.2+incompatible
 	github.com/argoproj/argo-workflows/v3 v3.4.11
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.2.0 // indirect

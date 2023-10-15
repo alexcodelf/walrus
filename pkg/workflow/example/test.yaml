@@ -6,7 +6,7 @@ metadata:
 spec:
   entrypoint: init
   onExit: notify
-  
+
   templates:
   - name: init
     dag:
@@ -15,6 +15,7 @@ spec:
           hooks:
             running:
               template: webservice
+              expression: tasks.webservice.status == "Running"
           template: webservice
   - name: webservice
     inputs:
@@ -56,7 +57,7 @@ spec:
         tar -xzf config.tar.gz
 
         # run terraform
-        terraform {{inputs.parameters.tf-command}} 
+        terraform {{inputs.parameters.tf-command}}
   - name: notify
     timeout: "30s"
     retryStrategy:
@@ -87,5 +88,5 @@ spec:
           },
           "log": {{step.webserver.outputs.result}},
         }
-      
+
 

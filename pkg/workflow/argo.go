@@ -3,6 +3,8 @@ package workflow
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
 	"os/user"
 	"path/filepath"
 
@@ -26,6 +28,10 @@ import (
 
 const (
 	WorkflowFlowNamespace = "walrus-system"
+
+	beforeTemplateKey = "before"
+	afterTemplateKey  = "after"
+	mainTemplateKey   = "main"
 )
 
 type ArgoWorkflowClient struct {
@@ -36,7 +42,6 @@ type ArgoWorkflowClient struct {
 }
 
 func NewArgoWorkflowClient(mc model.ClientSet, config *rest.Config) (WorkflowClient, error) {
-	// get current user to determine home directory
 	usr, err := user.Current()
 	if err != nil {
 		return nil, err
@@ -74,7 +79,6 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 	}
 
 	token := at.AccessToken
-	// token := "bzAk_gT4dY_Rel45_fKlmEWqRzuOhdVD4QAdSDnXLezi97JRjX6UlLqsuh5Y0efeuYE4JZhDAr9nnXaI_CHIqzDbsEk_vNh1ygz9UJ4jdy5ClELsNvWt6DFCrX9v0qE4NIk"
 	tlsVerify := apiconfig.TlsCertified.Get()
 
 	// Prepare address for terraform backend.
@@ -87,61 +91,22 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 		return errors.New("server address is empty")
 	}
 
-	stepService, err := step.GetStepManager(steptypes.CreateOptions{
-		Type:        steptypes.StepTypeService,
-		ModelClient: s.mc,
-	})
+	wfTemplates, err := s.GenerateWorkflowTemplateEntrypoint(ctx, opts.WorkflowExecution.Edges.WorkflowStageExecutions)
 	if err != nil {
 		return err
 	}
 
-	swe := &model.WorkflowStepExecution{
-		ProjectID:   "480121971162504616",
-		Name:        "test-svc-demo",
-		Description: "test-svc-demo",
-		Type:        steptypes.StepTypeService.String(),
-		Spec: map[string]any{
-			"projectID":     "480121971162504616",
-			"environmentID": "480123459335118248",
-			"project": map[string]any{
-				"id": "480121971162504616",
-			},
-			"environment": map[string]any{
-				"id": "480123459335118248",
-			},
-			"name": "sfsf",
-			"attributes": map[string]any{
-				"env":            map[string]any{},
-				"name":           "",
-				"image":          "nginx",
-				"ports":          []int{80},
-				"replicas":       1,
-				"limit_cpu":      "",
-				"namespace":      "",
-				"request_cpu":    "0.1",
-				"limit_memory":   "",
-				"request_memory": "128Mi",
-			},
-			"template": map[string]any{
-				"name":    "webservice",
-				"version": "v0.0.3",
-			},
-			"jobType": "apply",
-		},
+	workflowTemplates := make([]v1alpha1.Template, 0, len(wfTemplates))
+	for _, tpl := range wfTemplates {
+		workflowTemplates = append(workflowTemplates, *tpl)
 	}
 
-	// Generate service template.
-	serviceTemplate, err := stepService.GenerateTemplate(ctx, swe)
-	if err != nil {
-		return err
-	}
-
-	testWf := v1alpha1.Workflow{
+	wf := v1alpha1.Workflow{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.WorkflowExecution.Name,
 		},
 		Spec: v1alpha1.WorkflowSpec{
-			Entrypoint: "main",
+			Entrypoint: "entrypoint",
 			Arguments: v1alpha1.Arguments{
 				Parameters: []v1alpha1.Parameter{
 					{
@@ -158,24 +123,11 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 					},
 				},
 			},
-			Templates: []v1alpha1.Template{
-				{
-					Name: "main",
-					DAG: &v1alpha1.DAGTemplate{
-						Tasks: []v1alpha1.DAGTask{
-							{
-								Name:     serviceTemplate.Name + "-task",
-								Template: serviceTemplate.Name,
-							},
-						},
-					},
-				},
-				*serviceTemplate,
-			},
+			Templates: workflowTemplates,
 		},
 	}
 
-	_, err = s.cs.Create(ctx, &testWf, metav1.CreateOptions{})
+	_, err = s.cs.Create(ctx, &wf, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -199,4 +151,274 @@ func (s *ArgoWorkflowClient) List(ctx context.Context, opts ListOptions) (*v1alp
 	// 1. List workflows from workflow engine.
 	// 2. Update workflow status.
 	panic("not implemented")
+}
+
+func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
+	ctx context.Context,
+	stageExecutions model.WorkflowStageExecutions,
+) ([]*v1alpha1.Template, error) {
+	workflowTplLen := 1
+	for _, stageExec := range stageExecutions {
+		workflowTplLen += (len(stageExec.Edges.StepExecutions) + 1) * 3
+	}
+
+	workflowTemplates := make([]*v1alpha1.Template, 0, workflowTplLen)
+
+	entrypoint := &v1alpha1.Template{
+		Name: "entrypoint",
+		DAG:  &v1alpha1.DAGTemplate{},
+	}
+
+	taskTemplates := make([]*v1alpha1.Template, 0)
+	for i, stageExec := range stageExecutions {
+		stageTemplates, err := s.GenerateStageTemplates(ctx, stageExec)
+		if err != nil {
+			return nil, err
+		}
+
+		taskTemplates = append(taskTemplates, stageTemplates...)
+
+		var dependencies []string
+		if i > 0 {
+			// Add previous stage task as dependency.
+			dependencies = append(dependencies, entrypoint.DAG.Tasks[i-1].Name)
+		}
+
+		var (
+			taskName         = stageExec.ID.String() + "-stage-task"
+			taskTemplateName = stageExec.ID.String()
+		)
+		entrypoint.DAG.Tasks = append(entrypoint.DAG.Tasks, v1alpha1.DAGTask{
+			Name:         taskName,
+			Template:     taskTemplateName,
+			Dependencies: dependencies,
+		})
+	}
+
+	workflowTemplates = append(workflowTemplates, taskTemplates...)
+	workflowTemplates = append(workflowTemplates, entrypoint)
+
+	return workflowTemplates, nil
+}
+
+// GenerateStageTemplates generates templates for workflow stage.
+// It generates before, after and main templates,
+// where main template is a DAG template with tasks for each step templates.
+func (s *ArgoWorkflowClient) GenerateStageTemplates(
+	ctx context.Context,
+	stageExecution *model.WorkflowStageExecution,
+) ([]*v1alpha1.Template, error) {
+	stageTemplate := &v1alpha1.Template{
+		Name: stageExecution.ID.String(),
+		DAG:  &v1alpha1.DAGTemplate{},
+	}
+
+	beforeTemplate := &v1alpha1.Template{
+		Name: stageExecution.ID.String() + "-before",
+		Inputs: v1alpha1.Inputs{
+			Parameters: []v1alpha1.Parameter{
+				{
+					Name:  "id",
+					Value: v1alpha1.AnyStringPtr(stageExecution.ID.String()),
+				},
+				{
+					Name:  "status",
+					Value: v1alpha1.AnyStringPtr("running"),
+				},
+			},
+		},
+		HTTP: &v1alpha1.HTTP{
+			URL:    "{{workflow.parameters.server}}/v1/workflow-stage-executions",
+			Method: http.MethodPut,
+			Headers: v1alpha1.HTTPHeaders{
+				{
+					Name:  "Authorization",
+					Value: "Bearer {{workflow.parameters.token}}",
+				},
+				{
+					Name:  "Content-Type",
+					Value: "application/json",
+				},
+			},
+			Body: `{
+				"id": "{{inputs.parameters.id}}",
+				"status": "{{inputs.parameters.status}}"
+			}`,
+			SuccessCondition: "status == '200'",
+		},
+	}
+	afterTemplate := &v1alpha1.Template{
+		Name: stageExecution.ID.String() + "-after",
+		Inputs: v1alpha1.Inputs{
+			Parameters: []v1alpha1.Parameter{
+				{
+					Name:  "id",
+					Value: v1alpha1.AnyStringPtr(stageExecution.ID.String()),
+				},
+				{
+					Name:  "status",
+					Value: v1alpha1.AnyStringPtr("ready"),
+				},
+			},
+		},
+		HTTP: &v1alpha1.HTTP{
+			URL:    "{{workflow.parameters.server}}/v1/workflow-stage-executions",
+			Method: http.MethodPut,
+			Headers: v1alpha1.HTTPHeaders{
+				{
+					Name:  "Authorization",
+					Value: "Bearer {{workflow.parameters.token}}",
+				},
+				{
+					Name:  "Content-Type",
+					Value: "application/json",
+				},
+			},
+			Body: `{
+				"id": "{{inputs.parameters.id}}",
+				"status": "{{inputs.parameters.status}}"
+			}`,
+			SuccessCondition: "status == '200'",
+		},
+	}
+
+	stageTemplates := []*v1alpha1.Template{
+		beforeTemplate,
+		stageTemplate,
+		afterTemplate,
+	}
+
+	tasks := make([]v1alpha1.DAGTask, 0, len(stageExecution.Edges.StepExecutions))
+	stepTemplates := make([]*v1alpha1.Template, 0)
+
+	for _, stepExec := range stageExecution.Edges.StepExecutions {
+		stepTemplateMap, err := s.GenerateStepTemplate(ctx, stepExec)
+		if err != nil {
+			return nil, err
+		}
+
+		for key, stepTemplate := range stepTemplateMap {
+			stepTemplates = append(stepTemplates, stepTemplate)
+			if key == mainTemplateKey {
+				taskName := stepTemplate.Name + "-task"
+				tasks = append(tasks, v1alpha1.DAGTask{
+					Name:     taskName,
+					Template: stepTemplate.Name,
+					Hooks: v1alpha1.LifecycleHooks{
+						"running": v1alpha1.LifecycleHook{
+							Template:   beforeTemplateKey,
+							Expression: fmt.Sprintf("tasks['%s'].status==\"Running\"", taskName),
+						},
+						"finished": v1alpha1.LifecycleHook{
+							Template: afterTemplateKey,
+							Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" ||"+
+								" tasks['%s'].status==\"Failed\"", taskName, taskName),
+						},
+					},
+					// TODO add dependencies.
+				})
+			}
+		}
+	}
+
+	stageTemplate.DAG.Tasks = tasks
+
+	// Add step templates to templates list.
+	stageTemplates = append(stageTemplates, stepTemplates...)
+
+	return stageTemplates, nil
+}
+
+func (s *ArgoWorkflowClient) GenerateStepTemplate(
+	ctx context.Context,
+	wse *model.WorkflowStepExecution,
+) (map[string]*v1alpha1.Template, error) {
+	beforeTemplate := &v1alpha1.Template{
+		Name: wse.ID.String() + "-before",
+		Inputs: v1alpha1.Inputs{
+			Parameters: []v1alpha1.Parameter{
+				{
+					Name:  "id",
+					Value: v1alpha1.AnyStringPtr(wse.ID.String()),
+				},
+				{
+					Name:  "status",
+					Value: v1alpha1.AnyStringPtr("running"),
+				},
+			},
+		},
+		HTTP: &v1alpha1.HTTP{
+			URL:    "{{workflow.parameters.server}}/v1/workflow-step-executions",
+			Method: http.MethodPut,
+			Headers: v1alpha1.HTTPHeaders{
+				{
+					Name:  "Authorization",
+					Value: "Bearer {{workflow.parameters.token}}",
+				},
+				{
+					Name:  "Content-Type",
+					Value: "application/json",
+				},
+			},
+			Body: `{
+				"id": "{{inputs.parameters.id}}",
+				"status": "{{inputs.parameters.status}}"
+			}`,
+			SuccessCondition: "status == '200'",
+		},
+	}
+	afterTemplate := &v1alpha1.Template{
+		Name: wse.ID.String() + "-after",
+		Inputs: v1alpha1.Inputs{
+			Parameters: []v1alpha1.Parameter{
+				{
+					Name:  "id",
+					Value: v1alpha1.AnyStringPtr(wse.ID.String()),
+				},
+				{
+					Name:  "status",
+					Value: v1alpha1.AnyStringPtr("ready"),
+				},
+			},
+		},
+		HTTP: &v1alpha1.HTTP{
+			URL:    "{{workflow.parameters.server}}/v1/workflow-step-executions",
+			Method: http.MethodPut,
+			Headers: v1alpha1.HTTPHeaders{
+				{
+					Name:  "Authorization",
+					Value: "Bearer {{workflow.parameters.token}}",
+				},
+				{
+					Name:  "Content-Type",
+					Value: "application/json",
+				},
+			},
+			Body: `{
+				"id": "{{inputs.parameters.id}}",
+				"status": "{{inputs.parameters.status}}"
+			}`,
+			SuccessCondition: "status == '200'",
+		},
+	}
+
+	stepService, err := step.GetStepManager(steptypes.CreateOptions{
+		Type:        steptypes.StepTypeService,
+		ModelClient: s.mc,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate service template.
+	serviceTemplate, err := stepService.GenerateTemplate(ctx, wse)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]*v1alpha1.Template{
+		beforeTemplateKey: beforeTemplate,
+		afterTemplateKey:  afterTemplate,
+		mainTemplateKey:   serviceTemplate,
+	}, nil
 }

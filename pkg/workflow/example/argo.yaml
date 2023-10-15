@@ -11,7 +11,7 @@ spec:
         - - name: get-google-homepage
             template: http
             arguments:
-              parameters: [{name: url, value: "https://www.baidu.com"}]
+              parameters: [{name: url, value: "https://www.google.com"}]
     - name: http
       inputs:
         parameters:
