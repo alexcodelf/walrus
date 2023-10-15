@@ -2,95 +2,35 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  name: walrus-workflow
+  generateName: http-template-
 spec:
   entrypoint: main
-  arguments:
-    parameters:
-      - name: deployer-image
-        value: "sealio/terraform-deployer:v0.1.4"
   templates:
-  - name: main
-    dag:
-      tasks:
-        - name: webservice
-          template: webservice
-  - name: webservice
-    inputs:
-      artifacts:
-        - name: terraform
-          path: /var/terraform/workspace/main.tf
-          raw:
-            data: |
-              terraform {
-                required_providers {
-                  kubectl = {
-                    source  = "gavinbunney/kubectl"
-                    version = "1.14.0"
-                  }
-                  kubernetes = {}
-                }
-
-                backend "http" {
-                  address                = "https://192.168.50.123/v1/projects/477519492470026875/environments/479570615238406779/services/479571407995417211/revisions/479571408028971643/terraform-states"
-                  password               = "wGgjBG13GO7c7dJWtx-NjKd8TKvV4dUhc9AU4UcDKZZYDYj4dJT6OvVWLW8pDwasYKod_DfesuN6xZflhz_A76Le35NCPzFXRnZZY9vfj6jxUFMNQGu_vq3qc8u-SgDv_wo"
-                  retry_max              = 10
-                  retry_wait_max         = 5
-                  skip_cert_verification = true
-                  update_method          = "PUT"
-                  username               = "seal"
-                }
-              }
-
-              provider "kubectl" {
-                alias       = "connector--479570591481868923"
-                config_path = "/var/terraform/secrets/config479570591481868923"
-              }
-
-              provider "kubernetes" {
-                alias       = "connector--479570591481868923"
-                config_path = "/var/terraform/secrets/config479570591481868923"
-              }
-
-              module "test" {
-                env          = {}
-                image        = "nginx"
-                limit_cpu    = ""
-                limit_memory = ""
-                name         = ""
-                namespace    = ""
-                ports        = [80]
-                providers = {
-                  kubectl    = kubectl.connector--479570591481868923
-                  kubernetes = kubernetes.connector--479570591481868923
-                }
-                replicas                       = 1
-                request_cpu                    = "0.1"
-                request_memory                 = "128Mi"
-                source                         = "git::https://github.com/walrus-catalog/webservice?ref=v0.0.3"
-                walrus_metadata_namespace_name = "default-dev"
-                walrus_metadata_service_name   = "test"
-              }
-
-              output "test_service_ip" {
-                sensitive = false
-                value     = module.test.service_ip
-              }
-
-              output "test_ports" {
-                sensitive = false
-                value     = module.test.ports
-              }
-        - name: terraform.tfvars
-          path: /var/terraform/workspace/terraform.tfvars
-          raw:
-            data: |
-
-    script:
-      imagePullPolicy: PullIfNotPresent
-      image: "{{inputs.parameters.deployer-image}}"
-      command: ["/bin/sh"]
-      source: |
-        #!/bin/sh
-        set -e
-        terraform init -no-color && terraform apply -auto-approve -no-color
+    - name: main
+      steps:
+        - - name: get-google-homepage
+            template: http
+            arguments:
+              parameters: [{name: url, value: "https://www.baidu.com"}]
+    - name: http
+      inputs:
+        parameters:
+          - name: url
+      http:
+        timeoutSeconds: 20 # Default 30
+        url: "{{inputs.parameters.url}}"
+        method: "GET" # Default GET
+        headers:
+          - name: "x-header-name"
+            value: "test-value"
+        # Template will succeed if evaluated to true, otherwise will fail
+        # Available variables:
+        #  request.body: string, the request body
+        #  request.headers: map[string][]string, the request headers
+        #  response.url: string, the request url
+        #  response.method: string, the request method
+        #  response.statusCode: int, the response status code
+        #  response.body: string, the response body
+        #  response.headers: map[string][]string, the response headers
+        successCondition: "response.body contains \"google\"" # available since v3.3
+        body: "test body" # Change request body
