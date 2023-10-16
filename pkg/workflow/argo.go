@@ -5,14 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os/user"
-	"path/filepath"
 
+	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
+	"github.com/argoproj/argo-workflows/v3/pkg/apiclient/workflow"
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
-	wfclientset "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned"
-	wfv1alpha1 "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	apiconfig "github.com/seal-io/walrus/pkg/apis/config"
@@ -27,7 +24,7 @@ import (
 )
 
 const (
-	WorkflowFlowNamespace = "walrus-system"
+	WorkflowFlowNamespace = "argo"
 
 	beforeTemplateKey = "before"
 	afterTemplateKey  = "after"
@@ -38,33 +35,25 @@ type ArgoWorkflowClient struct {
 	Logger log.Logger
 	mc     model.ClientSet
 	// Argo workflow clientset.
-	cs wfv1alpha1.WorkflowInterface
+	apiClient apiclient.Client
+	ctx       context.Context
 }
 
-func NewArgoWorkflowClient(mc model.ClientSet, config *rest.Config) (WorkflowClient, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return nil, err
-	}
-
-	// get kubeconfig file location
-	kubeconfig := filepath.Join(usr.HomeDir, ".kube", "config")
-
-	// use the current context in kubeconfig
-	config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		return nil, err
-	}
-
-	cs, err := wfclientset.NewForConfig(config)
+func NewArgoWorkflowClient(mc model.ClientSet, clientConfig clientcmd.ClientConfig) (WorkflowClient, error) {
+	ctx, apiClient, err := apiclient.NewClientFromOpts(apiclient.Opts{
+		ClientConfigSupplier: func() clientcmd.ClientConfig {
+			return clientConfig
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &ArgoWorkflowClient{
-		Logger: log.WithName("workflow-service"),
-		mc:     mc,
-		cs:     cs.ArgoprojV1alpha1().Workflows("argo"),
+		Logger:    log.WithName("workflow-service"),
+		mc:        mc,
+		apiClient: apiClient,
+		ctx:       ctx,
 	}, nil
 }
 
@@ -79,7 +68,6 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 	}
 
 	token := at.AccessToken
-	tlsVerify := apiconfig.TlsCertified.Get()
 
 	// Prepare address for terraform backend.
 	serverAddress, err := settings.ServeUrl.Value(ctx, s.mc)
@@ -101,7 +89,7 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 		workflowTemplates = append(workflowTemplates, *tpl)
 	}
 
-	wf := v1alpha1.Workflow{
+	wf := &v1alpha1.Workflow{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.WorkflowExecution.Name,
 		},
@@ -114,12 +102,16 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 						Value: v1alpha1.AnyStringPtr(serverAddress),
 					},
 					{
+						Name:  "projectID",
+						Value: v1alpha1.AnyStringPtr(opts.WorkflowExecution.ProjectID.String()),
+					},
+					{
 						Name:  "token",
 						Value: v1alpha1.AnyStringPtr(token),
 					},
 					{
 						Name:  "tlsVerify",
-						Value: v1alpha1.AnyStringPtr(tlsVerify),
+						Value: v1alpha1.AnyStringPtr(apiconfig.TlsCertified.Get()),
 					},
 				},
 			},
@@ -127,10 +119,19 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 		},
 	}
 
-	_, err = s.cs.Create(ctx, &wf, metav1.CreateOptions{})
+	loglevel := log.GetLevel()
+	// make log level
+	log.SetLevel(log.WarnLevel)
+	_, err = s.apiClient.NewWorkflowServiceClient().CreateWorkflow(s.ctx, &workflow.WorkflowCreateRequest{
+		Namespace: WorkflowFlowNamespace,
+		Workflow:  wf,
+	})
 	if err != nil {
 		return err
 	}
+
+	// reset log level
+	log.SetLevel(loglevel)
 
 	return nil
 }
@@ -199,8 +200,8 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 				},
 				"finished": v1alpha1.LifecycleHook{
 					Template: taskTemplateName + "-after",
-					Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" ||"+
-						" tasks['%s'].status==\"Failed\"", taskName, taskName),
+					Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" || "+
+						"tasks['%s'].status==\"Failed\"", taskName, taskName),
 				},
 			},
 		})
@@ -239,7 +240,8 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
-			URL:    "{{workflow.parameters.server}}/v1/workflow-stage-executions",
+			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflow-stage-executions/{{inputs.parameters.id}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{
 				{
@@ -255,7 +257,8 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
 			}`,
-			SuccessCondition: "response.statusCode == 201",
+			SuccessCondition:   "response.statusCode >= 200 && response.statusCode < 300",
+			InsecureSkipVerify: !apiconfig.TlsCertified.Get(),
 		},
 	}
 	afterTemplate := &v1alpha1.Template{
@@ -273,7 +276,8 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
-			URL:    "{{workflow.parameters.server}}/v1/workflow-stage-executions",
+			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflow-stage-executions/{{inputs.parameters.id}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{
 				{
@@ -289,7 +293,8 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
 			}`,
-			SuccessCondition: "response.statusCode == 201",
+			SuccessCondition:   "response.statusCode >= 200 && response.statusCode < 300",
+			InsecureSkipVerify: !apiconfig.TlsCertified.Get(),
 		},
 	}
 
@@ -322,8 +327,8 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 						},
 						"finished": v1alpha1.LifecycleHook{
 							Template: stepTemplateMap[afterTemplateKey].Name,
-							Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" ||"+
-								" tasks['%s'].status==\"Failed\"", taskName, taskName),
+							Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" || "+
+								"tasks['%s'].status==\"Failed\"", taskName, taskName),
 						},
 					},
 					// TODO add dependencies.
@@ -359,7 +364,8 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
-			URL:    "{{workflow.parameters.server}}/v1/workflow-step-executions",
+			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflow-step-executions/{{inputs.parameters.id}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{
 				{
@@ -375,7 +381,8 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
 			}`,
-			SuccessCondition: "response.statusCode == 200",
+			SuccessCondition:   "response.statusCode >= 200 && response.statusCode < 300",
+			InsecureSkipVerify: !apiconfig.TlsCertified.Get(),
 		},
 	}
 	afterTemplate := &v1alpha1.Template{
@@ -393,7 +400,8 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
-			URL:    "{{workflow.parameters.server}}/v1/workflow-step-executions",
+			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflow-step-executions/{{inputs.parameters.id}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{
 				{
@@ -409,7 +417,8 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
 			}`,
-			SuccessCondition: "response.statusCode == 201",
+			SuccessCondition:   "response.statusCode >= 200 && response.statusCode < 300",
+			InsecureSkipVerify: !apiconfig.TlsCertified.Get(),
 		},
 	}
 

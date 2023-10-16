@@ -24,8 +24,6 @@ type WorkflowExecutionCreateInput struct {
 
 	// Project indicates to create WorkflowExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// Workflow indicates to create WorkflowExecution entity MUST under the Workflow route.
-	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
 	Progress string `path:"-" query:"-" json:"progress"`
@@ -69,9 +67,6 @@ func (weci *WorkflowExecutionCreateInput) Model() *WorkflowExecution {
 	if weci.Project != nil {
 		_we.ProjectID = weci.Project.ID
 	}
-	if weci.Workflow != nil {
-		_we.WorkflowID = weci.Workflow.ID
-	}
 
 	return _we
 }
@@ -98,12 +93,6 @@ func (weci *WorkflowExecutionCreateInput) ValidateWith(ctx context.Context, cs C
 	// Validate when creating under the Project route.
 	if weci.Project != nil {
 		if err := weci.Project.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		}
-	}
-	// Validate when creating under the Workflow route.
-	if weci.Workflow != nil {
-		if err := weci.Workflow.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
 	}
@@ -153,8 +142,6 @@ type WorkflowExecutionCreateInputs struct {
 
 	// Project indicates to create WorkflowExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// Workflow indicates to create WorkflowExecution entity MUST under the Workflow route.
-	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowExecutionCreateInputsItem `path:"-" query:"-" json:"items"`
@@ -184,9 +171,6 @@ func (weci *WorkflowExecutionCreateInputs) Model() []*WorkflowExecution {
 
 		if weci.Project != nil {
 			_we.ProjectID = weci.Project.ID
-		}
-		if weci.Workflow != nil {
-			_we.WorkflowID = weci.Workflow.ID
 		}
 
 		_wes[i] = _we
@@ -228,16 +212,6 @@ func (weci *WorkflowExecutionCreateInputs) ValidateWith(ctx context.Context, cs 
 			}
 		}
 	}
-	// Validate when creating under the Workflow route.
-	if weci.Workflow != nil {
-		if err := weci.Workflow.ValidateWith(ctx, cs, cache); err != nil {
-			if !IsBlankResourceReferError(err) {
-				return err
-			} else {
-				weci.Workflow = nil
-			}
-		}
-	}
 
 	for i := range weci.Items {
 		if weci.Items[i] == nil {
@@ -271,8 +245,6 @@ type WorkflowExecutionDeleteInputs struct {
 
 	// Project indicates to delete WorkflowExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// Workflow indicates to delete WorkflowExecution entity MUST under the Workflow route.
-	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowExecutionDeleteInputsItem `path:"-" query:"-" json:"items"`
@@ -344,16 +316,6 @@ func (wedi *WorkflowExecutionDeleteInputs) ValidateWith(ctx context.Context, cs 
 		}
 	}
 
-	// Validate when deleting under the Workflow route.
-	if wedi.Workflow != nil {
-		if err := wedi.Workflow.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		} else {
-			q.Where(
-				workflowexecution.WorkflowID(wedi.Workflow.ID))
-		}
-	}
-
 	ids := make([]object.ID, 0, len(wedi.Items))
 
 	for i := range wedi.Items {
@@ -392,8 +354,6 @@ type WorkflowExecutionQueryInput struct {
 
 	// Project indicates to query WorkflowExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
-	// Workflow indicates to query WorkflowExecution entity MUST under the Workflow route.
-	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"workflow"`
 
 	// Refer holds the route path reference of the WorkflowExecution entity.
 	Refer *object.Refer `path:"workflowexecution,default=" query:"-" json:"-"`
@@ -449,16 +409,6 @@ func (weqi *WorkflowExecutionQueryInput) ValidateWith(ctx context.Context, cs Cl
 		}
 	}
 
-	// Validate when querying under the Workflow route.
-	if weqi.Workflow != nil {
-		if err := weqi.Workflow.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		} else {
-			q.Where(
-				workflowexecution.WorkflowID(weqi.Workflow.ID))
-		}
-	}
-
 	if weqi.Refer != nil {
 		if weqi.Refer.IsID() {
 			q.Where(
@@ -507,8 +457,6 @@ type WorkflowExecutionQueryInputs struct {
 
 	// Project indicates to query WorkflowExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// Workflow indicates to query WorkflowExecution entity MUST under the Workflow route.
-	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 }
 
 // Validate checks the WorkflowExecutionQueryInputs entity.
@@ -533,13 +481,6 @@ func (weqi *WorkflowExecutionQueryInputs) ValidateWith(ctx context.Context, cs C
 	// Validate when querying under the Project route.
 	if weqi.Project != nil {
 		if err := weqi.Project.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		}
-	}
-
-	// Validate when querying under the Workflow route.
-	if weqi.Workflow != nil {
-		if err := weqi.Workflow.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
 	}
@@ -652,8 +593,6 @@ type WorkflowExecutionUpdateInputs struct {
 
 	// Project indicates to update WorkflowExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// Workflow indicates to update WorkflowExecution entity MUST under the Workflow route.
-	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowExecutionUpdateInputsItem `path:"-" query:"-" json:"items"`
@@ -736,16 +675,6 @@ func (weui *WorkflowExecutionUpdateInputs) ValidateWith(ctx context.Context, cs 
 		}
 	}
 
-	// Validate when updating under the Workflow route.
-	if weui.Workflow != nil {
-		if err := weui.Workflow.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		} else {
-			q.Where(
-				workflowexecution.WorkflowID(weui.Workflow.ID))
-		}
-	}
-
 	ids := make([]object.ID, 0, len(weui.Items))
 
 	for i := range weui.Items {
@@ -799,8 +728,7 @@ type WorkflowExecutionOutput struct {
 	Record            string            `json:"record,omitempty"`
 	Input             string            `json:"input,omitempty"`
 
-	Project  *ProjectOutput  `json:"project,omitempty"`
-	Workflow *WorkflowOutput `json:"workflow,omitempty"`
+	Project *ProjectOutput `json:"project,omitempty"`
 }
 
 // View returns the output of WorkflowExecution entity.
@@ -840,13 +768,6 @@ func ExposeWorkflowExecution(_we *WorkflowExecution) *WorkflowExecutionOutput {
 	} else if _we.ProjectID != "" {
 		weo.Project = &ProjectOutput{
 			ID: _we.ProjectID,
-		}
-	}
-	if _we.Edges.Workflow != nil {
-		weo.Workflow = ExposeWorkflow(_we.Edges.Workflow)
-	} else if _we.WorkflowID != "" {
-		weo.Workflow = &WorkflowOutput{
-			ID: _we.WorkflowID,
 		}
 	}
 	return weo

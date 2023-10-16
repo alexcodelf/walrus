@@ -4,20 +4,12 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	pkgworkflow "github.com/seal-io/walrus/pkg/workflow"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func (h Handler) CollectionRouteGetTestRequest(req CollectionRouteGetTestRequest) (any, error) {
-	wf := &model.Workflow{
-		ID:        "480121971162554616",
-		Name:      "test",
-		ProjectID: "480121971162504616",
-	}
-
-	err := pkgworkflow.Apply(req.Context, h.modelClient, h.k8sConfig, wf)
-	if err != nil {
-		return nil, err
-	}
-
 	return nil, nil
 }
 
@@ -32,9 +24,40 @@ func (h Handler) RouteApplyRequest(req RouteApplyRequest) (any, error) {
 		return nil, err
 	}
 
+	apiConfig := CreateKubeconfigFileForRestConfig(h.k8sConfig)
+	clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
+
 	err = h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
-		return pkgworkflow.Apply(req.Context, h.modelClient, h.k8sConfig, wf)
+		return pkgworkflow.Apply(req.Context, h.modelClient, clientConfig, wf)
 	})
 
 	return nil, err
+}
+
+func CreateKubeconfigFileForRestConfig(restConfig *rest.Config) clientcmdapi.Config {
+	clusters := make(map[string]*clientcmdapi.Cluster)
+	clusters["default-cluster"] = &clientcmdapi.Cluster{
+		Server:                   restConfig.Host,
+		CertificateAuthorityData: restConfig.CAData,
+	}
+	contexts := make(map[string]*clientcmdapi.Context)
+	contexts["default-context"] = &clientcmdapi.Context{
+		Cluster:  "default-cluster",
+		AuthInfo: "default-user",
+	}
+	authinfos := make(map[string]*clientcmdapi.AuthInfo)
+	authinfos["default-user"] = &clientcmdapi.AuthInfo{
+		ClientCertificateData: restConfig.CertData,
+		ClientKeyData:         restConfig.KeyData,
+	}
+	clientConfig := clientcmdapi.Config{
+		Kind:           "Config",
+		APIVersion:     "v1",
+		Clusters:       clusters,
+		Contexts:       contexts,
+		CurrentContext: "default-context",
+		AuthInfos:      authinfos,
+	}
+
+	return clientConfig
 }

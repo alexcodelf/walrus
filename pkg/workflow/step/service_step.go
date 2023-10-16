@@ -20,13 +20,13 @@ set -o pipefail
 
 # if skip tls verify
 tlsVerify="-k"
-if [ "{{workflow.parameters.tlsVerify}}" == "false" ]; then
+if [ "{{workflow.parameters.tlsVerify}}" == "true" ]; then
 	tlsVerify=""
 fi
 
 # get config
 curl -o config.tar.gz -X POST \
-{{workflow.parameters.server}}/v1/projects/{{inputs.parameters.projectID}}/environments/{{inputs.parameters.environmentID}}/services/_/workflow \
+{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}/environments/{{inputs.parameters.environmentID}}/services/_/workflow \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer {{workflow.parameters.token}}" \
 -d '{{inputs.parameters.executionSpec}}' $tlsVerify -s
@@ -59,6 +59,9 @@ func (s *ServiceStepManager) GenerateTemplate(
 		return nil, errors.New("environmentID is not found")
 	}
 
+	stepSpec := stepExec.Spec
+	stepSpec["workflowStepID"] = stepExec.ID.String()
+
 	execSpec, err := json.Marshal(stepExec.Spec)
 	if err != nil {
 		return nil, err
@@ -68,10 +71,6 @@ func (s *ServiceStepManager) GenerateTemplate(
 		Name: stepExec.Name, // TODO use stepExec.ID.String() as name.
 		Inputs: v1alpha1.Inputs{
 			Parameters: []v1alpha1.Parameter{
-				{
-					Name:  "projectID",
-					Value: v1alpha1.AnyStringPtr(stepExec.ProjectID.String()),
-				},
 				{
 					Name:  "environmentID",
 					Value: v1alpha1.AnyStringPtr(environmentID),

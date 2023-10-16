@@ -1,10 +1,9 @@
 package workflowstageexecution
 
-import "fmt"
-
 func (h Handler) Update(req UpdateRequest) error {
 	entity := req.Model()
 
-	fmt.Println("entity", entity)
-	return nil
+	return h.modelClient.WorkflowStageExecutions().UpdateOne(entity).
+		SetRecord(req.Record).
+		Exec(req.Context)
 }

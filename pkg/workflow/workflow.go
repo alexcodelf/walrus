@@ -9,7 +9,7 @@ import (
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func Create(ctx context.Context, mc model.ClientSet, wf *model.Workflow) error {
@@ -44,8 +44,8 @@ func Create(ctx context.Context, mc model.ClientSet, wf *model.Workflow) error {
 	})
 }
 
-func Apply(ctx context.Context, mc model.ClientSet, config *rest.Config, wf *model.Workflow) error {
-	client, err := NewArgoWorkflowClient(mc, config)
+func Apply(ctx context.Context, mc model.ClientSet, clientConfig clientcmd.ClientConfig, wf *model.Workflow) error {
+	client, err := NewArgoWorkflowClient(mc, clientConfig)
 	if err != nil {
 		return err
 	}

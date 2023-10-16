@@ -82,7 +82,9 @@ func (WorkflowExecution) Edges() []ent.Edge {
 			Comment("Workflow that this workflow execution belongs to.").
 			Required().
 			Unique().
-			Immutable(),
+			Immutable().
+			Annotations(
+				entx.SkipIO()),
 	}
 }
 

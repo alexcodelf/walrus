@@ -77,7 +77,9 @@ func (WorkflowStageExecution) Edges() []ent.Edge {
 			Comment("Workflow stage that this workflow stage execution belongs to.").
 			Required().
 			Unique().
-			Immutable(),
+			Immutable().
+			Annotations(
+				entx.SkipIO()),
 		// WorkflowExecution 1-* WorkflowStageExecutions.
 		edge.From("workflow_execution", WorkflowExecution.Type).
 			Ref("workflow_stage_executions").
@@ -85,7 +87,9 @@ func (WorkflowStageExecution) Edges() []ent.Edge {
 			Comment("Workflow execution that this workflow stage execution belongs to.").
 			Required().
 			Unique().
-			Immutable(),
+			Immutable().
+			Annotations(
+				entx.SkipIO()),
 	}
 }
 
