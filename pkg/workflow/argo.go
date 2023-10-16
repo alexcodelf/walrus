@@ -185,13 +185,24 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 		}
 
 		var (
-			taskName         = stageExec.ID.String() + "-stage-task"
-			taskTemplateName = stageExec.ID.String()
+			taskName         = "stage-execution-" + stageExec.ID.String()
+			taskTemplateName = "stage-execution-" + stageExec.ID.String()
 		)
 		entrypoint.DAG.Tasks = append(entrypoint.DAG.Tasks, v1alpha1.DAGTask{
 			Name:         taskName,
 			Template:     taskTemplateName,
 			Dependencies: dependencies,
+			Hooks: v1alpha1.LifecycleHooks{
+				"running": v1alpha1.LifecycleHook{
+					Template:   taskTemplateName + "-before",
+					Expression: fmt.Sprintf("tasks['%s'].status==\"Running\"", taskName),
+				},
+				"finished": v1alpha1.LifecycleHook{
+					Template: taskTemplateName + "-after",
+					Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" ||"+
+						" tasks['%s'].status==\"Failed\"", taskName, taskName),
+				},
+			},
 		})
 	}
 
@@ -209,12 +220,12 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 	stageExecution *model.WorkflowStageExecution,
 ) ([]*v1alpha1.Template, error) {
 	stageTemplate := &v1alpha1.Template{
-		Name: stageExecution.ID.String(),
+		Name: "stage-execution-" + stageExecution.ID.String(),
 		DAG:  &v1alpha1.DAGTemplate{},
 	}
 
 	beforeTemplate := &v1alpha1.Template{
-		Name: stageExecution.ID.String() + "-before",
+		Name: "stage-execution-" + stageExecution.ID.String() + "-before",
 		Inputs: v1alpha1.Inputs{
 			Parameters: []v1alpha1.Parameter{
 				{
@@ -244,11 +255,11 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
 			}`,
-			SuccessCondition: "status == '200'",
+			SuccessCondition: "response.statusCode == 201",
 		},
 	}
 	afterTemplate := &v1alpha1.Template{
-		Name: stageExecution.ID.String() + "-after",
+		Name: "stage-execution-" + stageExecution.ID.String() + "-after",
 		Inputs: v1alpha1.Inputs{
 			Parameters: []v1alpha1.Parameter{
 				{
@@ -278,7 +289,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
 			}`,
-			SuccessCondition: "status == '200'",
+			SuccessCondition: "response.statusCode == 201",
 		},
 	}
 
@@ -300,17 +311,17 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 		for key, stepTemplate := range stepTemplateMap {
 			stepTemplates = append(stepTemplates, stepTemplate)
 			if key == mainTemplateKey {
-				taskName := stepTemplate.Name + "-task"
+				taskName := "step-execution-" + stepExec.ID.String() + "-task"
 				tasks = append(tasks, v1alpha1.DAGTask{
 					Name:     taskName,
 					Template: stepTemplate.Name,
 					Hooks: v1alpha1.LifecycleHooks{
 						"running": v1alpha1.LifecycleHook{
-							Template:   beforeTemplateKey,
+							Template:   stepTemplateMap[beforeTemplateKey].Name,
 							Expression: fmt.Sprintf("tasks['%s'].status==\"Running\"", taskName),
 						},
 						"finished": v1alpha1.LifecycleHook{
-							Template: afterTemplateKey,
+							Template: stepTemplateMap[afterTemplateKey].Name,
 							Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" ||"+
 								" tasks['%s'].status==\"Failed\"", taskName, taskName),
 						},
@@ -334,7 +345,7 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 	wse *model.WorkflowStepExecution,
 ) (map[string]*v1alpha1.Template, error) {
 	beforeTemplate := &v1alpha1.Template{
-		Name: wse.ID.String() + "-before",
+		Name: "step-execution-" + wse.ID.String() + "-before",
 		Inputs: v1alpha1.Inputs{
 			Parameters: []v1alpha1.Parameter{
 				{
@@ -364,11 +375,11 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
 			}`,
-			SuccessCondition: "status == '200'",
+			SuccessCondition: "response.statusCode == 200",
 		},
 	}
 	afterTemplate := &v1alpha1.Template{
-		Name: wse.ID.String() + "-after",
+		Name: "step-execution-" + wse.ID.String() + "-after",
 		Inputs: v1alpha1.Inputs{
 			Parameters: []v1alpha1.Parameter{
 				{
@@ -398,7 +409,7 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
 			}`,
-			SuccessCondition: "status == '200'",
+			SuccessCondition: "response.statusCode == 201",
 		},
 	}
 

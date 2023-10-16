@@ -35,9 +35,6 @@ func (h Handler) RouteApplyRequest(req RouteApplyRequest) (any, error) {
 	err = h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
 		return pkgworkflow.Apply(req.Context, h.modelClient, h.k8sConfig, wf)
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	return nil, nil
+	return nil, err
 }

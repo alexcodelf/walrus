@@ -163,7 +163,7 @@ func CreateWorkflowStageExecution(
 
 	entity.Edges.StepExecutions = stepExecutions
 
-	return nil, nil
+	return entity, nil
 }
 
 func CreateWorkflowStepExecution(
