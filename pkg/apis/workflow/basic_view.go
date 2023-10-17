@@ -53,7 +53,7 @@ type (
 
 type (
 	CollectionGetRequest struct {
-		model.WorkflowQueryInput `path:",inline"`
+		model.WorkflowQueryInputs `path:",inline"`
 
 		runtime.RequestCollection[
 			predicate.Workflow, workflow.OrderOption,
