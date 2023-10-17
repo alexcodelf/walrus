@@ -3,10 +3,8 @@ package workflow
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
-	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -62,28 +60,6 @@ func Apply(ctx context.Context, mc model.ClientSet, clientConfig clientcmd.Clien
 		WorkflowExecution: wfe,
 		SubjectID:         s.ID,
 	})
-}
-
-func getExitTemplate(mc model.ClientSet, wf *model.WorkflowExecution) *v1alpha1.Template {
-	return &v1alpha1.Template{
-		Name: "notify",
-		HTTP: &v1alpha1.HTTP{
-			//nolint:lll
-			URL:    "{{workflow.parameters.server}}" + "v1/projects/" + wf.ProjectID.String() + "workflow-executions/" + wf.ID.String() + "/done",
-			Method: http.MethodPost,
-			Headers: v1alpha1.HTTPHeaders{
-				{
-					Name:  "Content-Type",
-					Value: "application/json",
-				},
-				{
-					Name:  "Authorization",
-					Value: "Bearer {{workflow.parameters.token}}",
-				},
-			},
-			Body: `{"project":{"id": "{{workflow.parameters.projectID}}"}}`,
-		},
-	}
 }
 
 func CreateWorkflowExecution(

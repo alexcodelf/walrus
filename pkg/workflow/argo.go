@@ -84,10 +84,13 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 		return err
 	}
 
-	workflowTemplates := make([]v1alpha1.Template, 0, len(wfTemplates))
+	workflowTemplates := make([]v1alpha1.Template, 0, len(wfTemplates)+1)
 	for _, tpl := range wfTemplates {
 		workflowTemplates = append(workflowTemplates, *tpl)
 	}
+
+	exitHandler := getExitTemplate(opts.WorkflowExecution)
+	workflowTemplates = append(workflowTemplates, *exitHandler)
 
 	wf := &v1alpha1.Workflow{
 		ObjectMeta: metav1.ObjectMeta{
@@ -95,6 +98,7 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 		},
 		Spec: v1alpha1.WorkflowSpec{
 			Entrypoint: "entrypoint",
+			OnExit:     exitHandler.Name,
 			Arguments: v1alpha1.Arguments{
 				Parameters: []v1alpha1.Parameter{
 					{
@@ -197,11 +201,27 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 				"running": v1alpha1.LifecycleHook{
 					Template:   taskTemplateName + "-before",
 					Expression: fmt.Sprintf("tasks['%s'].status==\"Running\"", taskName),
+					Arguments: v1alpha1.Arguments{
+						Parameters: []v1alpha1.Parameter{
+							{
+								Name:  "status",
+								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
+							},
+						},
+					},
 				},
 				"finished": v1alpha1.LifecycleHook{
 					Template: taskTemplateName + "-after",
 					Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" || "+
 						"tasks['%s'].status==\"Failed\"", taskName, taskName),
+					Arguments: v1alpha1.Arguments{
+						Parameters: []v1alpha1.Parameter{
+							{
+								Name:  "status",
+								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
+							},
+						},
+					},
 				},
 			},
 		})
@@ -314,7 +334,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 		for key, stepTemplate := range stepTemplateMap {
 			stepTemplates = append(stepTemplates, stepTemplate)
 			if key == mainTemplateKey {
-				taskName := "step-execution-" + stepExec.ID.String() + "-task"
+				taskName := "step-execution-" + stepExec.ID.String()
 				tasks = append(tasks, v1alpha1.DAGTask{
 					Name:     taskName,
 					Template: stepTemplate.Name,
@@ -322,7 +342,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 						Parameters: []v1alpha1.Parameter{
 							{
 								Name:  "status",
-								Value: v1alpha1.AnyStringPtr("{{tasks['%s'].status}}"),
+								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
 							},
 						},
 					},
@@ -330,11 +350,27 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 						"running": v1alpha1.LifecycleHook{
 							Template:   stepTemplateMap[beforeTemplateKey].Name,
 							Expression: fmt.Sprintf("tasks['%s'].status==\"Running\"", taskName),
+							Arguments: v1alpha1.Arguments{
+								Parameters: []v1alpha1.Parameter{
+									{
+										Name:  "status",
+										Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
+									},
+								},
+							},
 						},
 						"finished": v1alpha1.LifecycleHook{
 							Template: stepTemplateMap[afterTemplateKey].Name,
 							Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" || "+
 								"tasks['%s'].status==\"Failed\"", taskName, taskName),
+							Arguments: v1alpha1.Arguments{
+								Parameters: []v1alpha1.Parameter{
+									{
+										Name:  "status",
+										Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
+									},
+								},
+							},
 						},
 					},
 					// TODO add dependencies.
@@ -445,4 +481,41 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 		afterTemplateKey:  afterTemplate,
 		mainTemplateKey:   serviceTemplate,
 	}, nil
+}
+
+func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
+	return &v1alpha1.Template{
+		Name: "notify",
+		Inputs: v1alpha1.Inputs{
+			Parameters: []v1alpha1.Parameter{
+				{
+					Name:  "workflowExecutionID",
+					Value: v1alpha1.AnyStringPtr(wf.ID.String()),
+				},
+			},
+		},
+		HTTP: &v1alpha1.HTTP{
+			URL: "{{workflow.parameters.server}}v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflow-executions/{{inputs.parameters.workflowExecutionID}}",
+			Method: http.MethodPut,
+			Headers: v1alpha1.HTTPHeaders{
+				{
+					Name:  "Content-Type",
+					Value: "application/json",
+				},
+				{
+					Name:  "Authorization",
+					Value: "Bearer {{workflow.parameters.token}}",
+				},
+			},
+			Body: `{
+	"project":{
+		"id": "{{workflow.parameters.projectID}}"
+	},
+	"id": "{{inputs.parameters.workflowExecutionID}}",
+	"status": {{workflow.status}},
+}
+`,
+		},
+	}
 }

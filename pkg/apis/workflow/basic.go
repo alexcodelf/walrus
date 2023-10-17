@@ -35,6 +35,25 @@ func (h Handler) Create(req CreateRequest) (CreateResponse, error) {
 	return model.ExposeWorkflow(entity), nil
 }
 
+func (h Handler) Update(req UpdateRequest) error {
+	entity := req.Model()
+
+	status.WorkflowStatusInitialized.Unknown(entity, "Workflow is initialized.")
+	entity.Status.SetSummary(status.WalkWorkflow(&entity.Status))
+
+	var err error
+	return h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
+		entity, err = tx.Workflows().Create().
+			Set(entity).
+			SaveE(req.Context, dao.WorkflowStagesEdgeSave)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
 func (h Handler) Get(req GetRequest) (GetResponse, error) {
 	entity, err := h.modelClient.Workflows().Query().
 		Where(workflow.ID(req.ID)).
