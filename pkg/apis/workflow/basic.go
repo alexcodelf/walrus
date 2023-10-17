@@ -43,7 +43,7 @@ func (h Handler) Update(req UpdateRequest) error {
 
 	var err error
 	return h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
-		entity, err = tx.Workflows().Create().
+		entity, err = tx.Workflows().UpdateOne(entity).
 			Set(entity).
 			SaveE(req.Context, dao.WorkflowStagesEdgeSave)
 		if err != nil {
