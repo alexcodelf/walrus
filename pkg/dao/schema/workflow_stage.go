@@ -63,7 +63,6 @@ func (WorkflowStage) Edges() []ent.Edge {
 		edge.To("workflow_stage_executions", WorkflowStageExecution.Type).
 			Comment("Workflow stage executions that belong to this workflow stage.").
 			Annotations(
-				entsql.OnDelete(entsql.Cascade),
 				entx.SkipIO()),
 
 		// Workflow 1-* WorkflowStages.

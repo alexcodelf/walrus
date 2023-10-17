@@ -37,6 +37,7 @@ var (
 	queryFields = []string{
 		workflowexecution.FieldID,
 		workflowexecution.FieldName,
+		workflowexecution.FieldWorkflowID,
 	}
 	getFields  = workflowexecution.WithoutFields()
 	sortFields = []string{

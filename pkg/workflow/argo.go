@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
@@ -21,10 +22,11 @@ import (
 	steptypes "github.com/seal-io/walrus/pkg/workflow/step/types"
 	"github.com/seal-io/walrus/utils/log"
 	"github.com/seal-io/walrus/utils/pointer"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
-	WorkflowFlowNamespace = "argo"
+	Namespace = "argo"
 
 	beforeTemplateKey = "before"
 	afterTemplateKey  = "after"
@@ -127,7 +129,7 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 	// Make log level.
 	log.SetLevel(log.WarnLevel)
 	_, err = s.apiClient.NewWorkflowServiceClient().CreateWorkflow(s.ctx, &workflow.WorkflowCreateRequest{
-		Namespace: WorkflowFlowNamespace,
+		Namespace: Namespace,
 		Workflow:  wf,
 	})
 	if err != nil {
@@ -517,5 +519,48 @@ func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
 }
 `,
 		},
+	}
+}
+
+type StreamLogsOptions struct {
+	workflow   string
+	podName    string
+	grep       string
+	selector   string
+	logOptions *corev1.PodLogOptions
+
+	Out io.Writer
+}
+
+func StreamWorkflowLogs(
+	ctx context.Context,
+	serviceClient workflow.WorkflowServiceClient,
+	opts StreamLogsOptions,
+) error {
+	stream, err := serviceClient.WorkflowLogs(ctx, &workflow.WorkflowLogRequest{
+		Name:       opts.workflow,
+		Namespace:  Namespace,
+		PodName:    opts.podName,
+		LogOptions: opts.logOptions,
+		Selector:   opts.selector,
+		Grep:       opts.grep,
+	})
+	if err != nil {
+		return err
+	}
+
+	for {
+		event, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		_, err = opts.Out.Write([]byte(event.Content))
+		if err != nil {
+			return err
+		}
 	}
 }

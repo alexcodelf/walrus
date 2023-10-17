@@ -985,7 +985,7 @@ var (
 				Symbol:     "workflow_stage_executions_workflow_stages_workflow_stage_executions",
 				Columns:    []*schema.Column{WorkflowStageExecutionsColumns[14]},
 				RefColumns: []*schema.Column{WorkflowStagesColumns[0]},
-				OnDelete:   schema.Cascade,
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
