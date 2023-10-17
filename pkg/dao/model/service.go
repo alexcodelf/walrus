@@ -50,6 +50,8 @@ type Service struct {
 	TemplateID object.ID `json:"template_id,omitempty"`
 	// Attributes to configure the template.
 	Attributes property.Values `json:"attributes,omitempty"`
+	// ID of the workflow step to which the service belong.
+	WorkflowStepID object.ID `json:"workflow_step_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ServiceQuery when eager-loading is set.
 	Edges        ServiceEdges `json:"edges,omitempty"`
@@ -148,7 +150,7 @@ func (*Service) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case service.FieldLabels, service.FieldAnnotations, service.FieldStatus:
 			values[i] = new([]byte)
-		case service.FieldID, service.FieldProjectID, service.FieldEnvironmentID, service.FieldTemplateID:
+		case service.FieldID, service.FieldProjectID, service.FieldEnvironmentID, service.FieldTemplateID, service.FieldWorkflowStepID:
 			values[i] = new(object.ID)
 		case service.FieldAttributes:
 			values[i] = new(property.Values)
@@ -250,6 +252,12 @@ func (s *Service) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field attributes", values[i])
 			} else if value != nil {
 				s.Attributes = *value
+			}
+		case service.FieldWorkflowStepID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field workflow_step_id", values[i])
+			} else if value != nil {
+				s.WorkflowStepID = *value
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
@@ -353,6 +361,9 @@ func (s *Service) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("attributes=")
 	builder.WriteString(fmt.Sprintf("%v", s.Attributes))
+	builder.WriteString(", ")
+	builder.WriteString("workflow_step_id=")
+	builder.WriteString(fmt.Sprintf("%v", s.WorkflowStepID))
 	builder.WriteByte(')')
 	return builder.String()
 }

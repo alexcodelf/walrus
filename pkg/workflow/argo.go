@@ -120,7 +120,7 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 	}
 
 	loglevel := log.GetLevel()
-	// make log level
+	// Make log level.
 	log.SetLevel(log.WarnLevel)
 	_, err = s.apiClient.NewWorkflowServiceClient().CreateWorkflow(s.ctx, &workflow.WorkflowCreateRequest{
 		Namespace: WorkflowFlowNamespace,
@@ -130,7 +130,7 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 		return err
 	}
 
-	// reset log level
+	// Reset log level.
 	log.SetLevel(loglevel)
 
 	return nil
@@ -234,8 +234,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 					Value: v1alpha1.AnyStringPtr(stageExecution.ID.String()),
 				},
 				{
-					Name:  "status",
-					Value: v1alpha1.AnyStringPtr("running"),
+					Name: "status",
 				},
 			},
 		},
@@ -270,8 +269,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 					Value: v1alpha1.AnyStringPtr(stageExecution.ID.String()),
 				},
 				{
-					Name:  "status",
-					Value: v1alpha1.AnyStringPtr("ready"),
+					Name: "status",
 				},
 			},
 		},
@@ -320,6 +318,14 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 				tasks = append(tasks, v1alpha1.DAGTask{
 					Name:     taskName,
 					Template: stepTemplate.Name,
+					Arguments: v1alpha1.Arguments{
+						Parameters: []v1alpha1.Parameter{
+							{
+								Name:  "status",
+								Value: v1alpha1.AnyStringPtr("{{tasks['%s'].status}}"),
+							},
+						},
+					},
 					Hooks: v1alpha1.LifecycleHooks{
 						"running": v1alpha1.LifecycleHook{
 							Template:   stepTemplateMap[beforeTemplateKey].Name,
@@ -358,8 +364,7 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 					Value: v1alpha1.AnyStringPtr(wse.ID.String()),
 				},
 				{
-					Name:  "status",
-					Value: v1alpha1.AnyStringPtr("running"),
+					Name: "status",
 				},
 			},
 		},
@@ -394,8 +399,7 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 					Value: v1alpha1.AnyStringPtr(wse.ID.String()),
 				},
 				{
-					Name:  "status",
-					Value: v1alpha1.AnyStringPtr("ready"),
+					Name: "status",
 				},
 			},
 		},

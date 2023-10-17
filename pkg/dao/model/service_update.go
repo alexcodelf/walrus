@@ -133,6 +133,26 @@ func (su *ServiceUpdate) ClearAttributes() *ServiceUpdate {
 	return su
 }
 
+// SetWorkflowStepID sets the "workflow_step_id" field.
+func (su *ServiceUpdate) SetWorkflowStepID(o object.ID) *ServiceUpdate {
+	su.mutation.SetWorkflowStepID(o)
+	return su
+}
+
+// SetNillableWorkflowStepID sets the "workflow_step_id" field if the given value is not nil.
+func (su *ServiceUpdate) SetNillableWorkflowStepID(o *object.ID) *ServiceUpdate {
+	if o != nil {
+		su.SetWorkflowStepID(*o)
+	}
+	return su
+}
+
+// ClearWorkflowStepID clears the value of the "workflow_step_id" field.
+func (su *ServiceUpdate) ClearWorkflowStepID() *ServiceUpdate {
+	su.mutation.ClearWorkflowStepID()
+	return su
+}
+
 // SetTemplate sets the "template" edge to the TemplateVersion entity.
 func (su *ServiceUpdate) SetTemplate(t *TemplateVersion) *ServiceUpdate {
 	return su.SetTemplateID(t.ID)
@@ -373,6 +393,9 @@ func (su *ServiceUpdate) Set(obj *Service) *ServiceUpdate {
 	} else {
 		su.ClearAttributes()
 	}
+	if obj.WorkflowStepID != "" {
+		su.SetWorkflowStepID(obj.WorkflowStepID)
+	}
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -435,6 +458,12 @@ func (su *ServiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if su.mutation.AttributesCleared() {
 		_spec.ClearField(service.FieldAttributes, field.TypeOther)
+	}
+	if value, ok := su.mutation.WorkflowStepID(); ok {
+		_spec.SetField(service.FieldWorkflowStepID, field.TypeString, value)
+	}
+	if su.mutation.WorkflowStepIDCleared() {
+		_spec.ClearField(service.FieldWorkflowStepID, field.TypeString)
 	}
 	if su.mutation.TemplateCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -724,6 +753,26 @@ func (suo *ServiceUpdateOne) ClearAttributes() *ServiceUpdateOne {
 	return suo
 }
 
+// SetWorkflowStepID sets the "workflow_step_id" field.
+func (suo *ServiceUpdateOne) SetWorkflowStepID(o object.ID) *ServiceUpdateOne {
+	suo.mutation.SetWorkflowStepID(o)
+	return suo
+}
+
+// SetNillableWorkflowStepID sets the "workflow_step_id" field if the given value is not nil.
+func (suo *ServiceUpdateOne) SetNillableWorkflowStepID(o *object.ID) *ServiceUpdateOne {
+	if o != nil {
+		suo.SetWorkflowStepID(*o)
+	}
+	return suo
+}
+
+// ClearWorkflowStepID clears the value of the "workflow_step_id" field.
+func (suo *ServiceUpdateOne) ClearWorkflowStepID() *ServiceUpdateOne {
+	suo.mutation.ClearWorkflowStepID()
+	return suo
+}
+
 // SetTemplate sets the "template" edge to the TemplateVersion entity.
 func (suo *ServiceUpdateOne) SetTemplate(t *TemplateVersion) *ServiceUpdateOne {
 	return suo.SetTemplateID(t.ID)
@@ -999,6 +1048,11 @@ func (suo *ServiceUpdateOne) Set(obj *Service) *ServiceUpdateOne {
 			} else {
 				suo.ClearAttributes()
 			}
+			if obj.WorkflowStepID != "" {
+				if db.WorkflowStepID != obj.WorkflowStepID {
+					suo.SetWorkflowStepID(obj.WorkflowStepID)
+				}
+			}
 
 			// With Default.
 			if (obj.UpdateTime != nil) && (!reflect.DeepEqual(db.UpdateTime, obj.UpdateTime)) {
@@ -1066,6 +1120,9 @@ func (suo *ServiceUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx context.
 		}
 		if _, set := suo.mutation.Field(service.FieldAttributes); set {
 			obj.Attributes = x.Attributes
+		}
+		if _, set := suo.mutation.Field(service.FieldWorkflowStepID); set {
+			obj.WorkflowStepID = x.WorkflowStepID
 		}
 		obj.Edges = x.Edges
 	}
@@ -1169,6 +1226,12 @@ func (suo *ServiceUpdateOne) sqlSave(ctx context.Context) (_node *Service, err e
 	}
 	if suo.mutation.AttributesCleared() {
 		_spec.ClearField(service.FieldAttributes, field.TypeOther)
+	}
+	if value, ok := suo.mutation.WorkflowStepID(); ok {
+		_spec.SetField(service.FieldWorkflowStepID, field.TypeString, value)
+	}
+	if suo.mutation.WorkflowStepIDCleared() {
+		_spec.ClearField(service.FieldWorkflowStepID, field.TypeString)
 	}
 	if suo.mutation.TemplateCleared() {
 		edge := &sqlgraph.EdgeSpec{

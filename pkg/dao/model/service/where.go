@@ -102,6 +102,11 @@ func Attributes(v property.Values) predicate.Service {
 	return predicate.Service(sql.FieldEQ(FieldAttributes, v))
 }
 
+// WorkflowStepID applies equality check predicate on the "workflow_step_id" field. It's identical to WorkflowStepIDEQ.
+func WorkflowStepID(v object.ID) predicate.Service {
+	return predicate.Service(sql.FieldEQ(FieldWorkflowStepID, v))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Service {
 	return predicate.Service(sql.FieldEQ(FieldName, v))
@@ -610,6 +615,86 @@ func AttributesIsNil() predicate.Service {
 // AttributesNotNil applies the NotNil predicate on the "attributes" field.
 func AttributesNotNil() predicate.Service {
 	return predicate.Service(sql.FieldNotNull(FieldAttributes))
+}
+
+// WorkflowStepIDEQ applies the EQ predicate on the "workflow_step_id" field.
+func WorkflowStepIDEQ(v object.ID) predicate.Service {
+	return predicate.Service(sql.FieldEQ(FieldWorkflowStepID, v))
+}
+
+// WorkflowStepIDNEQ applies the NEQ predicate on the "workflow_step_id" field.
+func WorkflowStepIDNEQ(v object.ID) predicate.Service {
+	return predicate.Service(sql.FieldNEQ(FieldWorkflowStepID, v))
+}
+
+// WorkflowStepIDIn applies the In predicate on the "workflow_step_id" field.
+func WorkflowStepIDIn(vs ...object.ID) predicate.Service {
+	return predicate.Service(sql.FieldIn(FieldWorkflowStepID, vs...))
+}
+
+// WorkflowStepIDNotIn applies the NotIn predicate on the "workflow_step_id" field.
+func WorkflowStepIDNotIn(vs ...object.ID) predicate.Service {
+	return predicate.Service(sql.FieldNotIn(FieldWorkflowStepID, vs...))
+}
+
+// WorkflowStepIDGT applies the GT predicate on the "workflow_step_id" field.
+func WorkflowStepIDGT(v object.ID) predicate.Service {
+	return predicate.Service(sql.FieldGT(FieldWorkflowStepID, v))
+}
+
+// WorkflowStepIDGTE applies the GTE predicate on the "workflow_step_id" field.
+func WorkflowStepIDGTE(v object.ID) predicate.Service {
+	return predicate.Service(sql.FieldGTE(FieldWorkflowStepID, v))
+}
+
+// WorkflowStepIDLT applies the LT predicate on the "workflow_step_id" field.
+func WorkflowStepIDLT(v object.ID) predicate.Service {
+	return predicate.Service(sql.FieldLT(FieldWorkflowStepID, v))
+}
+
+// WorkflowStepIDLTE applies the LTE predicate on the "workflow_step_id" field.
+func WorkflowStepIDLTE(v object.ID) predicate.Service {
+	return predicate.Service(sql.FieldLTE(FieldWorkflowStepID, v))
+}
+
+// WorkflowStepIDContains applies the Contains predicate on the "workflow_step_id" field.
+func WorkflowStepIDContains(v object.ID) predicate.Service {
+	vc := string(v)
+	return predicate.Service(sql.FieldContains(FieldWorkflowStepID, vc))
+}
+
+// WorkflowStepIDHasPrefix applies the HasPrefix predicate on the "workflow_step_id" field.
+func WorkflowStepIDHasPrefix(v object.ID) predicate.Service {
+	vc := string(v)
+	return predicate.Service(sql.FieldHasPrefix(FieldWorkflowStepID, vc))
+}
+
+// WorkflowStepIDHasSuffix applies the HasSuffix predicate on the "workflow_step_id" field.
+func WorkflowStepIDHasSuffix(v object.ID) predicate.Service {
+	vc := string(v)
+	return predicate.Service(sql.FieldHasSuffix(FieldWorkflowStepID, vc))
+}
+
+// WorkflowStepIDIsNil applies the IsNil predicate on the "workflow_step_id" field.
+func WorkflowStepIDIsNil() predicate.Service {
+	return predicate.Service(sql.FieldIsNull(FieldWorkflowStepID))
+}
+
+// WorkflowStepIDNotNil applies the NotNil predicate on the "workflow_step_id" field.
+func WorkflowStepIDNotNil() predicate.Service {
+	return predicate.Service(sql.FieldNotNull(FieldWorkflowStepID))
+}
+
+// WorkflowStepIDEqualFold applies the EqualFold predicate on the "workflow_step_id" field.
+func WorkflowStepIDEqualFold(v object.ID) predicate.Service {
+	vc := string(v)
+	return predicate.Service(sql.FieldEqualFold(FieldWorkflowStepID, vc))
+}
+
+// WorkflowStepIDContainsFold applies the ContainsFold predicate on the "workflow_step_id" field.
+func WorkflowStepIDContainsFold(v object.ID) predicate.Service {
+	vc := string(v)
+	return predicate.Service(sql.FieldContainsFold(FieldWorkflowStepID, vc))
 }
 
 // HasProject applies the HasEdge predicate on the "project" edge.

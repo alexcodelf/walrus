@@ -6,12 +6,16 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
 	"github.com/seal-io/walrus/utils/topic"
 )
 
 func (h Handler) Create(req CreateRequest) (CreateResponse, error) {
 	entity := req.Model()
+
+	status.WorkflowStatusInitialized.Unknown(entity, "Workflow is initialized.")
+	entity.Status.SetSummary(status.WalkWorkflow(&entity.Status))
 
 	var err error
 	err = h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {

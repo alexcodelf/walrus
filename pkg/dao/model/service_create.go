@@ -137,6 +137,20 @@ func (sc *ServiceCreate) SetAttributes(pr property.Values) *ServiceCreate {
 	return sc
 }
 
+// SetWorkflowStepID sets the "workflow_step_id" field.
+func (sc *ServiceCreate) SetWorkflowStepID(o object.ID) *ServiceCreate {
+	sc.mutation.SetWorkflowStepID(o)
+	return sc
+}
+
+// SetNillableWorkflowStepID sets the "workflow_step_id" field if the given value is not nil.
+func (sc *ServiceCreate) SetNillableWorkflowStepID(o *object.ID) *ServiceCreate {
+	if o != nil {
+		sc.SetWorkflowStepID(*o)
+	}
+	return sc
+}
+
 // SetID sets the "id" field.
 func (sc *ServiceCreate) SetID(o object.ID) *ServiceCreate {
 	sc.mutation.SetID(o)
@@ -383,6 +397,10 @@ func (sc *ServiceCreate) createSpec() (*Service, *sqlgraph.CreateSpec) {
 		_spec.SetField(service.FieldAttributes, field.TypeOther, value)
 		_node.Attributes = value
 	}
+	if value, ok := sc.mutation.WorkflowStepID(); ok {
+		_spec.SetField(service.FieldWorkflowStepID, field.TypeString, value)
+		_node.WorkflowStepID = value
+	}
 	if nodes := sc.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -538,6 +556,9 @@ func (sc *ServiceCreate) Set(obj *Service) *ServiceCreate {
 	if !reflect.ValueOf(obj.Attributes).IsZero() {
 		sc.SetAttributes(obj.Attributes)
 	}
+	if obj.WorkflowStepID != "" {
+		sc.SetWorkflowStepID(obj.WorkflowStepID)
+	}
 
 	// Record the given object.
 	sc.object = obj
@@ -606,6 +627,9 @@ func (sc *ServiceCreate) SaveE(ctx context.Context, cbs ...func(ctx context.Cont
 		}
 		if _, set := sc.mutation.Field(service.FieldAttributes); set {
 			obj.Attributes = x.Attributes
+		}
+		if _, set := sc.mutation.Field(service.FieldWorkflowStepID); set {
+			obj.WorkflowStepID = x.WorkflowStepID
 		}
 		obj.Edges = x.Edges
 	}
@@ -741,6 +765,9 @@ func (scb *ServiceCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx context
 			}
 			if _, set := scb.builders[i].mutation.Field(service.FieldAttributes); set {
 				objs[i].Attributes = x[i].Attributes
+			}
+			if _, set := scb.builders[i].mutation.Field(service.FieldWorkflowStepID); set {
+				objs[i].WorkflowStepID = x[i].WorkflowStepID
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -982,6 +1009,24 @@ func (u *ServiceUpsert) ClearAttributes() *ServiceUpsert {
 	return u
 }
 
+// SetWorkflowStepID sets the "workflow_step_id" field.
+func (u *ServiceUpsert) SetWorkflowStepID(v object.ID) *ServiceUpsert {
+	u.Set(service.FieldWorkflowStepID, v)
+	return u
+}
+
+// UpdateWorkflowStepID sets the "workflow_step_id" field to the value that was provided on create.
+func (u *ServiceUpsert) UpdateWorkflowStepID() *ServiceUpsert {
+	u.SetExcluded(service.FieldWorkflowStepID)
+	return u
+}
+
+// ClearWorkflowStepID clears the value of the "workflow_step_id" field.
+func (u *ServiceUpsert) ClearWorkflowStepID() *ServiceUpsert {
+	u.SetNull(service.FieldWorkflowStepID)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1172,6 +1217,27 @@ func (u *ServiceUpsertOne) UpdateAttributes() *ServiceUpsertOne {
 func (u *ServiceUpsertOne) ClearAttributes() *ServiceUpsertOne {
 	return u.Update(func(s *ServiceUpsert) {
 		s.ClearAttributes()
+	})
+}
+
+// SetWorkflowStepID sets the "workflow_step_id" field.
+func (u *ServiceUpsertOne) SetWorkflowStepID(v object.ID) *ServiceUpsertOne {
+	return u.Update(func(s *ServiceUpsert) {
+		s.SetWorkflowStepID(v)
+	})
+}
+
+// UpdateWorkflowStepID sets the "workflow_step_id" field to the value that was provided on create.
+func (u *ServiceUpsertOne) UpdateWorkflowStepID() *ServiceUpsertOne {
+	return u.Update(func(s *ServiceUpsert) {
+		s.UpdateWorkflowStepID()
+	})
+}
+
+// ClearWorkflowStepID clears the value of the "workflow_step_id" field.
+func (u *ServiceUpsertOne) ClearWorkflowStepID() *ServiceUpsertOne {
+	return u.Update(func(s *ServiceUpsert) {
+		s.ClearWorkflowStepID()
 	})
 }
 
@@ -1530,6 +1596,27 @@ func (u *ServiceUpsertBulk) UpdateAttributes() *ServiceUpsertBulk {
 func (u *ServiceUpsertBulk) ClearAttributes() *ServiceUpsertBulk {
 	return u.Update(func(s *ServiceUpsert) {
 		s.ClearAttributes()
+	})
+}
+
+// SetWorkflowStepID sets the "workflow_step_id" field.
+func (u *ServiceUpsertBulk) SetWorkflowStepID(v object.ID) *ServiceUpsertBulk {
+	return u.Update(func(s *ServiceUpsert) {
+		s.SetWorkflowStepID(v)
+	})
+}
+
+// UpdateWorkflowStepID sets the "workflow_step_id" field to the value that was provided on create.
+func (u *ServiceUpsertBulk) UpdateWorkflowStepID() *ServiceUpsertBulk {
+	return u.Update(func(s *ServiceUpsert) {
+		s.UpdateWorkflowStepID()
+	})
+}
+
+// ClearWorkflowStepID clears the value of the "workflow_step_id" field.
+func (u *ServiceUpsertBulk) ClearWorkflowStepID() *ServiceUpsertBulk {
+	return u.Update(func(s *ServiceUpsert) {
+		s.ClearWorkflowStepID()
 	})
 }
 

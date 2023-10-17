@@ -47,6 +47,12 @@ func (Service) Fields() []ent.Field {
 		property.ValuesField("attributes").
 			Comment("Attributes to configure the template.").
 			Optional(),
+		object.IDField("workflow_step_id").
+			Comment("ID of the workflow step to which the service belong.").
+			Optional().
+			Annotations(
+				entx.SkipIO(),
+			),
 	}
 }
 

@@ -41,6 +41,8 @@ const (
 	FieldTemplateID = "template_id"
 	// FieldAttributes holds the string denoting the attributes field in the database.
 	FieldAttributes = "attributes"
+	// FieldWorkflowStepID holds the string denoting the workflow_step_id field in the database.
+	FieldWorkflowStepID = "workflow_step_id"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeEnvironment holds the string denoting the environment edge name in mutations.
@@ -113,6 +115,7 @@ var Columns = []string{
 	FieldEnvironmentID,
 	FieldTemplateID,
 	FieldAttributes,
+	FieldWorkflowStepID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -199,6 +202,11 @@ func ByTemplateID(opts ...sql.OrderTermOption) OrderOption {
 // ByAttributes orders the results by the attributes field.
 func ByAttributes(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAttributes, opts...).ToFunc()
+}
+
+// ByWorkflowStepID orders the results by the workflow_step_id field.
+func ByWorkflowStepID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowStepID, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.

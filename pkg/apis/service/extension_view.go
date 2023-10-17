@@ -166,7 +166,8 @@ type (
 
 		model.ServiceCreateInput `path:",inline" json:",inline"`
 
-		JobType string `json:"jobType,omitempty"`
+		JobType        string    `json:"jobType,omitempty"`
+		WorkflowStepID object.ID `json:"workflowStepId"`
 	}
 )
 
@@ -174,6 +175,10 @@ func (r *CollectionRouteWorkflowExecRequest) Validate() error {
 	// TODO.
 	if err := r.ServiceCreateInput.Validate(); err != nil {
 		return err
+	}
+
+	if !r.WorkflowStepID.Valid() {
+		return errors.New("invalid workflow step ID")
 	}
 
 	return nil

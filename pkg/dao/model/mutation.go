@@ -10797,6 +10797,7 @@ type ServiceMutation struct {
 	update_time         *time.Time
 	status              *status.Status
 	attributes          *property.Values
+	workflow_step_id    *object.ID
 	clearedFields       map[string]struct{}
 	project             *object.ID
 	clearedproject      bool
@@ -11383,6 +11384,55 @@ func (m *ServiceMutation) ResetAttributes() {
 	delete(m.clearedFields, service.FieldAttributes)
 }
 
+// SetWorkflowStepID sets the "workflow_step_id" field.
+func (m *ServiceMutation) SetWorkflowStepID(o object.ID) {
+	m.workflow_step_id = &o
+}
+
+// WorkflowStepID returns the value of the "workflow_step_id" field in the mutation.
+func (m *ServiceMutation) WorkflowStepID() (r object.ID, exists bool) {
+	v := m.workflow_step_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkflowStepID returns the old "workflow_step_id" field's value of the Service entity.
+// If the Service object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServiceMutation) OldWorkflowStepID(ctx context.Context) (v object.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkflowStepID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkflowStepID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkflowStepID: %w", err)
+	}
+	return oldValue.WorkflowStepID, nil
+}
+
+// ClearWorkflowStepID clears the value of the "workflow_step_id" field.
+func (m *ServiceMutation) ClearWorkflowStepID() {
+	m.workflow_step_id = nil
+	m.clearedFields[service.FieldWorkflowStepID] = struct{}{}
+}
+
+// WorkflowStepIDCleared returns if the "workflow_step_id" field was cleared in this mutation.
+func (m *ServiceMutation) WorkflowStepIDCleared() bool {
+	_, ok := m.clearedFields[service.FieldWorkflowStepID]
+	return ok
+}
+
+// ResetWorkflowStepID resets all changes to the "workflow_step_id" field.
+func (m *ServiceMutation) ResetWorkflowStepID() {
+	m.workflow_step_id = nil
+	delete(m.clearedFields, service.FieldWorkflowStepID)
+}
+
 // ClearProject clears the "project" edge to the Project entity.
 func (m *ServiceMutation) ClearProject() {
 	m.clearedproject = true
@@ -11657,7 +11707,7 @@ func (m *ServiceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ServiceMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.name != nil {
 		fields = append(fields, service.FieldName)
 	}
@@ -11691,6 +11741,9 @@ func (m *ServiceMutation) Fields() []string {
 	if m.attributes != nil {
 		fields = append(fields, service.FieldAttributes)
 	}
+	if m.workflow_step_id != nil {
+		fields = append(fields, service.FieldWorkflowStepID)
+	}
 	return fields
 }
 
@@ -11721,6 +11774,8 @@ func (m *ServiceMutation) Field(name string) (ent.Value, bool) {
 		return m.TemplateID()
 	case service.FieldAttributes:
 		return m.Attributes()
+	case service.FieldWorkflowStepID:
+		return m.WorkflowStepID()
 	}
 	return nil, false
 }
@@ -11752,6 +11807,8 @@ func (m *ServiceMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldTemplateID(ctx)
 	case service.FieldAttributes:
 		return m.OldAttributes(ctx)
+	case service.FieldWorkflowStepID:
+		return m.OldWorkflowStepID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Service field %s", name)
 }
@@ -11838,6 +11895,13 @@ func (m *ServiceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAttributes(v)
 		return nil
+	case service.FieldWorkflowStepID:
+		v, ok := value.(object.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkflowStepID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Service field %s", name)
 }
@@ -11883,6 +11947,9 @@ func (m *ServiceMutation) ClearedFields() []string {
 	if m.FieldCleared(service.FieldAttributes) {
 		fields = append(fields, service.FieldAttributes)
 	}
+	if m.FieldCleared(service.FieldWorkflowStepID) {
+		fields = append(fields, service.FieldWorkflowStepID)
+	}
 	return fields
 }
 
@@ -11911,6 +11978,9 @@ func (m *ServiceMutation) ClearField(name string) error {
 		return nil
 	case service.FieldAttributes:
 		m.ClearAttributes()
+		return nil
+	case service.FieldWorkflowStepID:
+		m.ClearWorkflowStepID()
 		return nil
 	}
 	return fmt.Errorf("unknown Service nullable field %s", name)
@@ -11952,6 +12022,9 @@ func (m *ServiceMutation) ResetField(name string) error {
 		return nil
 	case service.FieldAttributes:
 		m.ResetAttributes()
+		return nil
+	case service.FieldWorkflowStepID:
+		m.ResetWorkflowStepID()
 		return nil
 	}
 	return fmt.Errorf("unknown Service field %s", name)

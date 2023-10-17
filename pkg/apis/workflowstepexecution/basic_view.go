@@ -1,10 +1,17 @@
 package workflowstepexecution
 
-func (h Handler) Update(req UpdateRequest) error {
-	entity := req.Model()
+import "github.com/seal-io/walrus/pkg/dao/model"
 
-	return h.modelClient.WorkflowStepExecutions().UpdateOne(entity).
-		SetRecord(req.Record).
-		SetDuration(req.Duration).
-		Exec(req.Context)
+type UpdateRequest struct {
+	model.WorkflowStepExecutionUpdateInput `path:",inline" json:",inline"`
+
+	Status string `json:"status"`
+}
+
+func (r *UpdateRequest) Validate() error {
+	if err := r.WorkflowStepExecutionUpdateInput.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }

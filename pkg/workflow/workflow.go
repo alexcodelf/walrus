@@ -9,6 +9,7 @@ import (
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -94,7 +95,7 @@ func CreateWorkflowExecution(
 
 	// TODO check if the workflow is already running.
 
-	// create workflow execution
+	// Create workflow execution.
 	progress := fmt.Sprintf("%d/%d", 0, len(wf.Edges.Stages))
 
 	workflowExecution := &model.WorkflowExecution{
@@ -104,6 +105,9 @@ func CreateWorkflowExecution(
 		Progress:   progress,
 		SubjectID:  s.ID,
 	}
+
+	status.WorkflowExecutionStatusPending.Unknown(workflowExecution, "")
+	workflowExecution.Status.SetSummary(status.WalkWorkflowExecution(&workflowExecution.Status))
 
 	entity, err := mc.WorkflowExecutions().Create().
 		Set(workflowExecution).
@@ -115,7 +119,7 @@ func CreateWorkflowExecution(
 	stageExecutions := make(model.WorkflowStageExecutions, len(wf.Edges.Stages))
 
 	for i, stage := range wf.Edges.Stages {
-		// create workflow stage execution
+		// Create workflow stage execution.
 		stageExecution, err := CreateWorkflowStageExecution(ctx, mc, stage, entity)
 		if err != nil {
 			return nil, err
@@ -142,6 +146,9 @@ func CreateWorkflowStageExecution(
 		WorkflowExecutionID: we.ID,
 	}
 
+	status.WorkflowStageStatusInitialized.Unknown(stageExec, "")
+	stageExec.Status.SetSummary(status.WalkWorkflowStageExecution(&stageExec.Status))
+
 	entity, err := mc.WorkflowStageExecutions().Create().
 		Set(stageExec).
 		Save(ctx)
@@ -152,7 +159,7 @@ func CreateWorkflowStageExecution(
 	stepExecutions := make(model.WorkflowStepExecutions, len(stage.Edges.Steps))
 
 	for i, step := range stage.Edges.Steps {
-		// create workflow step execution
+		// Create workflow step execution.
 		stepExecution, err := CreateWorkflowStepExecution(ctx, mc, step, entity)
 		if err != nil {
 			return nil, err
@@ -182,6 +189,9 @@ func CreateWorkflowStepExecution(
 		WorkflowStageExecutionID: wse.ID,
 		Spec:                     step.Spec,
 	}
+
+	status.WorkflowStepExecutionStatusPending.Unknown(stepExec, "")
+	stepExec.Status.SetSummary(status.WalkWorkflowStepExecution(&stepExec.Status))
 
 	return mc.WorkflowStepExecutions().Create().
 		Set(stepExec).

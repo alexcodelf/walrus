@@ -8,6 +8,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
+	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
 
 func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *model.Workflow) error {
@@ -32,6 +33,9 @@ func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *mod
 		}
 		newItems[i].WorkflowID = entity.ID
 		newItems[i].ProjectID = entity.ProjectID
+
+		status.WorkflowStageStatusInitialized.Unknown(newItems[i], "Workflow stage is initialized.")
+		newItems[i].Status.SetSummary(status.WalkWorkflowStage(&newItems[i].Status))
 
 		steps[i] = newItems[i].Edges.Steps
 	}
@@ -94,6 +98,9 @@ func WorkflowStageStepsEdgeSave(ctx context.Context, mc model.ClientSet, entity 
 		newItems[i].StageID = entity.ID
 		newItems[i].ProjectID = entity.ProjectID
 		newItems[i].WorkflowID = entity.WorkflowID
+
+		status.WorkflowStageStatusInitialized.Unknown(newItems[i], "Workflow step is initialized.")
+		newItems[i].Status.SetSummary(status.WalkWorkflowStep(&newItems[i].Status))
 	}
 
 	newItems, err = mc.WorkflowSteps().CreateBulk().

@@ -486,7 +486,6 @@ func (h Handler) CollectionRouteWorkflowExec(req CollectionRouteWorkflowExecRequ
 			service.EnvironmentID(req.Environment.ID),
 		).
 		Only(req.Context)
-
 	if err != nil && !model.IsNotFound(err) {
 		return nil, err
 	}
@@ -501,6 +500,7 @@ func (h Handler) CollectionRouteWorkflowExec(req CollectionRouteWorkflowExecRequ
 		// If the service does not exist, create it.
 		if entity == nil {
 			entity = req.Model()
+			entity.WorkflowStepID = req.WorkflowStepID
 
 			status.ServiceStatusDeployed.Unknown(entity, "")
 			entity.Status.SetSummary(status.WalkService(&entity.Status))
@@ -518,6 +518,7 @@ func (h Handler) CollectionRouteWorkflowExec(req CollectionRouteWorkflowExecRequ
 	if err != nil {
 		return nil, err
 	}
+
 	rm := pkgrevision.NewRevisionManager(h.modelClient)
 	revisionOpts := pkgrevision.CreateOptions{
 		ServiceID: entity.ID,
@@ -547,7 +548,6 @@ func (h Handler) CollectionRouteWorkflowExec(req CollectionRouteWorkflowExecRequ
 		}
 
 		// TODO (alex) update revision status.
-
 		// Save the input plan configs.
 		revision, err = h.modelClient.ServiceRevisions().UpdateOne(revision).
 			SetInputPlanConfigs(inputPlanConfigs).
