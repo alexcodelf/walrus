@@ -67,7 +67,7 @@ type WorkflowExecutionEdges struct {
 	// Project to which the workflow execution belongs.
 	Project *Project `json:"project,omitempty"`
 	// Workflow stage executions that belong to this workflow execution.
-	WorkflowStageExecutions []*WorkflowStageExecution `json:"workflow_stage_executions,omitempty"`
+	StageExecutions []*WorkflowStageExecution `json:"stage_executions,omitempty"`
 	// Workflow that this workflow execution belongs to.
 	Workflow *Workflow `json:"workflow,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -88,13 +88,13 @@ func (e WorkflowExecutionEdges) ProjectOrErr() (*Project, error) {
 	return nil, &NotLoadedError{edge: "project"}
 }
 
-// WorkflowStageExecutionsOrErr returns the WorkflowStageExecutions value or an error if the edge
+// StageExecutionsOrErr returns the StageExecutions value or an error if the edge
 // was not loaded in eager-loading.
-func (e WorkflowExecutionEdges) WorkflowStageExecutionsOrErr() ([]*WorkflowStageExecution, error) {
+func (e WorkflowExecutionEdges) StageExecutionsOrErr() ([]*WorkflowStageExecution, error) {
 	if e.loadedTypes[1] {
-		return e.WorkflowStageExecutions, nil
+		return e.StageExecutions, nil
 	}
-	return nil, &NotLoadedError{edge: "workflow_stage_executions"}
+	return nil, &NotLoadedError{edge: "stage_executions"}
 }
 
 // WorkflowOrErr returns the Workflow value or an error if the edge
@@ -264,9 +264,9 @@ func (we *WorkflowExecution) QueryProject() *ProjectQuery {
 	return NewWorkflowExecutionClient(we.config).QueryProject(we)
 }
 
-// QueryWorkflowStageExecutions queries the "workflow_stage_executions" edge of the WorkflowExecution entity.
-func (we *WorkflowExecution) QueryWorkflowStageExecutions() *WorkflowStageExecutionQuery {
-	return NewWorkflowExecutionClient(we.config).QueryWorkflowStageExecutions(we)
+// QueryStageExecutions queries the "stage_executions" edge of the WorkflowExecution entity.
+func (we *WorkflowExecution) QueryStageExecutions() *WorkflowStageExecutionQuery {
+	return NewWorkflowExecutionClient(we.config).QueryStageExecutions(we)
 }
 
 // QueryWorkflow queries the "workflow" edge of the WorkflowExecution entity.

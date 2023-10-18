@@ -1045,12 +1045,12 @@ func HasProjectWith(preds ...predicate.Project) predicate.WorkflowStepExecution 
 	})
 }
 
-// HasWorkflowStep applies the HasEdge predicate on the "workflow_step" edge.
-func HasWorkflowStep() predicate.WorkflowStepExecution {
+// HasStep applies the HasEdge predicate on the "step" edge.
+func HasStep() predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, WorkflowStepTable, WorkflowStepColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, StepTable, StepColumn),
 		)
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.WorkflowStep
@@ -1059,10 +1059,10 @@ func HasWorkflowStep() predicate.WorkflowStepExecution {
 	})
 }
 
-// HasWorkflowStepWith applies the HasEdge predicate on the "workflow_step" edge with a given conditions (other predicates).
-func HasWorkflowStepWith(preds ...predicate.WorkflowStep) predicate.WorkflowStepExecution {
+// HasStepWith applies the HasEdge predicate on the "step" edge with a given conditions (other predicates).
+func HasStepWith(preds ...predicate.WorkflowStep) predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(func(s *sql.Selector) {
-		step := newWorkflowStepStep()
+		step := newStepStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.WorkflowStep
 		step.Edge.Schema = schemaConfig.WorkflowStepExecution

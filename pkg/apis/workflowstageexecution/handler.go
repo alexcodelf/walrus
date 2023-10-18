@@ -27,6 +27,7 @@ func (h Handler) SubResourceHandlers() []runtime.IResourceHandler {
 	return []runtime.IResourceHandler{
 		runtime.Alias(
 			workflowstepexecution.Handle(h.modelClient, h.k8sConfig),
-			"StepExecution"),
+			"StepExecution",
+		),
 	}
 }

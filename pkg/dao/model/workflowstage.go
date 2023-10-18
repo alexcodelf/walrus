@@ -61,7 +61,7 @@ type WorkflowStageEdges struct {
 	// Workflow steps that belong to this workflow stage.
 	Steps []*WorkflowStep `json:"steps,omitempty"`
 	// Workflow stage executions that belong to this workflow stage.
-	WorkflowStageExecutions []*WorkflowStageExecution `json:"workflow_stage_executions,omitempty"`
+	Executions []*WorkflowStageExecution `json:"executions,omitempty"`
 	// Workflow that this workflow stage belongs to.
 	Workflow *Workflow `json:"workflow,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -91,13 +91,13 @@ func (e WorkflowStageEdges) StepsOrErr() ([]*WorkflowStep, error) {
 	return nil, &NotLoadedError{edge: "steps"}
 }
 
-// WorkflowStageExecutionsOrErr returns the WorkflowStageExecutions value or an error if the edge
+// ExecutionsOrErr returns the Executions value or an error if the edge
 // was not loaded in eager-loading.
-func (e WorkflowStageEdges) WorkflowStageExecutionsOrErr() ([]*WorkflowStageExecution, error) {
+func (e WorkflowStageEdges) ExecutionsOrErr() ([]*WorkflowStageExecution, error) {
 	if e.loadedTypes[2] {
-		return e.WorkflowStageExecutions, nil
+		return e.Executions, nil
 	}
-	return nil, &NotLoadedError{edge: "workflow_stage_executions"}
+	return nil, &NotLoadedError{edge: "executions"}
 }
 
 // WorkflowOrErr returns the Workflow value or an error if the edge
@@ -248,9 +248,9 @@ func (ws *WorkflowStage) QuerySteps() *WorkflowStepQuery {
 	return NewWorkflowStageClient(ws.config).QuerySteps(ws)
 }
 
-// QueryWorkflowStageExecutions queries the "workflow_stage_executions" edge of the WorkflowStage entity.
-func (ws *WorkflowStage) QueryWorkflowStageExecutions() *WorkflowStageExecutionQuery {
-	return NewWorkflowStageClient(ws.config).QueryWorkflowStageExecutions(ws)
+// QueryExecutions queries the "executions" edge of the WorkflowStage entity.
+func (ws *WorkflowStage) QueryExecutions() *WorkflowStageExecutionQuery {
+	return NewWorkflowStageClient(ws.config).QueryExecutions(ws)
 }
 
 // QueryWorkflow queries the "workflow" edge of the WorkflowStage entity.

@@ -976,13 +976,13 @@ var (
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "workflow_stage_executions_workflow_executions_workflow_stage_executions",
+				Symbol:     "workflow_stage_executions_workflow_executions_stage_executions",
 				Columns:    []*schema.Column{WorkflowStageExecutionsColumns[13]},
 				RefColumns: []*schema.Column{WorkflowExecutionsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "workflow_stage_executions_workflow_stages_workflow_stage_executions",
+				Symbol:     "workflow_stage_executions_workflow_stages_executions",
 				Columns:    []*schema.Column{WorkflowStageExecutionsColumns[14]},
 				RefColumns: []*schema.Column{WorkflowStagesColumns[0]},
 				OnDelete:   schema.NoAction,

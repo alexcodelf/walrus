@@ -218,9 +218,15 @@ func (wsec *WorkflowStepExecutionCreate) SetProject(p *Project) *WorkflowStepExe
 	return wsec.SetProjectID(p.ID)
 }
 
-// SetWorkflowStep sets the "workflow_step" edge to the WorkflowStep entity.
-func (wsec *WorkflowStepExecutionCreate) SetWorkflowStep(w *WorkflowStep) *WorkflowStepExecutionCreate {
-	return wsec.SetWorkflowStepID(w.ID)
+// SetStepID sets the "step" edge to the WorkflowStep entity by ID.
+func (wsec *WorkflowStepExecutionCreate) SetStepID(id object.ID) *WorkflowStepExecutionCreate {
+	wsec.mutation.SetStepID(id)
+	return wsec
+}
+
+// SetStep sets the "step" edge to the WorkflowStep entity.
+func (wsec *WorkflowStepExecutionCreate) SetStep(w *WorkflowStep) *WorkflowStepExecutionCreate {
+	return wsec.SetStepID(w.ID)
 }
 
 // SetStageExecutionID sets the "stage_execution" edge to the WorkflowStageExecution entity by ID.
@@ -386,8 +392,8 @@ func (wsec *WorkflowStepExecutionCreate) check() error {
 	if _, ok := wsec.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowStepExecution.project"`)}
 	}
-	if _, ok := wsec.mutation.WorkflowStepID(); !ok {
-		return &ValidationError{Name: "workflow_step", err: errors.New(`model: missing required edge "WorkflowStepExecution.workflow_step"`)}
+	if _, ok := wsec.mutation.StepID(); !ok {
+		return &ValidationError{Name: "step", err: errors.New(`model: missing required edge "WorkflowStepExecution.step"`)}
 	}
 	if _, ok := wsec.mutation.StageExecutionID(); !ok {
 		return &ValidationError{Name: "stage_execution", err: errors.New(`model: missing required edge "WorkflowStepExecution.stage_execution"`)}
@@ -507,12 +513,12 @@ func (wsec *WorkflowStepExecutionCreate) createSpec() (*WorkflowStepExecution, *
 		_node.ProjectID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := wsec.mutation.WorkflowStepIDs(); len(nodes) > 0 {
+	if nodes := wsec.mutation.StepIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   workflowstepexecution.WorkflowStepTable,
-			Columns: []string{workflowstepexecution.WorkflowStepColumn},
+			Table:   workflowstepexecution.StepTable,
+			Columns: []string{workflowstepexecution.StepColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstep.FieldID, field.TypeString),

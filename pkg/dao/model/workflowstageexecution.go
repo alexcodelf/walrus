@@ -70,7 +70,7 @@ type WorkflowStageExecutionEdges struct {
 	// Workflow stage that this workflow stage execution belongs to.
 	Stage *WorkflowStage `json:"stage,omitempty"`
 	// Workflow execution that this workflow stage execution belongs to.
-	WorkflowExecution *WorkflowExecution `json:"workflow_execution,omitempty"`
+	Execution *WorkflowExecution `json:"execution,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [4]bool
@@ -111,17 +111,17 @@ func (e WorkflowStageExecutionEdges) StageOrErr() (*WorkflowStage, error) {
 	return nil, &NotLoadedError{edge: "stage"}
 }
 
-// WorkflowExecutionOrErr returns the WorkflowExecution value or an error if the edge
+// ExecutionOrErr returns the Execution value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e WorkflowStageExecutionEdges) WorkflowExecutionOrErr() (*WorkflowExecution, error) {
+func (e WorkflowStageExecutionEdges) ExecutionOrErr() (*WorkflowExecution, error) {
 	if e.loadedTypes[3] {
-		if e.WorkflowExecution == nil {
+		if e.Execution == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflowexecution.Label}
 		}
-		return e.WorkflowExecution, nil
+		return e.Execution, nil
 	}
-	return nil, &NotLoadedError{edge: "workflow_execution"}
+	return nil, &NotLoadedError{edge: "execution"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -282,9 +282,9 @@ func (wse *WorkflowStageExecution) QueryStage() *WorkflowStageQuery {
 	return NewWorkflowStageExecutionClient(wse.config).QueryStage(wse)
 }
 
-// QueryWorkflowExecution queries the "workflow_execution" edge of the WorkflowStageExecution entity.
-func (wse *WorkflowStageExecution) QueryWorkflowExecution() *WorkflowExecutionQuery {
-	return NewWorkflowStageExecutionClient(wse.config).QueryWorkflowExecution(wse)
+// QueryExecution queries the "execution" edge of the WorkflowStageExecution entity.
+func (wse *WorkflowStageExecution) QueryExecution() *WorkflowExecutionQuery {
+	return NewWorkflowStageExecutionClient(wse.config).QueryExecution(wse)
 }
 
 // Update returns a builder for updating this WorkflowStageExecution.

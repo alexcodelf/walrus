@@ -12,7 +12,7 @@ import (
 func (h Handler) Get(req GetRequest) (GetResponse, error) {
 	entity, err := h.modelClient.WorkflowExecutions().Query().
 		Where(workflowexecution.ID(req.ID)).
-		WithWorkflowStageExecutions(func(wsgq *model.WorkflowStageExecutionQuery) {
+		WithStageExecutions(func(wsgq *model.WorkflowStageExecutionQuery) {
 			wsgq.WithStepExecutions()
 		}).
 		Only(req.Context)

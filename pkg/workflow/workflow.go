@@ -106,7 +106,7 @@ func CreateWorkflowExecution(
 		stageExecutions[i] = stageExecution
 	}
 
-	entity.Edges.WorkflowStageExecutions = stageExecutions
+	entity.Edges.StageExecutions = stageExecutions
 
 	return entity, nil
 }

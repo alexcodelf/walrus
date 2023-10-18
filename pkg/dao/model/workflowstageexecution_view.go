@@ -24,8 +24,10 @@ type WorkflowStageExecutionCreateInput struct {
 
 	// Project indicates to create WorkflowStageExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// WorkflowExecution indicates to create WorkflowStageExecution entity MUST under the WorkflowExecution route.
-	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to create WorkflowStageExecution entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
+	// Execution indicates to create WorkflowStageExecution entity MUST under the Execution route.
+	Execution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
@@ -41,6 +43,9 @@ type WorkflowStageExecutionCreateInput struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+
+	// StepExecutions specifies full inserting the new WorkflowStepExecution entities of the WorkflowStageExecution entity.
+	StepExecutions []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"stepExecutions,omitempty"`
 }
 
 // Model returns the WorkflowStageExecution entity for creating,
@@ -63,10 +68,24 @@ func (wseci *WorkflowStageExecutionCreateInput) Model() *WorkflowStageExecution 
 	if wseci.Project != nil {
 		_wse.ProjectID = wseci.Project.ID
 	}
-	if wseci.WorkflowExecution != nil {
-		_wse.WorkflowExecutionID = wseci.WorkflowExecution.ID
+	if wseci.Stage != nil {
+		_wse.StageID = wseci.Stage.ID
+	}
+	if wseci.Execution != nil {
+		_wse.WorkflowExecutionID = wseci.Execution.ID
 	}
 
+	if wseci.StepExecutions != nil {
+		// Empty slice is used for clearing the edge.
+		_wse.Edges.StepExecutions = make([]*WorkflowStepExecution, 0, len(wseci.StepExecutions))
+	}
+	for j := range wseci.StepExecutions {
+		if wseci.StepExecutions[j] == nil {
+			continue
+		}
+		_wse.Edges.StepExecutions = append(_wse.Edges.StepExecutions,
+			wseci.StepExecutions[j].Model())
+	}
 	return _wse
 }
 
@@ -95,10 +114,30 @@ func (wseci *WorkflowStageExecutionCreateInput) ValidateWith(ctx context.Context
 			return err
 		}
 	}
-	// Validate when creating under the WorkflowExecution route.
-	if wseci.WorkflowExecution != nil {
-		if err := wseci.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+	// Validate when creating under the Stage route.
+	if wseci.Stage != nil {
+		if err := wseci.Stage.ValidateWith(ctx, cs, cache); err != nil {
 			return err
+		}
+	}
+	// Validate when creating under the Execution route.
+	if wseci.Execution != nil {
+		if err := wseci.Execution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
+	for i := range wseci.StepExecutions {
+		if wseci.StepExecutions[i] == nil {
+			continue
+		}
+
+		if err := wseci.StepExecutions[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.StepExecutions[i] = nil
+			}
 		}
 	}
 
@@ -121,6 +160,9 @@ type WorkflowStageExecutionCreateInputsItem struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+
+	// StepExecutions specifies full inserting the new WorkflowStepExecution entities.
+	StepExecutions []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"stepExecutions,omitempty"`
 }
 
 // ValidateWith checks the WorkflowStageExecutionCreateInputsItem entity with the given context and client set.
@@ -133,6 +175,20 @@ func (wseci *WorkflowStageExecutionCreateInputsItem) ValidateWith(ctx context.Co
 		cache = map[string]any{}
 	}
 
+	for i := range wseci.StepExecutions {
+		if wseci.StepExecutions[i] == nil {
+			continue
+		}
+
+		if err := wseci.StepExecutions[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.StepExecutions[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -143,8 +199,10 @@ type WorkflowStageExecutionCreateInputs struct {
 
 	// Project indicates to create WorkflowStageExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// WorkflowExecution indicates to create WorkflowStageExecution entity MUST under the WorkflowExecution route.
-	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to create WorkflowStageExecution entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
+	// Execution indicates to create WorkflowStageExecution entity MUST under the Execution route.
+	Execution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStageExecutionCreateInputsItem `path:"-" query:"-" json:"items"`
@@ -173,8 +231,23 @@ func (wseci *WorkflowStageExecutionCreateInputs) Model() []*WorkflowStageExecuti
 		if wseci.Project != nil {
 			_wse.ProjectID = wseci.Project.ID
 		}
-		if wseci.WorkflowExecution != nil {
-			_wse.WorkflowExecutionID = wseci.WorkflowExecution.ID
+		if wseci.Stage != nil {
+			_wse.StageID = wseci.Stage.ID
+		}
+		if wseci.Execution != nil {
+			_wse.WorkflowExecutionID = wseci.Execution.ID
+		}
+
+		if wseci.Items[i].StepExecutions != nil {
+			// Empty slice is used for clearing the edge.
+			_wse.Edges.StepExecutions = make([]*WorkflowStepExecution, 0, len(wseci.Items[i].StepExecutions))
+		}
+		for j := range wseci.Items[i].StepExecutions {
+			if wseci.Items[i].StepExecutions[j] == nil {
+				continue
+			}
+			_wse.Edges.StepExecutions = append(_wse.Edges.StepExecutions,
+				wseci.Items[i].StepExecutions[j].Model())
 		}
 
 		_wses[i] = _wse
@@ -216,13 +289,23 @@ func (wseci *WorkflowStageExecutionCreateInputs) ValidateWith(ctx context.Contex
 			}
 		}
 	}
-	// Validate when creating under the WorkflowExecution route.
-	if wseci.WorkflowExecution != nil {
-		if err := wseci.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+	// Validate when creating under the Stage route.
+	if wseci.Stage != nil {
+		if err := wseci.Stage.ValidateWith(ctx, cs, cache); err != nil {
 			if !IsBlankResourceReferError(err) {
 				return err
 			} else {
-				wseci.WorkflowExecution = nil
+				wseci.Stage = nil
+			}
+		}
+	}
+	// Validate when creating under the Execution route.
+	if wseci.Execution != nil {
+		if err := wseci.Execution.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.Execution = nil
 			}
 		}
 	}
@@ -259,8 +342,10 @@ type WorkflowStageExecutionDeleteInputs struct {
 
 	// Project indicates to delete WorkflowStageExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// WorkflowExecution indicates to delete WorkflowStageExecution entity MUST under the WorkflowExecution route.
-	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to delete WorkflowStageExecution entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
+	// Execution indicates to delete WorkflowStageExecution entity MUST under the Execution route.
+	Execution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStageExecutionDeleteInputsItem `path:"-" query:"-" json:"items"`
@@ -332,13 +417,23 @@ func (wsedi *WorkflowStageExecutionDeleteInputs) ValidateWith(ctx context.Contex
 		}
 	}
 
-	// Validate when deleting under the WorkflowExecution route.
-	if wsedi.WorkflowExecution != nil {
-		if err := wsedi.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+	// Validate when deleting under the Stage route.
+	if wsedi.Stage != nil {
+		if err := wsedi.Stage.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		} else {
 			q.Where(
-				workflowstageexecution.WorkflowExecutionID(wsedi.WorkflowExecution.ID))
+				workflowstageexecution.StageID(wsedi.Stage.ID))
+		}
+	}
+
+	// Validate when deleting under the Execution route.
+	if wsedi.Execution != nil {
+		if err := wsedi.Execution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstageexecution.WorkflowExecutionID(wsedi.Execution.ID))
 		}
 	}
 
@@ -380,8 +475,10 @@ type WorkflowStageExecutionQueryInput struct {
 
 	// Project indicates to query WorkflowStageExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
-	// WorkflowExecution indicates to query WorkflowStageExecution entity MUST under the WorkflowExecution route.
-	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"workflowExecution"`
+	// Stage indicates to query WorkflowStageExecution entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"stage"`
+	// Execution indicates to query WorkflowStageExecution entity MUST under the Execution route.
+	Execution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"execution"`
 
 	// Refer holds the route path reference of the WorkflowStageExecution entity.
 	Refer *object.Refer `path:"workflowstageexecution,default=" query:"-" json:"-"`
@@ -437,13 +534,23 @@ func (wseqi *WorkflowStageExecutionQueryInput) ValidateWith(ctx context.Context,
 		}
 	}
 
-	// Validate when querying under the WorkflowExecution route.
-	if wseqi.WorkflowExecution != nil {
-		if err := wseqi.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+	// Validate when querying under the Stage route.
+	if wseqi.Stage != nil {
+		if err := wseqi.Stage.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		} else {
 			q.Where(
-				workflowstageexecution.WorkflowExecutionID(wseqi.WorkflowExecution.ID))
+				workflowstageexecution.StageID(wseqi.Stage.ID))
+		}
+	}
+
+	// Validate when querying under the Execution route.
+	if wseqi.Execution != nil {
+		if err := wseqi.Execution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstageexecution.WorkflowExecutionID(wseqi.Execution.ID))
 		}
 	}
 
@@ -495,8 +602,10 @@ type WorkflowStageExecutionQueryInputs struct {
 
 	// Project indicates to query WorkflowStageExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// WorkflowExecution indicates to query WorkflowStageExecution entity MUST under the WorkflowExecution route.
-	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to query WorkflowStageExecution entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
+	// Execution indicates to query WorkflowStageExecution entity MUST under the Execution route.
+	Execution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 }
 
 // Validate checks the WorkflowStageExecutionQueryInputs entity.
@@ -525,9 +634,16 @@ func (wseqi *WorkflowStageExecutionQueryInputs) ValidateWith(ctx context.Context
 		}
 	}
 
-	// Validate when querying under the WorkflowExecution route.
-	if wseqi.WorkflowExecution != nil {
-		if err := wseqi.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+	// Validate when querying under the Stage route.
+	if wseqi.Stage != nil {
+		if err := wseqi.Stage.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
+	// Validate when querying under the Execution route.
+	if wseqi.Execution != nil {
+		if err := wseqi.Execution.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
 	}
@@ -552,6 +668,9 @@ type WorkflowStageExecutionUpdateInput struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+
+	// StepExecutions indicates replacing the stale WorkflowStepExecution entities.
+	StepExecutions []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"stepExecutions,omitempty"`
 }
 
 // Model returns the WorkflowStageExecution entity for modifying,
@@ -571,6 +690,17 @@ func (wseui *WorkflowStageExecutionUpdateInput) Model() *WorkflowStageExecution 
 		Input:            wseui.Input,
 	}
 
+	if wseui.StepExecutions != nil {
+		// Empty slice is used for clearing the edge.
+		_wse.Edges.StepExecutions = make([]*WorkflowStepExecution, 0, len(wseui.StepExecutions))
+	}
+	for j := range wseui.StepExecutions {
+		if wseui.StepExecutions[j] == nil {
+			continue
+		}
+		_wse.Edges.StepExecutions = append(_wse.Edges.StepExecutions,
+			wseui.StepExecutions[j].Model())
+	}
 	return _wse
 }
 
@@ -593,6 +723,20 @@ func (wseui *WorkflowStageExecutionUpdateInput) ValidateWith(ctx context.Context
 		return err
 	}
 
+	for i := range wseui.StepExecutions {
+		if wseui.StepExecutions[i] == nil {
+			continue
+		}
+
+		if err := wseui.StepExecutions[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseui.StepExecutions[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -613,6 +757,9 @@ type WorkflowStageExecutionUpdateInputsItem struct {
 	Record string `path:"-" query:"-" json:"record"`
 	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
 	Input string `path:"-" query:"-" json:"input"`
+
+	// StepExecutions indicates replacing the stale WorkflowStepExecution entities.
+	StepExecutions []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"stepExecutions,omitempty"`
 }
 
 // ValidateWith checks the WorkflowStageExecutionUpdateInputsItem entity with the given context and client set.
@@ -625,6 +772,20 @@ func (wseui *WorkflowStageExecutionUpdateInputsItem) ValidateWith(ctx context.Co
 		cache = map[string]any{}
 	}
 
+	for i := range wseui.StepExecutions {
+		if wseui.StepExecutions[i] == nil {
+			continue
+		}
+
+		if err := wseui.StepExecutions[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseui.StepExecutions[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -635,8 +796,10 @@ type WorkflowStageExecutionUpdateInputs struct {
 
 	// Project indicates to update WorkflowStageExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
-	// WorkflowExecution indicates to update WorkflowStageExecution entity MUST under the WorkflowExecution route.
-	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to update WorkflowStageExecution entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
+	// Execution indicates to update WorkflowStageExecution entity MUST under the Execution route.
+	Execution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStageExecutionUpdateInputsItem `path:"-" query:"-" json:"items"`
@@ -660,6 +823,18 @@ func (wseui *WorkflowStageExecutionUpdateInputs) Model() []*WorkflowStageExecuti
 			StepExecutionIds: wseui.Items[i].StepExecutionIds,
 			Record:           wseui.Items[i].Record,
 			Input:            wseui.Items[i].Input,
+		}
+
+		if wseui.Items[i].StepExecutions != nil {
+			// Empty slice is used for clearing the edge.
+			_wse.Edges.StepExecutions = make([]*WorkflowStepExecution, 0, len(wseui.Items[i].StepExecutions))
+		}
+		for j := range wseui.Items[i].StepExecutions {
+			if wseui.Items[i].StepExecutions[j] == nil {
+				continue
+			}
+			_wse.Edges.StepExecutions = append(_wse.Edges.StepExecutions,
+				wseui.Items[i].StepExecutions[j].Model())
 		}
 
 		_wses[i] = _wse
@@ -718,13 +893,23 @@ func (wseui *WorkflowStageExecutionUpdateInputs) ValidateWith(ctx context.Contex
 		}
 	}
 
-	// Validate when updating under the WorkflowExecution route.
-	if wseui.WorkflowExecution != nil {
-		if err := wseui.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+	// Validate when updating under the Stage route.
+	if wseui.Stage != nil {
+		if err := wseui.Stage.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		} else {
 			q.Where(
-				workflowstageexecution.WorkflowExecutionID(wseui.WorkflowExecution.ID))
+				workflowstageexecution.StageID(wseui.Stage.ID))
+		}
+	}
+
+	// Validate when updating under the Execution route.
+	if wseui.Execution != nil {
+		if err := wseui.Execution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstageexecution.WorkflowExecutionID(wseui.Execution.ID))
 		}
 	}
 
@@ -779,8 +964,10 @@ type WorkflowStageExecutionOutput struct {
 	Record           string            `json:"record,omitempty"`
 	Input            string            `json:"input,omitempty"`
 
-	Project           *ProjectOutput           `json:"project,omitempty"`
-	WorkflowExecution *WorkflowExecutionOutput `json:"workflowExecution,omitempty"`
+	Project        *ProjectOutput                 `json:"project,omitempty"`
+	StepExecutions []*WorkflowStepExecutionOutput `json:"stepExecutions,omitempty"`
+	Stage          *WorkflowStageOutput           `json:"stage,omitempty"`
+	Execution      *WorkflowExecutionOutput       `json:"execution,omitempty"`
 }
 
 // View returns the output of WorkflowStageExecution entity.
@@ -820,10 +1007,20 @@ func ExposeWorkflowStageExecution(_wse *WorkflowStageExecution) *WorkflowStageEx
 			ID: _wse.ProjectID,
 		}
 	}
-	if _wse.Edges.WorkflowExecution != nil {
-		wseo.WorkflowExecution = ExposeWorkflowExecution(_wse.Edges.WorkflowExecution)
+	if _wse.Edges.StepExecutions != nil {
+		wseo.StepExecutions = ExposeWorkflowStepExecutions(_wse.Edges.StepExecutions)
+	}
+	if _wse.Edges.Stage != nil {
+		wseo.Stage = ExposeWorkflowStage(_wse.Edges.Stage)
+	} else if _wse.StageID != "" {
+		wseo.Stage = &WorkflowStageOutput{
+			ID: _wse.StageID,
+		}
+	}
+	if _wse.Edges.Execution != nil {
+		wseo.Execution = ExposeWorkflowExecution(_wse.Edges.Execution)
 	} else if _wse.WorkflowExecutionID != "" {
-		wseo.WorkflowExecution = &WorkflowExecutionOutput{
+		wseo.Execution = &WorkflowExecutionOutput{
 			ID: _wse.WorkflowExecutionID,
 		}
 	}

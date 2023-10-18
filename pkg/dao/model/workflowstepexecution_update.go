@@ -253,8 +253,8 @@ func (wseu *WorkflowStepExecutionUpdate) check() error {
 	if _, ok := wseu.mutation.ProjectID(); wseu.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.project"`)
 	}
-	if _, ok := wseu.mutation.WorkflowStepID(); wseu.mutation.WorkflowStepCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.workflow_step"`)
+	if _, ok := wseu.mutation.StepID(); wseu.mutation.StepCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.step"`)
 	}
 	if _, ok := wseu.mutation.StageExecutionID(); wseu.mutation.StageExecutionCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.stage_execution"`)
@@ -653,8 +653,8 @@ func (wseuo *WorkflowStepExecutionUpdateOne) check() error {
 	if _, ok := wseuo.mutation.ProjectID(); wseuo.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.project"`)
 	}
-	if _, ok := wseuo.mutation.WorkflowStepID(); wseuo.mutation.WorkflowStepCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.workflow_step"`)
+	if _, ok := wseuo.mutation.StepID(); wseuo.mutation.StepCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.step"`)
 	}
 	if _, ok := wseuo.mutation.StageExecutionID(); wseuo.mutation.StageExecutionCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.stage_execution"`)

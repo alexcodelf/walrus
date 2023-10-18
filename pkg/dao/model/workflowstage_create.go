@@ -160,19 +160,19 @@ func (wsc *WorkflowStageCreate) AddSteps(w ...*WorkflowStep) *WorkflowStageCreat
 	return wsc.AddStepIDs(ids...)
 }
 
-// AddWorkflowStageExecutionIDs adds the "workflow_stage_executions" edge to the WorkflowStageExecution entity by IDs.
-func (wsc *WorkflowStageCreate) AddWorkflowStageExecutionIDs(ids ...object.ID) *WorkflowStageCreate {
-	wsc.mutation.AddWorkflowStageExecutionIDs(ids...)
+// AddExecutionIDs adds the "executions" edge to the WorkflowStageExecution entity by IDs.
+func (wsc *WorkflowStageCreate) AddExecutionIDs(ids ...object.ID) *WorkflowStageCreate {
+	wsc.mutation.AddExecutionIDs(ids...)
 	return wsc
 }
 
-// AddWorkflowStageExecutions adds the "workflow_stage_executions" edges to the WorkflowStageExecution entity.
-func (wsc *WorkflowStageCreate) AddWorkflowStageExecutions(w ...*WorkflowStageExecution) *WorkflowStageCreate {
+// AddExecutions adds the "executions" edges to the WorkflowStageExecution entity.
+func (wsc *WorkflowStageCreate) AddExecutions(w ...*WorkflowStageExecution) *WorkflowStageCreate {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return wsc.AddWorkflowStageExecutionIDs(ids...)
+	return wsc.AddExecutionIDs(ids...)
 }
 
 // SetWorkflow sets the "workflow" edge to the Workflow entity.
@@ -402,12 +402,12 @@ func (wsc *WorkflowStageCreate) createSpec() (*WorkflowStage, *sqlgraph.CreateSp
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := wsc.mutation.WorkflowStageExecutionsIDs(); len(nodes) > 0 {
+	if nodes := wsc.mutation.ExecutionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowstage.WorkflowStageExecutionsTable,
-			Columns: []string{workflowstage.WorkflowStageExecutionsColumn},
+			Table:   workflowstage.ExecutionsTable,
+			Columns: []string{workflowstage.ExecutionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),

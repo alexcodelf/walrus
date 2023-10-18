@@ -53,8 +53,8 @@ const (
 	FieldInput = "input"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
-	// EdgeWorkflowStageExecutions holds the string denoting the workflow_stage_executions edge name in mutations.
-	EdgeWorkflowStageExecutions = "workflow_stage_executions"
+	// EdgeStageExecutions holds the string denoting the stage_executions edge name in mutations.
+	EdgeStageExecutions = "stage_executions"
 	// EdgeWorkflow holds the string denoting the workflow edge name in mutations.
 	EdgeWorkflow = "workflow"
 	// Table holds the table name of the workflowexecution in the database.
@@ -66,13 +66,13 @@ const (
 	ProjectInverseTable = "projects"
 	// ProjectColumn is the table column denoting the project relation/edge.
 	ProjectColumn = "project_id"
-	// WorkflowStageExecutionsTable is the table that holds the workflow_stage_executions relation/edge.
-	WorkflowStageExecutionsTable = "workflow_stage_executions"
-	// WorkflowStageExecutionsInverseTable is the table name for the WorkflowStageExecution entity.
+	// StageExecutionsTable is the table that holds the stage_executions relation/edge.
+	StageExecutionsTable = "workflow_stage_executions"
+	// StageExecutionsInverseTable is the table name for the WorkflowStageExecution entity.
 	// It exists in this package in order to avoid circular dependency with the "workflowstageexecution" package.
-	WorkflowStageExecutionsInverseTable = "workflow_stage_executions"
-	// WorkflowStageExecutionsColumn is the table column denoting the workflow_stage_executions relation/edge.
-	WorkflowStageExecutionsColumn = "workflow_execution_id"
+	StageExecutionsInverseTable = "workflow_stage_executions"
+	// StageExecutionsColumn is the table column denoting the stage_executions relation/edge.
+	StageExecutionsColumn = "workflow_execution_id"
 	// WorkflowTable is the table that holds the workflow relation/edge.
 	WorkflowTable = "workflow_executions"
 	// WorkflowInverseTable is the table name for the Workflow entity.
@@ -218,17 +218,17 @@ func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByWorkflowStageExecutionsCount orders the results by workflow_stage_executions count.
-func ByWorkflowStageExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByStageExecutionsCount orders the results by stage_executions count.
+func ByStageExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newWorkflowStageExecutionsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newStageExecutionsStep(), opts...)
 	}
 }
 
-// ByWorkflowStageExecutions orders the results by workflow_stage_executions terms.
-func ByWorkflowStageExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByStageExecutions orders the results by stage_executions terms.
+func ByStageExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newWorkflowStageExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newStageExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -245,11 +245,11 @@ func newProjectStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
 	)
 }
-func newWorkflowStageExecutionsStep() *sqlgraph.Step {
+func newStageExecutionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(WorkflowStageExecutionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowStageExecutionsTable, WorkflowStageExecutionsColumn),
+		sqlgraph.To(StageExecutionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, StageExecutionsTable, StageExecutionsColumn),
 	)
 }
 func newWorkflowStep() *sqlgraph.Step {

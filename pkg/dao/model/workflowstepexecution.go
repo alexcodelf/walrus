@@ -74,7 +74,7 @@ type WorkflowStepExecutionEdges struct {
 	// Project to which the workflow step execution belongs.
 	Project *Project `json:"project,omitempty"`
 	// Workflow step that this workflow step execution belongs to.
-	WorkflowStep *WorkflowStep `json:"workflow_step,omitempty"`
+	Step *WorkflowStep `json:"step,omitempty"`
 	// Workflow stage execution that this workflow step execution belongs to.
 	StageExecution *WorkflowStageExecution `json:"stage_execution,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -95,17 +95,17 @@ func (e WorkflowStepExecutionEdges) ProjectOrErr() (*Project, error) {
 	return nil, &NotLoadedError{edge: "project"}
 }
 
-// WorkflowStepOrErr returns the WorkflowStep value or an error if the edge
+// StepOrErr returns the Step value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e WorkflowStepExecutionEdges) WorkflowStepOrErr() (*WorkflowStep, error) {
+func (e WorkflowStepExecutionEdges) StepOrErr() (*WorkflowStep, error) {
 	if e.loadedTypes[1] {
-		if e.WorkflowStep == nil {
+		if e.Step == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflowstep.Label}
 		}
-		return e.WorkflowStep, nil
+		return e.Step, nil
 	}
-	return nil, &NotLoadedError{edge: "workflow_step"}
+	return nil, &NotLoadedError{edge: "step"}
 }
 
 // StageExecutionOrErr returns the StageExecution value or an error if the edge
@@ -293,9 +293,9 @@ func (wse *WorkflowStepExecution) QueryProject() *ProjectQuery {
 	return NewWorkflowStepExecutionClient(wse.config).QueryProject(wse)
 }
 
-// QueryWorkflowStep queries the "workflow_step" edge of the WorkflowStepExecution entity.
-func (wse *WorkflowStepExecution) QueryWorkflowStep() *WorkflowStepQuery {
-	return NewWorkflowStepExecutionClient(wse.config).QueryWorkflowStep(wse)
+// QueryStep queries the "step" edge of the WorkflowStepExecution entity.
+func (wse *WorkflowStepExecution) QueryStep() *WorkflowStepQuery {
+	return NewWorkflowStepExecutionClient(wse.config).QueryStep(wse)
 }
 
 // QueryStageExecution queries the "stage_execution" edge of the WorkflowStepExecution entity.

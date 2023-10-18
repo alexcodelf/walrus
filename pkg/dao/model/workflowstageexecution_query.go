@@ -29,15 +29,15 @@ import (
 // WorkflowStageExecutionQuery is the builder for querying WorkflowStageExecution entities.
 type WorkflowStageExecutionQuery struct {
 	config
-	ctx                   *QueryContext
-	order                 []workflowstageexecution.OrderOption
-	inters                []Interceptor
-	predicates            []predicate.WorkflowStageExecution
-	withProject           *ProjectQuery
-	withStepExecutions    *WorkflowStepExecutionQuery
-	withStage             *WorkflowStageQuery
-	withWorkflowExecution *WorkflowExecutionQuery
-	modifiers             []func(*sql.Selector)
+	ctx                *QueryContext
+	order              []workflowstageexecution.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.WorkflowStageExecution
+	withProject        *ProjectQuery
+	withStepExecutions *WorkflowStepExecutionQuery
+	withStage          *WorkflowStageQuery
+	withExecution      *WorkflowExecutionQuery
+	modifiers          []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -149,8 +149,8 @@ func (wseq *WorkflowStageExecutionQuery) QueryStage() *WorkflowStageQuery {
 	return query
 }
 
-// QueryWorkflowExecution chains the current query on the "workflow_execution" edge.
-func (wseq *WorkflowStageExecutionQuery) QueryWorkflowExecution() *WorkflowExecutionQuery {
+// QueryExecution chains the current query on the "execution" edge.
+func (wseq *WorkflowStageExecutionQuery) QueryExecution() *WorkflowExecutionQuery {
 	query := (&WorkflowExecutionClient{config: wseq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := wseq.prepareQuery(ctx); err != nil {
@@ -163,7 +163,7 @@ func (wseq *WorkflowStageExecutionQuery) QueryWorkflowExecution() *WorkflowExecu
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflowstageexecution.Table, workflowstageexecution.FieldID, selector),
 			sqlgraph.To(workflowexecution.Table, workflowexecution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, workflowstageexecution.WorkflowExecutionTable, workflowstageexecution.WorkflowExecutionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstageexecution.ExecutionTable, workflowstageexecution.ExecutionColumn),
 		)
 		schemaConfig := wseq.schemaConfig
 		step.To.Schema = schemaConfig.WorkflowExecution
@@ -361,15 +361,15 @@ func (wseq *WorkflowStageExecutionQuery) Clone() *WorkflowStageExecutionQuery {
 		return nil
 	}
 	return &WorkflowStageExecutionQuery{
-		config:                wseq.config,
-		ctx:                   wseq.ctx.Clone(),
-		order:                 append([]workflowstageexecution.OrderOption{}, wseq.order...),
-		inters:                append([]Interceptor{}, wseq.inters...),
-		predicates:            append([]predicate.WorkflowStageExecution{}, wseq.predicates...),
-		withProject:           wseq.withProject.Clone(),
-		withStepExecutions:    wseq.withStepExecutions.Clone(),
-		withStage:             wseq.withStage.Clone(),
-		withWorkflowExecution: wseq.withWorkflowExecution.Clone(),
+		config:             wseq.config,
+		ctx:                wseq.ctx.Clone(),
+		order:              append([]workflowstageexecution.OrderOption{}, wseq.order...),
+		inters:             append([]Interceptor{}, wseq.inters...),
+		predicates:         append([]predicate.WorkflowStageExecution{}, wseq.predicates...),
+		withProject:        wseq.withProject.Clone(),
+		withStepExecutions: wseq.withStepExecutions.Clone(),
+		withStage:          wseq.withStage.Clone(),
+		withExecution:      wseq.withExecution.Clone(),
 		// clone intermediate query.
 		sql:  wseq.sql.Clone(),
 		path: wseq.path,
@@ -409,14 +409,14 @@ func (wseq *WorkflowStageExecutionQuery) WithStage(opts ...func(*WorkflowStageQu
 	return wseq
 }
 
-// WithWorkflowExecution tells the query-builder to eager-load the nodes that are connected to
-// the "workflow_execution" edge. The optional arguments are used to configure the query builder of the edge.
-func (wseq *WorkflowStageExecutionQuery) WithWorkflowExecution(opts ...func(*WorkflowExecutionQuery)) *WorkflowStageExecutionQuery {
+// WithExecution tells the query-builder to eager-load the nodes that are connected to
+// the "execution" edge. The optional arguments are used to configure the query builder of the edge.
+func (wseq *WorkflowStageExecutionQuery) WithExecution(opts ...func(*WorkflowExecutionQuery)) *WorkflowStageExecutionQuery {
 	query := (&WorkflowExecutionClient{config: wseq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	wseq.withWorkflowExecution = query
+	wseq.withExecution = query
 	return wseq
 }
 
@@ -502,7 +502,7 @@ func (wseq *WorkflowStageExecutionQuery) sqlAll(ctx context.Context, hooks ...qu
 			wseq.withProject != nil,
 			wseq.withStepExecutions != nil,
 			wseq.withStage != nil,
-			wseq.withWorkflowExecution != nil,
+			wseq.withExecution != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -549,9 +549,9 @@ func (wseq *WorkflowStageExecutionQuery) sqlAll(ctx context.Context, hooks ...qu
 			return nil, err
 		}
 	}
-	if query := wseq.withWorkflowExecution; query != nil {
-		if err := wseq.loadWorkflowExecution(ctx, query, nodes, nil,
-			func(n *WorkflowStageExecution, e *WorkflowExecution) { n.Edges.WorkflowExecution = e }); err != nil {
+	if query := wseq.withExecution; query != nil {
+		if err := wseq.loadExecution(ctx, query, nodes, nil,
+			func(n *WorkflowStageExecution, e *WorkflowExecution) { n.Edges.Execution = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -646,7 +646,7 @@ func (wseq *WorkflowStageExecutionQuery) loadStage(ctx context.Context, query *W
 	}
 	return nil
 }
-func (wseq *WorkflowStageExecutionQuery) loadWorkflowExecution(ctx context.Context, query *WorkflowExecutionQuery, nodes []*WorkflowStageExecution, init func(*WorkflowStageExecution), assign func(*WorkflowStageExecution, *WorkflowExecution)) error {
+func (wseq *WorkflowStageExecutionQuery) loadExecution(ctx context.Context, query *WorkflowExecutionQuery, nodes []*WorkflowStageExecution, init func(*WorkflowStageExecution), assign func(*WorkflowStageExecution, *WorkflowExecution)) error {
 	ids := make([]object.ID, 0, len(nodes))
 	nodeids := make(map[object.ID][]*WorkflowStageExecution)
 	for i := range nodes {
@@ -712,7 +712,7 @@ func (wseq *WorkflowStageExecutionQuery) querySpec() *sqlgraph.QuerySpec {
 		if wseq.withStage != nil {
 			_spec.Node.AddColumnOnce(workflowstageexecution.FieldStageID)
 		}
-		if wseq.withWorkflowExecution != nil {
+		if wseq.withExecution != nil {
 			_spec.Node.AddColumnOnce(workflowstageexecution.FieldWorkflowExecutionID)
 		}
 	}

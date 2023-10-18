@@ -79,7 +79,7 @@ func (WorkflowStepExecution) Edges() []ent.Edge {
 			Annotations(
 				entx.ValidateContext(intercept.WithProjectInterceptor)),
 		// WorkflowStep 1-* WorkflowStepExecutions.
-		edge.From("workflow_step", WorkflowStep.Type).
+		edge.From("step", WorkflowStep.Type).
 			Ref("executions").
 			Field("workflow_step_id").
 			Comment("Workflow step that this workflow step execution belongs to.").

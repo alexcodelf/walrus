@@ -192,19 +192,19 @@ func (wec *WorkflowExecutionCreate) SetProject(p *Project) *WorkflowExecutionCre
 	return wec.SetProjectID(p.ID)
 }
 
-// AddWorkflowStageExecutionIDs adds the "workflow_stage_executions" edge to the WorkflowStageExecution entity by IDs.
-func (wec *WorkflowExecutionCreate) AddWorkflowStageExecutionIDs(ids ...object.ID) *WorkflowExecutionCreate {
-	wec.mutation.AddWorkflowStageExecutionIDs(ids...)
+// AddStageExecutionIDs adds the "stage_executions" edge to the WorkflowStageExecution entity by IDs.
+func (wec *WorkflowExecutionCreate) AddStageExecutionIDs(ids ...object.ID) *WorkflowExecutionCreate {
+	wec.mutation.AddStageExecutionIDs(ids...)
 	return wec
 }
 
-// AddWorkflowStageExecutions adds the "workflow_stage_executions" edges to the WorkflowStageExecution entity.
-func (wec *WorkflowExecutionCreate) AddWorkflowStageExecutions(w ...*WorkflowStageExecution) *WorkflowExecutionCreate {
+// AddStageExecutions adds the "stage_executions" edges to the WorkflowStageExecution entity.
+func (wec *WorkflowExecutionCreate) AddStageExecutions(w ...*WorkflowStageExecution) *WorkflowExecutionCreate {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return wec.AddWorkflowStageExecutionIDs(ids...)
+	return wec.AddStageExecutionIDs(ids...)
 }
 
 // SetWorkflow sets the "workflow" edge to the Workflow entity.
@@ -458,12 +458,12 @@ func (wec *WorkflowExecutionCreate) createSpec() (*WorkflowExecution, *sqlgraph.
 		_node.ProjectID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := wec.mutation.WorkflowStageExecutionsIDs(); len(nodes) > 0 {
+	if nodes := wec.mutation.StageExecutionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowexecution.WorkflowStageExecutionsTable,
-			Columns: []string{workflowexecution.WorkflowStageExecutionsColumn},
+			Table:   workflowexecution.StageExecutionsTable,
+			Columns: []string{workflowexecution.StageExecutionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),

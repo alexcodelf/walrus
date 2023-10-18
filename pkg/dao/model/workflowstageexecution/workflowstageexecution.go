@@ -55,8 +55,8 @@ const (
 	EdgeStepExecutions = "step_executions"
 	// EdgeStage holds the string denoting the stage edge name in mutations.
 	EdgeStage = "stage"
-	// EdgeWorkflowExecution holds the string denoting the workflow_execution edge name in mutations.
-	EdgeWorkflowExecution = "workflow_execution"
+	// EdgeExecution holds the string denoting the execution edge name in mutations.
+	EdgeExecution = "execution"
 	// Table holds the table name of the workflowstageexecution in the database.
 	Table = "workflow_stage_executions"
 	// ProjectTable is the table that holds the project relation/edge.
@@ -80,13 +80,13 @@ const (
 	StageInverseTable = "workflow_stages"
 	// StageColumn is the table column denoting the stage relation/edge.
 	StageColumn = "stage_id"
-	// WorkflowExecutionTable is the table that holds the workflow_execution relation/edge.
-	WorkflowExecutionTable = "workflow_stage_executions"
-	// WorkflowExecutionInverseTable is the table name for the WorkflowExecution entity.
+	// ExecutionTable is the table that holds the execution relation/edge.
+	ExecutionTable = "workflow_stage_executions"
+	// ExecutionInverseTable is the table name for the WorkflowExecution entity.
 	// It exists in this package in order to avoid circular dependency with the "workflowexecution" package.
-	WorkflowExecutionInverseTable = "workflow_executions"
-	// WorkflowExecutionColumn is the table column denoting the workflow_execution relation/edge.
-	WorkflowExecutionColumn = "workflow_execution_id"
+	ExecutionInverseTable = "workflow_executions"
+	// ExecutionColumn is the table column denoting the execution relation/edge.
+	ExecutionColumn = "workflow_execution_id"
 )
 
 // Columns holds all SQL columns for workflowstageexecution fields.
@@ -238,10 +238,10 @@ func ByStageField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByWorkflowExecutionField orders the results by workflow_execution field.
-func ByWorkflowExecutionField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByExecutionField orders the results by execution field.
+func ByExecutionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newWorkflowExecutionStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newExecutionStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newProjectStep() *sqlgraph.Step {
@@ -265,11 +265,11 @@ func newStageStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, StageTable, StageColumn),
 	)
 }
-func newWorkflowExecutionStep() *sqlgraph.Step {
+func newExecutionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(WorkflowExecutionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, WorkflowExecutionTable, WorkflowExecutionColumn),
+		sqlgraph.To(ExecutionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ExecutionTable, ExecutionColumn),
 	)
 }
 

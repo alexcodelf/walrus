@@ -25,6 +25,9 @@ func (Handler) Kind() string {
 
 func (h Handler) SubResourceHandlers() []runtime.IResourceHandler {
 	return []runtime.IResourceHandler{
-		workflowstep.Handle(h.modelClient),
+		runtime.Alias(
+			workflowstep.Handle(h.modelClient),
+			"Step",
+		),
 	}
 }

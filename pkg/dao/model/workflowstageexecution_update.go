@@ -269,8 +269,8 @@ func (wseu *WorkflowStageExecutionUpdate) check() error {
 	if _, ok := wseu.mutation.StageID(); wseu.mutation.StageCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.stage"`)
 	}
-	if _, ok := wseu.mutation.WorkflowExecutionID(); wseu.mutation.WorkflowExecutionCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.workflow_execution"`)
+	if _, ok := wseu.mutation.ExecutionID(); wseu.mutation.ExecutionCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.execution"`)
 	}
 	return nil
 }
@@ -718,8 +718,8 @@ func (wseuo *WorkflowStageExecutionUpdateOne) check() error {
 	if _, ok := wseuo.mutation.StageID(); wseuo.mutation.StageCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.stage"`)
 	}
-	if _, ok := wseuo.mutation.WorkflowExecutionID(); wseuo.mutation.WorkflowExecutionCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.workflow_execution"`)
+	if _, ok := wseuo.mutation.ExecutionID(); wseuo.mutation.ExecutionCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.execution"`)
 	}
 	return nil
 }

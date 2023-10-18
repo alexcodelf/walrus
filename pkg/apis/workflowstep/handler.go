@@ -1,6 +1,8 @@
 package workflowstep
 
-import "github.com/seal-io/walrus/pkg/dao/model"
+import (
+	"github.com/seal-io/walrus/pkg/dao/model"
+)
 
 type Handler struct {
 	modelClient model.ClientSet
