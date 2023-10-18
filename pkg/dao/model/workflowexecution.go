@@ -67,7 +67,7 @@ type WorkflowExecutionEdges struct {
 	// Project to which the workflow execution belongs.
 	Project *Project `json:"project,omitempty"`
 	// Workflow stage executions that belong to this workflow execution.
-	StageExecutions []*WorkflowStageExecution `json:"stage_executions,omitempty"`
+	Stages []*WorkflowStageExecution `json:"stages,omitempty"`
 	// Workflow that this workflow execution belongs to.
 	Workflow *Workflow `json:"workflow,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -88,13 +88,13 @@ func (e WorkflowExecutionEdges) ProjectOrErr() (*Project, error) {
 	return nil, &NotLoadedError{edge: "project"}
 }
 
-// StageExecutionsOrErr returns the StageExecutions value or an error if the edge
+// StagesOrErr returns the Stages value or an error if the edge
 // was not loaded in eager-loading.
-func (e WorkflowExecutionEdges) StageExecutionsOrErr() ([]*WorkflowStageExecution, error) {
+func (e WorkflowExecutionEdges) StagesOrErr() ([]*WorkflowStageExecution, error) {
 	if e.loadedTypes[1] {
-		return e.StageExecutions, nil
+		return e.Stages, nil
 	}
-	return nil, &NotLoadedError{edge: "stage_executions"}
+	return nil, &NotLoadedError{edge: "stages"}
 }
 
 // WorkflowOrErr returns the Workflow value or an error if the edge
@@ -264,9 +264,9 @@ func (we *WorkflowExecution) QueryProject() *ProjectQuery {
 	return NewWorkflowExecutionClient(we.config).QueryProject(we)
 }
 
-// QueryStageExecutions queries the "stage_executions" edge of the WorkflowExecution entity.
-func (we *WorkflowExecution) QueryStageExecutions() *WorkflowStageExecutionQuery {
-	return NewWorkflowExecutionClient(we.config).QueryStageExecutions(we)
+// QueryStages queries the "stages" edge of the WorkflowExecution entity.
+func (we *WorkflowExecution) QueryStages() *WorkflowStageExecutionQuery {
+	return NewWorkflowExecutionClient(we.config).QueryStages(we)
 }
 
 // QueryWorkflow queries the "workflow" edge of the WorkflowExecution entity.

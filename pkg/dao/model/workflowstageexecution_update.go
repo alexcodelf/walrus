@@ -173,19 +173,19 @@ func (wseu *WorkflowStageExecutionUpdate) SetNillableInput(s *string) *WorkflowS
 	return wseu
 }
 
-// AddStepExecutionIDs adds the "step_executions" edge to the WorkflowStepExecution entity by IDs.
-func (wseu *WorkflowStageExecutionUpdate) AddStepExecutionIDs(ids ...object.ID) *WorkflowStageExecutionUpdate {
-	wseu.mutation.AddStepExecutionIDs(ids...)
+// AddStepIDs adds the "steps" edge to the WorkflowStepExecution entity by IDs.
+func (wseu *WorkflowStageExecutionUpdate) AddStepIDs(ids ...object.ID) *WorkflowStageExecutionUpdate {
+	wseu.mutation.AddStepIDs(ids...)
 	return wseu
 }
 
-// AddStepExecutions adds the "step_executions" edges to the WorkflowStepExecution entity.
-func (wseu *WorkflowStageExecutionUpdate) AddStepExecutions(w ...*WorkflowStepExecution) *WorkflowStageExecutionUpdate {
+// AddSteps adds the "steps" edges to the WorkflowStepExecution entity.
+func (wseu *WorkflowStageExecutionUpdate) AddSteps(w ...*WorkflowStepExecution) *WorkflowStageExecutionUpdate {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return wseu.AddStepExecutionIDs(ids...)
+	return wseu.AddStepIDs(ids...)
 }
 
 // Mutation returns the WorkflowStageExecutionMutation object of the builder.
@@ -193,25 +193,25 @@ func (wseu *WorkflowStageExecutionUpdate) Mutation() *WorkflowStageExecutionMuta
 	return wseu.mutation
 }
 
-// ClearStepExecutions clears all "step_executions" edges to the WorkflowStepExecution entity.
-func (wseu *WorkflowStageExecutionUpdate) ClearStepExecutions() *WorkflowStageExecutionUpdate {
-	wseu.mutation.ClearStepExecutions()
+// ClearSteps clears all "steps" edges to the WorkflowStepExecution entity.
+func (wseu *WorkflowStageExecutionUpdate) ClearSteps() *WorkflowStageExecutionUpdate {
+	wseu.mutation.ClearSteps()
 	return wseu
 }
 
-// RemoveStepExecutionIDs removes the "step_executions" edge to WorkflowStepExecution entities by IDs.
-func (wseu *WorkflowStageExecutionUpdate) RemoveStepExecutionIDs(ids ...object.ID) *WorkflowStageExecutionUpdate {
-	wseu.mutation.RemoveStepExecutionIDs(ids...)
+// RemoveStepIDs removes the "steps" edge to WorkflowStepExecution entities by IDs.
+func (wseu *WorkflowStageExecutionUpdate) RemoveStepIDs(ids ...object.ID) *WorkflowStageExecutionUpdate {
+	wseu.mutation.RemoveStepIDs(ids...)
 	return wseu
 }
 
-// RemoveStepExecutions removes "step_executions" edges to WorkflowStepExecution entities.
-func (wseu *WorkflowStageExecutionUpdate) RemoveStepExecutions(w ...*WorkflowStepExecution) *WorkflowStageExecutionUpdate {
+// RemoveSteps removes "steps" edges to WorkflowStepExecution entities.
+func (wseu *WorkflowStageExecutionUpdate) RemoveSteps(w ...*WorkflowStepExecution) *WorkflowStageExecutionUpdate {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return wseu.RemoveStepExecutionIDs(ids...)
+	return wseu.RemoveStepIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -269,8 +269,8 @@ func (wseu *WorkflowStageExecutionUpdate) check() error {
 	if _, ok := wseu.mutation.StageID(); wseu.mutation.StageCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.stage"`)
 	}
-	if _, ok := wseu.mutation.ExecutionID(); wseu.mutation.ExecutionCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.execution"`)
+	if _, ok := wseu.mutation.WorkflowExecutionID(); wseu.mutation.WorkflowExecutionCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.workflow_execution"`)
 	}
 	return nil
 }
@@ -405,12 +405,12 @@ func (wseu *WorkflowStageExecutionUpdate) sqlSave(ctx context.Context) (n int, e
 	if value, ok := wseu.mutation.Input(); ok {
 		_spec.SetField(workflowstageexecution.FieldInput, field.TypeString, value)
 	}
-	if wseu.mutation.StepExecutionsCleared() {
+	if wseu.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowstageexecution.StepExecutionsTable,
-			Columns: []string{workflowstageexecution.StepExecutionsColumn},
+			Table:   workflowstageexecution.StepsTable,
+			Columns: []string{workflowstageexecution.StepsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstepexecution.FieldID, field.TypeString),
@@ -419,12 +419,12 @@ func (wseu *WorkflowStageExecutionUpdate) sqlSave(ctx context.Context) (n int, e
 		edge.Schema = wseu.schemaConfig.WorkflowStepExecution
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wseu.mutation.RemovedStepExecutionsIDs(); len(nodes) > 0 && !wseu.mutation.StepExecutionsCleared() {
+	if nodes := wseu.mutation.RemovedStepsIDs(); len(nodes) > 0 && !wseu.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowstageexecution.StepExecutionsTable,
-			Columns: []string{workflowstageexecution.StepExecutionsColumn},
+			Table:   workflowstageexecution.StepsTable,
+			Columns: []string{workflowstageexecution.StepsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstepexecution.FieldID, field.TypeString),
@@ -436,12 +436,12 @@ func (wseu *WorkflowStageExecutionUpdate) sqlSave(ctx context.Context) (n int, e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wseu.mutation.StepExecutionsIDs(); len(nodes) > 0 {
+	if nodes := wseu.mutation.StepsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowstageexecution.StepExecutionsTable,
-			Columns: []string{workflowstageexecution.StepExecutionsColumn},
+			Table:   workflowstageexecution.StepsTable,
+			Columns: []string{workflowstageexecution.StepsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstepexecution.FieldID, field.TypeString),
@@ -609,19 +609,19 @@ func (wseuo *WorkflowStageExecutionUpdateOne) SetNillableInput(s *string) *Workf
 	return wseuo
 }
 
-// AddStepExecutionIDs adds the "step_executions" edge to the WorkflowStepExecution entity by IDs.
-func (wseuo *WorkflowStageExecutionUpdateOne) AddStepExecutionIDs(ids ...object.ID) *WorkflowStageExecutionUpdateOne {
-	wseuo.mutation.AddStepExecutionIDs(ids...)
+// AddStepIDs adds the "steps" edge to the WorkflowStepExecution entity by IDs.
+func (wseuo *WorkflowStageExecutionUpdateOne) AddStepIDs(ids ...object.ID) *WorkflowStageExecutionUpdateOne {
+	wseuo.mutation.AddStepIDs(ids...)
 	return wseuo
 }
 
-// AddStepExecutions adds the "step_executions" edges to the WorkflowStepExecution entity.
-func (wseuo *WorkflowStageExecutionUpdateOne) AddStepExecutions(w ...*WorkflowStepExecution) *WorkflowStageExecutionUpdateOne {
+// AddSteps adds the "steps" edges to the WorkflowStepExecution entity.
+func (wseuo *WorkflowStageExecutionUpdateOne) AddSteps(w ...*WorkflowStepExecution) *WorkflowStageExecutionUpdateOne {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return wseuo.AddStepExecutionIDs(ids...)
+	return wseuo.AddStepIDs(ids...)
 }
 
 // Mutation returns the WorkflowStageExecutionMutation object of the builder.
@@ -629,25 +629,25 @@ func (wseuo *WorkflowStageExecutionUpdateOne) Mutation() *WorkflowStageExecution
 	return wseuo.mutation
 }
 
-// ClearStepExecutions clears all "step_executions" edges to the WorkflowStepExecution entity.
-func (wseuo *WorkflowStageExecutionUpdateOne) ClearStepExecutions() *WorkflowStageExecutionUpdateOne {
-	wseuo.mutation.ClearStepExecutions()
+// ClearSteps clears all "steps" edges to the WorkflowStepExecution entity.
+func (wseuo *WorkflowStageExecutionUpdateOne) ClearSteps() *WorkflowStageExecutionUpdateOne {
+	wseuo.mutation.ClearSteps()
 	return wseuo
 }
 
-// RemoveStepExecutionIDs removes the "step_executions" edge to WorkflowStepExecution entities by IDs.
-func (wseuo *WorkflowStageExecutionUpdateOne) RemoveStepExecutionIDs(ids ...object.ID) *WorkflowStageExecutionUpdateOne {
-	wseuo.mutation.RemoveStepExecutionIDs(ids...)
+// RemoveStepIDs removes the "steps" edge to WorkflowStepExecution entities by IDs.
+func (wseuo *WorkflowStageExecutionUpdateOne) RemoveStepIDs(ids ...object.ID) *WorkflowStageExecutionUpdateOne {
+	wseuo.mutation.RemoveStepIDs(ids...)
 	return wseuo
 }
 
-// RemoveStepExecutions removes "step_executions" edges to WorkflowStepExecution entities.
-func (wseuo *WorkflowStageExecutionUpdateOne) RemoveStepExecutions(w ...*WorkflowStepExecution) *WorkflowStageExecutionUpdateOne {
+// RemoveSteps removes "steps" edges to WorkflowStepExecution entities.
+func (wseuo *WorkflowStageExecutionUpdateOne) RemoveSteps(w ...*WorkflowStepExecution) *WorkflowStageExecutionUpdateOne {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return wseuo.RemoveStepExecutionIDs(ids...)
+	return wseuo.RemoveStepIDs(ids...)
 }
 
 // Where appends a list predicates to the WorkflowStageExecutionUpdate builder.
@@ -718,8 +718,8 @@ func (wseuo *WorkflowStageExecutionUpdateOne) check() error {
 	if _, ok := wseuo.mutation.StageID(); wseuo.mutation.StageCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.stage"`)
 	}
-	if _, ok := wseuo.mutation.ExecutionID(); wseuo.mutation.ExecutionCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.execution"`)
+	if _, ok := wseuo.mutation.WorkflowExecutionID(); wseuo.mutation.WorkflowExecutionCleared() && !ok {
+		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.workflow_execution"`)
 	}
 	return nil
 }
@@ -994,12 +994,12 @@ func (wseuo *WorkflowStageExecutionUpdateOne) sqlSave(ctx context.Context) (_nod
 	if value, ok := wseuo.mutation.Input(); ok {
 		_spec.SetField(workflowstageexecution.FieldInput, field.TypeString, value)
 	}
-	if wseuo.mutation.StepExecutionsCleared() {
+	if wseuo.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowstageexecution.StepExecutionsTable,
-			Columns: []string{workflowstageexecution.StepExecutionsColumn},
+			Table:   workflowstageexecution.StepsTable,
+			Columns: []string{workflowstageexecution.StepsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstepexecution.FieldID, field.TypeString),
@@ -1008,12 +1008,12 @@ func (wseuo *WorkflowStageExecutionUpdateOne) sqlSave(ctx context.Context) (_nod
 		edge.Schema = wseuo.schemaConfig.WorkflowStepExecution
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wseuo.mutation.RemovedStepExecutionsIDs(); len(nodes) > 0 && !wseuo.mutation.StepExecutionsCleared() {
+	if nodes := wseuo.mutation.RemovedStepsIDs(); len(nodes) > 0 && !wseuo.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowstageexecution.StepExecutionsTable,
-			Columns: []string{workflowstageexecution.StepExecutionsColumn},
+			Table:   workflowstageexecution.StepsTable,
+			Columns: []string{workflowstageexecution.StepsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstepexecution.FieldID, field.TypeString),
@@ -1025,12 +1025,12 @@ func (wseuo *WorkflowStageExecutionUpdateOne) sqlSave(ctx context.Context) (_nod
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wseuo.mutation.StepExecutionsIDs(); len(nodes) > 0 {
+	if nodes := wseuo.mutation.StepsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowstageexecution.StepExecutionsTable,
-			Columns: []string{workflowstageexecution.StepExecutionsColumn},
+			Table:   workflowstageexecution.StepsTable,
+			Columns: []string{workflowstageexecution.StepsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstepexecution.FieldID, field.TypeString),

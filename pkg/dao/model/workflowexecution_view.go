@@ -799,9 +799,9 @@ type WorkflowExecutionOutput struct {
 	Record            string            `json:"record,omitempty"`
 	Input             string            `json:"input,omitempty"`
 
-	Project         *ProjectOutput                  `json:"project,omitempty"`
-	StageExecutions []*WorkflowStageExecutionOutput `json:"stageExecutions,omitempty"`
-	Workflow        *WorkflowOutput                 `json:"workflow,omitempty"`
+	Project  *ProjectOutput                  `json:"project,omitempty"`
+	Stages   []*WorkflowStageExecutionOutput `json:"stages,omitempty"`
+	Workflow *WorkflowOutput                 `json:"workflow,omitempty"`
 }
 
 // View returns the output of WorkflowExecution entity.
@@ -843,8 +843,8 @@ func ExposeWorkflowExecution(_we *WorkflowExecution) *WorkflowExecutionOutput {
 			ID: _we.ProjectID,
 		}
 	}
-	if _we.Edges.StageExecutions != nil {
-		weo.StageExecutions = ExposeWorkflowStageExecutions(_we.Edges.StageExecutions)
+	if _we.Edges.Stages != nil {
+		weo.Stages = ExposeWorkflowStageExecutions(_we.Edges.Stages)
 	}
 	if _we.Edges.Workflow != nil {
 		weo.Workflow = ExposeWorkflow(_we.Edges.Workflow)

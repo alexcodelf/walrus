@@ -81,7 +81,7 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 		return errors.New("server address is empty")
 	}
 
-	wfTemplates, err := s.GenerateWorkflowTemplateEntrypoint(ctx, opts.WorkflowExecution.Edges.StageExecutions)
+	wfTemplates, err := s.GenerateWorkflowTemplateEntrypoint(ctx, opts.WorkflowExecution.Edges.Stages)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 ) ([]*v1alpha1.Template, error) {
 	workflowTplLen := 1
 	for _, stageExec := range stageExecutions {
-		workflowTplLen += (len(stageExec.Edges.StepExecutions) + 1) * 3
+		workflowTplLen += (len(stageExec.Edges.Steps) + 1) * 3
 	}
 
 	workflowTemplates := make([]*v1alpha1.Template, 0, workflowTplLen)
@@ -340,10 +340,10 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 		afterTemplate,
 	}
 
-	tasks := make([]v1alpha1.DAGTask, 0, len(stageExecution.Edges.StepExecutions))
+	tasks := make([]v1alpha1.DAGTask, 0, len(stageExecution.Edges.Steps))
 	stepTemplates := make([]*v1alpha1.Template, 0)
 
-	for _, stepExec := range stageExecution.Edges.StepExecutions {
+	for _, stepExec := range stageExecution.Edges.Steps {
 		stepTemplateMap, err := s.GenerateStepTemplate(ctx, stepExec)
 		if err != nil {
 			return nil, err

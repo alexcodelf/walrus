@@ -69,7 +69,7 @@ func (WorkflowExecution) Edges() []ent.Edge {
 			Annotations(
 				entx.ValidateContext(intercept.WithProjectInterceptor)),
 		// WorkflowExecution 1-* WorkflowStageExecutions.
-		edge.To("stage_executions", WorkflowStageExecution.Type).
+		edge.To("stages", WorkflowStageExecution.Type).
 			Comment("Workflow stage executions that belong to this workflow execution.").
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),

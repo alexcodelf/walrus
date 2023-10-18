@@ -4592,15 +4592,15 @@ func (c *WorkflowExecutionClient) QueryProject(we *WorkflowExecution) *ProjectQu
 	return query
 }
 
-// QueryStageExecutions queries the stage_executions edge of a WorkflowExecution.
-func (c *WorkflowExecutionClient) QueryStageExecutions(we *WorkflowExecution) *WorkflowStageExecutionQuery {
+// QueryStages queries the stages edge of a WorkflowExecution.
+func (c *WorkflowExecutionClient) QueryStages(we *WorkflowExecution) *WorkflowStageExecutionQuery {
 	query := (&WorkflowStageExecutionClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := we.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflowexecution.Table, workflowexecution.FieldID, id),
 			sqlgraph.To(workflowstageexecution.Table, workflowstageexecution.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, workflowexecution.StageExecutionsTable, workflowexecution.StageExecutionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowexecution.StagesTable, workflowexecution.StagesColumn),
 		)
 		schemaConfig := we.schemaConfig
 		step.To.Schema = schemaConfig.WorkflowStageExecution
@@ -4965,15 +4965,15 @@ func (c *WorkflowStageExecutionClient) QueryProject(wse *WorkflowStageExecution)
 	return query
 }
 
-// QueryStepExecutions queries the step_executions edge of a WorkflowStageExecution.
-func (c *WorkflowStageExecutionClient) QueryStepExecutions(wse *WorkflowStageExecution) *WorkflowStepExecutionQuery {
+// QuerySteps queries the steps edge of a WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) QuerySteps(wse *WorkflowStageExecution) *WorkflowStepExecutionQuery {
 	query := (&WorkflowStepExecutionClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := wse.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflowstageexecution.Table, workflowstageexecution.FieldID, id),
 			sqlgraph.To(workflowstepexecution.Table, workflowstepexecution.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, workflowstageexecution.StepExecutionsTable, workflowstageexecution.StepExecutionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowstageexecution.StepsTable, workflowstageexecution.StepsColumn),
 		)
 		schemaConfig := wse.schemaConfig
 		step.To.Schema = schemaConfig.WorkflowStepExecution
@@ -5003,15 +5003,15 @@ func (c *WorkflowStageExecutionClient) QueryStage(wse *WorkflowStageExecution) *
 	return query
 }
 
-// QueryExecution queries the execution edge of a WorkflowStageExecution.
-func (c *WorkflowStageExecutionClient) QueryExecution(wse *WorkflowStageExecution) *WorkflowExecutionQuery {
+// QueryWorkflowExecution queries the workflow_execution edge of a WorkflowStageExecution.
+func (c *WorkflowStageExecutionClient) QueryWorkflowExecution(wse *WorkflowStageExecution) *WorkflowExecutionQuery {
 	query := (&WorkflowExecutionClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := wse.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workflowstageexecution.Table, workflowstageexecution.FieldID, id),
 			sqlgraph.To(workflowexecution.Table, workflowexecution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, workflowstageexecution.ExecutionTable, workflowstageexecution.ExecutionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowstageexecution.WorkflowExecutionTable, workflowstageexecution.WorkflowExecutionColumn),
 		)
 		schemaConfig := wse.schemaConfig
 		step.To.Schema = schemaConfig.WorkflowExecution

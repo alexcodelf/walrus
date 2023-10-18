@@ -179,19 +179,19 @@ func (weu *WorkflowExecutionUpdate) SetNillableInput(s *string) *WorkflowExecuti
 	return weu
 }
 
-// AddStageExecutionIDs adds the "stage_executions" edge to the WorkflowStageExecution entity by IDs.
-func (weu *WorkflowExecutionUpdate) AddStageExecutionIDs(ids ...object.ID) *WorkflowExecutionUpdate {
-	weu.mutation.AddStageExecutionIDs(ids...)
+// AddStageIDs adds the "stages" edge to the WorkflowStageExecution entity by IDs.
+func (weu *WorkflowExecutionUpdate) AddStageIDs(ids ...object.ID) *WorkflowExecutionUpdate {
+	weu.mutation.AddStageIDs(ids...)
 	return weu
 }
 
-// AddStageExecutions adds the "stage_executions" edges to the WorkflowStageExecution entity.
-func (weu *WorkflowExecutionUpdate) AddStageExecutions(w ...*WorkflowStageExecution) *WorkflowExecutionUpdate {
+// AddStages adds the "stages" edges to the WorkflowStageExecution entity.
+func (weu *WorkflowExecutionUpdate) AddStages(w ...*WorkflowStageExecution) *WorkflowExecutionUpdate {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return weu.AddStageExecutionIDs(ids...)
+	return weu.AddStageIDs(ids...)
 }
 
 // Mutation returns the WorkflowExecutionMutation object of the builder.
@@ -199,25 +199,25 @@ func (weu *WorkflowExecutionUpdate) Mutation() *WorkflowExecutionMutation {
 	return weu.mutation
 }
 
-// ClearStageExecutions clears all "stage_executions" edges to the WorkflowStageExecution entity.
-func (weu *WorkflowExecutionUpdate) ClearStageExecutions() *WorkflowExecutionUpdate {
-	weu.mutation.ClearStageExecutions()
+// ClearStages clears all "stages" edges to the WorkflowStageExecution entity.
+func (weu *WorkflowExecutionUpdate) ClearStages() *WorkflowExecutionUpdate {
+	weu.mutation.ClearStages()
 	return weu
 }
 
-// RemoveStageExecutionIDs removes the "stage_executions" edge to WorkflowStageExecution entities by IDs.
-func (weu *WorkflowExecutionUpdate) RemoveStageExecutionIDs(ids ...object.ID) *WorkflowExecutionUpdate {
-	weu.mutation.RemoveStageExecutionIDs(ids...)
+// RemoveStageIDs removes the "stages" edge to WorkflowStageExecution entities by IDs.
+func (weu *WorkflowExecutionUpdate) RemoveStageIDs(ids ...object.ID) *WorkflowExecutionUpdate {
+	weu.mutation.RemoveStageIDs(ids...)
 	return weu
 }
 
-// RemoveStageExecutions removes "stage_executions" edges to WorkflowStageExecution entities.
-func (weu *WorkflowExecutionUpdate) RemoveStageExecutions(w ...*WorkflowStageExecution) *WorkflowExecutionUpdate {
+// RemoveStages removes "stages" edges to WorkflowStageExecution entities.
+func (weu *WorkflowExecutionUpdate) RemoveStages(w ...*WorkflowStageExecution) *WorkflowExecutionUpdate {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return weu.RemoveStageExecutionIDs(ids...)
+	return weu.RemoveStageIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -412,12 +412,12 @@ func (weu *WorkflowExecutionUpdate) sqlSave(ctx context.Context) (n int, err err
 	if value, ok := weu.mutation.Input(); ok {
 		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
 	}
-	if weu.mutation.StageExecutionsCleared() {
+	if weu.mutation.StagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowexecution.StageExecutionsTable,
-			Columns: []string{workflowexecution.StageExecutionsColumn},
+			Table:   workflowexecution.StagesTable,
+			Columns: []string{workflowexecution.StagesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
@@ -426,12 +426,12 @@ func (weu *WorkflowExecutionUpdate) sqlSave(ctx context.Context) (n int, err err
 		edge.Schema = weu.schemaConfig.WorkflowStageExecution
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := weu.mutation.RemovedStageExecutionsIDs(); len(nodes) > 0 && !weu.mutation.StageExecutionsCleared() {
+	if nodes := weu.mutation.RemovedStagesIDs(); len(nodes) > 0 && !weu.mutation.StagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowexecution.StageExecutionsTable,
-			Columns: []string{workflowexecution.StageExecutionsColumn},
+			Table:   workflowexecution.StagesTable,
+			Columns: []string{workflowexecution.StagesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
@@ -443,12 +443,12 @@ func (weu *WorkflowExecutionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := weu.mutation.StageExecutionsIDs(); len(nodes) > 0 {
+	if nodes := weu.mutation.StagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowexecution.StageExecutionsTable,
-			Columns: []string{workflowexecution.StageExecutionsColumn},
+			Table:   workflowexecution.StagesTable,
+			Columns: []string{workflowexecution.StagesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
@@ -622,19 +622,19 @@ func (weuo *WorkflowExecutionUpdateOne) SetNillableInput(s *string) *WorkflowExe
 	return weuo
 }
 
-// AddStageExecutionIDs adds the "stage_executions" edge to the WorkflowStageExecution entity by IDs.
-func (weuo *WorkflowExecutionUpdateOne) AddStageExecutionIDs(ids ...object.ID) *WorkflowExecutionUpdateOne {
-	weuo.mutation.AddStageExecutionIDs(ids...)
+// AddStageIDs adds the "stages" edge to the WorkflowStageExecution entity by IDs.
+func (weuo *WorkflowExecutionUpdateOne) AddStageIDs(ids ...object.ID) *WorkflowExecutionUpdateOne {
+	weuo.mutation.AddStageIDs(ids...)
 	return weuo
 }
 
-// AddStageExecutions adds the "stage_executions" edges to the WorkflowStageExecution entity.
-func (weuo *WorkflowExecutionUpdateOne) AddStageExecutions(w ...*WorkflowStageExecution) *WorkflowExecutionUpdateOne {
+// AddStages adds the "stages" edges to the WorkflowStageExecution entity.
+func (weuo *WorkflowExecutionUpdateOne) AddStages(w ...*WorkflowStageExecution) *WorkflowExecutionUpdateOne {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return weuo.AddStageExecutionIDs(ids...)
+	return weuo.AddStageIDs(ids...)
 }
 
 // Mutation returns the WorkflowExecutionMutation object of the builder.
@@ -642,25 +642,25 @@ func (weuo *WorkflowExecutionUpdateOne) Mutation() *WorkflowExecutionMutation {
 	return weuo.mutation
 }
 
-// ClearStageExecutions clears all "stage_executions" edges to the WorkflowStageExecution entity.
-func (weuo *WorkflowExecutionUpdateOne) ClearStageExecutions() *WorkflowExecutionUpdateOne {
-	weuo.mutation.ClearStageExecutions()
+// ClearStages clears all "stages" edges to the WorkflowStageExecution entity.
+func (weuo *WorkflowExecutionUpdateOne) ClearStages() *WorkflowExecutionUpdateOne {
+	weuo.mutation.ClearStages()
 	return weuo
 }
 
-// RemoveStageExecutionIDs removes the "stage_executions" edge to WorkflowStageExecution entities by IDs.
-func (weuo *WorkflowExecutionUpdateOne) RemoveStageExecutionIDs(ids ...object.ID) *WorkflowExecutionUpdateOne {
-	weuo.mutation.RemoveStageExecutionIDs(ids...)
+// RemoveStageIDs removes the "stages" edge to WorkflowStageExecution entities by IDs.
+func (weuo *WorkflowExecutionUpdateOne) RemoveStageIDs(ids ...object.ID) *WorkflowExecutionUpdateOne {
+	weuo.mutation.RemoveStageIDs(ids...)
 	return weuo
 }
 
-// RemoveStageExecutions removes "stage_executions" edges to WorkflowStageExecution entities.
-func (weuo *WorkflowExecutionUpdateOne) RemoveStageExecutions(w ...*WorkflowStageExecution) *WorkflowExecutionUpdateOne {
+// RemoveStages removes "stages" edges to WorkflowStageExecution entities.
+func (weuo *WorkflowExecutionUpdateOne) RemoveStages(w ...*WorkflowStageExecution) *WorkflowExecutionUpdateOne {
 	ids := make([]object.ID, len(w))
 	for i := range w {
 		ids[i] = w[i].ID
 	}
-	return weuo.RemoveStageExecutionIDs(ids...)
+	return weuo.RemoveStageIDs(ids...)
 }
 
 // Where appends a list predicates to the WorkflowExecutionUpdate builder.
@@ -1013,12 +1013,12 @@ func (weuo *WorkflowExecutionUpdateOne) sqlSave(ctx context.Context) (_node *Wor
 	if value, ok := weuo.mutation.Input(); ok {
 		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
 	}
-	if weuo.mutation.StageExecutionsCleared() {
+	if weuo.mutation.StagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowexecution.StageExecutionsTable,
-			Columns: []string{workflowexecution.StageExecutionsColumn},
+			Table:   workflowexecution.StagesTable,
+			Columns: []string{workflowexecution.StagesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
@@ -1027,12 +1027,12 @@ func (weuo *WorkflowExecutionUpdateOne) sqlSave(ctx context.Context) (_node *Wor
 		edge.Schema = weuo.schemaConfig.WorkflowStageExecution
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := weuo.mutation.RemovedStageExecutionsIDs(); len(nodes) > 0 && !weuo.mutation.StageExecutionsCleared() {
+	if nodes := weuo.mutation.RemovedStagesIDs(); len(nodes) > 0 && !weuo.mutation.StagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowexecution.StageExecutionsTable,
-			Columns: []string{workflowexecution.StageExecutionsColumn},
+			Table:   workflowexecution.StagesTable,
+			Columns: []string{workflowexecution.StagesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
@@ -1044,12 +1044,12 @@ func (weuo *WorkflowExecutionUpdateOne) sqlSave(ctx context.Context) (_node *Wor
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := weuo.mutation.StageExecutionsIDs(); len(nodes) > 0 {
+	if nodes := weuo.mutation.StagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   workflowexecution.StageExecutionsTable,
-			Columns: []string{workflowexecution.StageExecutionsColumn},
+			Table:   workflowexecution.StagesTable,
+			Columns: []string{workflowexecution.StagesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),

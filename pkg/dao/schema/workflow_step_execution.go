@@ -90,7 +90,7 @@ func (WorkflowStepExecution) Edges() []ent.Edge {
 				entx.SkipIO()),
 		// WorkflowStageExecution 1-* WorkflowStepExecutions.
 		edge.From("stage_execution", WorkflowStageExecution.Type).
-			Ref("step_executions").
+			Ref("steps").
 			Field("workflow_stage_execution_id").
 			Comment("Workflow stage execution that this workflow step execution belongs to.").
 			Required().

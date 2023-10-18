@@ -51,12 +51,12 @@ const (
 	FieldInput = "input"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
-	// EdgeStepExecutions holds the string denoting the step_executions edge name in mutations.
-	EdgeStepExecutions = "step_executions"
+	// EdgeSteps holds the string denoting the steps edge name in mutations.
+	EdgeSteps = "steps"
 	// EdgeStage holds the string denoting the stage edge name in mutations.
 	EdgeStage = "stage"
-	// EdgeExecution holds the string denoting the execution edge name in mutations.
-	EdgeExecution = "execution"
+	// EdgeWorkflowExecution holds the string denoting the workflow_execution edge name in mutations.
+	EdgeWorkflowExecution = "workflow_execution"
 	// Table holds the table name of the workflowstageexecution in the database.
 	Table = "workflow_stage_executions"
 	// ProjectTable is the table that holds the project relation/edge.
@@ -66,13 +66,13 @@ const (
 	ProjectInverseTable = "projects"
 	// ProjectColumn is the table column denoting the project relation/edge.
 	ProjectColumn = "project_id"
-	// StepExecutionsTable is the table that holds the step_executions relation/edge.
-	StepExecutionsTable = "workflow_step_executions"
-	// StepExecutionsInverseTable is the table name for the WorkflowStepExecution entity.
+	// StepsTable is the table that holds the steps relation/edge.
+	StepsTable = "workflow_step_executions"
+	// StepsInverseTable is the table name for the WorkflowStepExecution entity.
 	// It exists in this package in order to avoid circular dependency with the "workflowstepexecution" package.
-	StepExecutionsInverseTable = "workflow_step_executions"
-	// StepExecutionsColumn is the table column denoting the step_executions relation/edge.
-	StepExecutionsColumn = "workflow_stage_execution_id"
+	StepsInverseTable = "workflow_step_executions"
+	// StepsColumn is the table column denoting the steps relation/edge.
+	StepsColumn = "workflow_stage_execution_id"
 	// StageTable is the table that holds the stage relation/edge.
 	StageTable = "workflow_stage_executions"
 	// StageInverseTable is the table name for the WorkflowStage entity.
@@ -80,13 +80,13 @@ const (
 	StageInverseTable = "workflow_stages"
 	// StageColumn is the table column denoting the stage relation/edge.
 	StageColumn = "stage_id"
-	// ExecutionTable is the table that holds the execution relation/edge.
-	ExecutionTable = "workflow_stage_executions"
-	// ExecutionInverseTable is the table name for the WorkflowExecution entity.
+	// WorkflowExecutionTable is the table that holds the workflow_execution relation/edge.
+	WorkflowExecutionTable = "workflow_stage_executions"
+	// WorkflowExecutionInverseTable is the table name for the WorkflowExecution entity.
 	// It exists in this package in order to avoid circular dependency with the "workflowexecution" package.
-	ExecutionInverseTable = "workflow_executions"
-	// ExecutionColumn is the table column denoting the execution relation/edge.
-	ExecutionColumn = "workflow_execution_id"
+	WorkflowExecutionInverseTable = "workflow_executions"
+	// WorkflowExecutionColumn is the table column denoting the workflow_execution relation/edge.
+	WorkflowExecutionColumn = "workflow_execution_id"
 )
 
 // Columns holds all SQL columns for workflowstageexecution fields.
@@ -217,17 +217,17 @@ func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByStepExecutionsCount orders the results by step_executions count.
-func ByStepExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByStepsCount orders the results by steps count.
+func ByStepsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newStepExecutionsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newStepsStep(), opts...)
 	}
 }
 
-// ByStepExecutions orders the results by step_executions terms.
-func ByStepExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// BySteps orders the results by steps terms.
+func BySteps(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newStepExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newStepsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -238,10 +238,10 @@ func ByStageField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByExecutionField orders the results by execution field.
-func ByExecutionField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByWorkflowExecutionField orders the results by workflow_execution field.
+func ByWorkflowExecutionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newExecutionStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowExecutionStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newProjectStep() *sqlgraph.Step {
@@ -251,11 +251,11 @@ func newProjectStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
 	)
 }
-func newStepExecutionsStep() *sqlgraph.Step {
+func newStepsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(StepExecutionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, StepExecutionsTable, StepExecutionsColumn),
+		sqlgraph.To(StepsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, StepsTable, StepsColumn),
 	)
 }
 func newStageStep() *sqlgraph.Step {
@@ -265,11 +265,11 @@ func newStageStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, StageTable, StageColumn),
 	)
 }
-func newExecutionStep() *sqlgraph.Step {
+func newWorkflowExecutionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ExecutionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ExecutionTable, ExecutionColumn),
+		sqlgraph.To(WorkflowExecutionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, WorkflowExecutionTable, WorkflowExecutionColumn),
 	)
 }
 

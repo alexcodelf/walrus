@@ -840,12 +840,12 @@ func HasProjectWith(preds ...predicate.Project) predicate.WorkflowExecution {
 	})
 }
 
-// HasStageExecutions applies the HasEdge predicate on the "stage_executions" edge.
-func HasStageExecutions() predicate.WorkflowExecution {
+// HasStages applies the HasEdge predicate on the "stages" edge.
+func HasStages() predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, StageExecutionsTable, StageExecutionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, StagesTable, StagesColumn),
 		)
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.WorkflowStageExecution
@@ -854,10 +854,10 @@ func HasStageExecutions() predicate.WorkflowExecution {
 	})
 }
 
-// HasStageExecutionsWith applies the HasEdge predicate on the "stage_executions" edge with a given conditions (other predicates).
-func HasStageExecutionsWith(preds ...predicate.WorkflowStageExecution) predicate.WorkflowExecution {
+// HasStagesWith applies the HasEdge predicate on the "stages" edge with a given conditions (other predicates).
+func HasStagesWith(preds ...predicate.WorkflowStageExecution) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(func(s *sql.Selector) {
-		step := newStageExecutionsStep()
+		step := newStagesStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.WorkflowStageExecution
 		step.Edge.Schema = schemaConfig.WorkflowStageExecution

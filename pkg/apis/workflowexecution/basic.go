@@ -12,8 +12,8 @@ import (
 func (h Handler) Get(req GetRequest) (GetResponse, error) {
 	entity, err := h.modelClient.WorkflowExecutions().Query().
 		Where(workflowexecution.ID(req.ID)).
-		WithStageExecutions(func(wsgq *model.WorkflowStageExecutionQuery) {
-			wsgq.WithStepExecutions()
+		WithStages(func(wsgq *model.WorkflowStageExecutionQuery) {
+			wsgq.WithSteps()
 		}).
 		Only(req.Context)
 	if err != nil {
