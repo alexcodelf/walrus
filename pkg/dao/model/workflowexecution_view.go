@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
-	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -22,8 +21,6 @@ import (
 type WorkflowExecutionCreateInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
-	// Project indicates to create WorkflowExecution entity MUST under the Project route.
-	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to create WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
@@ -66,13 +63,6 @@ func (weci *WorkflowExecutionCreateInput) Model() *WorkflowExecution {
 		Input:             weci.Input,
 	}
 
-	if weci.Project != nil {
-		_we.ProjectID = weci.Project.ID
-	}
-	if weci.Workflow != nil {
-		_we.WorkflowID = weci.Workflow.ID
-	}
-
 	return _we
 }
 
@@ -95,12 +85,6 @@ func (weci *WorkflowExecutionCreateInput) ValidateWith(ctx context.Context, cs C
 		cache = map[string]any{}
 	}
 
-	// Validate when creating under the Project route.
-	if weci.Project != nil {
-		if err := weci.Project.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		}
-	}
 	// Validate when creating under the Workflow route.
 	if weci.Workflow != nil {
 		if err := weci.Workflow.ValidateWith(ctx, cs, cache); err != nil {
@@ -151,8 +135,6 @@ func (weci *WorkflowExecutionCreateInputsItem) ValidateWith(ctx context.Context,
 type WorkflowExecutionCreateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
-	// Project indicates to create WorkflowExecution entity MUST under the Project route.
-	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to create WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
@@ -180,13 +162,6 @@ func (weci *WorkflowExecutionCreateInputs) Model() []*WorkflowExecution {
 			StageExecutionIds: weci.Items[i].StageExecutionIds,
 			Record:            weci.Items[i].Record,
 			Input:             weci.Items[i].Input,
-		}
-
-		if weci.Project != nil {
-			_we.ProjectID = weci.Project.ID
-		}
-		if weci.Workflow != nil {
-			_we.WorkflowID = weci.Workflow.ID
 		}
 
 		_wes[i] = _we
@@ -218,16 +193,6 @@ func (weci *WorkflowExecutionCreateInputs) ValidateWith(ctx context.Context, cs 
 		cache = map[string]any{}
 	}
 
-	// Validate when creating under the Project route.
-	if weci.Project != nil {
-		if err := weci.Project.ValidateWith(ctx, cs, cache); err != nil {
-			if !IsBlankResourceReferError(err) {
-				return err
-			} else {
-				weci.Project = nil
-			}
-		}
-	}
 	// Validate when creating under the Workflow route.
 	if weci.Workflow != nil {
 		if err := weci.Workflow.ValidateWith(ctx, cs, cache); err != nil {
@@ -269,8 +234,6 @@ type WorkflowExecutionDeleteInputsItem struct {
 type WorkflowExecutionDeleteInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
-	// Project indicates to delete WorkflowExecution entity MUST under the Project route.
-	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to delete WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
@@ -333,17 +296,6 @@ func (wedi *WorkflowExecutionDeleteInputs) ValidateWith(ctx context.Context, cs 
 
 	q := cs.WorkflowExecutions().Query()
 
-	// Validate when deleting under the Project route.
-	if wedi.Project != nil {
-		if err := wedi.Project.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		} else {
-			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
-			q.Where(
-				workflowexecution.ProjectID(wedi.Project.ID))
-		}
-	}
-
 	// Validate when deleting under the Workflow route.
 	if wedi.Workflow != nil {
 		if err := wedi.Workflow.ValidateWith(ctx, cs, cache); err != nil {
@@ -390,8 +342,6 @@ func (wedi *WorkflowExecutionDeleteInputs) ValidateWith(ctx context.Context, cs 
 type WorkflowExecutionQueryInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
-	// Project indicates to query WorkflowExecution entity MUST under the Project route.
-	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
 	// Workflow indicates to query WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"workflow"`
 
@@ -437,17 +387,6 @@ func (weqi *WorkflowExecutionQueryInput) ValidateWith(ctx context.Context, cs Cl
 	}
 
 	q := cs.WorkflowExecutions().Query()
-
-	// Validate when querying under the Project route.
-	if weqi.Project != nil {
-		if err := weqi.Project.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		} else {
-			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
-			q.Where(
-				workflowexecution.ProjectID(weqi.Project.ID))
-		}
-	}
 
 	// Validate when querying under the Workflow route.
 	if weqi.Workflow != nil {
@@ -505,8 +444,6 @@ func (weqi *WorkflowExecutionQueryInput) ValidateWith(ctx context.Context, cs Cl
 type WorkflowExecutionQueryInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
-	// Project indicates to query WorkflowExecution entity MUST under the Project route.
-	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to query WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 }
@@ -528,13 +465,6 @@ func (weqi *WorkflowExecutionQueryInputs) ValidateWith(ctx context.Context, cs C
 
 	if cache == nil {
 		cache = map[string]any{}
-	}
-
-	// Validate when querying under the Project route.
-	if weqi.Project != nil {
-		if err := weqi.Project.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		}
 	}
 
 	// Validate when querying under the Workflow route.
@@ -650,8 +580,6 @@ func (weui *WorkflowExecutionUpdateInputsItem) ValidateWith(ctx context.Context,
 type WorkflowExecutionUpdateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
-	// Project indicates to update WorkflowExecution entity MUST under the Project route.
-	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 	// Workflow indicates to update WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
@@ -724,17 +652,6 @@ func (weui *WorkflowExecutionUpdateInputs) ValidateWith(ctx context.Context, cs 
 	}
 
 	q := cs.WorkflowExecutions().Query()
-
-	// Validate when updating under the Project route.
-	if weui.Project != nil {
-		if err := weui.Project.ValidateWith(ctx, cs, cache); err != nil {
-			return err
-		} else {
-			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
-			q.Where(
-				workflowexecution.ProjectID(weui.Project.ID))
-		}
-	}
 
 	// Validate when updating under the Workflow route.
 	if weui.Workflow != nil {

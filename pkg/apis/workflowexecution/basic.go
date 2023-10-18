@@ -47,7 +47,8 @@ var (
 )
 
 func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse, int, error) {
-	query := h.modelClient.WorkflowExecutions().Query()
+	query := h.modelClient.WorkflowExecutions().Query().
+		Where(workflowexecution.WorkflowID(req.Workflow.ID))
 
 	if queries, ok := req.Querying(queryFields); ok {
 		query = query.Where(queries)

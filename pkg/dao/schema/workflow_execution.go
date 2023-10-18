@@ -67,7 +67,8 @@ func (WorkflowExecution) Edges() []ent.Edge {
 			Required().
 			Immutable().
 			Annotations(
-				entx.ValidateContext(intercept.WithProjectInterceptor)),
+				entx.ValidateContext(intercept.WithProjectInterceptor),
+				entx.SkipInput()),
 		// WorkflowExecution 1-* WorkflowStageExecutions.
 		edge.To("stages", WorkflowStageExecution.Type).
 			Comment("Workflow stage executions that belong to this workflow execution.").
@@ -82,7 +83,9 @@ func (WorkflowExecution) Edges() []ent.Edge {
 			Comment("Workflow that this workflow execution belongs to.").
 			Required().
 			Unique().
-			Immutable(),
+			Immutable().
+			Annotations(
+				entx.SkipInput(entx.WithCreate(), entx.WithUpdate())),
 	}
 }
 
