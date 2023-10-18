@@ -112,6 +112,10 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 						Value: v1alpha1.AnyStringPtr(opts.WorkflowExecution.ProjectID.String()),
 					},
 					{
+						Name:  "workflowID",
+						Value: v1alpha1.AnyStringPtr(opts.WorkflowExecution.Edges.Workflow.ID.String()),
+					},
+					{
 						Name:  "token",
 						Value: v1alpha1.AnyStringPtr(token),
 					},
@@ -258,10 +262,16 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 				{
 					Name: "status",
 				},
+				{
+					Name:  "workflowExecutionID",
+					Value: v1alpha1.AnyStringPtr(stageExecution.WorkflowExecutionID.String()),
+				},
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
 			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflows/{{workflow.parameters.workflowID}}" +
+				"/workflow-executions/{{workflow.parameters.workflowExecutionID}}" +
 				"/workflow-stage-executions/{{inputs.parameters.id}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{
@@ -293,10 +303,16 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 				{
 					Name: "status",
 				},
+				{
+					Name:  "workflowExecutionID",
+					Value: v1alpha1.AnyStringPtr(stageExecution.WorkflowExecutionID.String()),
+				},
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
 			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflows/{{workflow.parameters.workflowID}}" +
+				"/workflow-executions/{{workflow.parameters.workflowExecutionID}}" +
 				"/workflow-stage-executions/{{inputs.parameters.id}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{
@@ -402,12 +418,23 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 					Value: v1alpha1.AnyStringPtr(wse.ID.String()),
 				},
 				{
+					Name:  "workflowStageExecutionID",
+					Value: v1alpha1.AnyStringPtr(wse.WorkflowStageExecutionID.String()),
+				},
+				{
+					Name:  "workflowExecutionID",
+					Value: v1alpha1.AnyStringPtr(wse.WorkflowExecutionID.String()),
+				},
+				{
 					Name: "status",
 				},
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
 			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflows/{{workflow.parameters.workflowID}}" +
+				"/workflow-executions/{{inputs.parameters.workflowExecutionID}}" +
+				"/workflows-stage-executions/{{inputs.parameters.workflowStageExecutionID}}" +
 				"/workflow-step-executions/{{inputs.parameters.id}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{
@@ -439,10 +466,21 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 				{
 					Name: "status",
 				},
+				{
+					Name:  "workflowStageExecutionID",
+					Value: v1alpha1.AnyStringPtr(wse.WorkflowStageExecutionID.String()),
+				},
+				{
+					Name:  "workflowExecutionID",
+					Value: v1alpha1.AnyStringPtr(wse.WorkflowExecutionID.String()),
+				},
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
 			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflows/{{workflow.parameters.workflowID}}" +
+				"/workflow-executions/{{workflow.parameters.workflowExecutionID}}" +
+				"/workflows-stage-executions/{{inputs.parameters.workflowStageID}}" +
 				"/workflow-step-executions/{{inputs.parameters.id}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{
@@ -498,6 +536,7 @@ func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
 		},
 		HTTP: &v1alpha1.HTTP{
 			URL: "{{workflow.parameters.server}}v1/projects/{{workflow.parameters.projectID}}" +
+				"/workflows/{{workflow.parameters.workflowID}}" +
 				"/workflow-executions/{{inputs.parameters.workflowExecutionID}}",
 			Method: http.MethodPut,
 			Headers: v1alpha1.HTTPHeaders{

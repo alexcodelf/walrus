@@ -36,9 +36,6 @@ func (h Handler) SubResourceHandlers() []runtime.IResourceHandler {
 		environment.Handle(h.modelClient, h.kubeConfig, h.tlsCertified),
 		variable.Handle(h.modelClient),
 		workflow.Handle(h.modelClient, h.kubeConfig),
-		// workflowexecution.Handle(h.modelClient, h.kubeConfig),
-		// workflowstageexecution.Handle(h.modelClient, h.kubeConfig),
-		// workflowstepexecution.Handle(h.modelClient, h.kubeConfig),
 		runtime.Alias(
 			projectsubject.Handle(h.modelClient),
 			"Subject"),
