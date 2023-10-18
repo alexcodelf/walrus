@@ -1,17 +1,16 @@
-package workflow
+package workflowstage
 
 import (
 	"github.com/seal-io/walrus/pkg/apis/runtime"
-	"github.com/seal-io/walrus/pkg/apis/workflowexecution"
-	"github.com/seal-io/walrus/pkg/apis/workflowstage"
+	"github.com/seal-io/walrus/pkg/apis/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"k8s.io/client-go/rest"
 )
 
-func Handle(mc model.ClientSet, k8sConfig *rest.Config) Handler {
+func Handle(mc model.ClientSet, kc *rest.Config) Handler {
 	return Handler{
 		modelClient: mc,
-		k8sConfig:   k8sConfig,
+		k8sConfig:   kc,
 	}
 }
 
@@ -21,12 +20,11 @@ type Handler struct {
 }
 
 func (Handler) Kind() string {
-	return "Workflow"
+	return "WorkflowStage"
 }
 
 func (h Handler) SubResourceHandlers() []runtime.IResourceHandler {
 	return []runtime.IResourceHandler{
-		workflowstage.Handle(h.modelClient, h.k8sConfig),
-		workflowexecution.Handle(h.modelClient, h.k8sConfig),
+		workflowstep.Handle(h.modelClient),
 	}
 }

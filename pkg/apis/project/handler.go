@@ -9,9 +9,6 @@ import (
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/apis/variable"
 	"github.com/seal-io/walrus/pkg/apis/workflow"
-	"github.com/seal-io/walrus/pkg/apis/workflowexecution"
-	"github.com/seal-io/walrus/pkg/apis/workflowstageexecution"
-	"github.com/seal-io/walrus/pkg/apis/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/model"
 )
 
@@ -39,9 +36,9 @@ func (h Handler) SubResourceHandlers() []runtime.IResourceHandler {
 		environment.Handle(h.modelClient, h.kubeConfig, h.tlsCertified),
 		variable.Handle(h.modelClient),
 		workflow.Handle(h.modelClient, h.kubeConfig),
-		workflowexecution.Handle(h.modelClient),
-		workflowstageexecution.Handle(h.modelClient),
-		workflowstepexecution.Handle(h.modelClient),
+		// workflowexecution.Handle(h.modelClient, h.kubeConfig),
+		// workflowstageexecution.Handle(h.modelClient, h.kubeConfig),
+		// workflowstepexecution.Handle(h.modelClient, h.kubeConfig),
 		runtime.Alias(
 			projectsubject.Handle(h.modelClient),
 			"Subject"),

@@ -523,27 +523,28 @@ func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
 }
 
 type StreamLogsOptions struct {
-	workflow   string
-	podName    string
-	grep       string
-	selector   string
-	logOptions *corev1.PodLogOptions
+	Workflow   string
+	PodName    string
+	Grep       string
+	Selector   string
+	ApiClient  apiclient.Client
+	LogOptions *corev1.PodLogOptions
 
 	Out io.Writer
 }
 
 func StreamWorkflowLogs(
 	ctx context.Context,
-	serviceClient workflow.WorkflowServiceClient,
 	opts StreamLogsOptions,
 ) error {
+	serviceClient := opts.ApiClient.NewWorkflowServiceClient()
 	stream, err := serviceClient.WorkflowLogs(ctx, &workflow.WorkflowLogRequest{
-		Name:       opts.workflow,
+		Name:       opts.Workflow,
 		Namespace:  Namespace,
-		PodName:    opts.podName,
-		LogOptions: opts.logOptions,
-		Selector:   opts.selector,
-		Grep:       opts.grep,
+		PodName:    opts.PodName,
+		LogOptions: opts.LogOptions,
+		Selector:   opts.Selector,
+		Grep:       opts.Grep,
 	})
 	if err != nil {
 		return err

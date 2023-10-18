@@ -24,6 +24,8 @@ type WorkflowStepExecutionCreateInput struct {
 
 	// Project indicates to create WorkflowStepExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// StageExecution indicates to create WorkflowStepExecution entity MUST under the StageExecution route.
+	StageExecution *WorkflowStageExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Type of the workflow step execution.
 	Type string `path:"-" query:"-" json:"type"`
@@ -70,6 +72,9 @@ func (wseci *WorkflowStepExecutionCreateInput) Model() *WorkflowStepExecution {
 		Input:               wseci.Input,
 	}
 
+	if wseci.StageExecution != nil {
+		_wse.WorkflowStageExecutionID = wseci.StageExecution.ID
+	}
 	if wseci.Project != nil {
 		_wse.ProjectID = wseci.Project.ID
 	}
@@ -99,6 +104,12 @@ func (wseci *WorkflowStepExecutionCreateInput) ValidateWith(ctx context.Context,
 	// Validate when creating under the Project route.
 	if wseci.Project != nil {
 		if err := wseci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+	// Validate when creating under the StageExecution route.
+	if wseci.StageExecution != nil {
+		if err := wseci.StageExecution.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
 	}
@@ -152,6 +163,8 @@ type WorkflowStepExecutionCreateInputs struct {
 
 	// Project indicates to create WorkflowStepExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// StageExecution indicates to create WorkflowStepExecution entity MUST under the StageExecution route.
+	StageExecution *WorkflowStageExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepExecutionCreateInputsItem `path:"-" query:"-" json:"items"`
@@ -181,6 +194,9 @@ func (wseci *WorkflowStepExecutionCreateInputs) Model() []*WorkflowStepExecution
 			Input:               wseci.Items[i].Input,
 		}
 
+		if wseci.StageExecution != nil {
+			_wse.WorkflowStageExecutionID = wseci.StageExecution.ID
+		}
 		if wseci.Project != nil {
 			_wse.ProjectID = wseci.Project.ID
 		}
@@ -224,6 +240,16 @@ func (wseci *WorkflowStepExecutionCreateInputs) ValidateWith(ctx context.Context
 			}
 		}
 	}
+	// Validate when creating under the StageExecution route.
+	if wseci.StageExecution != nil {
+		if err := wseci.StageExecution.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.StageExecution = nil
+			}
+		}
+	}
 
 	for i := range wseci.Items {
 		if wseci.Items[i] == nil {
@@ -257,6 +283,8 @@ type WorkflowStepExecutionDeleteInputs struct {
 
 	// Project indicates to delete WorkflowStepExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// StageExecution indicates to delete WorkflowStepExecution entity MUST under the StageExecution route.
+	StageExecution *WorkflowStageExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepExecutionDeleteInputsItem `path:"-" query:"-" json:"items"`
@@ -328,6 +356,16 @@ func (wsedi *WorkflowStepExecutionDeleteInputs) ValidateWith(ctx context.Context
 		}
 	}
 
+	// Validate when deleting under the StageExecution route.
+	if wsedi.StageExecution != nil {
+		if err := wsedi.StageExecution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstepexecution.WorkflowStageExecutionID(wsedi.StageExecution.ID))
+		}
+	}
+
 	ids := make([]object.ID, 0, len(wsedi.Items))
 
 	for i := range wsedi.Items {
@@ -366,6 +404,8 @@ type WorkflowStepExecutionQueryInput struct {
 
 	// Project indicates to query WorkflowStepExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
+	// StageExecution indicates to query WorkflowStepExecution entity MUST under the StageExecution route.
+	StageExecution *WorkflowStageExecutionQueryInput `path:",inline" query:"-" json:"stageExecution"`
 
 	// Refer holds the route path reference of the WorkflowStepExecution entity.
 	Refer *object.Refer `path:"workflowstepexecution,default=" query:"-" json:"-"`
@@ -421,6 +461,16 @@ func (wseqi *WorkflowStepExecutionQueryInput) ValidateWith(ctx context.Context, 
 		}
 	}
 
+	// Validate when querying under the StageExecution route.
+	if wseqi.StageExecution != nil {
+		if err := wseqi.StageExecution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstepexecution.WorkflowStageExecutionID(wseqi.StageExecution.ID))
+		}
+	}
+
 	if wseqi.Refer != nil {
 		if wseqi.Refer.IsID() {
 			q.Where(
@@ -469,6 +519,8 @@ type WorkflowStepExecutionQueryInputs struct {
 
 	// Project indicates to query WorkflowStepExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// StageExecution indicates to query WorkflowStepExecution entity MUST under the StageExecution route.
+	StageExecution *WorkflowStageExecutionQueryInput `path:",inline" query:"-" json:"-"`
 }
 
 // Validate checks the WorkflowStepExecutionQueryInputs entity.
@@ -493,6 +545,13 @@ func (wseqi *WorkflowStepExecutionQueryInputs) ValidateWith(ctx context.Context,
 	// Validate when querying under the Project route.
 	if wseqi.Project != nil {
 		if err := wseqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
+	// Validate when querying under the StageExecution route.
+	if wseqi.StageExecution != nil {
+		if err := wseqi.StageExecution.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
 	}
@@ -605,6 +664,8 @@ type WorkflowStepExecutionUpdateInputs struct {
 
 	// Project indicates to update WorkflowStepExecution entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// StageExecution indicates to update WorkflowStepExecution entity MUST under the StageExecution route.
+	StageExecution *WorkflowStageExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepExecutionUpdateInputsItem `path:"-" query:"-" json:"items"`
@@ -687,6 +748,16 @@ func (wseui *WorkflowStepExecutionUpdateInputs) ValidateWith(ctx context.Context
 		}
 	}
 
+	// Validate when updating under the StageExecution route.
+	if wseui.StageExecution != nil {
+		if err := wseui.StageExecution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstepexecution.WorkflowStageExecutionID(wseui.StageExecution.ID))
+		}
+	}
+
 	ids := make([]object.ID, 0, len(wseui.Items))
 
 	for i := range wseui.Items {
@@ -742,7 +813,8 @@ type WorkflowStepExecutionOutput struct {
 	Record              string                 `json:"record,omitempty"`
 	Input               string                 `json:"input,omitempty"`
 
-	Project *ProjectOutput `json:"project,omitempty"`
+	Project        *ProjectOutput                `json:"project,omitempty"`
+	StageExecution *WorkflowStageExecutionOutput `json:"stageExecution,omitempty"`
 }
 
 // View returns the output of WorkflowStepExecution entity.
@@ -784,6 +856,13 @@ func ExposeWorkflowStepExecution(_wse *WorkflowStepExecution) *WorkflowStepExecu
 	} else if _wse.ProjectID != "" {
 		wseo.Project = &ProjectOutput{
 			ID: _wse.ProjectID,
+		}
+	}
+	if _wse.Edges.StageExecution != nil {
+		wseo.StageExecution = ExposeWorkflowStageExecution(_wse.Edges.StageExecution)
+	} else if _wse.WorkflowStageExecutionID != "" {
+		wseo.StageExecution = &WorkflowStageExecutionOutput{
+			ID: _wse.WorkflowStageExecutionID,
 		}
 	}
 	return wseo

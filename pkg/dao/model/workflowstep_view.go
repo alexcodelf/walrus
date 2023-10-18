@@ -25,6 +25,8 @@ type WorkflowStepCreateInput struct {
 
 	// Project indicates to create WorkflowStep entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to create WorkflowStep entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 
 	// ID of the workflow that this workflow step belongs to.
 	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
@@ -74,6 +76,9 @@ func (wsci *WorkflowStepCreateInput) Model() *WorkflowStep {
 	if wsci.Project != nil {
 		_ws.ProjectID = wsci.Project.ID
 	}
+	if wsci.Stage != nil {
+		_ws.StageID = wsci.Stage.ID
+	}
 
 	return _ws
 }
@@ -100,6 +105,12 @@ func (wsci *WorkflowStepCreateInput) ValidateWith(ctx context.Context, cs Client
 	// Validate when creating under the Project route.
 	if wsci.Project != nil {
 		if err := wsci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+	// Validate when creating under the Stage route.
+	if wsci.Stage != nil {
+		if err := wsci.Stage.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
 	}
@@ -153,6 +164,8 @@ type WorkflowStepCreateInputs struct {
 
 	// Project indicates to create WorkflowStep entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to create WorkflowStep entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepCreateInputsItem `path:"-" query:"-" json:"items"`
@@ -184,6 +197,9 @@ func (wsci *WorkflowStepCreateInputs) Model() []*WorkflowStep {
 
 		if wsci.Project != nil {
 			_ws.ProjectID = wsci.Project.ID
+		}
+		if wsci.Stage != nil {
+			_ws.StageID = wsci.Stage.ID
 		}
 
 		_wss[i] = _ws
@@ -225,6 +241,16 @@ func (wsci *WorkflowStepCreateInputs) ValidateWith(ctx context.Context, cs Clien
 			}
 		}
 	}
+	// Validate when creating under the Stage route.
+	if wsci.Stage != nil {
+		if err := wsci.Stage.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wsci.Stage = nil
+			}
+		}
+	}
 
 	for i := range wsci.Items {
 		if wsci.Items[i] == nil {
@@ -258,6 +284,8 @@ type WorkflowStepDeleteInputs struct {
 
 	// Project indicates to delete WorkflowStep entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to delete WorkflowStep entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepDeleteInputsItem `path:"-" query:"-" json:"items"`
@@ -329,6 +357,16 @@ func (wsdi *WorkflowStepDeleteInputs) ValidateWith(ctx context.Context, cs Clien
 		}
 	}
 
+	// Validate when deleting under the Stage route.
+	if wsdi.Stage != nil {
+		if err := wsdi.Stage.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstep.StageID(wsdi.Stage.ID))
+		}
+	}
+
 	ids := make([]object.ID, 0, len(wsdi.Items))
 
 	for i := range wsdi.Items {
@@ -367,6 +405,8 @@ type WorkflowStepQueryInput struct {
 
 	// Project indicates to query WorkflowStep entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"project"`
+	// Stage indicates to query WorkflowStep entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"stage"`
 
 	// Refer holds the route path reference of the WorkflowStep entity.
 	Refer *object.Refer `path:"workflowstep,default=" query:"-" json:"-"`
@@ -422,6 +462,16 @@ func (wsqi *WorkflowStepQueryInput) ValidateWith(ctx context.Context, cs ClientS
 		}
 	}
 
+	// Validate when querying under the Stage route.
+	if wsqi.Stage != nil {
+		if err := wsqi.Stage.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstep.StageID(wsqi.Stage.ID))
+		}
+	}
+
 	if wsqi.Refer != nil {
 		if wsqi.Refer.IsID() {
 			q.Where(
@@ -470,6 +520,8 @@ type WorkflowStepQueryInputs struct {
 
 	// Project indicates to query WorkflowStep entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to query WorkflowStep entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 }
 
 // Validate checks the WorkflowStepQueryInputs entity.
@@ -494,6 +546,13 @@ func (wsqi *WorkflowStepQueryInputs) ValidateWith(ctx context.Context, cs Client
 	// Validate when querying under the Project route.
 	if wsqi.Project != nil {
 		if err := wsqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
+	// Validate when querying under the Stage route.
+	if wsqi.Stage != nil {
+		if err := wsqi.Stage.ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
 	}
@@ -611,6 +670,8 @@ type WorkflowStepUpdateInputs struct {
 
 	// Project indicates to update WorkflowStep entity MUST under the Project route.
 	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+	// Stage indicates to update WorkflowStep entity MUST under the Stage route.
+	Stage *WorkflowStageQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStepUpdateInputsItem `path:"-" query:"-" json:"items"`
@@ -694,6 +755,16 @@ func (wsui *WorkflowStepUpdateInputs) ValidateWith(ctx context.Context, cs Clien
 		}
 	}
 
+	// Validate when updating under the Stage route.
+	if wsui.Stage != nil {
+		if err := wsui.Stage.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstep.StageID(wsui.Stage.ID))
+		}
+	}
+
 	ids := make([]object.ID, 0, len(wsui.Items))
 
 	for i := range wsui.Items {
@@ -749,7 +820,8 @@ type WorkflowStepOutput struct {
 	RetryStrategy types.RetryStrategy    `json:"retryStrategy,omitempty"`
 	Timeout       int                    `json:"timeout,omitempty"`
 
-	Project *ProjectOutput `json:"project,omitempty"`
+	Project *ProjectOutput       `json:"project,omitempty"`
+	Stage   *WorkflowStageOutput `json:"stage,omitempty"`
 }
 
 // View returns the output of WorkflowStep entity.
@@ -791,6 +863,13 @@ func ExposeWorkflowStep(_ws *WorkflowStep) *WorkflowStepOutput {
 	} else if _ws.ProjectID != "" {
 		wso.Project = &ProjectOutput{
 			ID: _ws.ProjectID,
+		}
+	}
+	if _ws.Edges.Stage != nil {
+		wso.Stage = ExposeWorkflowStage(_ws.Edges.Stage)
+	} else if _ws.StageID != "" {
+		wso.Stage = &WorkflowStageOutput{
+			ID: _ws.StageID,
 		}
 	}
 	return wso

@@ -88,9 +88,7 @@ func (WorkflowStep) Edges() []ent.Edge {
 			Comment("Workflow stage that this workflow step belongs to.").
 			Required().
 			Unique().
-			Immutable().
-			Annotations(
-				entx.SkipIO()),
+			Immutable(),
 	}
 }
 

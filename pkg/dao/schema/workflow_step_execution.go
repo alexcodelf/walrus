@@ -96,9 +96,7 @@ func (WorkflowStepExecution) Edges() []ent.Edge {
 			Required().
 			Unique().
 			Required().
-			Immutable().
-			Annotations(
-				entx.SkipIO()),
+			Immutable(),
 	}
 }
 
