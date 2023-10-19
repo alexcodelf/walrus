@@ -2,12 +2,14 @@ package workflowstepexecution
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/workflow"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -54,8 +56,11 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 
 	return workflow.StreamWorkflowLogs(ctx, workflow.StreamLogsOptions{
 		Workflow:  workflowExec.Name,
-		PodName:   wse.Name,
 		ApiClient: apiClient,
-		Out:       out,
+		Selector:  fmt.Sprintf("step-execution-id=%s", wse.ID),
+		LogOptions: &corev1.PodLogOptions{
+			Container: "main",
+		},
+		Out: out,
 	})
 }

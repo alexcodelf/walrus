@@ -1,9 +1,9 @@
 package status
 
 const (
-	ServiceRevisionStatusPending   ConditionType = "Pending"
-	ServiceRevisionStatusDeploying ConditionType = "Deploying"
-	ServiceRevisionStatusReady     ConditionType = "Ready"
+	ServiceRevisionStatusPending ConditionType = "Pending"
+	ServiceRevisionStatusRunning ConditionType = "Running"
+	ServiceRevisionStatusReady   ConditionType = "Ready"
 
 	ServiceRevisionSummaryStatusRunning string = "Running"
 	ServiceRevisionSummaryStatusFailed  string = "Failed"
@@ -17,9 +17,9 @@ const (
 //	| Pending          | Unknown                 | Pending               | Transitioning         |
 //	| Pending          | False                   | Failed                | Error                 |
 //	| Pending          | True                    | Pended                |                       |
-//	| Deploying        | Unknown                 | Deploying             | Transitioning         |
-//	| Deploying        | False                   | Failed                | Error                 |
-//	| Deploying        | True                    | Deployed              |                       |
+//	| Running          | Unknown                 | Running               | Transitioning         |
+//	| Running          | False                   | Failed                | Error                 |
+//	| Running          | True                    | Deployed              |                       |
 //	| Ready            | Unknown                 | Preparing             | Transitioning         |
 //	| Ready            | False                   | Failed                | Error                 |
 //	| Ready            | True                    | Ready                 |                       |
@@ -27,7 +27,7 @@ var serviceRevisionStatusPaths = NewWalker(
 	[][]ConditionType{
 		{
 			ServiceRevisionStatusPending,
-			ServiceRevisionStatusDeploying,
+			ServiceRevisionStatusRunning,
 			ServiceRevisionStatusReady,
 		},
 	},

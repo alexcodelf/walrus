@@ -588,7 +588,9 @@ func StreamWorkflowLogs(
 			return err
 		}
 
-		_, err = opts.Out.Write([]byte(event.Content))
+		fmt.Println(event)
+
+		_, err = opts.Out.Write([]byte(event.Content + "\n"))
 		if err != nil {
 			return err
 		}

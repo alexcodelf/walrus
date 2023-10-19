@@ -15,7 +15,10 @@ func (h Handler) RouteGetLatestExecutionRequest(req RouteGetLatestExecutionReque
 	wf, err := h.modelClient.WorkflowExecutions().Query().
 		Where(workflowexecution.WorkflowID(req.ID)).
 		Order(model.Desc(workflowexecution.FieldCreateTime)).
-		Only(req.Context)
+		WithStages(func(wsq *model.WorkflowStageExecutionQuery) {
+			wsq.WithSteps()
+		}).
+		First(req.Context)
 	if err != nil {
 		return nil, err
 	}

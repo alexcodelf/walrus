@@ -35,6 +35,7 @@ import (
 	"github.com/seal-io/walrus/pkg/workflow"
 	"github.com/seal-io/walrus/utils/gopool"
 	"github.com/seal-io/walrus/utils/log"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // RouteGetTerraformStates get the terraform states of the service revision deployment.
@@ -387,7 +388,7 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 
 	revision, err := h.modelClient.ServiceRevisions().Query().
 		Where(servicerevision.ID(req.ID)).
-		Only(req.Context)
+		Only(req.Stream)
 	if err != nil {
 		return err
 	}
@@ -395,7 +396,7 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 	if revision.WorkflowStepExecutionID.Valid() {
 		stepExecution, err := h.modelClient.WorkflowStepExecutions().Query().
 			Where(workflowstepexecution.ID(revision.WorkflowStepExecutionID)).
-			Only(req.Context)
+			Only(ctx)
 		if err != nil {
 			return err
 		}
@@ -403,7 +404,7 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 		// TODO use edge.
 		workflowExecution, err := h.modelClient.WorkflowExecutions().Query().
 			Where(workflowexecution.ID(stepExecution.WorkflowExecutionID)).
-			Only(req.Context)
+			Only(ctx)
 		if err != nil {
 			return err
 		}
@@ -423,8 +424,12 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 
 		return workflow.StreamWorkflowLogs(ctx, workflow.StreamLogsOptions{
 			Workflow:  workflowExecution.Name,
-			PodName:   stepExecution.Name,
 			ApiClient: apiClient,
+			Selector:  fmt.Sprintf("step-execution-id=%s", stepExecution.ID),
+			LogOptions: &corev1.PodLogOptions{
+				Container: "main",
+			},
+			Out: out,
 		})
 	}
 

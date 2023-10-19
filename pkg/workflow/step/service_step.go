@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
@@ -73,10 +72,13 @@ func (s *ServiceStepManager) GenerateTemplate(
 		return nil, err
 	}
 
-	fmt.Println(string(execSpec))
-
 	st := &v1alpha1.Template{
 		Name: "step-execution-" + stepExec.ID.String(),
+		Metadata: v1alpha1.Metadata{
+			Labels: map[string]string{
+				"step-execution-id": stepExec.ID.String(),
+			},
+		},
 		Inputs: v1alpha1.Inputs{
 			Parameters: []v1alpha1.Parameter{
 				{

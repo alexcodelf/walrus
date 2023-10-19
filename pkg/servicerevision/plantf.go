@@ -166,7 +166,7 @@ func (t TerraformPlan) LoadConfigs(ctx context.Context, opts PlanOptions) (map[s
 		opts.ServiceRevision.Variables = variableMap
 	}
 
-	status.ServiceRevisionStatusDeploying.Reset(opts.ServiceRevision, "")
+	status.ServiceRevisionStatusRunning.Reset(opts.ServiceRevision, "")
 	opts.ServiceRevision.Status.SetSummary(status.WalkServiceRevision(&opts.ServiceRevision.Status))
 
 	revision, err := t.modelClient.ServiceRevisions().UpdateOne(opts.ServiceRevision).

@@ -51,10 +51,11 @@ func (h Handler) Update(req UpdateRequest) error {
 
 		switch req.Status {
 		case "Succeeded":
+			status.ServiceRevisionStatusRunning.Reset(latestRevision, "")
 			status.ServiceRevisionStatusReady.True(latestRevision, "")
 
 		case "Failed", "Error":
-			status.ServiceRevisionStatusDeploying.False(latestRevision, "")
+			status.ServiceRevisionStatusRunning.False(latestRevision, "")
 		}
 
 		latestRevision, err = h.modelClient.ServiceRevisions().UpdateOne(latestRevision).
