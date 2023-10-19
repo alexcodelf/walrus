@@ -21,6 +21,9 @@ import (
 type WorkflowStageExecutionCreateInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// WorkflowExecution indicates to create WorkflowStageExecution entity MUST under the WorkflowExecution route.
+	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
+
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -35,6 +38,9 @@ type WorkflowStageExecutionCreateInput struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+
+	// Steps specifies full inserting the new WorkflowStepExecution entities of the WorkflowStageExecution entity.
+	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
 }
 
 // Model returns the WorkflowStageExecution entity for creating,
@@ -54,6 +60,21 @@ func (wseci *WorkflowStageExecutionCreateInput) Model() *WorkflowStageExecution 
 		Input:            wseci.Input,
 	}
 
+	if wseci.WorkflowExecution != nil {
+		_wse.WorkflowExecutionID = wseci.WorkflowExecution.ID
+	}
+
+	if wseci.Steps != nil {
+		// Empty slice is used for clearing the edge.
+		_wse.Edges.Steps = make([]*WorkflowStepExecution, 0, len(wseci.Steps))
+	}
+	for j := range wseci.Steps {
+		if wseci.Steps[j] == nil {
+			continue
+		}
+		_wse.Edges.Steps = append(_wse.Edges.Steps,
+			wseci.Steps[j].Model())
+	}
 	return _wse
 }
 
@@ -76,6 +97,27 @@ func (wseci *WorkflowStageExecutionCreateInput) ValidateWith(ctx context.Context
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the WorkflowExecution route.
+	if wseci.WorkflowExecution != nil {
+		if err := wseci.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
+	}
+
+	for i := range wseci.Steps {
+		if wseci.Steps[i] == nil {
+			continue
+		}
+
+		if err := wseci.Steps[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.Steps[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -95,6 +137,9 @@ type WorkflowStageExecutionCreateInputsItem struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+
+	// Steps specifies full inserting the new WorkflowStepExecution entities.
+	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
 }
 
 // ValidateWith checks the WorkflowStageExecutionCreateInputsItem entity with the given context and client set.
@@ -107,6 +152,20 @@ func (wseci *WorkflowStageExecutionCreateInputsItem) ValidateWith(ctx context.Co
 		cache = map[string]any{}
 	}
 
+	for i := range wseci.Steps {
+		if wseci.Steps[i] == nil {
+			continue
+		}
+
+		if err := wseci.Steps[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.Steps[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -114,6 +173,9 @@ func (wseci *WorkflowStageExecutionCreateInputsItem) ValidateWith(ctx context.Co
 // please tags with `path:",inline" json:",inline"` if embedding.
 type WorkflowStageExecutionCreateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// WorkflowExecution indicates to create WorkflowStageExecution entity MUST under the WorkflowExecution route.
+	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStageExecutionCreateInputsItem `path:"-" query:"-" json:"items"`
@@ -137,6 +199,22 @@ func (wseci *WorkflowStageExecutionCreateInputs) Model() []*WorkflowStageExecuti
 			StepExecutionIds: wseci.Items[i].StepExecutionIds,
 			Record:           wseci.Items[i].Record,
 			Input:            wseci.Items[i].Input,
+		}
+
+		if wseci.WorkflowExecution != nil {
+			_wse.WorkflowExecutionID = wseci.WorkflowExecution.ID
+		}
+
+		if wseci.Items[i].Steps != nil {
+			// Empty slice is used for clearing the edge.
+			_wse.Edges.Steps = make([]*WorkflowStepExecution, 0, len(wseci.Items[i].Steps))
+		}
+		for j := range wseci.Items[i].Steps {
+			if wseci.Items[i].Steps[j] == nil {
+				continue
+			}
+			_wse.Edges.Steps = append(_wse.Edges.Steps,
+				wseci.Items[i].Steps[j].Model())
 		}
 
 		_wses[i] = _wse
@@ -168,6 +246,17 @@ func (wseci *WorkflowStageExecutionCreateInputs) ValidateWith(ctx context.Contex
 		cache = map[string]any{}
 	}
 
+	// Validate when creating under the WorkflowExecution route.
+	if wseci.WorkflowExecution != nil {
+		if err := wseci.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseci.WorkflowExecution = nil
+			}
+		}
+	}
+
 	for i := range wseci.Items {
 		if wseci.Items[i] == nil {
 			continue
@@ -197,6 +286,9 @@ type WorkflowStageExecutionDeleteInputsItem struct {
 // please tags with `path:",inline" json:",inline"` if embedding.
 type WorkflowStageExecutionDeleteInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// WorkflowExecution indicates to delete WorkflowStageExecution entity MUST under the WorkflowExecution route.
+	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStageExecutionDeleteInputsItem `path:"-" query:"-" json:"items"`
@@ -257,6 +349,16 @@ func (wsedi *WorkflowStageExecutionDeleteInputs) ValidateWith(ctx context.Contex
 
 	q := cs.WorkflowStageExecutions().Query()
 
+	// Validate when deleting under the WorkflowExecution route.
+	if wsedi.WorkflowExecution != nil {
+		if err := wsedi.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstageexecution.WorkflowExecutionID(wsedi.WorkflowExecution.ID))
+		}
+	}
+
 	ids := make([]object.ID, 0, len(wsedi.Items))
 
 	for i := range wsedi.Items {
@@ -292,6 +394,9 @@ func (wsedi *WorkflowStageExecutionDeleteInputs) ValidateWith(ctx context.Contex
 // please tags with `path:",inline"` if embedding.
 type WorkflowStageExecutionQueryInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// WorkflowExecution indicates to query WorkflowStageExecution entity MUST under the WorkflowExecution route.
+	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"workflowExecution"`
 
 	// Refer holds the route path reference of the WorkflowStageExecution entity.
 	Refer *object.Refer `path:"workflowstageexecution,default=" query:"-" json:"-"`
@@ -335,6 +440,16 @@ func (wseqi *WorkflowStageExecutionQueryInput) ValidateWith(ctx context.Context,
 	}
 
 	q := cs.WorkflowStageExecutions().Query()
+
+	// Validate when querying under the WorkflowExecution route.
+	if wseqi.WorkflowExecution != nil {
+		if err := wseqi.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstageexecution.WorkflowExecutionID(wseqi.WorkflowExecution.ID))
+		}
+	}
 
 	if wseqi.Refer != nil {
 		if wseqi.Refer.IsID() {
@@ -381,6 +496,9 @@ func (wseqi *WorkflowStageExecutionQueryInput) ValidateWith(ctx context.Context,
 // please tags with `path:",inline" query:",inline"` if embedding.
 type WorkflowStageExecutionQueryInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// WorkflowExecution indicates to query WorkflowStageExecution entity MUST under the WorkflowExecution route.
+	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 }
 
 // Validate checks the WorkflowStageExecutionQueryInputs entity.
@@ -400,6 +518,13 @@ func (wseqi *WorkflowStageExecutionQueryInputs) ValidateWith(ctx context.Context
 
 	if cache == nil {
 		cache = map[string]any{}
+	}
+
+	// Validate when querying under the WorkflowExecution route.
+	if wseqi.WorkflowExecution != nil {
+		if err := wseqi.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -422,6 +547,9 @@ type WorkflowStageExecutionUpdateInput struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+
+	// Steps indicates replacing the stale WorkflowStepExecution entities.
+	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
 }
 
 // Model returns the WorkflowStageExecution entity for modifying,
@@ -441,6 +569,17 @@ func (wseui *WorkflowStageExecutionUpdateInput) Model() *WorkflowStageExecution 
 		Input:            wseui.Input,
 	}
 
+	if wseui.Steps != nil {
+		// Empty slice is used for clearing the edge.
+		_wse.Edges.Steps = make([]*WorkflowStepExecution, 0, len(wseui.Steps))
+	}
+	for j := range wseui.Steps {
+		if wseui.Steps[j] == nil {
+			continue
+		}
+		_wse.Edges.Steps = append(_wse.Edges.Steps,
+			wseui.Steps[j].Model())
+	}
 	return _wse
 }
 
@@ -463,6 +602,20 @@ func (wseui *WorkflowStageExecutionUpdateInput) ValidateWith(ctx context.Context
 		return err
 	}
 
+	for i := range wseui.Steps {
+		if wseui.Steps[i] == nil {
+			continue
+		}
+
+		if err := wseui.Steps[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseui.Steps[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -483,6 +636,9 @@ type WorkflowStageExecutionUpdateInputsItem struct {
 	Record string `path:"-" query:"-" json:"record"`
 	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
 	Input string `path:"-" query:"-" json:"input"`
+
+	// Steps indicates replacing the stale WorkflowStepExecution entities.
+	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
 }
 
 // ValidateWith checks the WorkflowStageExecutionUpdateInputsItem entity with the given context and client set.
@@ -495,6 +651,20 @@ func (wseui *WorkflowStageExecutionUpdateInputsItem) ValidateWith(ctx context.Co
 		cache = map[string]any{}
 	}
 
+	for i := range wseui.Steps {
+		if wseui.Steps[i] == nil {
+			continue
+		}
+
+		if err := wseui.Steps[i].ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				wseui.Steps[i] = nil
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -502,6 +672,9 @@ func (wseui *WorkflowStageExecutionUpdateInputsItem) ValidateWith(ctx context.Co
 // please tags with `path:",inline" json:",inline"` if embedding.
 type WorkflowStageExecutionUpdateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// WorkflowExecution indicates to update WorkflowStageExecution entity MUST under the WorkflowExecution route.
+	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*WorkflowStageExecutionUpdateInputsItem `path:"-" query:"-" json:"items"`
@@ -525,6 +698,18 @@ func (wseui *WorkflowStageExecutionUpdateInputs) Model() []*WorkflowStageExecuti
 			StepExecutionIds: wseui.Items[i].StepExecutionIds,
 			Record:           wseui.Items[i].Record,
 			Input:            wseui.Items[i].Input,
+		}
+
+		if wseui.Items[i].Steps != nil {
+			// Empty slice is used for clearing the edge.
+			_wse.Edges.Steps = make([]*WorkflowStepExecution, 0, len(wseui.Items[i].Steps))
+		}
+		for j := range wseui.Items[i].Steps {
+			if wseui.Items[i].Steps[j] == nil {
+				continue
+			}
+			_wse.Edges.Steps = append(_wse.Edges.Steps,
+				wseui.Items[i].Steps[j].Model())
 		}
 
 		_wses[i] = _wse
@@ -571,6 +756,16 @@ func (wseui *WorkflowStageExecutionUpdateInputs) ValidateWith(ctx context.Contex
 	}
 
 	q := cs.WorkflowStageExecutions().Query()
+
+	// Validate when updating under the WorkflowExecution route.
+	if wseui.WorkflowExecution != nil {
+		if err := wseui.WorkflowExecution.ValidateWith(ctx, cs, cache); err != nil {
+			return err
+		} else {
+			q.Where(
+				workflowstageexecution.WorkflowExecutionID(wseui.WorkflowExecution.ID))
+		}
+	}
 
 	ids := make([]object.ID, 0, len(wseui.Items))
 

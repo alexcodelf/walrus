@@ -19,6 +19,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
@@ -490,6 +491,13 @@ func (h Handler) CollectionRouteWorkflowExec(req CollectionRouteWorkflowExecRequ
 		return nil, err
 	}
 
+	stepExecution, err := h.modelClient.WorkflowStepExecutions().Query().
+		Where(workflowstepexecution.ID(req.WorkflowStepExecutionID)).
+		Only(req.Context)
+	if err != nil {
+		return nil, err
+	}
+
 	var (
 		planner          pkgrevision.IPlan
 		planOpts         pkgrevision.PlanOptions
@@ -500,7 +508,7 @@ func (h Handler) CollectionRouteWorkflowExec(req CollectionRouteWorkflowExecRequ
 		// If the service does not exist, create it.
 		if entity == nil {
 			entity = req.Model()
-			entity.WorkflowStepID = req.WorkflowStepID
+			entity.WorkflowStepID = stepExecution.WorkflowStepID
 
 			status.ServiceStatusDeployed.Unknown(entity, "")
 			entity.Status.SetSummary(status.WalkService(&entity.Status))
@@ -521,8 +529,9 @@ func (h Handler) CollectionRouteWorkflowExec(req CollectionRouteWorkflowExecRequ
 
 	rm := pkgrevision.NewRevisionManager(h.modelClient)
 	revisionOpts := pkgrevision.CreateOptions{
-		ServiceID: entity.ID,
-		JobType:   req.JobType,
+		ServiceID:               entity.ID,
+		WorkflowStepExecutionID: stepExecution.ID,
+		JobType:                 req.JobType,
 	}
 
 	revision, err := rm.Create(req.Context, revisionOpts)

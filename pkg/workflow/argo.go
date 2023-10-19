@@ -211,7 +211,7 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 						Parameters: []v1alpha1.Parameter{
 							{
 								Name:  "status",
-								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
+								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks.%s.status}}", taskName)),
 							},
 						},
 					},
@@ -224,7 +224,7 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 						Parameters: []v1alpha1.Parameter{
 							{
 								Name:  "status",
-								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
+								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{task.%s.status}}", taskName)),
 							},
 						},
 					},
@@ -356,14 +356,6 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 				tasks = append(tasks, v1alpha1.DAGTask{
 					Name:     taskName,
 					Template: stepTemplate.Name,
-					Arguments: v1alpha1.Arguments{
-						Parameters: []v1alpha1.Parameter{
-							{
-								Name:  "status",
-								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
-							},
-						},
-					},
 					Hooks: v1alpha1.LifecycleHooks{
 						"running": v1alpha1.LifecycleHook{
 							Template:   stepTemplateMap[beforeTemplateKey].Name,
@@ -372,7 +364,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 								Parameters: []v1alpha1.Parameter{
 									{
 										Name:  "status",
-										Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
+										Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks.%s.status}}", taskName)),
 									},
 								},
 							},
@@ -385,7 +377,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 								Parameters: []v1alpha1.Parameter{
 									{
 										Name:  "status",
-										Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks['%s'].status}}", taskName)),
+										Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks.%s.status}}", taskName)),
 									},
 								},
 							},
@@ -535,7 +527,7 @@ func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
-			URL: "{{workflow.parameters.server}}v1/projects/{{workflow.parameters.projectID}}" +
+			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
 				"/workflows/{{workflow.parameters.workflowID}}" +
 				"/executions/{{inputs.parameters.workflowExecutionID}}",
 			Method: http.MethodPut,
@@ -549,14 +541,12 @@ func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
 					Value: "Bearer {{workflow.parameters.token}}",
 				},
 			},
+			InsecureSkipVerify: !apiconfig.TlsCertified.Get(),
+			SuccessCondition:   "response.statusCode >= 200 && response.statusCode < 300",
 			Body: `{
-	"project":{
-		"id": "{{workflow.parameters.projectID}}"
-	},
-	"id": "{{inputs.parameters.workflowExecutionID}}",
-	"status": {{workflow.status}},
-}
-`,
+				"status": "{{workflow.status}}",
+				"id": "{{inputs.parameters.workflowExecutionID}}"
+			}`,
 		},
 	}
 }

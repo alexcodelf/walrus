@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
@@ -54,21 +55,28 @@ func (s *ServiceStepManager) GenerateTemplate(
 ) (*v1alpha1.Template, error) {
 	deployerImage := settings.DeployerImage.ShouldValue(ctx, s.mc)
 
-	environmentID, ok := stepExec.Spec["environmentID"].(string)
+	environment, ok := stepExec.Spec["environment"].(map[string]interface{})
 	if !ok {
-		return nil, errors.New("environmentID is not found")
+		return nil, errors.New("environment is not found")
+	}
+	environmentID, ok := environment["id"].(string)
+	if !ok {
+		return nil, errors.New("environment id is not found")
 	}
 
+	// Inject workflow step execution id to request.
 	stepSpec := stepExec.Spec
-	stepSpec["workflowStepID"] = stepExec.ID.String()
+	stepSpec["workflowStepExecutionID"] = stepExec.ID.String()
 
 	execSpec, err := json.Marshal(stepExec.Spec)
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Println(string(execSpec))
+
 	st := &v1alpha1.Template{
-		Name: stepExec.Name, // TODO use stepExec.ID.String() as name.
+		Name: "step-execution-" + stepExec.ID.String(),
 		Inputs: v1alpha1.Inputs{
 			Parameters: []v1alpha1.Parameter{
 				{

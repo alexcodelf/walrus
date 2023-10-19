@@ -15117,6 +15117,7 @@ type ServiceRevisionMutation struct {
 	previous_required_providers       *[]types.ProviderRequirement
 	appendprevious_required_providers []types.ProviderRequirement
 	record                            *string
+	workflow_step_execution_id        *object.ID
 	clearedFields                     map[string]struct{}
 	project                           *object.ID
 	clearedproject                    bool
@@ -15847,6 +15848,55 @@ func (m *ServiceRevisionMutation) ResetRecord() {
 	delete(m.clearedFields, servicerevision.FieldRecord)
 }
 
+// SetWorkflowStepExecutionID sets the "workflow_step_execution_id" field.
+func (m *ServiceRevisionMutation) SetWorkflowStepExecutionID(o object.ID) {
+	m.workflow_step_execution_id = &o
+}
+
+// WorkflowStepExecutionID returns the value of the "workflow_step_execution_id" field in the mutation.
+func (m *ServiceRevisionMutation) WorkflowStepExecutionID() (r object.ID, exists bool) {
+	v := m.workflow_step_execution_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkflowStepExecutionID returns the old "workflow_step_execution_id" field's value of the ServiceRevision entity.
+// If the ServiceRevision object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServiceRevisionMutation) OldWorkflowStepExecutionID(ctx context.Context) (v object.ID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkflowStepExecutionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkflowStepExecutionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkflowStepExecutionID: %w", err)
+	}
+	return oldValue.WorkflowStepExecutionID, nil
+}
+
+// ClearWorkflowStepExecutionID clears the value of the "workflow_step_execution_id" field.
+func (m *ServiceRevisionMutation) ClearWorkflowStepExecutionID() {
+	m.workflow_step_execution_id = nil
+	m.clearedFields[servicerevision.FieldWorkflowStepExecutionID] = struct{}{}
+}
+
+// WorkflowStepExecutionIDCleared returns if the "workflow_step_execution_id" field was cleared in this mutation.
+func (m *ServiceRevisionMutation) WorkflowStepExecutionIDCleared() bool {
+	_, ok := m.clearedFields[servicerevision.FieldWorkflowStepExecutionID]
+	return ok
+}
+
+// ResetWorkflowStepExecutionID resets all changes to the "workflow_step_execution_id" field.
+func (m *ServiceRevisionMutation) ResetWorkflowStepExecutionID() {
+	m.workflow_step_execution_id = nil
+	delete(m.clearedFields, servicerevision.FieldWorkflowStepExecutionID)
+}
+
 // ClearProject clears the "project" edge to the Project entity.
 func (m *ServiceRevisionMutation) ClearProject() {
 	m.clearedproject = true
@@ -15959,7 +16009,7 @@ func (m *ServiceRevisionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ServiceRevisionMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 16)
 	if m.create_time != nil {
 		fields = append(fields, servicerevision.FieldCreateTime)
 	}
@@ -16005,6 +16055,9 @@ func (m *ServiceRevisionMutation) Fields() []string {
 	if m.record != nil {
 		fields = append(fields, servicerevision.FieldRecord)
 	}
+	if m.workflow_step_execution_id != nil {
+		fields = append(fields, servicerevision.FieldWorkflowStepExecutionID)
+	}
 	return fields
 }
 
@@ -16043,6 +16096,8 @@ func (m *ServiceRevisionMutation) Field(name string) (ent.Value, bool) {
 		return m.PreviousRequiredProviders()
 	case servicerevision.FieldRecord:
 		return m.Record()
+	case servicerevision.FieldWorkflowStepExecutionID:
+		return m.WorkflowStepExecutionID()
 	}
 	return nil, false
 }
@@ -16082,6 +16137,8 @@ func (m *ServiceRevisionMutation) OldField(ctx context.Context, name string) (en
 		return m.OldPreviousRequiredProviders(ctx)
 	case servicerevision.FieldRecord:
 		return m.OldRecord(ctx)
+	case servicerevision.FieldWorkflowStepExecutionID:
+		return m.OldWorkflowStepExecutionID(ctx)
 	}
 	return nil, fmt.Errorf("unknown ServiceRevision field %s", name)
 }
@@ -16196,6 +16253,13 @@ func (m *ServiceRevisionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRecord(v)
 		return nil
+	case servicerevision.FieldWorkflowStepExecutionID:
+		v, ok := value.(object.ID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkflowStepExecutionID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ServiceRevision field %s", name)
 }
@@ -16250,6 +16314,9 @@ func (m *ServiceRevisionMutation) ClearedFields() []string {
 	if m.FieldCleared(servicerevision.FieldRecord) {
 		fields = append(fields, servicerevision.FieldRecord)
 	}
+	if m.FieldCleared(servicerevision.FieldWorkflowStepExecutionID) {
+		fields = append(fields, servicerevision.FieldWorkflowStepExecutionID)
+	}
 	return fields
 }
 
@@ -16272,6 +16339,9 @@ func (m *ServiceRevisionMutation) ClearField(name string) error {
 		return nil
 	case servicerevision.FieldRecord:
 		m.ClearRecord()
+		return nil
+	case servicerevision.FieldWorkflowStepExecutionID:
+		m.ClearWorkflowStepExecutionID()
 		return nil
 	}
 	return fmt.Errorf("unknown ServiceRevision nullable field %s", name)
@@ -16325,6 +16395,9 @@ func (m *ServiceRevisionMutation) ResetField(name string) error {
 		return nil
 	case servicerevision.FieldRecord:
 		m.ResetRecord()
+		return nil
+	case servicerevision.FieldWorkflowStepExecutionID:
+		m.ResetWorkflowStepExecutionID()
 		return nil
 	}
 	return fmt.Errorf("unknown ServiceRevision field %s", name)

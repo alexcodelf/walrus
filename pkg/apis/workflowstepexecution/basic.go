@@ -14,13 +14,19 @@ func (h Handler) Update(req UpdateRequest) error {
 
 	switch req.Status {
 	case "Succeeded":
-	case "Error":
+		status.WorkflowStepExecutionStatusReady.Reset(entity, "")
+	case "Error", "Failed":
+		status.WorkflowStepExecutionStatusPending.False(entity, "execute failed")
 	case "Running":
+		status.WorkflowStepExecutionStatusRunning.True(entity, "")
 	}
+
+	entity.Status.SetSummary(status.WalkWorkflowStepExecution(&entity.Status))
 
 	entity, err := h.modelClient.WorkflowStepExecutions().UpdateOne(entity).
 		SetRecord(req.Record).
 		SetDuration(req.Duration).
+		SetStatus(entity.Status).
 		Save(req.Context)
 	if err != nil {
 		return err
@@ -46,11 +52,9 @@ func (h Handler) Update(req UpdateRequest) error {
 		switch req.Status {
 		case "Succeeded":
 			status.ServiceRevisionStatusReady.True(latestRevision, "")
-			latestRevision.Status.SetSummary(status.WalkServiceRevision(&latestRevision.Status))
 
 		case "Failed", "Error":
 			status.ServiceRevisionStatusDeploying.False(latestRevision, "")
-			latestRevision.Status.SetSummary(status.WalkServiceRevision(&latestRevision.Status))
 		}
 
 		latestRevision, err = h.modelClient.ServiceRevisions().UpdateOne(latestRevision).
@@ -59,6 +63,8 @@ func (h Handler) Update(req UpdateRequest) error {
 		if err != nil {
 			return err
 		}
+
+		latestRevision.Status.SetSummary(status.WalkServiceRevision(&latestRevision.Status))
 
 		return revisionbus.Notify(req.Context, h.modelClient, latestRevision)
 

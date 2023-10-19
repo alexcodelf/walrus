@@ -69,8 +69,7 @@ func (WorkflowStageExecution) Edges() []ent.Edge {
 		edge.To("steps", WorkflowStepExecution.Type).
 			Comment("Workflow step executions that belong to this workflow stage execution.").
 			Annotations(
-				entsql.OnDelete(entsql.Cascade),
-				entx.SkipInput()),
+				entsql.OnDelete(entsql.Cascade)),
 		// WorkflowStage 1-* WorkflowStageExecutions.
 		edge.From("stage", WorkflowStage.Type).
 			Ref("executions").
@@ -88,9 +87,7 @@ func (WorkflowStageExecution) Edges() []ent.Edge {
 			Comment("Workflow execution that this workflow stage execution belongs to.").
 			Required().
 			Unique().
-			Immutable().
-			Annotations(
-				entx.SkipInput()),
+			Immutable(),
 	}
 }
 

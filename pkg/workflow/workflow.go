@@ -45,20 +45,26 @@ func Create(ctx context.Context, mc model.ClientSet, wf *model.Workflow) error {
 	})
 }
 
-func Apply(ctx context.Context, mc model.ClientSet, clientConfig clientcmd.ClientConfig, wf *model.Workflow) error {
+// Apply applies the workflow execution to the argo workflow server.
+func Apply(
+	ctx context.Context,
+	mc model.ClientSet,
+	clientConfig clientcmd.ClientConfig,
+	wf *model.Workflow,
+) (*model.WorkflowExecution, error) {
 	client, err := NewArgoWorkflowClient(mc, clientConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	s := session.MustGetSubject(ctx)
 
 	wfe, err := CreateWorkflowExecution(ctx, mc, wf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return client.Submit(ctx, SubmitOptions{
+	return wfe, client.Submit(ctx, SubmitOptions{
 		WorkflowExecution: wfe,
 		SubjectID:         s.ID,
 	})

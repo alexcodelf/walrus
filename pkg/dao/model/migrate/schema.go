@@ -515,6 +515,7 @@ var (
 		{Name: "duration", Type: field.TypeInt, Default: 0},
 		{Name: "previous_required_providers", Type: field.TypeJSON},
 		{Name: "record", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "workflow_step_execution_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "environment_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "project_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "service_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
@@ -527,19 +528,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "service_revisions_environments_service_revisions",
-				Columns:    []*schema.Column{ServiceRevisionsColumns[13]},
+				Columns:    []*schema.Column{ServiceRevisionsColumns[14]},
 				RefColumns: []*schema.Column{EnvironmentsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "service_revisions_projects_service_revisions",
-				Columns:    []*schema.Column{ServiceRevisionsColumns[14]},
+				Columns:    []*schema.Column{ServiceRevisionsColumns[15]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "service_revisions_services_revisions",
-				Columns:    []*schema.Column{ServiceRevisionsColumns[15]},
+				Columns:    []*schema.Column{ServiceRevisionsColumns[16]},
 				RefColumns: []*schema.Column{ServicesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},

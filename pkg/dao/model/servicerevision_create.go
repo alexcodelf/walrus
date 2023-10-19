@@ -168,6 +168,20 @@ func (src *ServiceRevisionCreate) SetNillableRecord(s *string) *ServiceRevisionC
 	return src
 }
 
+// SetWorkflowStepExecutionID sets the "workflow_step_execution_id" field.
+func (src *ServiceRevisionCreate) SetWorkflowStepExecutionID(o object.ID) *ServiceRevisionCreate {
+	src.mutation.SetWorkflowStepExecutionID(o)
+	return src
+}
+
+// SetNillableWorkflowStepExecutionID sets the "workflow_step_execution_id" field if the given value is not nil.
+func (src *ServiceRevisionCreate) SetNillableWorkflowStepExecutionID(o *object.ID) *ServiceRevisionCreate {
+	if o != nil {
+		src.SetWorkflowStepExecutionID(*o)
+	}
+	return src
+}
+
 // SetID sets the "id" field.
 func (src *ServiceRevisionCreate) SetID(o object.ID) *ServiceRevisionCreate {
 	src.mutation.SetID(o)
@@ -409,6 +423,10 @@ func (src *ServiceRevisionCreate) createSpec() (*ServiceRevision, *sqlgraph.Crea
 		_spec.SetField(servicerevision.FieldRecord, field.TypeString, value)
 		_node.Record = value
 	}
+	if value, ok := src.mutation.WorkflowStepExecutionID(); ok {
+		_spec.SetField(servicerevision.FieldWorkflowStepExecutionID, field.TypeString, value)
+		_node.WorkflowStepExecutionID = value
+	}
 	if nodes := src.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -511,6 +529,9 @@ func (src *ServiceRevisionCreate) Set(obj *ServiceRevision) *ServiceRevisionCrea
 	if obj.Record != "" {
 		src.SetRecord(obj.Record)
 	}
+	if obj.WorkflowStepExecutionID != "" {
+		src.SetWorkflowStepExecutionID(obj.WorkflowStepExecutionID)
+	}
 
 	// Record the given object.
 	src.object = obj
@@ -576,6 +597,9 @@ func (src *ServiceRevisionCreate) SaveE(ctx context.Context, cbs ...func(ctx con
 		}
 		if _, set := src.mutation.Field(servicerevision.FieldRecord); set {
 			obj.Record = x.Record
+		}
+		if _, set := src.mutation.Field(servicerevision.FieldWorkflowStepExecutionID); set {
+			obj.WorkflowStepExecutionID = x.WorkflowStepExecutionID
 		}
 		obj.Edges = x.Edges
 	}
@@ -705,6 +729,9 @@ func (srcb *ServiceRevisionCreateBulk) SaveE(ctx context.Context, cbs ...func(ct
 			}
 			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldRecord); set {
 				objs[i].Record = x[i].Record
+			}
+			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldWorkflowStepExecutionID); set {
+				objs[i].WorkflowStepExecutionID = x[i].WorkflowStepExecutionID
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -976,6 +1003,24 @@ func (u *ServiceRevisionUpsert) ClearRecord() *ServiceRevisionUpsert {
 	return u
 }
 
+// SetWorkflowStepExecutionID sets the "workflow_step_execution_id" field.
+func (u *ServiceRevisionUpsert) SetWorkflowStepExecutionID(v object.ID) *ServiceRevisionUpsert {
+	u.Set(servicerevision.FieldWorkflowStepExecutionID, v)
+	return u
+}
+
+// UpdateWorkflowStepExecutionID sets the "workflow_step_execution_id" field to the value that was provided on create.
+func (u *ServiceRevisionUpsert) UpdateWorkflowStepExecutionID() *ServiceRevisionUpsert {
+	u.SetExcluded(servicerevision.FieldWorkflowStepExecutionID)
+	return u
+}
+
+// ClearWorkflowStepExecutionID clears the value of the "workflow_step_execution_id" field.
+func (u *ServiceRevisionUpsert) ClearWorkflowStepExecutionID() *ServiceRevisionUpsert {
+	u.SetNull(servicerevision.FieldWorkflowStepExecutionID)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1204,6 +1249,27 @@ func (u *ServiceRevisionUpsertOne) UpdateRecord() *ServiceRevisionUpsertOne {
 func (u *ServiceRevisionUpsertOne) ClearRecord() *ServiceRevisionUpsertOne {
 	return u.Update(func(s *ServiceRevisionUpsert) {
 		s.ClearRecord()
+	})
+}
+
+// SetWorkflowStepExecutionID sets the "workflow_step_execution_id" field.
+func (u *ServiceRevisionUpsertOne) SetWorkflowStepExecutionID(v object.ID) *ServiceRevisionUpsertOne {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.SetWorkflowStepExecutionID(v)
+	})
+}
+
+// UpdateWorkflowStepExecutionID sets the "workflow_step_execution_id" field to the value that was provided on create.
+func (u *ServiceRevisionUpsertOne) UpdateWorkflowStepExecutionID() *ServiceRevisionUpsertOne {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.UpdateWorkflowStepExecutionID()
+	})
+}
+
+// ClearWorkflowStepExecutionID clears the value of the "workflow_step_execution_id" field.
+func (u *ServiceRevisionUpsertOne) ClearWorkflowStepExecutionID() *ServiceRevisionUpsertOne {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.ClearWorkflowStepExecutionID()
 	})
 }
 
@@ -1600,6 +1666,27 @@ func (u *ServiceRevisionUpsertBulk) UpdateRecord() *ServiceRevisionUpsertBulk {
 func (u *ServiceRevisionUpsertBulk) ClearRecord() *ServiceRevisionUpsertBulk {
 	return u.Update(func(s *ServiceRevisionUpsert) {
 		s.ClearRecord()
+	})
+}
+
+// SetWorkflowStepExecutionID sets the "workflow_step_execution_id" field.
+func (u *ServiceRevisionUpsertBulk) SetWorkflowStepExecutionID(v object.ID) *ServiceRevisionUpsertBulk {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.SetWorkflowStepExecutionID(v)
+	})
+}
+
+// UpdateWorkflowStepExecutionID sets the "workflow_step_execution_id" field to the value that was provided on create.
+func (u *ServiceRevisionUpsertBulk) UpdateWorkflowStepExecutionID() *ServiceRevisionUpsertBulk {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.UpdateWorkflowStepExecutionID()
+	})
+}
+
+// ClearWorkflowStepExecutionID clears the value of the "workflow_step_execution_id" field.
+func (u *ServiceRevisionUpsertBulk) ClearWorkflowStepExecutionID() *ServiceRevisionUpsertBulk {
+	return u.Update(func(s *ServiceRevisionUpsert) {
+		s.ClearWorkflowStepExecutionID()
 	})
 }
 

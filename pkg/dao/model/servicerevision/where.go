@@ -123,6 +123,11 @@ func Record(v string) predicate.ServiceRevision {
 	return predicate.ServiceRevision(sql.FieldEQ(FieldRecord, v))
 }
 
+// WorkflowStepExecutionID applies equality check predicate on the "workflow_step_execution_id" field. It's identical to WorkflowStepExecutionIDEQ.
+func WorkflowStepExecutionID(v object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldEQ(FieldWorkflowStepExecutionID, v))
+}
+
 // CreateTimeEQ applies the EQ predicate on the "create_time" field.
 func CreateTimeEQ(v time.Time) predicate.ServiceRevision {
 	return predicate.ServiceRevision(sql.FieldEQ(FieldCreateTime, v))
@@ -846,6 +851,86 @@ func RecordEqualFold(v string) predicate.ServiceRevision {
 // RecordContainsFold applies the ContainsFold predicate on the "record" field.
 func RecordContainsFold(v string) predicate.ServiceRevision {
 	return predicate.ServiceRevision(sql.FieldContainsFold(FieldRecord, v))
+}
+
+// WorkflowStepExecutionIDEQ applies the EQ predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDEQ(v object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldEQ(FieldWorkflowStepExecutionID, v))
+}
+
+// WorkflowStepExecutionIDNEQ applies the NEQ predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDNEQ(v object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldNEQ(FieldWorkflowStepExecutionID, v))
+}
+
+// WorkflowStepExecutionIDIn applies the In predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDIn(vs ...object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldIn(FieldWorkflowStepExecutionID, vs...))
+}
+
+// WorkflowStepExecutionIDNotIn applies the NotIn predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDNotIn(vs ...object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldNotIn(FieldWorkflowStepExecutionID, vs...))
+}
+
+// WorkflowStepExecutionIDGT applies the GT predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDGT(v object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldGT(FieldWorkflowStepExecutionID, v))
+}
+
+// WorkflowStepExecutionIDGTE applies the GTE predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDGTE(v object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldGTE(FieldWorkflowStepExecutionID, v))
+}
+
+// WorkflowStepExecutionIDLT applies the LT predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDLT(v object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldLT(FieldWorkflowStepExecutionID, v))
+}
+
+// WorkflowStepExecutionIDLTE applies the LTE predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDLTE(v object.ID) predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldLTE(FieldWorkflowStepExecutionID, v))
+}
+
+// WorkflowStepExecutionIDContains applies the Contains predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDContains(v object.ID) predicate.ServiceRevision {
+	vc := string(v)
+	return predicate.ServiceRevision(sql.FieldContains(FieldWorkflowStepExecutionID, vc))
+}
+
+// WorkflowStepExecutionIDHasPrefix applies the HasPrefix predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDHasPrefix(v object.ID) predicate.ServiceRevision {
+	vc := string(v)
+	return predicate.ServiceRevision(sql.FieldHasPrefix(FieldWorkflowStepExecutionID, vc))
+}
+
+// WorkflowStepExecutionIDHasSuffix applies the HasSuffix predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDHasSuffix(v object.ID) predicate.ServiceRevision {
+	vc := string(v)
+	return predicate.ServiceRevision(sql.FieldHasSuffix(FieldWorkflowStepExecutionID, vc))
+}
+
+// WorkflowStepExecutionIDIsNil applies the IsNil predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDIsNil() predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldIsNull(FieldWorkflowStepExecutionID))
+}
+
+// WorkflowStepExecutionIDNotNil applies the NotNil predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDNotNil() predicate.ServiceRevision {
+	return predicate.ServiceRevision(sql.FieldNotNull(FieldWorkflowStepExecutionID))
+}
+
+// WorkflowStepExecutionIDEqualFold applies the EqualFold predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDEqualFold(v object.ID) predicate.ServiceRevision {
+	vc := string(v)
+	return predicate.ServiceRevision(sql.FieldEqualFold(FieldWorkflowStepExecutionID, vc))
+}
+
+// WorkflowStepExecutionIDContainsFold applies the ContainsFold predicate on the "workflow_step_execution_id" field.
+func WorkflowStepExecutionIDContainsFold(v object.ID) predicate.ServiceRevision {
+	vc := string(v)
+	return predicate.ServiceRevision(sql.FieldContainsFold(FieldWorkflowStepExecutionID, vc))
 }
 
 // HasProject applies the HasEdge predicate on the "project" edge.

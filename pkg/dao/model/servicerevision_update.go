@@ -23,6 +23,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/crypto"
+	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -165,6 +166,26 @@ func (sru *ServiceRevisionUpdate) ClearRecord() *ServiceRevisionUpdate {
 	return sru
 }
 
+// SetWorkflowStepExecutionID sets the "workflow_step_execution_id" field.
+func (sru *ServiceRevisionUpdate) SetWorkflowStepExecutionID(o object.ID) *ServiceRevisionUpdate {
+	sru.mutation.SetWorkflowStepExecutionID(o)
+	return sru
+}
+
+// SetNillableWorkflowStepExecutionID sets the "workflow_step_execution_id" field if the given value is not nil.
+func (sru *ServiceRevisionUpdate) SetNillableWorkflowStepExecutionID(o *object.ID) *ServiceRevisionUpdate {
+	if o != nil {
+		sru.SetWorkflowStepExecutionID(*o)
+	}
+	return sru
+}
+
+// ClearWorkflowStepExecutionID clears the value of the "workflow_step_execution_id" field.
+func (sru *ServiceRevisionUpdate) ClearWorkflowStepExecutionID() *ServiceRevisionUpdate {
+	sru.mutation.ClearWorkflowStepExecutionID()
+	return sru
+}
+
 // Mutation returns the ServiceRevisionMutation object of the builder.
 func (sru *ServiceRevisionUpdate) Mutation() *ServiceRevisionMutation {
 	return sru.mutation
@@ -269,6 +290,11 @@ func (sru *ServiceRevisionUpdate) Set(obj *ServiceRevision) *ServiceRevisionUpda
 	} else {
 		sru.ClearRecord()
 	}
+	if obj.WorkflowStepExecutionID != "" {
+		sru.SetWorkflowStepExecutionID(obj.WorkflowStepExecutionID)
+	} else {
+		sru.ClearWorkflowStepExecutionID()
+	}
 
 	// With Default.
 
@@ -342,6 +368,12 @@ func (sru *ServiceRevisionUpdate) sqlSave(ctx context.Context) (n int, err error
 	}
 	if sru.mutation.RecordCleared() {
 		_spec.ClearField(servicerevision.FieldRecord, field.TypeString)
+	}
+	if value, ok := sru.mutation.WorkflowStepExecutionID(); ok {
+		_spec.SetField(servicerevision.FieldWorkflowStepExecutionID, field.TypeString, value)
+	}
+	if sru.mutation.WorkflowStepExecutionIDCleared() {
+		_spec.ClearField(servicerevision.FieldWorkflowStepExecutionID, field.TypeString)
 	}
 	_spec.Node.Schema = sru.schemaConfig.ServiceRevision
 	ctx = internal.NewSchemaConfigContext(ctx, sru.schemaConfig)
@@ -488,6 +520,26 @@ func (sruo *ServiceRevisionUpdateOne) SetNillableRecord(s *string) *ServiceRevis
 // ClearRecord clears the value of the "record" field.
 func (sruo *ServiceRevisionUpdateOne) ClearRecord() *ServiceRevisionUpdateOne {
 	sruo.mutation.ClearRecord()
+	return sruo
+}
+
+// SetWorkflowStepExecutionID sets the "workflow_step_execution_id" field.
+func (sruo *ServiceRevisionUpdateOne) SetWorkflowStepExecutionID(o object.ID) *ServiceRevisionUpdateOne {
+	sruo.mutation.SetWorkflowStepExecutionID(o)
+	return sruo
+}
+
+// SetNillableWorkflowStepExecutionID sets the "workflow_step_execution_id" field if the given value is not nil.
+func (sruo *ServiceRevisionUpdateOne) SetNillableWorkflowStepExecutionID(o *object.ID) *ServiceRevisionUpdateOne {
+	if o != nil {
+		sruo.SetWorkflowStepExecutionID(*o)
+	}
+	return sruo
+}
+
+// ClearWorkflowStepExecutionID clears the value of the "workflow_step_execution_id" field.
+func (sruo *ServiceRevisionUpdateOne) ClearWorkflowStepExecutionID() *ServiceRevisionUpdateOne {
+	sruo.mutation.ClearWorkflowStepExecutionID()
 	return sruo
 }
 
@@ -638,6 +690,13 @@ func (sruo *ServiceRevisionUpdateOne) Set(obj *ServiceRevision) *ServiceRevision
 			} else {
 				sruo.ClearRecord()
 			}
+			if obj.WorkflowStepExecutionID != "" {
+				if db.WorkflowStepExecutionID != obj.WorkflowStepExecutionID {
+					sruo.SetWorkflowStepExecutionID(obj.WorkflowStepExecutionID)
+				}
+			} else {
+				sruo.ClearWorkflowStepExecutionID()
+			}
 
 			// With Default.
 
@@ -714,6 +773,9 @@ func (sruo *ServiceRevisionUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx
 		}
 		if _, set := sruo.mutation.Field(servicerevision.FieldRecord); set {
 			obj.Record = x.Record
+		}
+		if _, set := sruo.mutation.Field(servicerevision.FieldWorkflowStepExecutionID); set {
+			obj.WorkflowStepExecutionID = x.WorkflowStepExecutionID
 		}
 		obj.Edges = x.Edges
 	}
@@ -831,6 +893,12 @@ func (sruo *ServiceRevisionUpdateOne) sqlSave(ctx context.Context) (_node *Servi
 	}
 	if sruo.mutation.RecordCleared() {
 		_spec.ClearField(servicerevision.FieldRecord, field.TypeString)
+	}
+	if value, ok := sruo.mutation.WorkflowStepExecutionID(); ok {
+		_spec.SetField(servicerevision.FieldWorkflowStepExecutionID, field.TypeString, value)
+	}
+	if sruo.mutation.WorkflowStepExecutionIDCleared() {
+		_spec.ClearField(servicerevision.FieldWorkflowStepExecutionID, field.TypeString)
 	}
 	_spec.Node.Schema = sruo.schemaConfig.ServiceRevision
 	ctx = internal.NewSchemaConfigContext(ctx, sruo.schemaConfig)

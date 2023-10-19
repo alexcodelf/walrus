@@ -52,6 +52,8 @@ type ServiceRevisionCreateInput struct {
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
 	// Record of the revision.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
+	// ID of the workflow step execution that this revision belongs to.
+	WorkflowStepExecutionID object.ID `path:"-" query:"-" json:"workflowStepExecutionID,omitempty"`
 }
 
 // Model returns the ServiceRevision entity for creating,
@@ -72,6 +74,7 @@ func (srci *ServiceRevisionCreateInput) Model() *ServiceRevision {
 		Duration:                  srci.Duration,
 		PreviousRequiredProviders: srci.PreviousRequiredProviders,
 		Record:                    srci.Record,
+		WorkflowStepExecutionID:   srci.WorkflowStepExecutionID,
 	}
 
 	if srci.Project != nil {
@@ -150,6 +153,8 @@ type ServiceRevisionCreateInputsItem struct {
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
 	// Record of the revision.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
+	// ID of the workflow step execution that this revision belongs to.
+	WorkflowStepExecutionID object.ID `path:"-" query:"-" json:"workflowStepExecutionID,omitempty"`
 }
 
 // ValidateWith checks the ServiceRevisionCreateInputsItem entity with the given context and client set.
@@ -202,6 +207,7 @@ func (srci *ServiceRevisionCreateInputs) Model() []*ServiceRevision {
 			Duration:                  srci.Items[i].Duration,
 			PreviousRequiredProviders: srci.Items[i].PreviousRequiredProviders,
 			Record:                    srci.Items[i].Record,
+			WorkflowStepExecutionID:   srci.Items[i].WorkflowStepExecutionID,
 		}
 
 		if srci.Project != nil {
@@ -638,6 +644,8 @@ type ServiceRevisionUpdateInput struct {
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
 	// Record of the revision.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
+	// ID of the workflow step execution that this revision belongs to.
+	WorkflowStepExecutionID object.ID `path:"-" query:"-" json:"workflowStepExecutionID,omitempty"`
 }
 
 // Model returns the ServiceRevision entity for modifying,
@@ -658,6 +666,7 @@ func (srui *ServiceRevisionUpdateInput) Model() *ServiceRevision {
 		Duration:                  srui.Duration,
 		PreviousRequiredProviders: srui.PreviousRequiredProviders,
 		Record:                    srui.Record,
+		WorkflowStepExecutionID:   srui.WorkflowStepExecutionID,
 	}
 
 	return _sr
@@ -708,6 +717,8 @@ type ServiceRevisionUpdateInputsItem struct {
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders"`
 	// Record of the revision.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
+	// ID of the workflow step execution that this revision belongs to.
+	WorkflowStepExecutionID object.ID `path:"-" query:"-" json:"workflowStepExecutionID,omitempty"`
 }
 
 // ValidateWith checks the ServiceRevisionUpdateInputsItem entity with the given context and client set.
@@ -760,6 +771,7 @@ func (srui *ServiceRevisionUpdateInputs) Model() []*ServiceRevision {
 			Duration:                  srui.Items[i].Duration,
 			PreviousRequiredProviders: srui.Items[i].PreviousRequiredProviders,
 			Record:                    srui.Items[i].Record,
+			WorkflowStepExecutionID:   srui.Items[i].WorkflowStepExecutionID,
 		}
 
 		_srs[i] = _sr
@@ -888,6 +900,7 @@ type ServiceRevisionOutput struct {
 	Duration                  int                         `json:"duration,omitempty"`
 	PreviousRequiredProviders []types.ProviderRequirement `json:"previousRequiredProviders,omitempty"`
 	Record                    string                      `json:"record,omitempty"`
+	WorkflowStepExecutionID   object.ID                   `json:"workflowStepExecutionID,omitempty"`
 
 	Project     *ProjectOutput     `json:"project,omitempty"`
 	Environment *EnvironmentOutput `json:"environment,omitempty"`
@@ -922,6 +935,7 @@ func ExposeServiceRevision(_sr *ServiceRevision) *ServiceRevisionOutput {
 		Duration:                  _sr.Duration,
 		PreviousRequiredProviders: _sr.PreviousRequiredProviders,
 		Record:                    _sr.Record,
+		WorkflowStepExecutionID:   _sr.WorkflowStepExecutionID,
 	}
 
 	if _sr.Edges.Project != nil {

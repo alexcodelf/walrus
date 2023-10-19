@@ -52,6 +52,8 @@ const (
 	FieldPreviousRequiredProviders = "previous_required_providers"
 	// FieldRecord holds the string denoting the record field in the database.
 	FieldRecord = "record"
+	// FieldWorkflowStepExecutionID holds the string denoting the workflow_step_execution_id field in the database.
+	FieldWorkflowStepExecutionID = "workflow_step_execution_id"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeEnvironment holds the string denoting the environment edge name in mutations.
@@ -101,6 +103,7 @@ var Columns = []string{
 	FieldDuration,
 	FieldPreviousRequiredProviders,
 	FieldRecord,
+	FieldWorkflowStepExecutionID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -209,6 +212,11 @@ func ByDuration(opts ...sql.OrderTermOption) OrderOption {
 // ByRecord orders the results by the record field.
 func ByRecord(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRecord, opts...).ToFunc()
+}
+
+// ByWorkflowStepExecutionID orders the results by the workflow_step_execution_id field.
+func ByWorkflowStepExecutionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowStepExecutionID, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.

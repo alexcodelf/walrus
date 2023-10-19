@@ -42,6 +42,8 @@ func NewRevisionManager(mc model.ClientSet) *Manager {
 type CreateOptions struct {
 	// ServiceID indicates the ID of service which is for create the revision.
 	ServiceID object.ID
+	// WorkflowStepExecutionID indicates the ID of workflow step execution which is for create the revision.
+	WorkflowStepExecutionID object.ID
 	// JobType indicates the type of the job.
 	JobType string
 }
@@ -81,13 +83,14 @@ func (m Manager) Create(ctx context.Context, opts CreateOptions) (*model.Service
 	}
 
 	entity := &model.ServiceRevision{
-		ProjectID:       svc.ProjectID,
-		EnvironmentID:   svc.EnvironmentID,
-		ServiceID:       svc.ID,
-		TemplateName:    svc.Edges.Template.Name,
-		TemplateVersion: svc.Edges.Template.Version,
-		Attributes:      svc.Attributes,
-		DeployerType:    DeployerType,
+		ProjectID:               svc.ProjectID,
+		EnvironmentID:           svc.EnvironmentID,
+		ServiceID:               svc.ID,
+		TemplateName:            svc.Edges.Template.Name,
+		TemplateVersion:         svc.Edges.Template.Version,
+		WorkflowStepExecutionID: opts.WorkflowStepExecutionID,
+		Attributes:              svc.Attributes,
+		DeployerType:            DeployerType,
 	}
 
 	status.ServiceRevisionStatusPending.Unknown(entity, "")

@@ -5,6 +5,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
 	"github.com/seal-io/walrus/utils/topic"
 )
@@ -26,10 +27,24 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 func (h Handler) Update(req UpdateRequest) error {
 	entity := req.Model()
 
+	switch req.Status {
+	case "Succeeded":
+		status.WorkflowExecutionStatusReady.Reset(entity, "")
+		status.WorkflowExecutionStatusReady.Reset(entity, "")
+	case "Error", "Failed":
+		status.WorkflowExecutionStatusPending.False(entity, "execute failed")
+	case "Running":
+		status.WorkflowExecutionStatusPending.Reset(entity, "")
+		status.WorkflowExecutionStatusRunning.True(entity, "")
+	}
+
+	entity.Status.SetSummary(status.WalkWorkflowExecution(&entity.Status))
+
 	return h.modelClient.WorkflowExecutions().UpdateOne(entity).
 		SetDescription(req.Description).
 		SetDuration(req.Duration).
 		SetRecord(req.Record).
+		SetStatus(entity.Status).
 		Exec(req.Context)
 }
 

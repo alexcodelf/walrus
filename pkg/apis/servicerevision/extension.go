@@ -10,7 +10,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
 	revisionbus "github.com/seal-io/walrus/pkg/bus/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
@@ -20,6 +22,8 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/service"
 	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -28,6 +32,7 @@ import (
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
 	"github.com/seal-io/walrus/pkg/serviceresources"
 	tfparser "github.com/seal-io/walrus/pkg/terraform/parser"
+	"github.com/seal-io/walrus/pkg/workflow"
 	"github.com/seal-io/walrus/utils/gopool"
 	"github.com/seal-io/walrus/utils/log"
 )
@@ -366,17 +371,6 @@ func reconcileResources(
 }
 
 func (h Handler) RouteLog(req RouteLogRequest) error {
-	// NB(thxCode): disable timeout as we don't know the maximum time-cost of once tracing,
-	// and rely on the session context timeout control,
-	// which means we don't close the underlay kubernetes client operation until the `ctx` is cancel.
-	restConfig := *h.kubeConfig // Copy.
-	restConfig.Timeout = 0
-
-	cli, err := coreclient.NewForConfig(&restConfig)
-	if err != nil {
-		return fmt.Errorf("error creating kubernetes client: %w", err)
-	}
-
 	var (
 		ctx context.Context
 		out io.Writer
@@ -389,6 +383,60 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 	} else {
 		ctx = req.Context
 		out = req.Context.Writer
+	}
+
+	revision, err := h.modelClient.ServiceRevisions().Query().
+		Where(servicerevision.ID(req.ID)).
+		Only(req.Context)
+	if err != nil {
+		return err
+	}
+
+	if revision.WorkflowStepExecutionID.Valid() {
+		stepExecution, err := h.modelClient.WorkflowStepExecutions().Query().
+			Where(workflowstepexecution.ID(revision.WorkflowStepExecutionID)).
+			Only(req.Context)
+		if err != nil {
+			return err
+		}
+
+		// TODO use edge.
+		workflowExecution, err := h.modelClient.WorkflowExecutions().Query().
+			Where(workflowexecution.ID(stepExecution.WorkflowExecutionID)).
+			Only(req.Context)
+		if err != nil {
+			return err
+		}
+
+		apiConfig := workflow.CreateKubeconfigFileForRestConfig(h.kubeConfig)
+		clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
+
+		ctx, apiClient, err := apiclient.NewClientFromOpts(apiclient.Opts{
+			ClientConfigSupplier: func() clientcmd.ClientConfig {
+				return clientConfig
+			},
+			Context: ctx,
+		})
+		if err != nil {
+			return err
+		}
+
+		return workflow.StreamWorkflowLogs(ctx, workflow.StreamLogsOptions{
+			Workflow:  workflowExecution.Name,
+			PodName:   stepExecution.Name,
+			ApiClient: apiClient,
+		})
+	}
+
+	// NB(thxCode): disable timeout as we don't know the maximum time-cost of once tracing,
+	// and rely on the session context timeout control,
+	// which means we don't close the underlay kubernetes client operation until the `ctx` is cancel.
+	restConfig := *h.kubeConfig // Copy.
+	restConfig.Timeout = 0
+
+	cli, err := coreclient.NewForConfig(&restConfig)
+	if err != nil {
+		return fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
 	return terraform.StreamJobLogs(ctx, terraform.StreamJobLogsOptions{
