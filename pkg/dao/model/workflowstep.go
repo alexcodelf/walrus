@@ -18,7 +18,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/utils/json"
 )
 
@@ -39,8 +38,6 @@ type WorkflowStep struct {
 	CreateTime *time.Time `json:"create_time,omitempty"`
 	// UpdateTime holds the value of the "update_time" field.
 	UpdateTime *time.Time `json:"update_time,omitempty"`
-	// Status holds the value of the "status" field.
-	Status status.Status `json:"status,omitempty"`
 	// Type of the workflow step.
 	Type string `json:"type,omitempty"`
 	// ID of the project to belong.
@@ -120,7 +117,7 @@ func (*WorkflowStep) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflowstep.FieldLabels, workflowstep.FieldAnnotations, workflowstep.FieldStatus, workflowstep.FieldSpec, workflowstep.FieldInput, workflowstep.FieldOutput, workflowstep.FieldDependencies, workflowstep.FieldRetryStrategy:
+		case workflowstep.FieldLabels, workflowstep.FieldAnnotations, workflowstep.FieldSpec, workflowstep.FieldInput, workflowstep.FieldOutput, workflowstep.FieldDependencies, workflowstep.FieldRetryStrategy:
 			values[i] = new([]byte)
 		case workflowstep.FieldID, workflowstep.FieldProjectID, workflowstep.FieldWorkflowID, workflowstep.FieldStageID:
 			values[i] = new(object.ID)
@@ -192,14 +189,6 @@ func (ws *WorkflowStep) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ws.UpdateTime = new(time.Time)
 				*ws.UpdateTime = value.Time
-			}
-		case workflowstep.FieldStatus:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ws.Status); err != nil {
-					return fmt.Errorf("unmarshal field status: %w", err)
-				}
 			}
 		case workflowstep.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -343,9 +332,6 @@ func (ws *WorkflowStep) String() string {
 		builder.WriteString("update_time=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
-	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", ws.Status))
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(ws.Type)

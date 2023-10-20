@@ -23,7 +23,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
 
 // WorkflowStepCreate is the builder for creating a WorkflowStep entity.
@@ -92,20 +91,6 @@ func (wsc *WorkflowStepCreate) SetUpdateTime(t time.Time) *WorkflowStepCreate {
 func (wsc *WorkflowStepCreate) SetNillableUpdateTime(t *time.Time) *WorkflowStepCreate {
 	if t != nil {
 		wsc.SetUpdateTime(*t)
-	}
-	return wsc
-}
-
-// SetStatus sets the "status" field.
-func (wsc *WorkflowStepCreate) SetStatus(s status.Status) *WorkflowStepCreate {
-	wsc.mutation.SetStatus(s)
-	return wsc
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (wsc *WorkflowStepCreate) SetNillableStatus(s *status.Status) *WorkflowStepCreate {
-	if s != nil {
-		wsc.SetStatus(*s)
 	}
 	return wsc
 }
@@ -400,10 +385,6 @@ func (wsc *WorkflowStepCreate) createSpec() (*WorkflowStep, *sqlgraph.CreateSpec
 		_spec.SetField(workflowstep.FieldUpdateTime, field.TypeTime, value)
 		_node.UpdateTime = &value
 	}
-	if value, ok := wsc.mutation.Status(); ok {
-		_spec.SetField(workflowstep.FieldStatus, field.TypeJSON, value)
-		_node.Status = value
-	}
 	if value, ok := wsc.mutation.GetType(); ok {
 		_spec.SetField(workflowstep.FieldType, field.TypeString, value)
 		_node.Type = value
@@ -536,9 +517,6 @@ func (wsc *WorkflowStepCreate) Set(obj *WorkflowStep) *WorkflowStepCreate {
 	if obj.UpdateTime != nil {
 		wsc.SetUpdateTime(*obj.UpdateTime)
 	}
-	if !reflect.ValueOf(obj.Status).IsZero() {
-		wsc.SetStatus(obj.Status)
-	}
 	if !reflect.ValueOf(obj.Spec).IsZero() {
 		wsc.SetSpec(obj.Spec)
 	}
@@ -592,9 +570,6 @@ func (wsc *WorkflowStepCreate) SaveE(ctx context.Context, cbs ...func(ctx contex
 		}
 		if _, set := wsc.mutation.Field(workflowstep.FieldDescription); set {
 			obj.Description = x.Description
-		}
-		if _, set := wsc.mutation.Field(workflowstep.FieldStatus); set {
-			obj.Status = x.Status
 		}
 		if _, set := wsc.mutation.Field(workflowstep.FieldType); set {
 			obj.Type = x.Type
@@ -724,9 +699,6 @@ func (wscb *WorkflowStepCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx c
 			}
 			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldDescription); set {
 				objs[i].Description = x[i].Description
-			}
-			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldStatus); set {
-				objs[i].Status = x[i].Status
 			}
 			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldType); set {
 				objs[i].Type = x[i].Type
@@ -941,24 +913,6 @@ func (u *WorkflowStepUpsert) SetUpdateTime(v time.Time) *WorkflowStepUpsert {
 // UpdateUpdateTime sets the "update_time" field to the value that was provided on create.
 func (u *WorkflowStepUpsert) UpdateUpdateTime() *WorkflowStepUpsert {
 	u.SetExcluded(workflowstep.FieldUpdateTime)
-	return u
-}
-
-// SetStatus sets the "status" field.
-func (u *WorkflowStepUpsert) SetStatus(v status.Status) *WorkflowStepUpsert {
-	u.Set(workflowstep.FieldStatus, v)
-	return u
-}
-
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *WorkflowStepUpsert) UpdateStatus() *WorkflowStepUpsert {
-	u.SetExcluded(workflowstep.FieldStatus)
-	return u
-}
-
-// ClearStatus clears the value of the "status" field.
-func (u *WorkflowStepUpsert) ClearStatus() *WorkflowStepUpsert {
-	u.SetNull(workflowstep.FieldStatus)
 	return u
 }
 
@@ -1204,27 +1158,6 @@ func (u *WorkflowStepUpsertOne) SetUpdateTime(v time.Time) *WorkflowStepUpsertOn
 func (u *WorkflowStepUpsertOne) UpdateUpdateTime() *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.UpdateUpdateTime()
-	})
-}
-
-// SetStatus sets the "status" field.
-func (u *WorkflowStepUpsertOne) SetStatus(v status.Status) *WorkflowStepUpsertOne {
-	return u.Update(func(s *WorkflowStepUpsert) {
-		s.SetStatus(v)
-	})
-}
-
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *WorkflowStepUpsertOne) UpdateStatus() *WorkflowStepUpsertOne {
-	return u.Update(func(s *WorkflowStepUpsert) {
-		s.UpdateStatus()
-	})
-}
-
-// ClearStatus clears the value of the "status" field.
-func (u *WorkflowStepUpsertOne) ClearStatus() *WorkflowStepUpsertOne {
-	return u.Update(func(s *WorkflowStepUpsert) {
-		s.ClearStatus()
 	})
 }
 
@@ -1652,27 +1585,6 @@ func (u *WorkflowStepUpsertBulk) SetUpdateTime(v time.Time) *WorkflowStepUpsertB
 func (u *WorkflowStepUpsertBulk) UpdateUpdateTime() *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.UpdateUpdateTime()
-	})
-}
-
-// SetStatus sets the "status" field.
-func (u *WorkflowStepUpsertBulk) SetStatus(v status.Status) *WorkflowStepUpsertBulk {
-	return u.Update(func(s *WorkflowStepUpsert) {
-		s.SetStatus(v)
-	})
-}
-
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *WorkflowStepUpsertBulk) UpdateStatus() *WorkflowStepUpsertBulk {
-	return u.Update(func(s *WorkflowStepUpsert) {
-		s.UpdateStatus()
-	})
-}
-
-// ClearStatus clears the value of the "status" field.
-func (u *WorkflowStepUpsertBulk) ClearStatus() *WorkflowStepUpsertBulk {
-	return u.Update(func(s *WorkflowStepUpsert) {
-		s.ClearStatus()
 	})
 }
 

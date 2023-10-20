@@ -33,8 +33,6 @@ const (
 	FieldCreateTime = "create_time"
 	// FieldUpdateTime holds the string denoting the update_time field in the database.
 	FieldUpdateTime = "update_time"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
 	// FieldProjectID holds the string denoting the project_id field in the database.
 	FieldProjectID = "project_id"
 	// FieldEnvironmentID holds the string denoting the environment_id field in the database.
@@ -87,7 +85,6 @@ var Columns = []string{
 	FieldAnnotations,
 	FieldCreateTime,
 	FieldUpdateTime,
-	FieldStatus,
 	FieldProjectID,
 	FieldEnvironmentID,
 	FieldDisplayName,

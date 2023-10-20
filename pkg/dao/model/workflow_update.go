@@ -25,7 +25,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
 
 // WorkflowUpdate is the builder for updating Workflow entities.
@@ -90,26 +89,6 @@ func (wu *WorkflowUpdate) ClearAnnotations() *WorkflowUpdate {
 // SetUpdateTime sets the "update_time" field.
 func (wu *WorkflowUpdate) SetUpdateTime(t time.Time) *WorkflowUpdate {
 	wu.mutation.SetUpdateTime(t)
-	return wu
-}
-
-// SetStatus sets the "status" field.
-func (wu *WorkflowUpdate) SetStatus(s status.Status) *WorkflowUpdate {
-	wu.mutation.SetStatus(s)
-	return wu
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (wu *WorkflowUpdate) SetNillableStatus(s *status.Status) *WorkflowUpdate {
-	if s != nil {
-		wu.SetStatus(*s)
-	}
-	return wu
-}
-
-// ClearStatus clears the value of the "status" field.
-func (wu *WorkflowUpdate) ClearStatus() *WorkflowUpdate {
-	wu.mutation.ClearStatus()
 	return wu
 }
 
@@ -335,9 +314,6 @@ func (wu *WorkflowUpdate) Set(obj *Workflow) *WorkflowUpdate {
 	if !reflect.ValueOf(obj.Annotations).IsZero() {
 		wu.SetAnnotations(obj.Annotations)
 	}
-	if !reflect.ValueOf(obj.Status).IsZero() {
-		wu.SetStatus(obj.Status)
-	}
 	wu.SetDisplayName(obj.DisplayName)
 	wu.SetStageIds(obj.StageIds)
 	wu.SetParallelism(obj.Parallelism)
@@ -391,12 +367,6 @@ func (wu *WorkflowUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := wu.mutation.UpdateTime(); ok {
 		_spec.SetField(workflow.FieldUpdateTime, field.TypeTime, value)
-	}
-	if value, ok := wu.mutation.Status(); ok {
-		_spec.SetField(workflow.FieldStatus, field.TypeJSON, value)
-	}
-	if wu.mutation.StatusCleared() {
-		_spec.ClearField(workflow.FieldStatus, field.TypeJSON)
 	}
 	if wu.mutation.EnvironmentIDCleared() {
 		_spec.ClearField(workflow.FieldEnvironmentID, field.TypeString)
@@ -586,26 +556,6 @@ func (wuo *WorkflowUpdateOne) ClearAnnotations() *WorkflowUpdateOne {
 // SetUpdateTime sets the "update_time" field.
 func (wuo *WorkflowUpdateOne) SetUpdateTime(t time.Time) *WorkflowUpdateOne {
 	wuo.mutation.SetUpdateTime(t)
-	return wuo
-}
-
-// SetStatus sets the "status" field.
-func (wuo *WorkflowUpdateOne) SetStatus(s status.Status) *WorkflowUpdateOne {
-	wuo.mutation.SetStatus(s)
-	return wuo
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (wuo *WorkflowUpdateOne) SetNillableStatus(s *status.Status) *WorkflowUpdateOne {
-	if s != nil {
-		wuo.SetStatus(*s)
-	}
-	return wuo
-}
-
-// ClearStatus clears the value of the "status" field.
-func (wuo *WorkflowUpdateOne) ClearStatus() *WorkflowUpdateOne {
-	wuo.mutation.ClearStatus()
 	return wuo
 }
 
@@ -860,11 +810,6 @@ func (wuo *WorkflowUpdateOne) Set(obj *Workflow) *WorkflowUpdateOne {
 					wuo.SetAnnotations(obj.Annotations)
 				}
 			}
-			if !reflect.ValueOf(obj.Status).IsZero() {
-				if !db.Status.Equal(obj.Status) {
-					wuo.SetStatus(obj.Status)
-				}
-			}
 			if db.DisplayName != obj.DisplayName {
 				wuo.SetDisplayName(obj.DisplayName)
 			}
@@ -932,9 +877,6 @@ func (wuo *WorkflowUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx context
 		}
 		if _, set := wuo.mutation.Field(workflow.FieldAnnotations); set {
 			obj.Annotations = x.Annotations
-		}
-		if _, set := wuo.mutation.Field(workflow.FieldStatus); set {
-			obj.Status = x.Status
 		}
 		if _, set := wuo.mutation.Field(workflow.FieldDisplayName); set {
 			obj.DisplayName = x.DisplayName
@@ -1035,12 +977,6 @@ func (wuo *WorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Workflow, err
 	}
 	if value, ok := wuo.mutation.UpdateTime(); ok {
 		_spec.SetField(workflow.FieldUpdateTime, field.TypeTime, value)
-	}
-	if value, ok := wuo.mutation.Status(); ok {
-		_spec.SetField(workflow.FieldStatus, field.TypeJSON, value)
-	}
-	if wuo.mutation.StatusCleared() {
-		_spec.ClearField(workflow.FieldStatus, field.TypeJSON)
 	}
 	if wuo.mutation.EnvironmentIDCleared() {
 		_spec.ClearField(workflow.FieldEnvironmentID, field.TypeString)

@@ -25,7 +25,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
 
 // WorkflowStepUpdate is the builder for updating WorkflowStep entities.
@@ -90,26 +89,6 @@ func (wsu *WorkflowStepUpdate) ClearAnnotations() *WorkflowStepUpdate {
 // SetUpdateTime sets the "update_time" field.
 func (wsu *WorkflowStepUpdate) SetUpdateTime(t time.Time) *WorkflowStepUpdate {
 	wsu.mutation.SetUpdateTime(t)
-	return wsu
-}
-
-// SetStatus sets the "status" field.
-func (wsu *WorkflowStepUpdate) SetStatus(s status.Status) *WorkflowStepUpdate {
-	wsu.mutation.SetStatus(s)
-	return wsu
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (wsu *WorkflowStepUpdate) SetNillableStatus(s *status.Status) *WorkflowStepUpdate {
-	if s != nil {
-		wsu.SetStatus(*s)
-	}
-	return wsu
-}
-
-// ClearStatus clears the value of the "status" field.
-func (wsu *WorkflowStepUpdate) ClearStatus() *WorkflowStepUpdate {
-	wsu.mutation.ClearStatus()
 	return wsu
 }
 
@@ -339,9 +318,6 @@ func (wsu *WorkflowStepUpdate) Set(obj *WorkflowStep) *WorkflowStepUpdate {
 	if !reflect.ValueOf(obj.Annotations).IsZero() {
 		wsu.SetAnnotations(obj.Annotations)
 	}
-	if !reflect.ValueOf(obj.Status).IsZero() {
-		wsu.SetStatus(obj.Status)
-	}
 	if !reflect.ValueOf(obj.Spec).IsZero() {
 		wsu.SetSpec(obj.Spec)
 	} else {
@@ -414,12 +390,6 @@ func (wsu *WorkflowStepUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := wsu.mutation.UpdateTime(); ok {
 		_spec.SetField(workflowstep.FieldUpdateTime, field.TypeTime, value)
-	}
-	if value, ok := wsu.mutation.Status(); ok {
-		_spec.SetField(workflowstep.FieldStatus, field.TypeJSON, value)
-	}
-	if wsu.mutation.StatusCleared() {
-		_spec.ClearField(workflowstep.FieldStatus, field.TypeJSON)
 	}
 	if value, ok := wsu.mutation.Spec(); ok {
 		_spec.SetField(workflowstep.FieldSpec, field.TypeJSON, value)
@@ -579,26 +549,6 @@ func (wsuo *WorkflowStepUpdateOne) ClearAnnotations() *WorkflowStepUpdateOne {
 // SetUpdateTime sets the "update_time" field.
 func (wsuo *WorkflowStepUpdateOne) SetUpdateTime(t time.Time) *WorkflowStepUpdateOne {
 	wsuo.mutation.SetUpdateTime(t)
-	return wsuo
-}
-
-// SetStatus sets the "status" field.
-func (wsuo *WorkflowStepUpdateOne) SetStatus(s status.Status) *WorkflowStepUpdateOne {
-	wsuo.mutation.SetStatus(s)
-	return wsuo
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (wsuo *WorkflowStepUpdateOne) SetNillableStatus(s *status.Status) *WorkflowStepUpdateOne {
-	if s != nil {
-		wsuo.SetStatus(*s)
-	}
-	return wsuo
-}
-
-// ClearStatus clears the value of the "status" field.
-func (wsuo *WorkflowStepUpdateOne) ClearStatus() *WorkflowStepUpdateOne {
-	wsuo.mutation.ClearStatus()
 	return wsuo
 }
 
@@ -857,11 +807,6 @@ func (wsuo *WorkflowStepUpdateOne) Set(obj *WorkflowStep) *WorkflowStepUpdateOne
 					wsuo.SetAnnotations(obj.Annotations)
 				}
 			}
-			if !reflect.ValueOf(obj.Status).IsZero() {
-				if !db.Status.Equal(obj.Status) {
-					wsuo.SetStatus(obj.Status)
-				}
-			}
 			if !reflect.ValueOf(obj.Spec).IsZero() {
 				if !reflect.DeepEqual(db.Spec, obj.Spec) {
 					wsuo.SetSpec(obj.Spec)
@@ -954,9 +899,6 @@ func (wsuo *WorkflowStepUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx co
 		}
 		if _, set := wsuo.mutation.Field(workflowstep.FieldAnnotations); set {
 			obj.Annotations = x.Annotations
-		}
-		if _, set := wsuo.mutation.Field(workflowstep.FieldStatus); set {
-			obj.Status = x.Status
 		}
 		if _, set := wsuo.mutation.Field(workflowstep.FieldSpec); set {
 			obj.Spec = x.Spec
@@ -1066,12 +1008,6 @@ func (wsuo *WorkflowStepUpdateOne) sqlSave(ctx context.Context) (_node *Workflow
 	}
 	if value, ok := wsuo.mutation.UpdateTime(); ok {
 		_spec.SetField(workflowstep.FieldUpdateTime, field.TypeTime, value)
-	}
-	if value, ok := wsuo.mutation.Status(); ok {
-		_spec.SetField(workflowstep.FieldStatus, field.TypeJSON, value)
-	}
-	if wsuo.mutation.StatusCleared() {
-		_spec.ClearField(workflowstep.FieldStatus, field.TypeJSON)
 	}
 	if value, ok := wsuo.mutation.Spec(); ok {
 		_spec.SetField(workflowstep.FieldSpec, field.TypeJSON, value)

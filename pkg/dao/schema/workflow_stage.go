@@ -19,7 +19,6 @@ type WorkflowStage struct {
 func (WorkflowStage) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.Metadata(),
-		mixin.Status(),
 	}
 }
 

@@ -14,31 +14,31 @@ import (
 )
 
 func (h Handler) RouteLog(req RouteLogRequest) error {
+	var (
+		ctx context.Context
+		out io.Writer
+	)
+
+	if req.Stream != nil {
+		ctx = req.Stream
+		out = req.Stream
+	} else {
+		ctx = req.Context
+		out = req.Context.Writer
+	}
+
 	wse, err := h.modelClient.WorkflowStepExecutions().Query().
 		Where(workflowstepexecution.ID(req.ID)).
-		Only(req.Context)
+		Only(ctx)
 	if err != nil {
 		return err
 	}
 
 	workflowExec, err := h.modelClient.WorkflowExecutions().Query().
 		Where(workflowexecution.ID(wse.WorkflowExecutionID)).
-		Only(req.Context)
+		Only(ctx)
 	if err != nil {
 		return err
-	}
-
-	var (
-		ctx context.Context
-		out io.Writer
-	)
-
-	if req.Stream == nil {
-		ctx = req.Stream
-		out = req.Stream
-	} else {
-		ctx = req.Context
-		out = req.Context.Writer
 	}
 
 	apiConfig := workflow.CreateKubeconfigFileForRestConfig(h.k8sConfig)

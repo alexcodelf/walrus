@@ -15,10 +15,12 @@ func (h Handler) Update(req UpdateRequest) error {
 	switch req.Status {
 	case "Succeeded":
 		status.WorkflowStepExecutionStatusReady.Reset(entity, "")
+		status.WorkflowStepExecutionStatusReady.True(entity, "")
 	case "Error", "Failed":
-		status.WorkflowStepExecutionStatusPending.False(entity, "execute failed")
+		status.WorkflowStepExecutionStatusRunning.Reset(entity, "")
+		status.WorkflowStepExecutionStatusRunning.False(entity, "execute failed")
 	case "Running":
-		status.WorkflowStepExecutionStatusRunning.True(entity, "")
+		status.WorkflowStepExecutionStatusRunning.Reset(entity, "")
 	}
 
 	entity.Status.SetSummary(status.WalkWorkflowStepExecution(&entity.Status))

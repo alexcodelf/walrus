@@ -16,7 +16,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/utils/json"
 )
 
@@ -37,8 +36,6 @@ type Workflow struct {
 	CreateTime *time.Time `json:"create_time,omitempty"`
 	// UpdateTime holds the value of the "update_time" field.
 	UpdateTime *time.Time `json:"update_time,omitempty"`
-	// Status holds the value of the "status" field.
-	Status status.Status `json:"status,omitempty"`
 	// ID of the project that this workflow belongs to.
 	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the environment that this workflow belongs to.
@@ -106,7 +103,7 @@ func (*Workflow) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflow.FieldLabels, workflow.FieldAnnotations, workflow.FieldStatus, workflow.FieldStageIds:
+		case workflow.FieldLabels, workflow.FieldAnnotations, workflow.FieldStageIds:
 			values[i] = new([]byte)
 		case workflow.FieldID, workflow.FieldProjectID, workflow.FieldEnvironmentID:
 			values[i] = new(object.ID)
@@ -178,14 +175,6 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				w.UpdateTime = new(time.Time)
 				*w.UpdateTime = value.Time
-			}
-		case workflow.FieldStatus:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &w.Status); err != nil {
-					return fmt.Errorf("unmarshal field status: %w", err)
-				}
 			}
 		case workflow.FieldProjectID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -297,9 +286,6 @@ func (w *Workflow) String() string {
 		builder.WriteString("update_time=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
-	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", w.Status))
 	builder.WriteString(", ")
 	builder.WriteString("project_id=")
 	builder.WriteString(fmt.Sprintf("%v", w.ProjectID))

@@ -20,7 +20,6 @@ type WorkflowStep struct {
 func (WorkflowStep) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.Metadata(),
-		mixin.Status(),
 	}
 }
 

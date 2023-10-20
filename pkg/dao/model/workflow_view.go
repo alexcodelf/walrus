@@ -15,7 +15,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
 
 // WorkflowCreateInput holds the creation input of the Workflow entity,
@@ -888,7 +887,6 @@ type WorkflowOutput struct {
 	Labels        map[string]string `json:"labels,omitempty"`
 	CreateTime    *time.Time        `json:"createTime,omitempty"`
 	UpdateTime    *time.Time        `json:"updateTime,omitempty"`
-	Status        status.Status     `json:"status,omitempty"`
 	EnvironmentID object.ID         `json:"environmentID,omitempty"`
 	DisplayName   string            `json:"displayName,omitempty"`
 	Type          string            `json:"type,omitempty"`
@@ -923,7 +921,6 @@ func ExposeWorkflow(_w *Workflow) *WorkflowOutput {
 		Labels:        _w.Labels,
 		CreateTime:    _w.CreateTime,
 		UpdateTime:    _w.UpdateTime,
-		Status:        _w.Status,
 		EnvironmentID: _w.EnvironmentID,
 		DisplayName:   _w.DisplayName,
 		Type:          _w.Type,

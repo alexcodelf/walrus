@@ -843,7 +843,6 @@ var (
 		{Name: "annotations", Type: field.TypeJSON, Nullable: true},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
-		{Name: "status", Type: field.TypeJSON, Nullable: true},
 		{Name: "environment_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "display_name", Type: field.TypeString},
 		{Name: "type", Type: field.TypeString},
@@ -859,7 +858,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflows_projects_workflows",
-				Columns:    []*schema.Column{WorkflowsColumns[13]},
+				Columns:    []*schema.Column{WorkflowsColumns[12]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -868,7 +867,7 @@ var (
 			{
 				Name:    "workflow_project_id_name",
 				Unique:  true,
-				Columns: []*schema.Column{WorkflowsColumns[13], WorkflowsColumns[1]},
+				Columns: []*schema.Column{WorkflowsColumns[12], WorkflowsColumns[1]},
 			},
 		},
 	}
@@ -920,7 +919,6 @@ var (
 		{Name: "annotations", Type: field.TypeJSON, Nullable: true},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
-		{Name: "status", Type: field.TypeJSON, Nullable: true},
 		{Name: "step_ids", Type: field.TypeJSON},
 		{Name: "dependencies", Type: field.TypeJSON},
 		{Name: "project_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
@@ -934,13 +932,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflow_stages_projects_workflow_stages",
-				Columns:    []*schema.Column{WorkflowStagesColumns[10]},
+				Columns:    []*schema.Column{WorkflowStagesColumns[9]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "workflow_stages_workflows_stages",
-				Columns:    []*schema.Column{WorkflowStagesColumns[11]},
+				Columns:    []*schema.Column{WorkflowStagesColumns[10]},
 				RefColumns: []*schema.Column{WorkflowsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -999,7 +997,6 @@ var (
 		{Name: "annotations", Type: field.TypeJSON, Nullable: true},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
-		{Name: "status", Type: field.TypeJSON, Nullable: true},
 		{Name: "type", Type: field.TypeString},
 		{Name: "workflow_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "spec", Type: field.TypeJSON, Nullable: true},
@@ -1019,13 +1016,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflow_steps_projects_workflow_steps",
-				Columns:    []*schema.Column{WorkflowStepsColumns[16]},
+				Columns:    []*schema.Column{WorkflowStepsColumns[15]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "workflow_steps_workflow_stages_steps",
-				Columns:    []*schema.Column{WorkflowStepsColumns[17]},
+				Columns:    []*schema.Column{WorkflowStepsColumns[16]},
 				RefColumns: []*schema.Column{WorkflowStagesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},

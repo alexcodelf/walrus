@@ -346,16 +346,6 @@ func UpdateTimeLTE(v time.Time) predicate.WorkflowStep {
 	return predicate.WorkflowStep(sql.FieldLTE(FieldUpdateTime, v))
 }
 
-// StatusIsNil applies the IsNil predicate on the "status" field.
-func StatusIsNil() predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldIsNull(FieldStatus))
-}
-
-// StatusNotNil applies the NotNil predicate on the "status" field.
-func StatusNotNil() predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldNotNull(FieldStatus))
-}
-
 // TypeEQ applies the EQ predicate on the "type" field.
 func TypeEQ(v string) predicate.WorkflowStep {
 	return predicate.WorkflowStep(sql.FieldEQ(FieldType, v))

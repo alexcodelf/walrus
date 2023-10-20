@@ -22166,7 +22166,6 @@ type WorkflowMutation struct {
 	annotations       *map[string]string
 	create_time       *time.Time
 	update_time       *time.Time
-	status            *status.Status
 	environment_id    *object.ID
 	display_name      *string
 	_type             *string
@@ -22545,55 +22544,6 @@ func (m *WorkflowMutation) OldUpdateTime(ctx context.Context) (v *time.Time, err
 // ResetUpdateTime resets all changes to the "update_time" field.
 func (m *WorkflowMutation) ResetUpdateTime() {
 	m.update_time = nil
-}
-
-// SetStatus sets the "status" field.
-func (m *WorkflowMutation) SetStatus(s status.Status) {
-	m.status = &s
-}
-
-// Status returns the value of the "status" field in the mutation.
-func (m *WorkflowMutation) Status() (r status.Status, exists bool) {
-	v := m.status
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStatus returns the old "status" field's value of the Workflow entity.
-// If the Workflow object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowMutation) OldStatus(ctx context.Context) (v status.Status, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldStatus requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
-	}
-	return oldValue.Status, nil
-}
-
-// ClearStatus clears the value of the "status" field.
-func (m *WorkflowMutation) ClearStatus() {
-	m.status = nil
-	m.clearedFields[workflow.FieldStatus] = struct{}{}
-}
-
-// StatusCleared returns if the "status" field was cleared in this mutation.
-func (m *WorkflowMutation) StatusCleared() bool {
-	_, ok := m.clearedFields[workflow.FieldStatus]
-	return ok
-}
-
-// ResetStatus resets all changes to the "status" field.
-func (m *WorkflowMutation) ResetStatus() {
-	m.status = nil
-	delete(m.clearedFields, workflow.FieldStatus)
 }
 
 // SetProjectID sets the "project_id" field.
@@ -23028,7 +22978,7 @@ func (m *WorkflowMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 12)
 	if m.name != nil {
 		fields = append(fields, workflow.FieldName)
 	}
@@ -23046,9 +22996,6 @@ func (m *WorkflowMutation) Fields() []string {
 	}
 	if m.update_time != nil {
 		fields = append(fields, workflow.FieldUpdateTime)
-	}
-	if m.status != nil {
-		fields = append(fields, workflow.FieldStatus)
 	}
 	if m.project != nil {
 		fields = append(fields, workflow.FieldProjectID)
@@ -23088,8 +23035,6 @@ func (m *WorkflowMutation) Field(name string) (ent.Value, bool) {
 		return m.CreateTime()
 	case workflow.FieldUpdateTime:
 		return m.UpdateTime()
-	case workflow.FieldStatus:
-		return m.Status()
 	case workflow.FieldProjectID:
 		return m.ProjectID()
 	case workflow.FieldEnvironmentID:
@@ -23123,8 +23068,6 @@ func (m *WorkflowMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldCreateTime(ctx)
 	case workflow.FieldUpdateTime:
 		return m.OldUpdateTime(ctx)
-	case workflow.FieldStatus:
-		return m.OldStatus(ctx)
 	case workflow.FieldProjectID:
 		return m.OldProjectID(ctx)
 	case workflow.FieldEnvironmentID:
@@ -23187,13 +23130,6 @@ func (m *WorkflowMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdateTime(v)
-		return nil
-	case workflow.FieldStatus:
-		v, ok := value.(status.Status)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStatus(v)
 		return nil
 	case workflow.FieldProjectID:
 		v, ok := value.(object.ID)
@@ -23291,9 +23227,6 @@ func (m *WorkflowMutation) ClearedFields() []string {
 	if m.FieldCleared(workflow.FieldAnnotations) {
 		fields = append(fields, workflow.FieldAnnotations)
 	}
-	if m.FieldCleared(workflow.FieldStatus) {
-		fields = append(fields, workflow.FieldStatus)
-	}
 	if m.FieldCleared(workflow.FieldEnvironmentID) {
 		fields = append(fields, workflow.FieldEnvironmentID)
 	}
@@ -23319,9 +23252,6 @@ func (m *WorkflowMutation) ClearField(name string) error {
 		return nil
 	case workflow.FieldAnnotations:
 		m.ClearAnnotations()
-		return nil
-	case workflow.FieldStatus:
-		m.ClearStatus()
 		return nil
 	case workflow.FieldEnvironmentID:
 		m.ClearEnvironmentID()
@@ -23351,9 +23281,6 @@ func (m *WorkflowMutation) ResetField(name string) error {
 		return nil
 	case workflow.FieldUpdateTime:
 		m.ResetUpdateTime()
-		return nil
-	case workflow.FieldStatus:
-		m.ResetStatus()
 		return nil
 	case workflow.FieldProjectID:
 		m.ResetProjectID()
@@ -24919,7 +24846,6 @@ type WorkflowStageMutation struct {
 	annotations        *map[string]string
 	create_time        *time.Time
 	update_time        *time.Time
-	status             *status.Status
 	step_ids           *[]object.ID
 	appendstep_ids     []object.ID
 	dependencies       *[]object.ID
@@ -25299,55 +25225,6 @@ func (m *WorkflowStageMutation) ResetUpdateTime() {
 	m.update_time = nil
 }
 
-// SetStatus sets the "status" field.
-func (m *WorkflowStageMutation) SetStatus(s status.Status) {
-	m.status = &s
-}
-
-// Status returns the value of the "status" field in the mutation.
-func (m *WorkflowStageMutation) Status() (r status.Status, exists bool) {
-	v := m.status
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStatus returns the old "status" field's value of the WorkflowStage entity.
-// If the WorkflowStage object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStageMutation) OldStatus(ctx context.Context) (v status.Status, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldStatus requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
-	}
-	return oldValue.Status, nil
-}
-
-// ClearStatus clears the value of the "status" field.
-func (m *WorkflowStageMutation) ClearStatus() {
-	m.status = nil
-	m.clearedFields[workflowstage.FieldStatus] = struct{}{}
-}
-
-// StatusCleared returns if the "status" field was cleared in this mutation.
-func (m *WorkflowStageMutation) StatusCleared() bool {
-	_, ok := m.clearedFields[workflowstage.FieldStatus]
-	return ok
-}
-
-// ResetStatus resets all changes to the "status" field.
-func (m *WorkflowStageMutation) ResetStatus() {
-	m.status = nil
-	delete(m.clearedFields, workflowstage.FieldStatus)
-}
-
 // SetProjectID sets the "project_id" field.
 func (m *WorkflowStageMutation) SetProjectID(o object.ID) {
 	m.project = &o
@@ -25716,7 +25593,7 @@ func (m *WorkflowStageMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStageMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 10)
 	if m.name != nil {
 		fields = append(fields, workflowstage.FieldName)
 	}
@@ -25734,9 +25611,6 @@ func (m *WorkflowStageMutation) Fields() []string {
 	}
 	if m.update_time != nil {
 		fields = append(fields, workflowstage.FieldUpdateTime)
-	}
-	if m.status != nil {
-		fields = append(fields, workflowstage.FieldStatus)
 	}
 	if m.project != nil {
 		fields = append(fields, workflowstage.FieldProjectID)
@@ -25770,8 +25644,6 @@ func (m *WorkflowStageMutation) Field(name string) (ent.Value, bool) {
 		return m.CreateTime()
 	case workflowstage.FieldUpdateTime:
 		return m.UpdateTime()
-	case workflowstage.FieldStatus:
-		return m.Status()
 	case workflowstage.FieldProjectID:
 		return m.ProjectID()
 	case workflowstage.FieldWorkflowID:
@@ -25801,8 +25673,6 @@ func (m *WorkflowStageMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldCreateTime(ctx)
 	case workflowstage.FieldUpdateTime:
 		return m.OldUpdateTime(ctx)
-	case workflowstage.FieldStatus:
-		return m.OldStatus(ctx)
 	case workflowstage.FieldProjectID:
 		return m.OldProjectID(ctx)
 	case workflowstage.FieldWorkflowID:
@@ -25861,13 +25731,6 @@ func (m *WorkflowStageMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdateTime(v)
-		return nil
-	case workflowstage.FieldStatus:
-		v, ok := value.(status.Status)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStatus(v)
 		return nil
 	case workflowstage.FieldProjectID:
 		v, ok := value.(object.ID)
@@ -25936,9 +25799,6 @@ func (m *WorkflowStageMutation) ClearedFields() []string {
 	if m.FieldCleared(workflowstage.FieldAnnotations) {
 		fields = append(fields, workflowstage.FieldAnnotations)
 	}
-	if m.FieldCleared(workflowstage.FieldStatus) {
-		fields = append(fields, workflowstage.FieldStatus)
-	}
 	return fields
 }
 
@@ -25961,9 +25821,6 @@ func (m *WorkflowStageMutation) ClearField(name string) error {
 		return nil
 	case workflowstage.FieldAnnotations:
 		m.ClearAnnotations()
-		return nil
-	case workflowstage.FieldStatus:
-		m.ClearStatus()
 		return nil
 	}
 	return fmt.Errorf("unknown WorkflowStage nullable field %s", name)
@@ -25990,9 +25847,6 @@ func (m *WorkflowStageMutation) ResetField(name string) error {
 		return nil
 	case workflowstage.FieldUpdateTime:
 		m.ResetUpdateTime()
-		return nil
-	case workflowstage.FieldStatus:
-		m.ResetStatus()
 		return nil
 	case workflowstage.FieldProjectID:
 		m.ResetProjectID()
@@ -27561,7 +27415,6 @@ type WorkflowStepMutation struct {
 	annotations        *map[string]string
 	create_time        *time.Time
 	update_time        *time.Time
-	status             *status.Status
 	_type              *string
 	workflow_id        *object.ID
 	spec               *map[string]interface{}
@@ -27942,55 +27795,6 @@ func (m *WorkflowStepMutation) OldUpdateTime(ctx context.Context) (v *time.Time,
 // ResetUpdateTime resets all changes to the "update_time" field.
 func (m *WorkflowStepMutation) ResetUpdateTime() {
 	m.update_time = nil
-}
-
-// SetStatus sets the "status" field.
-func (m *WorkflowStepMutation) SetStatus(s status.Status) {
-	m.status = &s
-}
-
-// Status returns the value of the "status" field in the mutation.
-func (m *WorkflowStepMutation) Status() (r status.Status, exists bool) {
-	v := m.status
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStatus returns the old "status" field's value of the WorkflowStep entity.
-// If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepMutation) OldStatus(ctx context.Context) (v status.Status, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldStatus requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
-	}
-	return oldValue.Status, nil
-}
-
-// ClearStatus clears the value of the "status" field.
-func (m *WorkflowStepMutation) ClearStatus() {
-	m.status = nil
-	m.clearedFields[workflowstep.FieldStatus] = struct{}{}
-}
-
-// StatusCleared returns if the "status" field was cleared in this mutation.
-func (m *WorkflowStepMutation) StatusCleared() bool {
-	_, ok := m.clearedFields[workflowstep.FieldStatus]
-	return ok
-}
-
-// ResetStatus resets all changes to the "status" field.
-func (m *WorkflowStepMutation) ResetStatus() {
-	m.status = nil
-	delete(m.clearedFields, workflowstep.FieldStatus)
 }
 
 // SetType sets the "type" field.
@@ -28580,7 +28384,7 @@ func (m *WorkflowStepMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStepMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 16)
 	if m.name != nil {
 		fields = append(fields, workflowstep.FieldName)
 	}
@@ -28598,9 +28402,6 @@ func (m *WorkflowStepMutation) Fields() []string {
 	}
 	if m.update_time != nil {
 		fields = append(fields, workflowstep.FieldUpdateTime)
-	}
-	if m.status != nil {
-		fields = append(fields, workflowstep.FieldStatus)
 	}
 	if m._type != nil {
 		fields = append(fields, workflowstep.FieldType)
@@ -28652,8 +28453,6 @@ func (m *WorkflowStepMutation) Field(name string) (ent.Value, bool) {
 		return m.CreateTime()
 	case workflowstep.FieldUpdateTime:
 		return m.UpdateTime()
-	case workflowstep.FieldStatus:
-		return m.Status()
 	case workflowstep.FieldType:
 		return m.GetType()
 	case workflowstep.FieldProjectID:
@@ -28695,8 +28494,6 @@ func (m *WorkflowStepMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldCreateTime(ctx)
 	case workflowstep.FieldUpdateTime:
 		return m.OldUpdateTime(ctx)
-	case workflowstep.FieldStatus:
-		return m.OldStatus(ctx)
 	case workflowstep.FieldType:
 		return m.OldType(ctx)
 	case workflowstep.FieldProjectID:
@@ -28767,13 +28564,6 @@ func (m *WorkflowStepMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdateTime(v)
-		return nil
-	case workflowstep.FieldStatus:
-		v, ok := value.(status.Status)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStatus(v)
 		return nil
 	case workflowstep.FieldType:
 		v, ok := value.(string)
@@ -28899,9 +28689,6 @@ func (m *WorkflowStepMutation) ClearedFields() []string {
 	if m.FieldCleared(workflowstep.FieldAnnotations) {
 		fields = append(fields, workflowstep.FieldAnnotations)
 	}
-	if m.FieldCleared(workflowstep.FieldStatus) {
-		fields = append(fields, workflowstep.FieldStatus)
-	}
 	if m.FieldCleared(workflowstep.FieldSpec) {
 		fields = append(fields, workflowstep.FieldSpec)
 	}
@@ -28936,9 +28723,6 @@ func (m *WorkflowStepMutation) ClearField(name string) error {
 		return nil
 	case workflowstep.FieldAnnotations:
 		m.ClearAnnotations()
-		return nil
-	case workflowstep.FieldStatus:
-		m.ClearStatus()
 		return nil
 	case workflowstep.FieldSpec:
 		m.ClearSpec()
@@ -28977,9 +28761,6 @@ func (m *WorkflowStepMutation) ResetField(name string) error {
 		return nil
 	case workflowstep.FieldUpdateTime:
 		m.ResetUpdateTime()
-		return nil
-	case workflowstep.FieldStatus:
-		m.ResetStatus()
 		return nil
 	case workflowstep.FieldType:
 		m.ResetType()
