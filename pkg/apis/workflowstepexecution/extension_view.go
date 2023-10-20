@@ -24,3 +24,17 @@ func (r *RouteLogRequest) Validate() error {
 func (r *RouteLogRequest) SetStream(stream runtime.RequestUnidiStream) {
 	r.Stream = &stream
 }
+
+type RouteApproveRequest struct {
+	_ struct{} `route:"POST=/approve"`
+
+	model.WorkflowStepExecutionQueryInput `path:",inline"`
+}
+
+func (r *RouteApproveRequest) Validate() error {
+	if err := r.WorkflowStepExecutionQueryInput.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -64,3 +64,26 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 		Out: out,
 	})
 }
+
+func (h Handler) RouteApprove(req RouteApproveRequest) error {
+	stepExecution, err := h.modelClient.WorkflowStepExecutions().Query().
+		Where(workflowstepexecution.ID(req.ID)).
+		Only(req.Context)
+	if err != nil {
+		return err
+	}
+
+	// Check permission to approve.
+
+	apiConfig := workflow.CreateKubeconfigFileForRestConfig(h.k8sConfig)
+	clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
+
+	client, err := workflow.NewArgoWorkflowClient(h.modelClient, clientConfig)
+	if err != nil {
+		return err
+	}
+
+	return client.Resume(req.Context, workflow.ResumeOptions{
+		WorkflowStepExecution: stepExecution,
+	})
+}

@@ -517,7 +517,7 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 	}
 
 	stepService, err := step.GetStepManager(steptypes.CreateOptions{
-		Type:        steptypes.StepTypeService,
+		Type:        steptypes.Type(wse.Type),
 		ModelClient: s.mc,
 	})
 	if err != nil {
