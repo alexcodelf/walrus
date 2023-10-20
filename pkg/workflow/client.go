@@ -12,6 +12,8 @@ import (
 type WorkflowClient interface {
 	// Submit submits a workflow to the workflow engine.
 	Submit(context.Context, SubmitOptions) error
+	// Resume resumes a workflow step execution of a workflow execution..
+	Resume(context.Context, ResumeOptions) error
 	// Delete deletes a workflow from the workflow engine.
 	Delete(context.Context, DeleteOptions) error
 	// Get gets a workflow from the workflow engine.
@@ -35,4 +37,8 @@ type GetOptions struct {
 
 type DeleteOptions struct {
 	Workflow *model.Workflow
+}
+
+type ResumeOptions struct {
+	WorkflowStepExecution *model.WorkflowStepExecution
 }

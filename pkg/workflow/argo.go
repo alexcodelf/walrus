@@ -16,6 +16,7 @@ import (
 	apiconfig "github.com/seal-io/walrus/pkg/apis/config"
 	"github.com/seal-io/walrus/pkg/auths"
 	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/settings"
 	"github.com/seal-io/walrus/pkg/workflow/step"
@@ -142,6 +143,27 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 
 	// Reset log level.
 	log.SetLevel(loglevel)
+
+	return nil
+}
+
+func (s *ArgoWorkflowClient) Resume(ctx context.Context, opts ResumeOptions) error {
+	// TODO get subjects from spec.
+	workflowExecution, err := s.mc.WorkflowExecutions().Query().
+		Where(workflowexecution.ID(opts.WorkflowStepExecution.WorkflowExecutionID)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.apiClient.NewWorkflowServiceClient().ResumeWorkflow(ctx, &workflow.WorkflowResumeRequest{
+		Name:              workflowExecution.Name,
+		Namespace:         Namespace,
+		NodeFieldSelector: fmt.Sprintf("step-execution-id=%s", opts.WorkflowStepExecution.ID.String()),
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

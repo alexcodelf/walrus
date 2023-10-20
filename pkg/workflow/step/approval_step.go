@@ -24,8 +24,16 @@ func (m *ApprovalStepManager) GenerateTemplate(
 	stepExec *model.WorkflowStepExecution,
 ) (*v1alpha1.Template, error) {
 	suspend := &v1alpha1.Template{
-		Name:    "suspend" + stepExec.ID.String(),
+		Name:    "suspend-" + stepExec.ID.String(),
 		Suspend: &v1alpha1.SuspendTemplate{},
+		Metadata: v1alpha1.Metadata{
+			Labels: map[string]string{
+				"step-execution-id": stepExec.ID.String(),
+			},
+		},
+		NodeSelector: map[string]string{
+			"step-execution-id": stepExec.ID.String(),
+		},
 	}
 
 	return suspend, nil
