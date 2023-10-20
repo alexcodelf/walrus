@@ -156,10 +156,10 @@ func (s *ArgoWorkflowClient) Resume(ctx context.Context, opts ResumeOptions) err
 		return err
 	}
 
-	_, err = s.apiClient.NewWorkflowServiceClient().ResumeWorkflow(ctx, &workflow.WorkflowResumeRequest{
+	_, err = s.apiClient.NewWorkflowServiceClient().ResumeWorkflow(s.ctx, &workflow.WorkflowResumeRequest{
 		Name:              workflowExecution.Name,
 		Namespace:         Namespace,
-		NodeFieldSelector: fmt.Sprintf("step-execution-id=%s", opts.WorkflowStepExecution.ID.String()),
+		NodeFieldSelector: fmt.Sprintf("templateName=suspend-%s", opts.WorkflowStepExecution.ID.String()),
 	})
 	if err != nil {
 		return err
@@ -306,6 +306,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 					Value: "application/json",
 				},
 			},
+			TimeoutSeconds: pointer.Int64(5),
 			Body: `{
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
@@ -347,6 +348,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 					Value: "application/json",
 				},
 			},
+			TimeoutSeconds: pointer.Int64(5),
 			Body: `{
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
@@ -461,6 +463,7 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 					Value: "application/json",
 				},
 			},
+			TimeoutSeconds: pointer.Int64(5),
 			Body: `{
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
@@ -507,6 +510,7 @@ func (s *ArgoWorkflowClient) GenerateStepTemplate(
 					Value: "application/json",
 				},
 			},
+			TimeoutSeconds: pointer.Int64(5),
 			Body: `{
 				"id": "{{inputs.parameters.id}}",
 				"status": "{{inputs.parameters.status}}"
@@ -549,6 +553,7 @@ func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
+
 			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
 				"/workflows/{{workflow.parameters.workflowID}}" +
 				"/executions/{{inputs.parameters.workflowExecutionID}}",
@@ -563,6 +568,7 @@ func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
 					Value: "Bearer {{workflow.parameters.token}}",
 				},
 			},
+			TimeoutSeconds:     pointer.Int64(5),
 			InsecureSkipVerify: !apiconfig.TlsCertified.Get(),
 			SuccessCondition:   "response.statusCode >= 200 && response.statusCode < 300",
 			Body: `{
