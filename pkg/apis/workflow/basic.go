@@ -178,3 +178,18 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 
 	return model.ExposeWorkflows(entities), count, nil
 }
+
+func (h Handler) CollectionDelete(req CollectionDeleteRequest) error {
+	ids := req.IDs()
+
+	return h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
+		_, err := tx.Workflows().Delete().
+			Where(workflow.IDIn(ids...)).
+			Exec(req.Context)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}

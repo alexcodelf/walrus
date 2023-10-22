@@ -130,7 +130,7 @@ func CreateWorkflowStageExecution(
 		WorkflowExecutionID: we.ID,
 	}
 
-	status.WorkflowStageStatusInitialized.Unknown(stageExec, "")
+	status.WorkflowStageStatusPending.Unknown(stageExec, "")
 	stageExec.Status.SetSummary(status.WalkWorkflowStageExecution(&stageExec.Status))
 
 	entity, err := mc.WorkflowStageExecutions().Create().

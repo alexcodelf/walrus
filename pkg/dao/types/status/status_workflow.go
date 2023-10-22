@@ -34,18 +34,18 @@ func WalkWorkflow(st *Status) *Summary {
 }
 
 const (
-	WorkflowStageStatusInitialized ConditionType = "Initialized"
-	WorkflowStageStatusRunning     ConditionType = "Running"
-	WorkflowStageStatusReady       ConditionType = "Ready"
+	WorkflowStageStatusPending ConditionType = "Pending"
+	WorkflowStageStatusRunning ConditionType = "Running"
+	WorkflowStageStatusReady   ConditionType = "Ready"
 )
 
 // workflowStageStatusPaths makes the following decision.
 //
 //	|  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
 //	| ---------------- | ----------------------- | --------------------- | --------------------- |
-//	| Initialized      | Unknown                 | Initializing          | Transitioning         |
-//	| Initialized      | False                   | InitializeFailed      | Error                 |
-//	| Initialized      | True                    | Initialized           |                       |
+//	| Pending          | Unknown                 | Pending               | Transitioning         |
+//	| Pending          | False                   | PendingFailed         | Error                 |
+//	| Pending          | True                    | Pending               |                       |
 //	| Running          | Unknown                 | Running               | Transitioning         |
 //	| Running          | False                   | RunFailed             | Error                 |
 //	| Running          | True                    | Running               |                       |
@@ -55,7 +55,7 @@ const (
 var workflowStageStatusPaths = NewWalker(
 	[][]ConditionType{
 		{
-			WorkflowStageStatusInitialized,
+			WorkflowStageStatusPending,
 			WorkflowStageStatusRunning,
 			WorkflowStageStatusReady,
 		},
@@ -67,18 +67,18 @@ func WalkWorkflowStage(st *Status) *Summary {
 }
 
 const (
-	WorkflowStepStatusInitialized ConditionType = "Initialized"
-	WorkflowStepStatusRunning     ConditionType = "Running"
-	WorkflowStepStatusReady       ConditionType = "Ready"
+	WorkflowStepStatusPending ConditionType = "Pending"
+	WorkflowStepStatusRunning ConditionType = "Running"
+	WorkflowStepStatusReady   ConditionType = "Ready"
 )
 
 // workflowStepStatusPaths makes the following decision.
 //
 //	|  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
 //	| ---------------- | ----------------------- | --------------------- | --------------------- |
-//	| Initialized      | Unknown                 | Initializing          | Transitioning         |
-//	| Initialized      | False                   | InitializeFailed      | Error                 |
-//	| Initialized      | True                    | Initialized           |                       |
+//	| Pending          | Unknown                 | Pending               | Transitioning         |
+//	| Pending          | False                   | PendingFailed         | Error                 |
+//	| Pending          | True                    | Pending               |                       |
 //	| Running          | Unknown                 | Running               | Transitioning         |
 //	| Running          | False                   | RunFailed             | Error                 |
 //	| Running          | True                    | Running               |                       |
@@ -88,7 +88,7 @@ const (
 var workflowStepStatusPaths = NewWalker(
 	[][]ConditionType{
 		{
-			WorkflowStepStatusInitialized,
+			WorkflowStepStatusPending,
 			WorkflowStepStatusRunning,
 			WorkflowStepStatusReady,
 		},
