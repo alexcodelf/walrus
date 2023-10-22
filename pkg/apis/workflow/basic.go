@@ -6,6 +6,8 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
 	"github.com/seal-io/walrus/utils/topic"
 )
@@ -51,7 +53,10 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 	entity, err := h.modelClient.Workflows().Query().
 		Where(workflow.ID(req.ID)).
 		WithStages(func(sgq *model.WorkflowStageQuery) {
-			sgq.WithSteps()
+			sgq.WithSteps(func(wsq *model.WorkflowStepQuery) {
+				wsq.Order(model.Asc(workflowstep.FieldCreateTime))
+			}).
+				Order(model.Asc(workflowstage.FieldCreateTime))
 		}).
 		Only(req.Context)
 	if err != nil {

@@ -4,6 +4,10 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	pkgworkflow "github.com/seal-io/walrus/pkg/workflow"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -16,7 +20,10 @@ func (h Handler) RouteGetLatestExecutionRequest(req RouteGetLatestExecutionReque
 		Where(workflowexecution.WorkflowID(req.ID)).
 		Order(model.Desc(workflowexecution.FieldCreateTime)).
 		WithStages(func(wsq *model.WorkflowStageExecutionQuery) {
-			wsq.WithSteps()
+			wsq.WithSteps(func(weeq *model.WorkflowStepExecutionQuery) {
+				weeq.Order(model.Asc(workflowstepexecution.FieldCreateTime))
+			}).
+				Order(model.Asc(workflowstageexecution.FieldCreateTime))
 		}).
 		First(req.Context)
 	if err != nil {
@@ -30,7 +37,9 @@ func (h Handler) RouteApplyRequest(req RouteApplyRequest) (RouteApplyResponse, e
 	wf, err := h.modelClient.Workflows().Query().
 		Where(workflow.ID(req.ID)).
 		WithStages(func(wsq *model.WorkflowStageQuery) {
-			wsq.WithSteps()
+			wsq.WithSteps(func(wsq *model.WorkflowStepQuery) {
+				wsq.Order(model.Asc(workflowstep.FieldCreateTime))
+			}).Order(model.Asc(workflowstage.FieldCreateTime))
 		}).
 		Only(req.Context)
 	if err != nil {

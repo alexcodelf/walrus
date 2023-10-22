@@ -7,6 +7,7 @@ import (
 
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -100,6 +101,18 @@ func CreateWorkflowExecution(
 		return nil, err
 	}
 
+	stageMap := make(map[object.ID]*model.WorkflowStage)
+	for i := range wf.Edges.Stages {
+		stageMap[wf.Edges.Stages[i].ID] = wf.Edges.Stages[i]
+	}
+
+	ordered := make(model.WorkflowStages, len(wf.Edges.Stages))
+	for i := range wf.StageIds {
+		ordered[i] = stageMap[wf.StageIds[i]]
+	}
+
+	wf.Edges.Stages = ordered
+
 	stageExecutions := make(model.WorkflowStageExecutions, len(wf.Edges.Stages))
 
 	for i, stage := range wf.Edges.Stages {
@@ -139,6 +152,18 @@ func CreateWorkflowStageExecution(
 	if err != nil {
 		return nil, err
 	}
+
+	stepMap := make(map[object.ID]*model.WorkflowStep)
+	for i := range stage.Edges.Steps {
+		stepMap[stage.Edges.Steps[i].ID] = stage.Edges.Steps[i]
+	}
+
+	ordered := make(model.WorkflowSteps, len(stage.Edges.Steps))
+	for i := range stage.StepIds {
+		ordered[i] = stepMap[stage.StepIds[i]]
+	}
+
+	stage.Edges.Steps = ordered
 
 	stepExecutions := make(model.WorkflowStepExecutions, len(stage.Edges.Steps))
 

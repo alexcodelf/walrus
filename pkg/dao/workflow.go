@@ -23,9 +23,9 @@ func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *mod
 		return err
 	}
 
-	steps := make([][]*model.WorkflowStep, len(entity.Edges.Stages))
 	// Add new items.
 	newItems := entity.Edges.Stages
+	stageIDs := make([]object.ID, len(newItems))
 	for i := range newItems {
 		if newItems[i] == nil {
 			return errors.New("invalid input: nil relationship")
@@ -33,32 +33,16 @@ func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *mod
 		newItems[i].WorkflowID = entity.ID
 		newItems[i].ProjectID = entity.ProjectID
 
-		steps[i] = newItems[i].Edges.Steps
-	}
-
-	newItems, err = mc.WorkflowStages().CreateBulk().
-		Set(newItems...).
-		Save(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Save steps after stage is saved.
-	for i := range newItems {
-		newItems[i].Edges.Steps = steps[i]
-		// TODO avoid save steps in loop.
-		err := WorkflowStageStepsEdgeSave(ctx, mc, newItems[i])
+		newItems[i], err = mc.WorkflowStages().Create().
+			Set(newItems[i]).
+			SaveE(ctx, WorkflowStageStepsEdgeSave)
 		if err != nil {
 			return err
 		}
+		stageIDs[i] = newItems[i].ID
 	}
 
 	entity.Edges.Stages = newItems // Feedback.
-
-	stageIDs := make([]object.ID, len(newItems))
-	for i := range newItems {
-		stageIDs[i] = newItems[i].ID
-	}
 
 	// Save workflow stage IDs.
 	err = mc.Workflows().UpdateOneID(entity.ID).
@@ -87,6 +71,7 @@ func WorkflowStageStepsEdgeSave(ctx context.Context, mc model.ClientSet, entity 
 
 	// Add new items.
 	newItems := entity.Edges.Steps
+	stepIDs := make([]object.ID, len(newItems))
 	for i := range newItems {
 		if newItems[i] == nil {
 			return errors.New("invalid input: nil relationship")
@@ -94,21 +79,17 @@ func WorkflowStageStepsEdgeSave(ctx context.Context, mc model.ClientSet, entity 
 		newItems[i].StageID = entity.ID
 		newItems[i].ProjectID = entity.ProjectID
 		newItems[i].WorkflowID = entity.WorkflowID
-	}
-
-	newItems, err = mc.WorkflowSteps().CreateBulk().
-		Set(newItems...).
-		Save(ctx)
-	if err != nil {
-		return err
+		// TODO avoid save in loop.
+		newItems[i], err = mc.WorkflowSteps().Create().
+			Set(newItems[i]).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		stepIDs[i] = newItems[i].ID
 	}
 
 	entity.Edges.Steps = newItems // Feedback.
-
-	stepIDs := make([]object.ID, len(newItems))
-	for i := range newItems {
-		stepIDs[i] = newItems[i].ID
-	}
 
 	// Save workflow step IDs.
 	err = mc.WorkflowStages().UpdateOneID(entity.ID).

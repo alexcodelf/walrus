@@ -228,25 +228,36 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 			Hooks: v1alpha1.LifecycleHooks{
 				"running": v1alpha1.LifecycleHook{
 					Template:   taskTemplateName + "-before",
-					Expression: fmt.Sprintf("tasks['%s'].status==\"Running\"", taskName),
+					Expression: fmt.Sprintf("tasks['%s'].status == \"Running\"", taskName),
 					Arguments: v1alpha1.Arguments{
 						Parameters: []v1alpha1.Parameter{
 							{
 								Name:  "status",
-								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks.%s.status}}", taskName)),
+								Value: v1alpha1.AnyStringPtr("Running"),
 							},
 						},
 					},
 				},
-				"finished": v1alpha1.LifecycleHook{
-					Template: taskTemplateName + "-after",
-					Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" || "+
-						"tasks['%s'].status==\"Failed\"", taskName, taskName),
+				"succeeded": v1alpha1.LifecycleHook{
+					Template:   taskTemplateName + "-after",
+					Expression: fmt.Sprintf("tasks['%s'].status == \"Succeeded\"", taskName),
 					Arguments: v1alpha1.Arguments{
 						Parameters: []v1alpha1.Parameter{
 							{
 								Name:  "status",
-								Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{task.%s.status}}", taskName)),
+								Value: v1alpha1.AnyStringPtr("Succeeded"),
+							},
+						},
+					},
+				},
+				"failed": v1alpha1.LifecycleHook{
+					Template:   taskTemplateName + "-after",
+					Expression: fmt.Sprintf("tasks['%s'].status == \"Failed\"", taskName),
+					Arguments: v1alpha1.Arguments{
+						Parameters: []v1alpha1.Parameter{
+							{
+								Name:  "status",
+								Value: v1alpha1.AnyStringPtr("Failed"),
 							},
 						},
 					},
@@ -383,25 +394,36 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 					Hooks: v1alpha1.LifecycleHooks{
 						"running": v1alpha1.LifecycleHook{
 							Template:   stepTemplateMap[beforeTemplateKey].Name,
-							Expression: fmt.Sprintf("tasks['%s'].status==\"Running\"", taskName),
+							Expression: fmt.Sprintf("tasks['%s'].status == \"Running\"", taskName),
 							Arguments: v1alpha1.Arguments{
 								Parameters: []v1alpha1.Parameter{
 									{
 										Name:  "status",
-										Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks.%s.status}}", taskName)),
+										Value: v1alpha1.AnyStringPtr("Running"),
 									},
 								},
 							},
 						},
-						"finished": v1alpha1.LifecycleHook{
-							Template: stepTemplateMap[afterTemplateKey].Name,
-							Expression: fmt.Sprintf("tasks['%s'].status==\"Succeeded\" || "+
-								"tasks['%s'].status==\"Failed\"", taskName, taskName),
+						"succeeded": v1alpha1.LifecycleHook{
+							Template:   stepTemplateMap[afterTemplateKey].Name,
+							Expression: fmt.Sprintf("tasks['%s'].status == \"Succeeded\"", taskName),
 							Arguments: v1alpha1.Arguments{
 								Parameters: []v1alpha1.Parameter{
 									{
 										Name:  "status",
-										Value: v1alpha1.AnyStringPtr(fmt.Sprintf("{{tasks.%s.status}}", taskName)),
+										Value: v1alpha1.AnyStringPtr("Succeeded"),
+									},
+								},
+							},
+						},
+						"failed": v1alpha1.LifecycleHook{
+							Template:   stepTemplateMap[afterTemplateKey].Name,
+							Expression: fmt.Sprintf("tasks['%s'].status == \"Failed\"", taskName),
+							Arguments: v1alpha1.Arguments{
+								Parameters: []v1alpha1.Parameter{
+									{
+										Name:  "status",
+										Value: v1alpha1.AnyStringPtr("Failed"),
 									},
 								},
 							},
@@ -553,7 +575,6 @@ func getExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
 			},
 		},
 		HTTP: &v1alpha1.HTTP{
-
 			URL: "{{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}" +
 				"/workflows/{{workflow.parameters.workflowID}}" +
 				"/executions/{{inputs.parameters.workflowExecutionID}}",
@@ -615,8 +636,6 @@ func StreamWorkflowLogs(
 		if err != nil {
 			return err
 		}
-
-		fmt.Println(event)
 
 		_, err = opts.Out.Write([]byte(event.Content + "\n"))
 		if err != nil {

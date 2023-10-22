@@ -1,6 +1,8 @@
 package workflowstepexecution
 
 import (
+	"fmt"
+
 	revisionbus "github.com/seal-io/walrus/pkg/bus/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/service"
@@ -22,6 +24,8 @@ func (h Handler) Update(req UpdateRequest) error {
 	case "Running":
 		status.WorkflowStepExecutionStatusRunning.Reset(entity, "")
 	}
+
+	fmt.Println("开始了", req.ID, req.Status)
 
 	entity.Status.SetSummary(status.WalkWorkflowStepExecution(&entity.Status))
 
@@ -53,12 +57,15 @@ func (h Handler) Update(req UpdateRequest) error {
 
 		switch req.Status {
 		case "Succeeded":
-			status.ServiceRevisionStatusRunning.Reset(latestRevision, "")
+			status.ServiceRevisionStatusReady.Reset(latestRevision, "")
 			status.ServiceRevisionStatusReady.True(latestRevision, "")
 
 		case "Failed", "Error":
 			status.ServiceRevisionStatusRunning.False(latestRevision, "")
+		default:
+			return nil
 		}
+		latestRevision.Status.SetSummary(status.WalkServiceRevision(&latestRevision.Status))
 
 		latestRevision, err = h.modelClient.ServiceRevisions().UpdateOne(latestRevision).
 			SetStatus(latestRevision.Status).
@@ -66,8 +73,6 @@ func (h Handler) Update(req UpdateRequest) error {
 		if err != nil {
 			return err
 		}
-
-		latestRevision.Status.SetSummary(status.WalkServiceRevision(&latestRevision.Status))
 
 		return revisionbus.Notify(req.Context, h.modelClient, latestRevision)
 
