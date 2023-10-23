@@ -2,6 +2,7 @@ package servicerevision
 
 import (
 	"context"
+	"errors"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -60,9 +61,9 @@ func (m Manager) Create(ctx context.Context, opts CreateOptions) (*model.Service
 		return nil, err
 	}
 
-	// If prevEntity != nil && status.ServiceRevisionStatusDeploying.IsUnknown(prevEntity) {
-	// 	return nil, errors.New("service deployment is running")
-	// }.
+	if prevEntity != nil && status.ServiceRevisionStatusRunning.IsUnknown(prevEntity) {
+		return nil, errors.New("service deployment is running")
+	}
 
 	// Get the corresponding service and template version.
 	svc, err := m.modelClient.Services().Query().
@@ -93,7 +94,7 @@ func (m Manager) Create(ctx context.Context, opts CreateOptions) (*model.Service
 		DeployerType:            DeployerType,
 	}
 
-	status.ServiceRevisionStatusPending.Unknown(entity, "")
+	status.ServiceRevisionStatusRunning.Unknown(entity, "")
 	entity.Status.SetSummary(status.WalkServiceRevision(&entity.Status))
 
 	// Inherit the output of previous revision to create a new one.

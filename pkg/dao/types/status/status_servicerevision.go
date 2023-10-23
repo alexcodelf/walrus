@@ -1,10 +1,10 @@
 package status
 
 const (
-	ServiceRevisionStatusPending ConditionType = "Pending"
 	ServiceRevisionStatusRunning ConditionType = "Running"
 	ServiceRevisionStatusReady   ConditionType = "Ready"
 
+	// TODO remove this status.
 	ServiceRevisionSummaryStatusRunning string = "Running"
 	ServiceRevisionSummaryStatusFailed  string = "Failed"
 	ServiceRevisionSummaryStatusSucceed string = "Succeed"
@@ -14,9 +14,6 @@ const (
 //
 //	|  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
 //	| ---------------- | ----------------------- | --------------------- | --------------------- |
-//	| Pending          | Unknown                 | Pending               | Transitioning         |
-//	| Pending          | False                   | Failed                | Error                 |
-//	| Pending          | True                    | Pended                |                       |
 //	| Running          | Unknown                 | Running               | Transitioning         |
 //	| Running          | False                   | Failed                | Error                 |
 //	| Running          | True                    | Deployed              |                       |
@@ -26,7 +23,6 @@ const (
 var serviceRevisionStatusPaths = NewWalker(
 	[][]ConditionType{
 		{
-			ServiceRevisionStatusPending,
 			ServiceRevisionStatusRunning,
 			ServiceRevisionStatusReady,
 		},

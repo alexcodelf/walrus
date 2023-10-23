@@ -54,8 +54,8 @@ func NewPlan(planType string, mc model.ClientSet) IPlan {
 
 // SetPlanOptions sets the plan options.
 func SetPlanOptions(ctx context.Context, mc model.ClientSet, opts *PlanOptions) error {
-	if !status.ServiceRevisionStatusPending.IsUnknown(opts.ServiceRevision) {
-		return errors.New("service revision is not pending")
+	if !status.ServiceRevisionStatusRunning.IsUnknown(opts.ServiceRevision) {
+		return errors.New("service revision is not running")
 	}
 
 	connectors, err := pkgenv.GetConnectors(ctx, mc, opts.ServiceRevision.EnvironmentID)
