@@ -48,6 +48,9 @@ func workflow() *deploy.ChartApp {
 			"name": "controller",
 		},
 		"fullnameOverride": NameWorkflow,
+		"crds": map[string]any{
+			"keep": false,
+		},
 	}
 
 	return &deploy.ChartApp{
