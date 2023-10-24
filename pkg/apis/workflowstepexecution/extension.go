@@ -8,6 +8,7 @@ import (
 	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+	"github.com/seal-io/walrus/pkg/k8s"
 	"github.com/seal-io/walrus/pkg/workflow"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
@@ -41,7 +42,7 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 		return err
 	}
 
-	apiConfig := workflow.CreateKubeconfigFileForRestConfig(h.k8sConfig)
+	apiConfig := k8s.ToClientCmdApiConfig(h.k8sConfig)
 	clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
 
 	ctx, apiClient, err := apiclient.NewClientFromOpts(apiclient.Opts{
@@ -75,7 +76,7 @@ func (h Handler) RouteApprove(req RouteApproveRequest) error {
 
 	// Check permission to approve.
 
-	apiConfig := workflow.CreateKubeconfigFileForRestConfig(h.k8sConfig)
+	apiConfig := k8s.ToClientCmdApiConfig(h.k8sConfig)
 	clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
 
 	client, err := workflow.NewArgoWorkflowClient(h.modelClient, clientConfig)

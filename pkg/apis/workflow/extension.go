@@ -8,6 +8,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+	"github.com/seal-io/walrus/pkg/k8s"
 	pkgworkflow "github.com/seal-io/walrus/pkg/workflow"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -46,7 +47,7 @@ func (h Handler) RouteApplyRequest(req RouteApplyRequest) (RouteApplyResponse, e
 		return nil, err
 	}
 
-	apiConfig := pkgworkflow.CreateKubeconfigFileForRestConfig(h.k8sConfig)
+	apiConfig := k8s.ToClientCmdApiConfig(h.k8sConfig)
 	clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
 
 	var wfe *model.WorkflowExecution

@@ -7,3 +7,7 @@ type GetRequest struct {
 }
 
 type GetResponse = *model.WorkflowStepOutput
+
+type CollectionGetRequest struct {
+	model.WorkflowStepQueryInputs `path:",inline"`
+}

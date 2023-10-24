@@ -28,6 +28,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/deployer/terraform"
+	"github.com/seal-io/walrus/pkg/k8s"
 	"github.com/seal-io/walrus/pkg/operator"
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
 	"github.com/seal-io/walrus/pkg/serviceresources"
@@ -409,7 +410,7 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 			return err
 		}
 
-		apiConfig := workflow.CreateKubeconfigFileForRestConfig(h.kubeConfig)
+		apiConfig := k8s.ToClientCmdApiConfig(h.kubeConfig)
 		clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
 
 		ctx, apiClient, err := apiclient.NewClientFromOpts(apiclient.Opts{

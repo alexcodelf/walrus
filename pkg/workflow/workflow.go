@@ -3,15 +3,12 @@ package workflow
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func Create(ctx context.Context, mc model.ClientSet, wf *model.Workflow) error {
@@ -78,13 +75,11 @@ func CreateWorkflowExecution(
 ) (*model.WorkflowExecution, error) {
 	s := session.MustGetSubject(ctx)
 
-	// TODO check if the workflow is already running.
-
 	// Create workflow execution.
 	progress := fmt.Sprintf("%d/%d", 0, len(wf.Edges.Stages))
 
 	workflowExecution := &model.WorkflowExecution{
-		Name:       fmt.Sprintf("%s-%d", wf.Name, time.Now().Unix()),
+		Name:       wf.Name,
 		ProjectID:  wf.ProjectID,
 		WorkflowID: wf.ID,
 		Progress:   progress,
@@ -137,7 +132,7 @@ func CreateWorkflowStageExecution(
 	we *model.WorkflowExecution,
 ) (*model.WorkflowStageExecution, error) {
 	stageExec := &model.WorkflowStageExecution{
-		Name:                fmt.Sprintf("%s-%d", stage.Name, time.Now().Unix()),
+		Name:                stage.Name,
 		ProjectID:           stage.ProjectID,
 		StageID:             stage.ID,
 		WorkflowExecutionID: we.ID,
@@ -189,7 +184,7 @@ func CreateWorkflowStepExecution(
 	wse *model.WorkflowStageExecution,
 ) (*model.WorkflowStepExecution, error) {
 	stepExec := &model.WorkflowStepExecution{
-		Name:                     fmt.Sprintf("%s-%d", step.Name, time.Now().Unix()),
+		Name:                     step.Name,
 		ProjectID:                step.ProjectID,
 		WorkflowID:               step.WorkflowID,
 		Type:                     step.Type,
@@ -205,32 +200,4 @@ func CreateWorkflowStepExecution(
 	return mc.WorkflowStepExecutions().Create().
 		Set(stepExec).
 		Save(ctx)
-}
-
-func CreateKubeconfigFileForRestConfig(restConfig *rest.Config) clientcmdapi.Config {
-	clusters := make(map[string]*clientcmdapi.Cluster)
-	clusters["default-cluster"] = &clientcmdapi.Cluster{
-		Server:                   restConfig.Host,
-		CertificateAuthorityData: restConfig.CAData,
-	}
-	contexts := make(map[string]*clientcmdapi.Context)
-	contexts["default-context"] = &clientcmdapi.Context{
-		Cluster:  "default-cluster",
-		AuthInfo: "default-user",
-	}
-	authinfos := make(map[string]*clientcmdapi.AuthInfo)
-	authinfos["default-user"] = &clientcmdapi.AuthInfo{
-		ClientCertificateData: restConfig.CertData,
-		ClientKeyData:         restConfig.KeyData,
-	}
-	clientConfig := clientcmdapi.Config{
-		Kind:           "Config",
-		APIVersion:     "v1",
-		Clusters:       clusters,
-		Contexts:       contexts,
-		CurrentContext: "default-context",
-		AuthInfos:      authinfos,
-	}
-
-	return clientConfig
 }

@@ -27,8 +27,6 @@ import (
 )
 
 const (
-	Namespace = "argo"
-
 	beforeTemplateKey = "before"
 	afterTemplateKey  = "after"
 	mainTemplateKey   = "main"
@@ -126,23 +124,28 @@ func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) err
 					},
 				},
 			},
-			Templates: workflowTemplates,
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsNonRoot: pointer.Bool(true),
+				RunAsUser:    pointer.Int64(1000),
+			},
+			TTLStrategy: &v1alpha1.TTLStrategy{
+				SecondsAfterCompletion: pointer.Int32(86400),
+			},
+			PodGC: &v1alpha1.PodGC{
+				Strategy: v1alpha1.PodGCOnWorkflowCompletion,
+			},
+			ServiceAccountName: types.WorkflowServiceAccountName,
+			Templates:          workflowTemplates,
 		},
 	}
 
-	loglevel := log.GetLevel()
-	// Make log level.
-	log.SetLevel(log.WarnLevel)
 	_, err = s.apiClient.NewWorkflowServiceClient().CreateWorkflow(s.ctx, &workflow.WorkflowCreateRequest{
-		Namespace: Namespace,
+		Namespace: types.WalrusWorkflowNamespace,
 		Workflow:  wf,
 	})
 	if err != nil {
 		return err
 	}
-
-	// Reset log level.
-	log.SetLevel(loglevel)
 
 	return nil
 }
@@ -158,7 +161,7 @@ func (s *ArgoWorkflowClient) Resume(ctx context.Context, opts ResumeOptions) err
 
 	_, err = s.apiClient.NewWorkflowServiceClient().ResumeWorkflow(s.ctx, &workflow.WorkflowResumeRequest{
 		Name:              workflowExecution.Name,
-		Namespace:         Namespace,
+		Namespace:         types.WalrusWorkflowNamespace,
 		NodeFieldSelector: fmt.Sprintf("templateName=suspend-%s", opts.WorkflowStepExecution.ID.String()),
 	})
 	if err != nil {
@@ -618,7 +621,7 @@ func StreamWorkflowLogs(
 	serviceClient := opts.ApiClient.NewWorkflowServiceClient()
 	stream, err := serviceClient.WorkflowLogs(ctx, &workflow.WorkflowLogRequest{
 		Name:       opts.Workflow,
-		Namespace:  Namespace,
+		Namespace:  types.WalrusWorkflowNamespace,
 		PodName:    opts.PodName,
 		LogOptions: opts.LogOptions,
 		Selector:   opts.Selector,
