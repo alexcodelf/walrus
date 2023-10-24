@@ -89,27 +89,3 @@ type (
 		New RevisionDiff `json:"new"`
 	}
 )
-
-// type (
-// 	RouteGetInputPlanRequest struct {
-// 		_ struct{} `route:"GET=/input-plan"`
-
-// 		model.ServiceRevisionQueryInput `path:",inline"`
-// 	}
-// )
-
-// func (r *RouteGetInputPlanRequest) Validate() error {
-// 	if err := r.ServiceRevisionQueryInput.Validate(); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-// type (
-// 	CollectionRouteGetWorkflowRequest struct {
-// 		_ struct{} `route:"GET=/workflow"`
-
-// 		Context *gin.Context
-// 	}
-// )

@@ -2,46 +2,14 @@ package workflow
 
 import (
 	"context"
-	"fmt"
+
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
-	"k8s.io/client-go/tools/clientcmd"
 )
-
-func Create(ctx context.Context, mc model.ClientSet, wf *model.Workflow) error {
-	return mc.WithTx(ctx, func(tx *model.Tx) error {
-		workflow, err := tx.Workflows().Create().
-			Set(wf).
-			Save(ctx)
-		if err != nil {
-			return err
-		}
-
-		stages := make(model.WorkflowStages, 0, len(wf.Edges.Stages))
-
-		for _, stage := range wf.Edges.Stages {
-			stage.WorkflowID = workflow.ID
-
-			st, err := tx.WorkflowStages().Create().
-				Set(stage).
-				Save(ctx)
-			if err != nil {
-				return err
-			}
-
-			stages = append(stages, st)
-		}
-
-		// Update workflow stages.
-		workflow.Edges.Stages = stages
-		wf = workflow
-
-		return nil
-	})
-}
 
 // Apply applies the workflow execution to the argo workflow server.
 func Apply(
@@ -75,14 +43,10 @@ func CreateWorkflowExecution(
 ) (*model.WorkflowExecution, error) {
 	s := session.MustGetSubject(ctx)
 
-	// Create workflow execution.
-	progress := fmt.Sprintf("%d/%d", 0, len(wf.Edges.Stages))
-
 	workflowExecution := &model.WorkflowExecution{
 		Name:       wf.Name,
 		ProjectID:  wf.ProjectID,
 		WorkflowID: wf.ID,
-		Progress:   progress,
 		SubjectID:  s.ID,
 	}
 

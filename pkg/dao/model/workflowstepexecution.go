@@ -54,7 +54,7 @@ type WorkflowStepExecution struct {
 	// Type of the workflow step execution.
 	Type string `json:"type,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]interface{} `json:"spec,omitempty"`
+	Spec map[string]any `json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `json:"times,omitempty"`
 	// Duration of the workflow step execution.

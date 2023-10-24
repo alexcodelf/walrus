@@ -4,9 +4,10 @@ import (
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
-	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
 	"github.com/seal-io/walrus/utils/topic"
@@ -16,6 +17,7 @@ func (h Handler) Create(req CreateRequest) (CreateResponse, error) {
 	entity := req.Model()
 
 	var err error
+
 	err = h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
 		entity, err = tx.Workflows().Create().
 			Set(entity).
@@ -37,6 +39,7 @@ func (h Handler) Update(req UpdateRequest) error {
 	entity := req.Model()
 
 	var err error
+
 	return h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
 		entity, err = tx.Workflows().UpdateOne(entity).
 			Set(entity).
@@ -96,11 +99,11 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 			query.Select(fields...)
 		}
 
-		if orders, ok := req.Sorting(sortFields, model.Desc(catalog.FieldCreateTime)); ok {
+		if orders, ok := req.Sorting(sortFields, model.Desc(workflow.FieldCreateTime)); ok {
 			query.Order(orders...)
 		}
 
-		t, err := topic.Subscribe(modelchange.Catalog)
+		t, err := topic.Subscribe(modelchange.Workflow)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -127,6 +130,16 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 				entities, err := query.Clone().
 					Where(workflow.IDIn(dm.IDs...)).
 					Unique(false).
+					WithExecutions(func(weq *model.WorkflowExecutionQuery) {
+						weq.WithStages(func(sgq *model.WorkflowStageExecutionQuery) {
+							sgq.Select(
+								workflowstageexecution.FieldID,
+								workflowstageexecution.FieldName,
+								workflowstageexecution.FieldStatus,
+							)
+						}).Order(model.Desc(workflowexecution.FieldCreateTime)).
+							Limit(1)
+					}).
 					All(stream)
 				if err != nil {
 					return nil, 0, err
@@ -170,12 +183,22 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 		query.Select(fields...)
 	}
 
-	if orders, ok := req.Sorting(sortFields, model.Desc(catalog.FieldCreateTime)); ok {
+	if orders, ok := req.Sorting(sortFields, model.Desc(workflow.FieldCreateTime)); ok {
 		query.Order(orders...)
 	}
 
 	entities, err := query.
 		Unique(false).
+		WithExecutions(func(weq *model.WorkflowExecutionQuery) {
+			weq.WithStages(func(sgq *model.WorkflowStageExecutionQuery) {
+				sgq.Select(
+					workflowstageexecution.FieldID,
+					workflowstageexecution.FieldName,
+					workflowstageexecution.FieldStatus,
+				)
+			}).Order(model.Desc(workflow.FieldCreateTime)).
+				Limit(1)
+		}).
 		All(req.Context)
 	if err != nil {
 		return nil, 0, err

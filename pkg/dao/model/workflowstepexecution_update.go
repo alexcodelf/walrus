@@ -110,7 +110,7 @@ func (wseu *WorkflowStepExecutionUpdate) ClearStatus() *WorkflowStepExecutionUpd
 }
 
 // SetSpec sets the "spec" field.
-func (wseu *WorkflowStepExecutionUpdate) SetSpec(m map[string]interface{}) *WorkflowStepExecutionUpdate {
+func (wseu *WorkflowStepExecutionUpdate) SetSpec(m map[string]any) *WorkflowStepExecutionUpdate {
 	wseu.mutation.SetSpec(m)
 	return wseu
 }
@@ -497,7 +497,7 @@ func (wseuo *WorkflowStepExecutionUpdateOne) ClearStatus() *WorkflowStepExecutio
 }
 
 // SetSpec sets the "spec" field.
-func (wseuo *WorkflowStepExecutionUpdateOne) SetSpec(m map[string]interface{}) *WorkflowStepExecutionUpdateOne {
+func (wseuo *WorkflowStepExecutionUpdateOne) SetSpec(m map[string]any) *WorkflowStepExecutionUpdateOne {
 	wseuo.mutation.SetSpec(m)
 	return wseuo
 }

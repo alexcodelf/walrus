@@ -5,8 +5,9 @@ import (
 	"os"
 	"testing"
 
-	k8sdeployer "github.com/seal-io/walrus/pkg/k8s/deploy"
 	"github.com/stretchr/testify/assert"
+
+	k8sdeployer "github.com/seal-io/walrus/pkg/k8s/deploy"
 )
 
 func TestHelm(t *testing.T) {

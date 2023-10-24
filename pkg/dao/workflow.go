@@ -26,6 +26,7 @@ func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *mod
 	// Add new items.
 	newItems := entity.Edges.Stages
 	stageIDs := make([]object.ID, len(newItems))
+
 	for i := range newItems {
 		if newItems[i] == nil {
 			return errors.New("invalid input: nil relationship")
@@ -72,6 +73,7 @@ func WorkflowStageStepsEdgeSave(ctx context.Context, mc model.ClientSet, entity 
 	// Add new items.
 	newItems := entity.Edges.Steps
 	stepIDs := make([]object.ID, len(newItems))
+
 	for i := range newItems {
 		if newItems[i] == nil {
 			return errors.New("invalid input: nil relationship")

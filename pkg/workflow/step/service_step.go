@@ -54,10 +54,11 @@ func (s *ServiceStepManager) GenerateTemplate(
 ) (*v1alpha1.Template, error) {
 	deployerImage := settings.DeployerImage.ShouldValue(ctx, s.mc)
 
-	environment, ok := stepExec.Spec["environment"].(map[string]interface{})
+	environment, ok := stepExec.Spec["environment"].(map[string]any)
 	if !ok {
 		return nil, errors.New("environment is not found")
 	}
+
 	environmentID, ok := environment["id"].(string)
 	if !ok {
 		return nil, errors.New("environment id is not found")

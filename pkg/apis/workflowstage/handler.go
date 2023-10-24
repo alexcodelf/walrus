@@ -1,10 +1,11 @@
 package workflowstage
 
 import (
+	"k8s.io/client-go/rest"
+
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/apis/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/model"
-	"k8s.io/client-go/rest"
 )
 
 func Handle(mc model.ClientSet, kc *rest.Config) Handler {

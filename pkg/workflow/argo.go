@@ -13,6 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
+	corev1 "k8s.io/api/core/v1"
+
 	apiconfig "github.com/seal-io/walrus/pkg/apis/config"
 	"github.com/seal-io/walrus/pkg/auths"
 	"github.com/seal-io/walrus/pkg/dao/model"
@@ -23,7 +25,6 @@ import (
 	steptypes "github.com/seal-io/walrus/pkg/workflow/step/types"
 	"github.com/seal-io/walrus/utils/log"
 	"github.com/seal-io/walrus/utils/pointer"
-	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -172,21 +173,15 @@ func (s *ArgoWorkflowClient) Resume(ctx context.Context, opts ResumeOptions) err
 }
 
 func (s *ArgoWorkflowClient) Delete(ctx context.Context, opts DeleteOptions) error {
-	// 1. Delete workflow from workflow engine.
-	// 2. Update workflow status.
-	panic("not implemented")
-}
+	_, err := s.apiClient.NewWorkflowServiceClient().DeleteWorkflow(s.ctx, &workflow.WorkflowDeleteRequest{
+		Name:      opts.Workflow.Name,
+		Namespace: types.WalrusWorkflowNamespace,
+	})
+	if err != nil {
+		return err
+	}
 
-func (s *ArgoWorkflowClient) Get(ctx context.Context, opts GetOptions) (*v1alpha1.Workflow, error) {
-	// 1. Get workflow from workflow engine.
-	// 2. Update workflow status.
-	panic("not implemented")
-}
-
-func (s *ArgoWorkflowClient) List(ctx context.Context, opts ListOptions) (*v1alpha1.WorkflowList, error) {
-	// 1. List workflows from workflow engine.
-	// 2. Update workflow status.
-	panic("not implemented")
+	return nil
 }
 
 func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
@@ -206,6 +201,7 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 	}
 
 	taskTemplates := make([]*v1alpha1.Template, 0)
+
 	for i, stageExec := range stageExecutions {
 		stageTemplates, err := s.GenerateStageTemplates(ctx, stageExec)
 		if err != nil {
@@ -224,6 +220,7 @@ func (s *ArgoWorkflowClient) GenerateWorkflowTemplateEntrypoint(
 			taskName         = "stage-execution-" + stageExec.ID.String()
 			taskTemplateName = "stage-execution-" + stageExec.ID.String()
 		)
+
 		entrypoint.DAG.Tasks = append(entrypoint.DAG.Tasks, v1alpha1.DAGTask{
 			Name:         taskName,
 			Template:     taskTemplateName,
@@ -389,6 +386,7 @@ func (s *ArgoWorkflowClient) GenerateStageTemplates(
 
 		for key, stepTemplate := range stepTemplateMap {
 			stepTemplates = append(stepTemplates, stepTemplate)
+
 			if key == mainTemplateKey {
 				taskName := "step-execution-" + stepExec.ID.String()
 				tasks = append(tasks, v1alpha1.DAGTask{
@@ -619,6 +617,7 @@ func StreamWorkflowLogs(
 	opts StreamLogsOptions,
 ) error {
 	serviceClient := opts.ApiClient.NewWorkflowServiceClient()
+
 	stream, err := serviceClient.WorkflowLogs(ctx, &workflow.WorkflowLogRequest{
 		Name:       opts.Workflow,
 		Namespace:  types.WalrusWorkflowNamespace,
@@ -636,6 +635,7 @@ func StreamWorkflowLogs(
 		if errors.Is(err, io.EOF) {
 			return nil
 		}
+
 		if err != nil {
 			return err
 		}

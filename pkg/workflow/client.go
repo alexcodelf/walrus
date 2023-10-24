@@ -3,7 +3,6 @@ package workflow
 import (
 	"context"
 
-	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -16,10 +15,6 @@ type WorkflowClient interface {
 	Resume(context.Context, ResumeOptions) error
 	// Delete deletes a workflow from the workflow engine.
 	Delete(context.Context, DeleteOptions) error
-	// Get gets a workflow from the workflow engine.
-	Get(context.Context, GetOptions) (*v1alpha1.Workflow, error)
-	// List lists all workflows from the workflow engine.
-	List(context.Context, ListOptions) (*v1alpha1.WorkflowList, error)
 }
 
 // SubmitOptions is the options for submitting a workflow.
@@ -29,14 +24,12 @@ type SubmitOptions struct {
 	SubjectID         object.ID
 }
 
-type ListOptions struct{}
-
 type GetOptions struct {
-	Workflow *model.Workflow
+	Workflow *model.WorkflowExecution
 }
 
 type DeleteOptions struct {
-	Workflow *model.Workflow
+	Workflow *model.WorkflowExecution
 }
 
 type ResumeOptions struct {

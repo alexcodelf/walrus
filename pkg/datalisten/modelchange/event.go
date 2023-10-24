@@ -23,6 +23,14 @@ var (
 	ServiceRevision = topic.Topic(migrate.ServiceRevisionsTable.Name)
 	// Template is the topic for model.Template.
 	Template = topic.Topic(migrate.TemplatesTable.Name)
+	// Workflow is the topic for model.Workflow.
+	Workflow = topic.Topic(migrate.WorkflowsTable.Name)
+	// WorkflowExecution is the topic for model.WorkflowExecution.
+	WorkflowExecution = topic.Topic(migrate.WorkflowExecutionsTable.Name)
+	// WorkflowStageExecution is the topic for model.WorkflowStageExecution.
+	WorkflowStageExecution = topic.Topic(migrate.WorkflowStageExecutionsTable.Name)
+	// WorkflowStepExecution is the topic for model.WorkflowStepExecution.
+	WorkflowStepExecution = topic.Topic(migrate.WorkflowStepExecutionsTable.Name)
 )
 
 // tableNameSet holds the set for interested table names,

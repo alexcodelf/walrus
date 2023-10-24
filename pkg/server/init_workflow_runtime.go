@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/seal-io/walrus/pkg/dao/types"
-	"github.com/seal-io/walrus/pkg/workflow/deployer"
-	"github.com/seal-io/walrus/utils/log"
-	"github.com/seal-io/walrus/utils/pointer"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"github.com/seal-io/walrus/pkg/dao/types"
+	"github.com/seal-io/walrus/pkg/workflow/deployer"
+	"github.com/seal-io/walrus/utils/log"
+	"github.com/seal-io/walrus/utils/pointer"
 )
 
 // setupDeployerRuntime configures the deployer runtime at initialization phase,

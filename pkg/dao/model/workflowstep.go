@@ -47,11 +47,11 @@ type WorkflowStep struct {
 	// ID of the stage that this workflow step belongs to.
 	StageID object.ID `json:"stage_id,omitempty"`
 	// Spec of the workflow step.
-	Spec map[string]interface{} `json:"spec,omitempty"`
+	Spec map[string]any `json:"spec,omitempty"`
 	// Input of the workflow step.
-	Input map[string]interface{} `json:"input,omitempty"`
+	Input map[string]any `json:"input,omitempty"`
 	// Output of the workflow step.
-	Output map[string]interface{} `json:"output,omitempty"`
+	Output map[string]any `json:"output,omitempty"`
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.

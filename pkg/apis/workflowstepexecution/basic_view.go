@@ -1,6 +1,11 @@
 package workflowstepexecution
 
-import "github.com/seal-io/walrus/pkg/dao/model"
+import (
+	"github.com/seal-io/walrus/pkg/apis/runtime"
+	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/model/predicate"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+)
 
 type UpdateRequest struct {
 	model.WorkflowStepExecutionUpdateInput `path:",inline" json:",inline"`
@@ -14,4 +19,22 @@ func (r *UpdateRequest) Validate() error {
 	}
 
 	return nil
+}
+
+type (
+	CollectionGetRequest struct {
+		model.WorkflowQueryInputs `path:",inline"`
+
+		runtime.RequestCollection[
+			predicate.WorkflowStepExecution, workflowstepexecution.OrderOption,
+		] `query:",inline"`
+
+		Stream *runtime.RequestUnidiStream
+	}
+
+	CollectionGetResponse = []*model.WorkflowStepExecutionOutput
+)
+
+func (r *CollectionGetRequest) SetStream(stream runtime.RequestUnidiStream) {
+	r.Stream = &stream
 }

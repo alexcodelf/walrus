@@ -2,6 +2,7 @@ package stage
 
 import (
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
+
 	"github.com/seal-io/walrus/pkg/dao/model"
 )
 

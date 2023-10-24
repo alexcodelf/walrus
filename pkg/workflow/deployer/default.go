@@ -5,11 +5,12 @@ import (
 	"os"
 	"path"
 
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/k8s"
 	"github.com/seal-io/walrus/pkg/k8s/deploy"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -75,5 +76,5 @@ func DeployArgoWorkflow(ctx context.Context, config *rest.Config) error {
 		return err
 	}
 
-	return d.EnsureChart(workflow(), true)
+	return d.EnsureChart(workflow(), false)
 }

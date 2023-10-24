@@ -1,6 +1,8 @@
 package workflow
 
 import (
+	"k8s.io/client-go/tools/clientcmd"
+
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
@@ -10,7 +12,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/k8s"
 	pkgworkflow "github.com/seal-io/walrus/pkg/workflow"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 func (h Handler) RouteGetLatestExecutionRequest(req RouteGetLatestExecutionRequest) (
