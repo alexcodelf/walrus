@@ -129,8 +129,6 @@ func (r JobReconciler) syncApplicationRevisionStatus(ctx context.Context, job *b
 		return nil
 	}
 
-	status.ServiceRevisionStatusReady.True(appRevision, "")
-
 	// Get job pods logs.
 	record, err := r.getJobPodsLogs(ctx, job.Name)
 	if err != nil {
@@ -140,11 +138,13 @@ func (r JobReconciler) syncApplicationRevisionStatus(ctx context.Context, job *b
 
 	if job.Status.Succeeded > 0 {
 		r.Logger.Info("succeed", "application-revision", appRevisionID)
+		status.ServiceRevisionStatusRunning.True(appRevision, "")
+		status.ServiceRevisionStatusReady.True(appRevision, "")
 	}
 
 	if job.Status.Failed > 0 {
 		r.Logger.Info("failed", "application-revision", appRevisionID)
-		status.ServiceRevisionStatusReady.False(appRevision, "")
+		status.ServiceRevisionStatusRunning.False(appRevision, "failed to deploy")
 	}
 
 	// Report to application revision.

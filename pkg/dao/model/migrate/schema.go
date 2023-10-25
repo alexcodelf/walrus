@@ -887,6 +887,7 @@ var (
 		{Name: "stage_execution_ids", Type: field.TypeJSON},
 		{Name: "record", Type: field.TypeString, Size: 2147483647, Default: ""},
 		{Name: "input", Type: field.TypeString, Size: 2147483647, Default: ""},
+		{Name: "trigger", Type: field.TypeJSON},
 		{Name: "project_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "workflow_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 	}
@@ -898,13 +899,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workflow_executions_projects_workflow_executions",
-				Columns:    []*schema.Column{WorkflowExecutionsColumns[14]},
+				Columns:    []*schema.Column{WorkflowExecutionsColumns[15]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "workflow_executions_workflows_executions",
-				Columns:    []*schema.Column{WorkflowExecutionsColumns[15]},
+				Columns:    []*schema.Column{WorkflowExecutionsColumns[16]},
 				RefColumns: []*schema.Column{WorkflowsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},

@@ -23,6 +23,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -175,6 +176,20 @@ func (weu *WorkflowExecutionUpdate) SetInput(s string) *WorkflowExecutionUpdate 
 func (weu *WorkflowExecutionUpdate) SetNillableInput(s *string) *WorkflowExecutionUpdate {
 	if s != nil {
 		weu.SetInput(*s)
+	}
+	return weu
+}
+
+// SetTrigger sets the "trigger" field.
+func (weu *WorkflowExecutionUpdate) SetTrigger(tet types.WorkflowExecutionTrigger) *WorkflowExecutionUpdate {
+	weu.mutation.SetTrigger(tet)
+	return weu
+}
+
+// SetNillableTrigger sets the "trigger" field if the given value is not nil.
+func (weu *WorkflowExecutionUpdate) SetNillableTrigger(tet *types.WorkflowExecutionTrigger) *WorkflowExecutionUpdate {
+	if tet != nil {
+		weu.SetTrigger(*tet)
 	}
 	return weu
 }
@@ -332,6 +347,7 @@ func (weu *WorkflowExecutionUpdate) Set(obj *WorkflowExecution) *WorkflowExecuti
 	weu.SetStageExecutionIds(obj.StageExecutionIds)
 	weu.SetRecord(obj.Record)
 	weu.SetInput(obj.Input)
+	weu.SetTrigger(obj.Trigger)
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -411,6 +427,9 @@ func (weu *WorkflowExecutionUpdate) sqlSave(ctx context.Context) (n int, err err
 	}
 	if value, ok := weu.mutation.Input(); ok {
 		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
+	}
+	if value, ok := weu.mutation.Trigger(); ok {
+		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)
 	}
 	if weu.mutation.StagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -622,6 +641,20 @@ func (weuo *WorkflowExecutionUpdateOne) SetNillableInput(s *string) *WorkflowExe
 	return weuo
 }
 
+// SetTrigger sets the "trigger" field.
+func (weuo *WorkflowExecutionUpdateOne) SetTrigger(tet types.WorkflowExecutionTrigger) *WorkflowExecutionUpdateOne {
+	weuo.mutation.SetTrigger(tet)
+	return weuo
+}
+
+// SetNillableTrigger sets the "trigger" field if the given value is not nil.
+func (weuo *WorkflowExecutionUpdateOne) SetNillableTrigger(tet *types.WorkflowExecutionTrigger) *WorkflowExecutionUpdateOne {
+	if tet != nil {
+		weuo.SetTrigger(*tet)
+	}
+	return weuo
+}
+
 // AddStageIDs adds the "stages" edge to the WorkflowStageExecution entity by IDs.
 func (weuo *WorkflowExecutionUpdateOne) AddStageIDs(ids ...object.ID) *WorkflowExecutionUpdateOne {
 	weuo.mutation.AddStageIDs(ids...)
@@ -816,6 +849,9 @@ func (weuo *WorkflowExecutionUpdateOne) Set(obj *WorkflowExecution) *WorkflowExe
 			if db.Input != obj.Input {
 				weuo.SetInput(obj.Input)
 			}
+			if !reflect.DeepEqual(db.Trigger, obj.Trigger) {
+				weuo.SetTrigger(obj.Trigger)
+			}
 
 			// With Default.
 			if (obj.UpdateTime != nil) && (!reflect.DeepEqual(db.UpdateTime, obj.UpdateTime)) {
@@ -892,6 +928,9 @@ func (weuo *WorkflowExecutionUpdateOne) SaveE(ctx context.Context, cbs ...func(c
 		}
 		if _, set := weuo.mutation.Field(workflowexecution.FieldInput); set {
 			obj.Input = x.Input
+		}
+		if _, set := weuo.mutation.Field(workflowexecution.FieldTrigger); set {
+			obj.Trigger = x.Trigger
 		}
 		obj.Edges = x.Edges
 	}
@@ -1012,6 +1051,9 @@ func (weuo *WorkflowExecutionUpdateOne) sqlSave(ctx context.Context) (_node *Wor
 	}
 	if value, ok := weuo.mutation.Input(); ok {
 		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
+	}
+	if value, ok := weuo.mutation.Trigger(); ok {
+		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)
 	}
 	if weuo.mutation.StagesCleared() {
 		edge := &sqlgraph.EdgeSpec{

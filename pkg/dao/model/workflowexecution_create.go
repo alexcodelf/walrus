@@ -21,6 +21,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -181,6 +182,20 @@ func (wec *WorkflowExecutionCreate) SetNillableInput(s *string) *WorkflowExecuti
 	return wec
 }
 
+// SetTrigger sets the "trigger" field.
+func (wec *WorkflowExecutionCreate) SetTrigger(tet types.WorkflowExecutionTrigger) *WorkflowExecutionCreate {
+	wec.mutation.SetTrigger(tet)
+	return wec
+}
+
+// SetNillableTrigger sets the "trigger" field if the given value is not nil.
+func (wec *WorkflowExecutionCreate) SetNillableTrigger(tet *types.WorkflowExecutionTrigger) *WorkflowExecutionCreate {
+	if tet != nil {
+		wec.SetTrigger(*tet)
+	}
+	return wec
+}
+
 // SetID sets the "id" field.
 func (wec *WorkflowExecutionCreate) SetID(o object.ID) *WorkflowExecutionCreate {
 	wec.mutation.SetID(o)
@@ -287,6 +302,10 @@ func (wec *WorkflowExecutionCreate) defaults() error {
 		v := workflowexecution.DefaultInput
 		wec.mutation.SetInput(v)
 	}
+	if _, ok := wec.mutation.Trigger(); !ok {
+		v := workflowexecution.DefaultTrigger
+		wec.mutation.SetTrigger(v)
+	}
 	return nil
 }
 
@@ -344,6 +363,9 @@ func (wec *WorkflowExecutionCreate) check() error {
 	}
 	if _, ok := wec.mutation.Input(); !ok {
 		return &ValidationError{Name: "input", err: errors.New(`model: missing required field "WorkflowExecution.input"`)}
+	}
+	if _, ok := wec.mutation.Trigger(); !ok {
+		return &ValidationError{Name: "trigger", err: errors.New(`model: missing required field "WorkflowExecution.trigger"`)}
 	}
 	if _, ok := wec.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowExecution.project"`)}
@@ -440,6 +462,10 @@ func (wec *WorkflowExecutionCreate) createSpec() (*WorkflowExecution, *sqlgraph.
 		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
 		_node.Input = value
 	}
+	if value, ok := wec.mutation.Trigger(); ok {
+		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)
+		_node.Trigger = value
+	}
 	if nodes := wec.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -525,6 +551,7 @@ func (wec *WorkflowExecutionCreate) Set(obj *WorkflowExecution) *WorkflowExecuti
 	wec.SetStageExecutionIds(obj.StageExecutionIds)
 	wec.SetRecord(obj.Record)
 	wec.SetInput(obj.Input)
+	wec.SetTrigger(obj.Trigger)
 
 	// Optional.
 	if obj.Description != "" {
@@ -998,6 +1025,18 @@ func (u *WorkflowExecutionUpsert) UpdateInput() *WorkflowExecutionUpsert {
 	return u
 }
 
+// SetTrigger sets the "trigger" field.
+func (u *WorkflowExecutionUpsert) SetTrigger(v types.WorkflowExecutionTrigger) *WorkflowExecutionUpsert {
+	u.Set(workflowexecution.FieldTrigger, v)
+	return u
+}
+
+// UpdateTrigger sets the "trigger" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsert) UpdateTrigger() *WorkflowExecutionUpsert {
+	u.SetExcluded(workflowexecution.FieldTrigger)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1233,6 +1272,20 @@ func (u *WorkflowExecutionUpsertOne) SetInput(v string) *WorkflowExecutionUpsert
 func (u *WorkflowExecutionUpsertOne) UpdateInput() *WorkflowExecutionUpsertOne {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
 		s.UpdateInput()
+	})
+}
+
+// SetTrigger sets the "trigger" field.
+func (u *WorkflowExecutionUpsertOne) SetTrigger(v types.WorkflowExecutionTrigger) *WorkflowExecutionUpsertOne {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.SetTrigger(v)
+	})
+}
+
+// UpdateTrigger sets the "trigger" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertOne) UpdateTrigger() *WorkflowExecutionUpsertOne {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.UpdateTrigger()
 	})
 }
 
@@ -1636,6 +1689,20 @@ func (u *WorkflowExecutionUpsertBulk) SetInput(v string) *WorkflowExecutionUpser
 func (u *WorkflowExecutionUpsertBulk) UpdateInput() *WorkflowExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
 		s.UpdateInput()
+	})
+}
+
+// SetTrigger sets the "trigger" field.
+func (u *WorkflowExecutionUpsertBulk) SetTrigger(v types.WorkflowExecutionTrigger) *WorkflowExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.SetTrigger(v)
+	})
+}
+
+// UpdateTrigger sets the "trigger" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertBulk) UpdateTrigger() *WorkflowExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.UpdateTrigger()
 	})
 }
 

@@ -16,6 +16,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/utils/json"
@@ -56,6 +57,8 @@ type WorkflowExecution struct {
 	Record string `json:"record,omitempty"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
 	Input string `json:"input,omitempty"`
+	// Trigger of the workflow execution.
+	Trigger types.WorkflowExecutionTrigger `json:"trigger,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WorkflowExecutionQuery when eager-loading is set.
 	Edges        WorkflowExecutionEdges `json:"edges,omitempty"`
@@ -115,7 +118,7 @@ func (*WorkflowExecution) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflowexecution.FieldLabels, workflowexecution.FieldAnnotations, workflowexecution.FieldStatus, workflowexecution.FieldStageExecutionIds:
+		case workflowexecution.FieldLabels, workflowexecution.FieldAnnotations, workflowexecution.FieldStatus, workflowexecution.FieldStageExecutionIds, workflowexecution.FieldTrigger:
 			values[i] = new([]byte)
 		case workflowexecution.FieldID, workflowexecution.FieldProjectID, workflowexecution.FieldWorkflowID, workflowexecution.FieldSubjectID:
 			values[i] = new(object.ID)
@@ -246,6 +249,14 @@ func (we *WorkflowExecution) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				we.Input = value.String
 			}
+		case workflowexecution.FieldTrigger:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field trigger", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &we.Trigger); err != nil {
+					return fmt.Errorf("unmarshal field trigger: %w", err)
+				}
+			}
 		default:
 			we.selectValues.Set(columns[i], values[i])
 		}
@@ -345,6 +356,9 @@ func (we *WorkflowExecution) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("input=")
 	builder.WriteString(we.Input)
+	builder.WriteString(", ")
+	builder.WriteString("trigger=")
+	builder.WriteString(fmt.Sprintf("%v", we.Trigger))
 	builder.WriteByte(')')
 	return builder.String()
 }

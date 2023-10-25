@@ -908,6 +908,10 @@ func init() {
 	workflowexecutionDescInput := workflowexecutionFields[7].Descriptor()
 	// workflowexecution.DefaultInput holds the default value on creation for the input field.
 	workflowexecution.DefaultInput = workflowexecutionDescInput.Default.(string)
+	// workflowexecutionDescTrigger is the schema descriptor for trigger field.
+	workflowexecutionDescTrigger := workflowexecutionFields[8].Descriptor()
+	// workflowexecution.DefaultTrigger holds the default value on creation for the trigger field.
+	workflowexecution.DefaultTrigger = workflowexecutionDescTrigger.Default.(types.WorkflowExecutionTrigger)
 	workflowstageMixin := schema.WorkflowStage{}.Mixin()
 	workflowstageMixinHooks0 := workflowstageMixin[0].Hooks()
 	workflowstage.Hooks[0] = workflowstageMixinHooks0[0]

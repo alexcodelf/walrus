@@ -8,6 +8,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
+	"github.com/seal-io/walrus/pkg/workflow"
 	"github.com/seal-io/walrus/utils/topic"
 )
 
@@ -43,6 +44,11 @@ func (h Handler) Update(req UpdateRequest) error {
 	}
 
 	entity.Status.SetSummary(status.WalkWorkflowExecution(&entity.Status))
+
+	statusManager := workflow.NewStatusManager(h.modelClient)
+	if err := statusManager.HandleWorkflowExecutionFailed(req.Context, entity); err != nil {
+		return err
+	}
 
 	return h.modelClient.WorkflowExecutions().UpdateOne(entity).
 		SetDescription(req.Description).

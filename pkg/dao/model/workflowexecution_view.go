@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -42,6 +43,8 @@ type WorkflowExecutionCreateInput struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+	// Trigger of the workflow execution.
+	Trigger types.WorkflowExecutionTrigger `path:"-" query:"-" json:"trigger,omitempty"`
 }
 
 // Model returns the WorkflowExecution entity for creating,
@@ -61,6 +64,7 @@ func (weci *WorkflowExecutionCreateInput) Model() *WorkflowExecution {
 		StageExecutionIds: weci.StageExecutionIds,
 		Record:            weci.Record,
 		Input:             weci.Input,
+		Trigger:           weci.Trigger,
 	}
 
 	return _we
@@ -115,6 +119,8 @@ type WorkflowExecutionCreateInputsItem struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+	// Trigger of the workflow execution.
+	Trigger types.WorkflowExecutionTrigger `path:"-" query:"-" json:"trigger,omitempty"`
 }
 
 // ValidateWith checks the WorkflowExecutionCreateInputsItem entity with the given context and client set.
@@ -162,6 +168,7 @@ func (weci *WorkflowExecutionCreateInputs) Model() []*WorkflowExecution {
 			StageExecutionIds: weci.Items[i].StageExecutionIds,
 			Record:            weci.Items[i].Record,
 			Input:             weci.Items[i].Input,
+			Trigger:           weci.Items[i].Trigger,
 		}
 
 		_wes[i] = _we
@@ -496,6 +503,8 @@ type WorkflowExecutionUpdateInput struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
 	Input string `path:"-" query:"-" json:"input,omitempty"`
+	// Trigger of the workflow execution.
+	Trigger types.WorkflowExecutionTrigger `path:"-" query:"-" json:"trigger,omitempty"`
 }
 
 // Model returns the WorkflowExecution entity for modifying,
@@ -514,6 +523,7 @@ func (weui *WorkflowExecutionUpdateInput) Model() *WorkflowExecution {
 		StageExecutionIds: weui.StageExecutionIds,
 		Record:            weui.Record,
 		Input:             weui.Input,
+		Trigger:           weui.Trigger,
 	}
 
 	return _we
@@ -560,6 +570,8 @@ type WorkflowExecutionUpdateInputsItem struct {
 	Record string `path:"-" query:"-" json:"record"`
 	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
 	Input string `path:"-" query:"-" json:"input"`
+	// Trigger of the workflow execution.
+	Trigger types.WorkflowExecutionTrigger `path:"-" query:"-" json:"trigger"`
 }
 
 // ValidateWith checks the WorkflowExecutionUpdateInputsItem entity with the given context and client set.
@@ -606,6 +618,7 @@ func (weui *WorkflowExecutionUpdateInputs) Model() []*WorkflowExecution {
 			StageExecutionIds: weui.Items[i].StageExecutionIds,
 			Record:            weui.Items[i].Record,
 			Input:             weui.Items[i].Input,
+			Trigger:           weui.Items[i].Trigger,
 		}
 
 		_wes[i] = _we
@@ -702,19 +715,20 @@ func (weui *WorkflowExecutionUpdateInputs) ValidateWith(ctx context.Context, cs 
 
 // WorkflowExecutionOutput holds the output of the WorkflowExecution entity.
 type WorkflowExecutionOutput struct {
-	ID                object.ID         `json:"id,omitempty"`
-	Name              string            `json:"name,omitempty"`
-	Description       string            `json:"description,omitempty"`
-	Labels            map[string]string `json:"labels,omitempty"`
-	CreateTime        *time.Time        `json:"createTime,omitempty"`
-	UpdateTime        *time.Time        `json:"updateTime,omitempty"`
-	Status            status.Status     `json:"status,omitempty"`
-	SubjectID         object.ID         `json:"subjectID,omitempty"`
-	Progress          string            `json:"progress,omitempty"`
-	Duration          int               `json:"duration,omitempty"`
-	StageExecutionIds []object.ID       `json:"stageExecutionIds,omitempty"`
-	Record            string            `json:"record,omitempty"`
-	Input             string            `json:"input,omitempty"`
+	ID                object.ID                      `json:"id,omitempty"`
+	Name              string                         `json:"name,omitempty"`
+	Description       string                         `json:"description,omitempty"`
+	Labels            map[string]string              `json:"labels,omitempty"`
+	CreateTime        *time.Time                     `json:"createTime,omitempty"`
+	UpdateTime        *time.Time                     `json:"updateTime,omitempty"`
+	Status            status.Status                  `json:"status,omitempty"`
+	SubjectID         object.ID                      `json:"subjectID,omitempty"`
+	Progress          string                         `json:"progress,omitempty"`
+	Duration          int                            `json:"duration,omitempty"`
+	StageExecutionIds []object.ID                    `json:"stageExecutionIds,omitempty"`
+	Record            string                         `json:"record,omitempty"`
+	Input             string                         `json:"input,omitempty"`
+	Trigger           types.WorkflowExecutionTrigger `json:"trigger,omitempty"`
 
 	Project  *ProjectOutput                  `json:"project,omitempty"`
 	Stages   []*WorkflowStageExecutionOutput `json:"stages,omitempty"`
@@ -751,6 +765,7 @@ func ExposeWorkflowExecution(_we *WorkflowExecution) *WorkflowExecutionOutput {
 		StageExecutionIds: _we.StageExecutionIds,
 		Record:            _we.Record,
 		Input:             _we.Input,
+		Trigger:           _we.Trigger,
 	}
 
 	if _we.Edges.Project != nil {

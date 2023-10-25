@@ -23453,6 +23453,7 @@ type WorkflowExecutionMutation struct {
 	appendstage_execution_ids []object.ID
 	record                    *string
 	input                     *string
+	trigger                   *types.WorkflowExecutionTrigger
 	clearedFields             map[string]struct{}
 	project                   *object.ID
 	clearedproject            bool
@@ -24197,6 +24198,42 @@ func (m *WorkflowExecutionMutation) ResetInput() {
 	m.input = nil
 }
 
+// SetTrigger sets the "trigger" field.
+func (m *WorkflowExecutionMutation) SetTrigger(tet types.WorkflowExecutionTrigger) {
+	m.trigger = &tet
+}
+
+// Trigger returns the value of the "trigger" field in the mutation.
+func (m *WorkflowExecutionMutation) Trigger() (r types.WorkflowExecutionTrigger, exists bool) {
+	v := m.trigger
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTrigger returns the old "trigger" field's value of the WorkflowExecution entity.
+// If the WorkflowExecution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowExecutionMutation) OldTrigger(ctx context.Context) (v types.WorkflowExecutionTrigger, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTrigger is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTrigger requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTrigger: %w", err)
+	}
+	return oldValue.Trigger, nil
+}
+
+// ResetTrigger resets all changes to the "trigger" field.
+func (m *WorkflowExecutionMutation) ResetTrigger() {
+	m.trigger = nil
+}
+
 // ClearProject clears the "project" edge to the Project entity.
 func (m *WorkflowExecutionMutation) ClearProject() {
 	m.clearedproject = true
@@ -24337,7 +24374,7 @@ func (m *WorkflowExecutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowExecutionMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 16)
 	if m.name != nil {
 		fields = append(fields, workflowexecution.FieldName)
 	}
@@ -24383,6 +24420,9 @@ func (m *WorkflowExecutionMutation) Fields() []string {
 	if m.input != nil {
 		fields = append(fields, workflowexecution.FieldInput)
 	}
+	if m.trigger != nil {
+		fields = append(fields, workflowexecution.FieldTrigger)
+	}
 	return fields
 }
 
@@ -24421,6 +24461,8 @@ func (m *WorkflowExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.Record()
 	case workflowexecution.FieldInput:
 		return m.Input()
+	case workflowexecution.FieldTrigger:
+		return m.Trigger()
 	}
 	return nil, false
 }
@@ -24460,6 +24502,8 @@ func (m *WorkflowExecutionMutation) OldField(ctx context.Context, name string) (
 		return m.OldRecord(ctx)
 	case workflowexecution.FieldInput:
 		return m.OldInput(ctx)
+	case workflowexecution.FieldTrigger:
+		return m.OldTrigger(ctx)
 	}
 	return nil, fmt.Errorf("unknown WorkflowExecution field %s", name)
 }
@@ -24573,6 +24617,13 @@ func (m *WorkflowExecutionMutation) SetField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetInput(v)
+		return nil
+	case workflowexecution.FieldTrigger:
+		v, ok := value.(types.WorkflowExecutionTrigger)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTrigger(v)
 		return nil
 	}
 	return fmt.Errorf("unknown WorkflowExecution field %s", name)
@@ -24709,6 +24760,9 @@ func (m *WorkflowExecutionMutation) ResetField(name string) error {
 		return nil
 	case workflowexecution.FieldInput:
 		m.ResetInput()
+		return nil
+	case workflowexecution.FieldTrigger:
+		m.ResetTrigger()
 		return nil
 	}
 	return fmt.Errorf("unknown WorkflowExecution field %s", name)

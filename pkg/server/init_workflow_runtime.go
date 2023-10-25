@@ -67,7 +67,7 @@ func applyWorkflowWorkspace(ctx context.Context, cli *kubernetes.Clientset) erro
 
 // applyWorkflowPermission applies the Kubernetes RBAC resources for workflow running.
 func applyWorkflowPermission(ctx context.Context, cli *kubernetes.Clientset) error {
-	if !isCreationAllowed(ctx, cli, "serviceaccounts", "roles", "rolebindings") {
+	if !isCreationAllowed(ctx, cli, "serviceaccounts", "roles", "rolebindings", "secrets") {
 		return nil
 	}
 
@@ -213,6 +213,23 @@ func applyWorkflowPermission(ctx context.Context, cli *kubernetes.Clientset) err
 		if err != nil {
 			return err
 		}
+	}
+
+	token := core.Secret{
+		ObjectMeta: meta.ObjectMeta{
+			Name: fmt.Sprintf("%s.service-account-token", types.WorkflowServiceAccountName),
+			Annotations: map[string]string{
+				"kubernetes.io/service-account.name": types.WorkflowServiceAccountName,
+			},
+		},
+		Type: core.SecretTypeServiceAccountToken,
+	}
+
+	_, err = cli.CoreV1().
+		Secrets(types.WalrusWorkflowNamespace).
+		Create(ctx, &token, meta.CreateOptions{})
+	if err != nil && !kerrors.IsAlreadyExists(err) {
+		return err
 	}
 
 	return nil

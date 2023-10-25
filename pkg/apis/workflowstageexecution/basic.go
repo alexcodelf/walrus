@@ -1,6 +1,9 @@
 package workflowstageexecution
 
-import "github.com/seal-io/walrus/pkg/dao/types/status"
+import (
+	"github.com/seal-io/walrus/pkg/dao/types/status"
+	"github.com/seal-io/walrus/pkg/workflow"
+)
 
 func (h Handler) Update(req UpdateRequest) error {
 	entity := req.Model()
@@ -17,6 +20,11 @@ func (h Handler) Update(req UpdateRequest) error {
 	}
 
 	entity.Status.SetSummary(status.WalkWorkflowStageExecution(&entity.Status))
+
+	statusManager := workflow.NewStatusManager(h.modelClient)
+	if err := statusManager.HandleWorkflowStageExecutionFailed(req.Context, entity); err != nil {
+		return err
+	}
 
 	return h.modelClient.WorkflowStageExecutions().UpdateOne(entity).
 		SetRecord(req.Record).

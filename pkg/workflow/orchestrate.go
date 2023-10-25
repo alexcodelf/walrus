@@ -53,13 +53,6 @@ func CreateWorkflowExecution(
 	status.WorkflowExecutionStatusPending.Unknown(workflowExecution, "")
 	workflowExecution.Status.SetSummary(status.WalkWorkflowExecution(&workflowExecution.Status))
 
-	entity, err := mc.WorkflowExecutions().Create().
-		Set(workflowExecution).
-		Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	stageMap := make(map[object.ID]*model.WorkflowStage)
 	for i := range wf.Edges.Stages {
 		stageMap[wf.Edges.Stages[i].ID] = wf.Edges.Stages[i]
@@ -71,6 +64,13 @@ func CreateWorkflowExecution(
 	}
 
 	wf.Edges.Stages = ordered
+
+	entity, err := mc.WorkflowExecutions().Create().
+		Set(workflowExecution).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	stageExecutions := make(model.WorkflowStageExecutions, len(wf.Edges.Stages))
 

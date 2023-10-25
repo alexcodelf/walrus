@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"golang.org/x/exp/slices"
 
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
@@ -51,6 +52,8 @@ const (
 	FieldRecord = "record"
 	// FieldInput holds the string denoting the input field in the database.
 	FieldInput = "input"
+	// FieldTrigger holds the string denoting the trigger field in the database.
+	FieldTrigger = "trigger"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeStages holds the string denoting the stages edge name in mutations.
@@ -100,6 +103,7 @@ var Columns = []string{
 	FieldStageExecutionIds,
 	FieldRecord,
 	FieldInput,
+	FieldTrigger,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -146,6 +150,8 @@ var (
 	DefaultRecord string
 	// DefaultInput holds the default value on creation for the "input" field.
 	DefaultInput string
+	// DefaultTrigger holds the default value on creation for the "trigger" field.
+	DefaultTrigger types.WorkflowExecutionTrigger
 )
 
 // OrderOption defines the ordering options for the WorkflowExecution queries.

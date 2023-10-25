@@ -9,6 +9,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/entx"
 	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
@@ -53,6 +54,9 @@ func (WorkflowExecution) Fields() []ent.Field {
 		field.Text("input").
 			Comment("Input of the workflow execution. It's the yaml file that defines the workflow execution.").
 			Default(""),
+		field.JSON("trigger", types.WorkflowExecutionTrigger{}).
+			Comment("Trigger of the workflow execution.").
+			Default(types.WorkflowExecutionTrigger{}),
 	}
 }
 

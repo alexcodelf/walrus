@@ -54,6 +54,14 @@ func workflow() *deploy.ChartApp {
 		},
 	}
 
+	// FIXME.
+	values["server"] = map[string]any{
+		"extraArgs": []string{
+			"--auth-mode=server",
+		},
+	}
+	// FIXME.
+
 	return &deploy.ChartApp{
 		Name:      NameWorkflow,
 		Namespace: types.WalrusWorkflowNamespace,
