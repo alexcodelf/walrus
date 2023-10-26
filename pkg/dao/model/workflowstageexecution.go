@@ -15,7 +15,6 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
-	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -43,18 +42,18 @@ type WorkflowStageExecution struct {
 	Status status.Status `json:"status,omitempty"`
 	// ID of the project to belong.
 	ProjectID object.ID `json:"project_id,omitempty"`
-	// Duration of the workflow stage execution.
-	Duration int `json:"duration,omitempty"`
+	// ID of the workflow that this workflow execution belongs to.
+	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// ID of the workflow stage that this workflow stage execution belongs to.
-	StageID object.ID `json:"stage_id,omitempty"`
+	WorkflowStageID object.ID `json:"workflow_stage_id,omitempty"`
 	// ID of the workflow execution that this workflow stage execution belongs to.
 	WorkflowExecutionID object.ID `json:"workflow_execution_id,omitempty"`
-	// ID list of the workflow step executions that belong to this workflow stage execution.
-	StepExecutionIds []object.ID `json:"step_execution_ids,omitempty"`
+	// Duration of the workflow stage execution.
+	Duration int `json:"duration,omitempty"`
+	// Order of the workflow stage execution.
+	Order int `json:"order,omitempty"`
 	// Log record of the workflow stage execution.
 	Record string `json:"record,omitempty"`
-	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
-	Input string `json:"input,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WorkflowStageExecutionQuery when eager-loading is set.
 	Edges        WorkflowStageExecutionEdges `json:"edges,omitempty"`
@@ -67,13 +66,11 @@ type WorkflowStageExecutionEdges struct {
 	Project *Project `json:"project,omitempty"`
 	// Workflow step executions that belong to this workflow stage execution.
 	Steps []*WorkflowStepExecution `json:"steps,omitempty"`
-	// Workflow stage that this workflow stage execution belongs to.
-	Stage *WorkflowStage `json:"stage,omitempty"`
 	// Workflow execution that this workflow stage execution belongs to.
 	WorkflowExecution *WorkflowExecution `json:"workflow_execution,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // ProjectOrErr returns the Project value or an error if the edge
@@ -98,23 +95,10 @@ func (e WorkflowStageExecutionEdges) StepsOrErr() ([]*WorkflowStepExecution, err
 	return nil, &NotLoadedError{edge: "steps"}
 }
 
-// StageOrErr returns the Stage value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e WorkflowStageExecutionEdges) StageOrErr() (*WorkflowStage, error) {
-	if e.loadedTypes[2] {
-		if e.Stage == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: workflowstage.Label}
-		}
-		return e.Stage, nil
-	}
-	return nil, &NotLoadedError{edge: "stage"}
-}
-
 // WorkflowExecutionOrErr returns the WorkflowExecution value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowStageExecutionEdges) WorkflowExecutionOrErr() (*WorkflowExecution, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		if e.WorkflowExecution == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflowexecution.Label}
@@ -129,13 +113,13 @@ func (*WorkflowStageExecution) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflowstageexecution.FieldLabels, workflowstageexecution.FieldAnnotations, workflowstageexecution.FieldStatus, workflowstageexecution.FieldStepExecutionIds:
+		case workflowstageexecution.FieldLabels, workflowstageexecution.FieldAnnotations, workflowstageexecution.FieldStatus:
 			values[i] = new([]byte)
-		case workflowstageexecution.FieldID, workflowstageexecution.FieldProjectID, workflowstageexecution.FieldStageID, workflowstageexecution.FieldWorkflowExecutionID:
+		case workflowstageexecution.FieldID, workflowstageexecution.FieldProjectID, workflowstageexecution.FieldWorkflowID, workflowstageexecution.FieldWorkflowStageID, workflowstageexecution.FieldWorkflowExecutionID:
 			values[i] = new(object.ID)
-		case workflowstageexecution.FieldDuration:
+		case workflowstageexecution.FieldDuration, workflowstageexecution.FieldOrder:
 			values[i] = new(sql.NullInt64)
-		case workflowstageexecution.FieldName, workflowstageexecution.FieldDescription, workflowstageexecution.FieldRecord, workflowstageexecution.FieldInput:
+		case workflowstageexecution.FieldName, workflowstageexecution.FieldDescription, workflowstageexecution.FieldRecord:
 			values[i] = new(sql.NullString)
 		case workflowstageexecution.FieldCreateTime, workflowstageexecution.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -216,17 +200,17 @@ func (wse *WorkflowStageExecution) assignValues(columns []string, values []any) 
 			} else if value != nil {
 				wse.ProjectID = *value
 			}
-		case workflowstageexecution.FieldDuration:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field duration", values[i])
-			} else if value.Valid {
-				wse.Duration = int(value.Int64)
-			}
-		case workflowstageexecution.FieldStageID:
+		case workflowstageexecution.FieldWorkflowID:
 			if value, ok := values[i].(*object.ID); !ok {
-				return fmt.Errorf("unexpected type %T for field stage_id", values[i])
+				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
 			} else if value != nil {
-				wse.StageID = *value
+				wse.WorkflowID = *value
+			}
+		case workflowstageexecution.FieldWorkflowStageID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field workflow_stage_id", values[i])
+			} else if value != nil {
+				wse.WorkflowStageID = *value
 			}
 		case workflowstageexecution.FieldWorkflowExecutionID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -234,25 +218,23 @@ func (wse *WorkflowStageExecution) assignValues(columns []string, values []any) 
 			} else if value != nil {
 				wse.WorkflowExecutionID = *value
 			}
-		case workflowstageexecution.FieldStepExecutionIds:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field step_execution_ids", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &wse.StepExecutionIds); err != nil {
-					return fmt.Errorf("unmarshal field step_execution_ids: %w", err)
-				}
+		case workflowstageexecution.FieldDuration:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field duration", values[i])
+			} else if value.Valid {
+				wse.Duration = int(value.Int64)
+			}
+		case workflowstageexecution.FieldOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field order", values[i])
+			} else if value.Valid {
+				wse.Order = int(value.Int64)
 			}
 		case workflowstageexecution.FieldRecord:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field record", values[i])
 			} else if value.Valid {
 				wse.Record = value.String
-			}
-		case workflowstageexecution.FieldInput:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field input", values[i])
-			} else if value.Valid {
-				wse.Input = value.String
 			}
 		default:
 			wse.selectValues.Set(columns[i], values[i])
@@ -275,11 +257,6 @@ func (wse *WorkflowStageExecution) QueryProject() *ProjectQuery {
 // QuerySteps queries the "steps" edge of the WorkflowStageExecution entity.
 func (wse *WorkflowStageExecution) QuerySteps() *WorkflowStepExecutionQuery {
 	return NewWorkflowStageExecutionClient(wse.config).QuerySteps(wse)
-}
-
-// QueryStage queries the "stage" edge of the WorkflowStageExecution entity.
-func (wse *WorkflowStageExecution) QueryStage() *WorkflowStageQuery {
-	return NewWorkflowStageExecutionClient(wse.config).QueryStage(wse)
 }
 
 // QueryWorkflowExecution queries the "workflow_execution" edge of the WorkflowStageExecution entity.
@@ -338,23 +315,23 @@ func (wse *WorkflowStageExecution) String() string {
 	builder.WriteString("project_id=")
 	builder.WriteString(fmt.Sprintf("%v", wse.ProjectID))
 	builder.WriteString(", ")
-	builder.WriteString("duration=")
-	builder.WriteString(fmt.Sprintf("%v", wse.Duration))
+	builder.WriteString("workflow_id=")
+	builder.WriteString(fmt.Sprintf("%v", wse.WorkflowID))
 	builder.WriteString(", ")
-	builder.WriteString("stage_id=")
-	builder.WriteString(fmt.Sprintf("%v", wse.StageID))
+	builder.WriteString("workflow_stage_id=")
+	builder.WriteString(fmt.Sprintf("%v", wse.WorkflowStageID))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_execution_id=")
 	builder.WriteString(fmt.Sprintf("%v", wse.WorkflowExecutionID))
 	builder.WriteString(", ")
-	builder.WriteString("step_execution_ids=")
-	builder.WriteString(fmt.Sprintf("%v", wse.StepExecutionIds))
+	builder.WriteString("duration=")
+	builder.WriteString(fmt.Sprintf("%v", wse.Duration))
+	builder.WriteString(", ")
+	builder.WriteString("order=")
+	builder.WriteString(fmt.Sprintf("%v", wse.Order))
 	builder.WriteString(", ")
 	builder.WriteString("record=")
 	builder.WriteString(wse.Record)
-	builder.WriteString(", ")
-	builder.WriteString("input=")
-	builder.WriteString(wse.Input)
 	builder.WriteByte(')')
 	return builder.String()
 }

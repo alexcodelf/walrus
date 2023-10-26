@@ -111,11 +111,6 @@ func Record(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldRecord, v))
 }
 
-// Input applies equality check predicate on the "input" field. It's identical to InputEQ.
-func Input(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEQ(FieldInput, v))
-}
-
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldName, v))
@@ -744,71 +739,6 @@ func RecordEqualFold(v string) predicate.WorkflowExecution {
 // RecordContainsFold applies the ContainsFold predicate on the "record" field.
 func RecordContainsFold(v string) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldRecord, v))
-}
-
-// InputEQ applies the EQ predicate on the "input" field.
-func InputEQ(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEQ(FieldInput, v))
-}
-
-// InputNEQ applies the NEQ predicate on the "input" field.
-func InputNEQ(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldNEQ(FieldInput, v))
-}
-
-// InputIn applies the In predicate on the "input" field.
-func InputIn(vs ...string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldIn(FieldInput, vs...))
-}
-
-// InputNotIn applies the NotIn predicate on the "input" field.
-func InputNotIn(vs ...string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldNotIn(FieldInput, vs...))
-}
-
-// InputGT applies the GT predicate on the "input" field.
-func InputGT(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldGT(FieldInput, v))
-}
-
-// InputGTE applies the GTE predicate on the "input" field.
-func InputGTE(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldGTE(FieldInput, v))
-}
-
-// InputLT applies the LT predicate on the "input" field.
-func InputLT(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldLT(FieldInput, v))
-}
-
-// InputLTE applies the LTE predicate on the "input" field.
-func InputLTE(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldLTE(FieldInput, v))
-}
-
-// InputContains applies the Contains predicate on the "input" field.
-func InputContains(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldContains(FieldInput, v))
-}
-
-// InputHasPrefix applies the HasPrefix predicate on the "input" field.
-func InputHasPrefix(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldHasPrefix(FieldInput, v))
-}
-
-// InputHasSuffix applies the HasSuffix predicate on the "input" field.
-func InputHasSuffix(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldHasSuffix(FieldInput, v))
-}
-
-// InputEqualFold applies the EqualFold predicate on the "input" field.
-func InputEqualFold(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEqualFold(FieldInput, v))
-}
-
-// InputContainsFold applies the ContainsFold predicate on the "input" field.
-func InputContainsFold(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldInput, v))
 }
 
 // HasProject applies the HasEdge predicate on the "project" edge.

@@ -110,7 +110,7 @@ func (wseu *WorkflowStepExecutionUpdate) ClearStatus() *WorkflowStepExecutionUpd
 }
 
 // SetSpec sets the "spec" field.
-func (wseu *WorkflowStepExecutionUpdate) SetSpec(m map[string]any) *WorkflowStepExecutionUpdate {
+func (wseu *WorkflowStepExecutionUpdate) SetSpec(m map[string]interface{}) *WorkflowStepExecutionUpdate {
 	wseu.mutation.SetSpec(m)
 	return wseu
 }
@@ -163,6 +163,27 @@ func (wseu *WorkflowStepExecutionUpdate) AddDuration(i int) *WorkflowStepExecuti
 	return wseu
 }
 
+// SetOrder sets the "order" field.
+func (wseu *WorkflowStepExecutionUpdate) SetOrder(i int) *WorkflowStepExecutionUpdate {
+	wseu.mutation.ResetOrder()
+	wseu.mutation.SetOrder(i)
+	return wseu
+}
+
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wseu *WorkflowStepExecutionUpdate) SetNillableOrder(i *int) *WorkflowStepExecutionUpdate {
+	if i != nil {
+		wseu.SetOrder(*i)
+	}
+	return wseu
+}
+
+// AddOrder adds i to the "order" field.
+func (wseu *WorkflowStepExecutionUpdate) AddOrder(i int) *WorkflowStepExecutionUpdate {
+	wseu.mutation.AddOrder(i)
+	return wseu
+}
+
 // SetRecord sets the "record" field.
 func (wseu *WorkflowStepExecutionUpdate) SetRecord(s string) *WorkflowStepExecutionUpdate {
 	wseu.mutation.SetRecord(s)
@@ -173,20 +194,6 @@ func (wseu *WorkflowStepExecutionUpdate) SetRecord(s string) *WorkflowStepExecut
 func (wseu *WorkflowStepExecutionUpdate) SetNillableRecord(s *string) *WorkflowStepExecutionUpdate {
 	if s != nil {
 		wseu.SetRecord(*s)
-	}
-	return wseu
-}
-
-// SetInput sets the "input" field.
-func (wseu *WorkflowStepExecutionUpdate) SetInput(s string) *WorkflowStepExecutionUpdate {
-	wseu.mutation.SetInput(s)
-	return wseu
-}
-
-// SetNillableInput sets the "input" field if the given value is not nil.
-func (wseu *WorkflowStepExecutionUpdate) SetNillableInput(s *string) *WorkflowStepExecutionUpdate {
-	if s != nil {
-		wseu.SetInput(*s)
 	}
 	return wseu
 }
@@ -250,11 +257,13 @@ func (wseu *WorkflowStepExecutionUpdate) check() error {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStepExecution.duration": %w`, err)}
 		}
 	}
+	if v, ok := wseu.mutation.Order(); ok {
+		if err := workflowstepexecution.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStepExecution.order": %w`, err)}
+		}
+	}
 	if _, ok := wseu.mutation.ProjectID(); wseu.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.project"`)
-	}
-	if _, ok := wseu.mutation.StepID(); wseu.mutation.StepCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.step"`)
 	}
 	if _, ok := wseu.mutation.StageExecutionID(); wseu.mutation.StageExecutionCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.stage_execution"`)
@@ -318,8 +327,8 @@ func (wseu *WorkflowStepExecutionUpdate) Set(obj *WorkflowStepExecution) *Workfl
 	}
 	wseu.SetTimes(obj.Times)
 	wseu.SetDuration(obj.Duration)
+	wseu.SetOrder(obj.Order)
 	wseu.SetRecord(obj.Record)
-	wseu.SetInput(obj.Input)
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -395,11 +404,14 @@ func (wseu *WorkflowStepExecutionUpdate) sqlSave(ctx context.Context) (n int, er
 	if value, ok := wseu.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowstepexecution.FieldDuration, field.TypeInt, value)
 	}
+	if value, ok := wseu.mutation.Order(); ok {
+		_spec.SetField(workflowstepexecution.FieldOrder, field.TypeInt, value)
+	}
+	if value, ok := wseu.mutation.AddedOrder(); ok {
+		_spec.AddField(workflowstepexecution.FieldOrder, field.TypeInt, value)
+	}
 	if value, ok := wseu.mutation.Record(); ok {
 		_spec.SetField(workflowstepexecution.FieldRecord, field.TypeString, value)
-	}
-	if value, ok := wseu.mutation.Input(); ok {
-		_spec.SetField(workflowstepexecution.FieldInput, field.TypeString, value)
 	}
 	_spec.Node.Schema = wseu.schemaConfig.WorkflowStepExecution
 	ctx = internal.NewSchemaConfigContext(ctx, wseu.schemaConfig)
@@ -497,7 +509,7 @@ func (wseuo *WorkflowStepExecutionUpdateOne) ClearStatus() *WorkflowStepExecutio
 }
 
 // SetSpec sets the "spec" field.
-func (wseuo *WorkflowStepExecutionUpdateOne) SetSpec(m map[string]any) *WorkflowStepExecutionUpdateOne {
+func (wseuo *WorkflowStepExecutionUpdateOne) SetSpec(m map[string]interface{}) *WorkflowStepExecutionUpdateOne {
 	wseuo.mutation.SetSpec(m)
 	return wseuo
 }
@@ -550,6 +562,27 @@ func (wseuo *WorkflowStepExecutionUpdateOne) AddDuration(i int) *WorkflowStepExe
 	return wseuo
 }
 
+// SetOrder sets the "order" field.
+func (wseuo *WorkflowStepExecutionUpdateOne) SetOrder(i int) *WorkflowStepExecutionUpdateOne {
+	wseuo.mutation.ResetOrder()
+	wseuo.mutation.SetOrder(i)
+	return wseuo
+}
+
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wseuo *WorkflowStepExecutionUpdateOne) SetNillableOrder(i *int) *WorkflowStepExecutionUpdateOne {
+	if i != nil {
+		wseuo.SetOrder(*i)
+	}
+	return wseuo
+}
+
+// AddOrder adds i to the "order" field.
+func (wseuo *WorkflowStepExecutionUpdateOne) AddOrder(i int) *WorkflowStepExecutionUpdateOne {
+	wseuo.mutation.AddOrder(i)
+	return wseuo
+}
+
 // SetRecord sets the "record" field.
 func (wseuo *WorkflowStepExecutionUpdateOne) SetRecord(s string) *WorkflowStepExecutionUpdateOne {
 	wseuo.mutation.SetRecord(s)
@@ -560,20 +593,6 @@ func (wseuo *WorkflowStepExecutionUpdateOne) SetRecord(s string) *WorkflowStepEx
 func (wseuo *WorkflowStepExecutionUpdateOne) SetNillableRecord(s *string) *WorkflowStepExecutionUpdateOne {
 	if s != nil {
 		wseuo.SetRecord(*s)
-	}
-	return wseuo
-}
-
-// SetInput sets the "input" field.
-func (wseuo *WorkflowStepExecutionUpdateOne) SetInput(s string) *WorkflowStepExecutionUpdateOne {
-	wseuo.mutation.SetInput(s)
-	return wseuo
-}
-
-// SetNillableInput sets the "input" field if the given value is not nil.
-func (wseuo *WorkflowStepExecutionUpdateOne) SetNillableInput(s *string) *WorkflowStepExecutionUpdateOne {
-	if s != nil {
-		wseuo.SetInput(*s)
 	}
 	return wseuo
 }
@@ -650,11 +669,13 @@ func (wseuo *WorkflowStepExecutionUpdateOne) check() error {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStepExecution.duration": %w`, err)}
 		}
 	}
+	if v, ok := wseuo.mutation.Order(); ok {
+		if err := workflowstepexecution.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStepExecution.order": %w`, err)}
+		}
+	}
 	if _, ok := wseuo.mutation.ProjectID(); wseuo.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.project"`)
-	}
-	if _, ok := wseuo.mutation.StepID(); wseuo.mutation.StepCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.step"`)
 	}
 	if _, ok := wseuo.mutation.StageExecutionID(); wseuo.mutation.StageExecutionCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStepExecution.stage_execution"`)
@@ -742,11 +763,11 @@ func (wseuo *WorkflowStepExecutionUpdateOne) Set(obj *WorkflowStepExecution) *Wo
 			if db.Duration != obj.Duration {
 				wseuo.SetDuration(obj.Duration)
 			}
+			if db.Order != obj.Order {
+				wseuo.SetOrder(obj.Order)
+			}
 			if db.Record != obj.Record {
 				wseuo.SetRecord(obj.Record)
-			}
-			if db.Input != obj.Input {
-				wseuo.SetInput(obj.Input)
 			}
 
 			// With Default.
@@ -819,11 +840,11 @@ func (wseuo *WorkflowStepExecutionUpdateOne) SaveE(ctx context.Context, cbs ...f
 		if _, set := wseuo.mutation.Field(workflowstepexecution.FieldDuration); set {
 			obj.Duration = x.Duration
 		}
+		if _, set := wseuo.mutation.Field(workflowstepexecution.FieldOrder); set {
+			obj.Order = x.Order
+		}
 		if _, set := wseuo.mutation.Field(workflowstepexecution.FieldRecord); set {
 			obj.Record = x.Record
-		}
-		if _, set := wseuo.mutation.Field(workflowstepexecution.FieldInput); set {
-			obj.Input = x.Input
 		}
 		obj.Edges = x.Edges
 	}
@@ -940,11 +961,14 @@ func (wseuo *WorkflowStepExecutionUpdateOne) sqlSave(ctx context.Context) (_node
 	if value, ok := wseuo.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowstepexecution.FieldDuration, field.TypeInt, value)
 	}
+	if value, ok := wseuo.mutation.Order(); ok {
+		_spec.SetField(workflowstepexecution.FieldOrder, field.TypeInt, value)
+	}
+	if value, ok := wseuo.mutation.AddedOrder(); ok {
+		_spec.AddField(workflowstepexecution.FieldOrder, field.TypeInt, value)
+	}
 	if value, ok := wseuo.mutation.Record(); ok {
 		_spec.SetField(workflowstepexecution.FieldRecord, field.TypeString, value)
-	}
-	if value, ok := wseuo.mutation.Input(); ok {
-		_spec.SetField(workflowstepexecution.FieldInput, field.TypeString, value)
 	}
 	_spec.Node.Schema = wseuo.schemaConfig.WorkflowStepExecution
 	ctx = internal.NewSchemaConfigContext(ctx, wseuo.schemaConfig)

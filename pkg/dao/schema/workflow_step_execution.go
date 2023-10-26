@@ -56,12 +56,14 @@ func (WorkflowStepExecution) Fields() []ent.Field {
 			Comment("Duration of the workflow step execution.").
 			NonNegative().
 			Default(0),
+		field.Int("order").
+			Comment("Order of the workflow step execution.").
+			NonNegative().
+			Default(0).
+			Annotations(
+				entx.SkipIO()),
 		field.Text("record").
 			Comment("Log record of the workflow step execution.").
-			Default(""),
-		field.Text("input").
-			Comment("Input of the workflow step execution." +
-				" It's the yaml file that defines the workflow step execution.").
 			Default(""),
 	}
 }
@@ -78,16 +80,6 @@ func (WorkflowStepExecution) Edges() []ent.Edge {
 			Immutable().
 			Annotations(
 				entx.ValidateContext(intercept.WithProjectInterceptor)),
-		// WorkflowStep 1-* WorkflowStepExecutions.
-		edge.From("step", WorkflowStep.Type).
-			Ref("executions").
-			Field("workflow_step_id").
-			Comment("Workflow step that this workflow step execution belongs to.").
-			Required().
-			Unique().
-			Immutable().
-			Annotations(
-				entx.SkipIO()),
 		// WorkflowStageExecution 1-* WorkflowStepExecutions.
 		edge.From("stage_execution", WorkflowStageExecution.Type).
 			Ref("steps").

@@ -45,13 +45,15 @@ type WorkflowStep struct {
 	// ID of the workflow that this workflow step belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// ID of the stage that this workflow step belongs to.
-	StageID object.ID `json:"stage_id,omitempty"`
+	WorkflowStageID object.ID `json:"workflow_stage_id,omitempty"`
 	// Spec of the workflow step.
-	Spec map[string]any `json:"spec,omitempty"`
+	Spec map[string]interface{} `json:"spec,omitempty"`
 	// Input of the workflow step.
-	Input map[string]any `json:"input,omitempty"`
+	Input map[string]interface{} `json:"input,omitempty"`
 	// Output of the workflow step.
-	Output map[string]any `json:"output,omitempty"`
+	Output map[string]interface{} `json:"output,omitempty"`
+	// Order of the workflow step.
+	Order int `json:"order,omitempty"`
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.
@@ -68,13 +70,11 @@ type WorkflowStep struct {
 type WorkflowStepEdges struct {
 	// Project to which the step belongs.
 	Project *Project `json:"project,omitempty"`
-	// Workflow step executions that belong to this workflow step.
-	Executions []*WorkflowStepExecution `json:"executions,omitempty"`
 	// Workflow stage that this workflow step belongs to.
 	Stage *WorkflowStage `json:"stage,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [2]bool
 }
 
 // ProjectOrErr returns the Project value or an error if the edge
@@ -90,19 +90,10 @@ func (e WorkflowStepEdges) ProjectOrErr() (*Project, error) {
 	return nil, &NotLoadedError{edge: "project"}
 }
 
-// ExecutionsOrErr returns the Executions value or an error if the edge
-// was not loaded in eager-loading.
-func (e WorkflowStepEdges) ExecutionsOrErr() ([]*WorkflowStepExecution, error) {
-	if e.loadedTypes[1] {
-		return e.Executions, nil
-	}
-	return nil, &NotLoadedError{edge: "executions"}
-}
-
 // StageOrErr returns the Stage value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowStepEdges) StageOrErr() (*WorkflowStage, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		if e.Stage == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflowstage.Label}
@@ -119,9 +110,9 @@ func (*WorkflowStep) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case workflowstep.FieldLabels, workflowstep.FieldAnnotations, workflowstep.FieldSpec, workflowstep.FieldInput, workflowstep.FieldOutput, workflowstep.FieldDependencies, workflowstep.FieldRetryStrategy:
 			values[i] = new([]byte)
-		case workflowstep.FieldID, workflowstep.FieldProjectID, workflowstep.FieldWorkflowID, workflowstep.FieldStageID:
+		case workflowstep.FieldID, workflowstep.FieldProjectID, workflowstep.FieldWorkflowID, workflowstep.FieldWorkflowStageID:
 			values[i] = new(object.ID)
-		case workflowstep.FieldTimeout:
+		case workflowstep.FieldOrder, workflowstep.FieldTimeout:
 			values[i] = new(sql.NullInt64)
 		case workflowstep.FieldName, workflowstep.FieldDescription, workflowstep.FieldType:
 			values[i] = new(sql.NullString)
@@ -208,11 +199,11 @@ func (ws *WorkflowStep) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				ws.WorkflowID = *value
 			}
-		case workflowstep.FieldStageID:
+		case workflowstep.FieldWorkflowStageID:
 			if value, ok := values[i].(*object.ID); !ok {
-				return fmt.Errorf("unexpected type %T for field stage_id", values[i])
+				return fmt.Errorf("unexpected type %T for field workflow_stage_id", values[i])
 			} else if value != nil {
-				ws.StageID = *value
+				ws.WorkflowStageID = *value
 			}
 		case workflowstep.FieldSpec:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -237,6 +228,12 @@ func (ws *WorkflowStep) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &ws.Output); err != nil {
 					return fmt.Errorf("unmarshal field output: %w", err)
 				}
+			}
+		case workflowstep.FieldOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field order", values[i])
+			} else if value.Valid {
+				ws.Order = int(value.Int64)
 			}
 		case workflowstep.FieldDependencies:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -276,11 +273,6 @@ func (ws *WorkflowStep) Value(name string) (ent.Value, error) {
 // QueryProject queries the "project" edge of the WorkflowStep entity.
 func (ws *WorkflowStep) QueryProject() *ProjectQuery {
 	return NewWorkflowStepClient(ws.config).QueryProject(ws)
-}
-
-// QueryExecutions queries the "executions" edge of the WorkflowStep entity.
-func (ws *WorkflowStep) QueryExecutions() *WorkflowStepExecutionQuery {
-	return NewWorkflowStepClient(ws.config).QueryExecutions(ws)
 }
 
 // QueryStage queries the "stage" edge of the WorkflowStep entity.
@@ -342,8 +334,8 @@ func (ws *WorkflowStep) String() string {
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", ws.WorkflowID))
 	builder.WriteString(", ")
-	builder.WriteString("stage_id=")
-	builder.WriteString(fmt.Sprintf("%v", ws.StageID))
+	builder.WriteString("workflow_stage_id=")
+	builder.WriteString(fmt.Sprintf("%v", ws.WorkflowStageID))
 	builder.WriteString(", ")
 	builder.WriteString("spec=")
 	builder.WriteString(fmt.Sprintf("%v", ws.Spec))
@@ -353,6 +345,9 @@ func (ws *WorkflowStep) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("output=")
 	builder.WriteString(fmt.Sprintf("%v", ws.Output))
+	builder.WriteString(", ")
+	builder.WriteString("order=")
+	builder.WriteString(fmt.Sprintf("%v", ws.Order))
 	builder.WriteString(", ")
 	builder.WriteString("dependencies=")
 	builder.WriteString(fmt.Sprintf("%v", ws.Dependencies))

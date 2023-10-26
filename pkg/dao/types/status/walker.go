@@ -215,6 +215,7 @@ func getGeneralDecide[T ~string](step T) Decide {
 var replacements = map[string]struct {
 	T, E, D string
 }{
+	"Running":     {"Running", "RunningFailed", "RunningCompleted"},
 	"Pending":     {"Pending", "PendingFailed", "Pended"},
 	"Progressing": {"Progressing", "Progressing", "Progressed"},
 	"Connected":   {"Connecting", "Disconnected", "Connected"},

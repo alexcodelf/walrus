@@ -148,12 +148,6 @@ func (wec *WorkflowExecutionCreate) SetNillableDuration(i *int) *WorkflowExecuti
 	return wec
 }
 
-// SetStageExecutionIds sets the "stage_execution_ids" field.
-func (wec *WorkflowExecutionCreate) SetStageExecutionIds(o []object.ID) *WorkflowExecutionCreate {
-	wec.mutation.SetStageExecutionIds(o)
-	return wec
-}
-
 // SetRecord sets the "record" field.
 func (wec *WorkflowExecutionCreate) SetRecord(s string) *WorkflowExecutionCreate {
 	wec.mutation.SetRecord(s)
@@ -164,20 +158,6 @@ func (wec *WorkflowExecutionCreate) SetRecord(s string) *WorkflowExecutionCreate
 func (wec *WorkflowExecutionCreate) SetNillableRecord(s *string) *WorkflowExecutionCreate {
 	if s != nil {
 		wec.SetRecord(*s)
-	}
-	return wec
-}
-
-// SetInput sets the "input" field.
-func (wec *WorkflowExecutionCreate) SetInput(s string) *WorkflowExecutionCreate {
-	wec.mutation.SetInput(s)
-	return wec
-}
-
-// SetNillableInput sets the "input" field if the given value is not nil.
-func (wec *WorkflowExecutionCreate) SetNillableInput(s *string) *WorkflowExecutionCreate {
-	if s != nil {
-		wec.SetInput(*s)
 	}
 	return wec
 }
@@ -290,17 +270,9 @@ func (wec *WorkflowExecutionCreate) defaults() error {
 		v := workflowexecution.DefaultDuration
 		wec.mutation.SetDuration(v)
 	}
-	if _, ok := wec.mutation.StageExecutionIds(); !ok {
-		v := workflowexecution.DefaultStageExecutionIds
-		wec.mutation.SetStageExecutionIds(v)
-	}
 	if _, ok := wec.mutation.Record(); !ok {
 		v := workflowexecution.DefaultRecord
 		wec.mutation.SetRecord(v)
-	}
-	if _, ok := wec.mutation.Input(); !ok {
-		v := workflowexecution.DefaultInput
-		wec.mutation.SetInput(v)
 	}
 	if _, ok := wec.mutation.Trigger(); !ok {
 		v := workflowexecution.DefaultTrigger
@@ -355,14 +327,8 @@ func (wec *WorkflowExecutionCreate) check() error {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.duration": %w`, err)}
 		}
 	}
-	if _, ok := wec.mutation.StageExecutionIds(); !ok {
-		return &ValidationError{Name: "stage_execution_ids", err: errors.New(`model: missing required field "WorkflowExecution.stage_execution_ids"`)}
-	}
 	if _, ok := wec.mutation.Record(); !ok {
 		return &ValidationError{Name: "record", err: errors.New(`model: missing required field "WorkflowExecution.record"`)}
-	}
-	if _, ok := wec.mutation.Input(); !ok {
-		return &ValidationError{Name: "input", err: errors.New(`model: missing required field "WorkflowExecution.input"`)}
 	}
 	if _, ok := wec.mutation.Trigger(); !ok {
 		return &ValidationError{Name: "trigger", err: errors.New(`model: missing required field "WorkflowExecution.trigger"`)}
@@ -450,17 +416,9 @@ func (wec *WorkflowExecutionCreate) createSpec() (*WorkflowExecution, *sqlgraph.
 		_spec.SetField(workflowexecution.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
 	}
-	if value, ok := wec.mutation.StageExecutionIds(); ok {
-		_spec.SetField(workflowexecution.FieldStageExecutionIds, field.TypeJSON, value)
-		_node.StageExecutionIds = value
-	}
 	if value, ok := wec.mutation.Record(); ok {
 		_spec.SetField(workflowexecution.FieldRecord, field.TypeString, value)
 		_node.Record = value
-	}
-	if value, ok := wec.mutation.Input(); ok {
-		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
-		_node.Input = value
 	}
 	if value, ok := wec.mutation.Trigger(); ok {
 		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)
@@ -548,9 +506,7 @@ func (wec *WorkflowExecutionCreate) Set(obj *WorkflowExecution) *WorkflowExecuti
 	wec.SetSubjectID(obj.SubjectID)
 	wec.SetProgress(obj.Progress)
 	wec.SetDuration(obj.Duration)
-	wec.SetStageExecutionIds(obj.StageExecutionIds)
 	wec.SetRecord(obj.Record)
-	wec.SetInput(obj.Input)
 	wec.SetTrigger(obj.Trigger)
 
 	// Optional.
@@ -989,18 +945,6 @@ func (u *WorkflowExecutionUpsert) AddDuration(v int) *WorkflowExecutionUpsert {
 	return u
 }
 
-// SetStageExecutionIds sets the "stage_execution_ids" field.
-func (u *WorkflowExecutionUpsert) SetStageExecutionIds(v []object.ID) *WorkflowExecutionUpsert {
-	u.Set(workflowexecution.FieldStageExecutionIds, v)
-	return u
-}
-
-// UpdateStageExecutionIds sets the "stage_execution_ids" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsert) UpdateStageExecutionIds() *WorkflowExecutionUpsert {
-	u.SetExcluded(workflowexecution.FieldStageExecutionIds)
-	return u
-}
-
 // SetRecord sets the "record" field.
 func (u *WorkflowExecutionUpsert) SetRecord(v string) *WorkflowExecutionUpsert {
 	u.Set(workflowexecution.FieldRecord, v)
@@ -1010,18 +954,6 @@ func (u *WorkflowExecutionUpsert) SetRecord(v string) *WorkflowExecutionUpsert {
 // UpdateRecord sets the "record" field to the value that was provided on create.
 func (u *WorkflowExecutionUpsert) UpdateRecord() *WorkflowExecutionUpsert {
 	u.SetExcluded(workflowexecution.FieldRecord)
-	return u
-}
-
-// SetInput sets the "input" field.
-func (u *WorkflowExecutionUpsert) SetInput(v string) *WorkflowExecutionUpsert {
-	u.Set(workflowexecution.FieldInput, v)
-	return u
-}
-
-// UpdateInput sets the "input" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsert) UpdateInput() *WorkflowExecutionUpsert {
-	u.SetExcluded(workflowexecution.FieldInput)
 	return u
 }
 
@@ -1233,20 +1165,6 @@ func (u *WorkflowExecutionUpsertOne) UpdateDuration() *WorkflowExecutionUpsertOn
 	})
 }
 
-// SetStageExecutionIds sets the "stage_execution_ids" field.
-func (u *WorkflowExecutionUpsertOne) SetStageExecutionIds(v []object.ID) *WorkflowExecutionUpsertOne {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetStageExecutionIds(v)
-	})
-}
-
-// UpdateStageExecutionIds sets the "stage_execution_ids" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertOne) UpdateStageExecutionIds() *WorkflowExecutionUpsertOne {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateStageExecutionIds()
-	})
-}
-
 // SetRecord sets the "record" field.
 func (u *WorkflowExecutionUpsertOne) SetRecord(v string) *WorkflowExecutionUpsertOne {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
@@ -1258,20 +1176,6 @@ func (u *WorkflowExecutionUpsertOne) SetRecord(v string) *WorkflowExecutionUpser
 func (u *WorkflowExecutionUpsertOne) UpdateRecord() *WorkflowExecutionUpsertOne {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
 		s.UpdateRecord()
-	})
-}
-
-// SetInput sets the "input" field.
-func (u *WorkflowExecutionUpsertOne) SetInput(v string) *WorkflowExecutionUpsertOne {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetInput(v)
-	})
-}
-
-// UpdateInput sets the "input" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertOne) UpdateInput() *WorkflowExecutionUpsertOne {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateInput()
 	})
 }
 
@@ -1650,20 +1554,6 @@ func (u *WorkflowExecutionUpsertBulk) UpdateDuration() *WorkflowExecutionUpsertB
 	})
 }
 
-// SetStageExecutionIds sets the "stage_execution_ids" field.
-func (u *WorkflowExecutionUpsertBulk) SetStageExecutionIds(v []object.ID) *WorkflowExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetStageExecutionIds(v)
-	})
-}
-
-// UpdateStageExecutionIds sets the "stage_execution_ids" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertBulk) UpdateStageExecutionIds() *WorkflowExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateStageExecutionIds()
-	})
-}
-
 // SetRecord sets the "record" field.
 func (u *WorkflowExecutionUpsertBulk) SetRecord(v string) *WorkflowExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
@@ -1675,20 +1565,6 @@ func (u *WorkflowExecutionUpsertBulk) SetRecord(v string) *WorkflowExecutionUpse
 func (u *WorkflowExecutionUpsertBulk) UpdateRecord() *WorkflowExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
 		s.UpdateRecord()
-	})
-}
-
-// SetInput sets the "input" field.
-func (u *WorkflowExecutionUpsertBulk) SetInput(v string) *WorkflowExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetInput(v)
-	})
-}
-
-// UpdateInput sets the "input" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertBulk) UpdateInput() *WorkflowExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateInput()
 	})
 }
 

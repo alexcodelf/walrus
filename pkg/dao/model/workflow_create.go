@@ -114,21 +114,9 @@ func (wc *WorkflowCreate) SetNillableEnvironmentID(o *object.ID) *WorkflowCreate
 	return wc
 }
 
-// SetDisplayName sets the "display_name" field.
-func (wc *WorkflowCreate) SetDisplayName(s string) *WorkflowCreate {
-	wc.mutation.SetDisplayName(s)
-	return wc
-}
-
 // SetType sets the "type" field.
 func (wc *WorkflowCreate) SetType(s string) *WorkflowCreate {
 	wc.mutation.SetType(s)
-	return wc
-}
-
-// SetStageIds sets the "stage_ids" field.
-func (wc *WorkflowCreate) SetStageIds(o []object.ID) *WorkflowCreate {
-	wc.mutation.SetStageIds(o)
 	return wc
 }
 
@@ -246,10 +234,6 @@ func (wc *WorkflowCreate) defaults() error {
 		v := workflow.DefaultUpdateTime()
 		wc.mutation.SetUpdateTime(v)
 	}
-	if _, ok := wc.mutation.StageIds(); !ok {
-		v := workflow.DefaultStageIds
-		wc.mutation.SetStageIds(v)
-	}
 	if _, ok := wc.mutation.Parallelism(); !ok {
 		v := workflow.DefaultParallelism
 		wc.mutation.SetParallelism(v)
@@ -281,14 +265,6 @@ func (wc *WorkflowCreate) check() error {
 			return &ValidationError{Name: "project_id", err: fmt.Errorf(`model: validator failed for field "Workflow.project_id": %w`, err)}
 		}
 	}
-	if _, ok := wc.mutation.DisplayName(); !ok {
-		return &ValidationError{Name: "display_name", err: errors.New(`model: missing required field "Workflow.display_name"`)}
-	}
-	if v, ok := wc.mutation.DisplayName(); ok {
-		if err := workflow.DisplayNameValidator(v); err != nil {
-			return &ValidationError{Name: "display_name", err: fmt.Errorf(`model: validator failed for field "Workflow.display_name": %w`, err)}
-		}
-	}
 	if _, ok := wc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`model: missing required field "Workflow.type"`)}
 	}
@@ -296,9 +272,6 @@ func (wc *WorkflowCreate) check() error {
 		if err := workflow.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`model: validator failed for field "Workflow.type": %w`, err)}
 		}
-	}
-	if _, ok := wc.mutation.StageIds(); !ok {
-		return &ValidationError{Name: "stage_ids", err: errors.New(`model: missing required field "Workflow.stage_ids"`)}
 	}
 	if _, ok := wc.mutation.Parallelism(); !ok {
 		return &ValidationError{Name: "parallelism", err: errors.New(`model: missing required field "Workflow.parallelism"`)}
@@ -376,17 +349,9 @@ func (wc *WorkflowCreate) createSpec() (*Workflow, *sqlgraph.CreateSpec) {
 		_spec.SetField(workflow.FieldEnvironmentID, field.TypeString, value)
 		_node.EnvironmentID = value
 	}
-	if value, ok := wc.mutation.DisplayName(); ok {
-		_spec.SetField(workflow.FieldDisplayName, field.TypeString, value)
-		_node.DisplayName = value
-	}
 	if value, ok := wc.mutation.GetType(); ok {
 		_spec.SetField(workflow.FieldType, field.TypeString, value)
 		_node.Type = value
-	}
-	if value, ok := wc.mutation.StageIds(); ok {
-		_spec.SetField(workflow.FieldStageIds, field.TypeJSON, value)
-		_node.StageIds = value
 	}
 	if value, ok := wc.mutation.Parallelism(); ok {
 		_spec.SetField(workflow.FieldParallelism, field.TypeInt, value)
@@ -469,9 +434,7 @@ func (wc *WorkflowCreate) Set(obj *Workflow) *WorkflowCreate {
 	// Required.
 	wc.SetName(obj.Name)
 	wc.SetProjectID(obj.ProjectID)
-	wc.SetDisplayName(obj.DisplayName)
 	wc.SetType(obj.Type)
-	wc.SetStageIds(obj.StageIds)
 	wc.SetParallelism(obj.Parallelism)
 
 	// Optional.
@@ -551,9 +514,6 @@ func (wc *WorkflowCreate) SaveE(ctx context.Context, cbs ...func(ctx context.Con
 		}
 		if _, set := wc.mutation.Field(workflow.FieldEnvironmentID); set {
 			obj.EnvironmentID = x.EnvironmentID
-		}
-		if _, set := wc.mutation.Field(workflow.FieldDisplayName); set {
-			obj.DisplayName = x.DisplayName
 		}
 		if _, set := wc.mutation.Field(workflow.FieldType); set {
 			obj.Type = x.Type
@@ -682,9 +642,6 @@ func (wcb *WorkflowCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx contex
 			}
 			if _, set := wcb.builders[i].mutation.Field(workflow.FieldEnvironmentID); set {
 				objs[i].EnvironmentID = x[i].EnvironmentID
-			}
-			if _, set := wcb.builders[i].mutation.Field(workflow.FieldDisplayName); set {
-				objs[i].DisplayName = x[i].DisplayName
 			}
 			if _, set := wcb.builders[i].mutation.Field(workflow.FieldType); set {
 				objs[i].Type = x[i].Type
@@ -881,30 +838,6 @@ func (u *WorkflowUpsert) UpdateUpdateTime() *WorkflowUpsert {
 	return u
 }
 
-// SetDisplayName sets the "display_name" field.
-func (u *WorkflowUpsert) SetDisplayName(v string) *WorkflowUpsert {
-	u.Set(workflow.FieldDisplayName, v)
-	return u
-}
-
-// UpdateDisplayName sets the "display_name" field to the value that was provided on create.
-func (u *WorkflowUpsert) UpdateDisplayName() *WorkflowUpsert {
-	u.SetExcluded(workflow.FieldDisplayName)
-	return u
-}
-
-// SetStageIds sets the "stage_ids" field.
-func (u *WorkflowUpsert) SetStageIds(v []object.ID) *WorkflowUpsert {
-	u.Set(workflow.FieldStageIds, v)
-	return u
-}
-
-// UpdateStageIds sets the "stage_ids" field to the value that was provided on create.
-func (u *WorkflowUpsert) UpdateStageIds() *WorkflowUpsert {
-	u.SetExcluded(workflow.FieldStageIds)
-	return u
-}
-
 // SetParallelism sets the "parallelism" field.
 func (u *WorkflowUpsert) SetParallelism(v int) *WorkflowUpsert {
 	u.Set(workflow.FieldParallelism, v)
@@ -1060,34 +993,6 @@ func (u *WorkflowUpsertOne) SetUpdateTime(v time.Time) *WorkflowUpsertOne {
 func (u *WorkflowUpsertOne) UpdateUpdateTime() *WorkflowUpsertOne {
 	return u.Update(func(s *WorkflowUpsert) {
 		s.UpdateUpdateTime()
-	})
-}
-
-// SetDisplayName sets the "display_name" field.
-func (u *WorkflowUpsertOne) SetDisplayName(v string) *WorkflowUpsertOne {
-	return u.Update(func(s *WorkflowUpsert) {
-		s.SetDisplayName(v)
-	})
-}
-
-// UpdateDisplayName sets the "display_name" field to the value that was provided on create.
-func (u *WorkflowUpsertOne) UpdateDisplayName() *WorkflowUpsertOne {
-	return u.Update(func(s *WorkflowUpsert) {
-		s.UpdateDisplayName()
-	})
-}
-
-// SetStageIds sets the "stage_ids" field.
-func (u *WorkflowUpsertOne) SetStageIds(v []object.ID) *WorkflowUpsertOne {
-	return u.Update(func(s *WorkflowUpsert) {
-		s.SetStageIds(v)
-	})
-}
-
-// UpdateStageIds sets the "stage_ids" field to the value that was provided on create.
-func (u *WorkflowUpsertOne) UpdateStageIds() *WorkflowUpsertOne {
-	return u.Update(func(s *WorkflowUpsert) {
-		s.UpdateStageIds()
 	})
 }
 
@@ -1414,34 +1319,6 @@ func (u *WorkflowUpsertBulk) SetUpdateTime(v time.Time) *WorkflowUpsertBulk {
 func (u *WorkflowUpsertBulk) UpdateUpdateTime() *WorkflowUpsertBulk {
 	return u.Update(func(s *WorkflowUpsert) {
 		s.UpdateUpdateTime()
-	})
-}
-
-// SetDisplayName sets the "display_name" field.
-func (u *WorkflowUpsertBulk) SetDisplayName(v string) *WorkflowUpsertBulk {
-	return u.Update(func(s *WorkflowUpsert) {
-		s.SetDisplayName(v)
-	})
-}
-
-// UpdateDisplayName sets the "display_name" field to the value that was provided on create.
-func (u *WorkflowUpsertBulk) UpdateDisplayName() *WorkflowUpsertBulk {
-	return u.Update(func(s *WorkflowUpsert) {
-		s.UpdateDisplayName()
-	})
-}
-
-// SetStageIds sets the "stage_ids" field.
-func (u *WorkflowUpsertBulk) SetStageIds(v []object.ID) *WorkflowUpsertBulk {
-	return u.Update(func(s *WorkflowUpsert) {
-		s.SetStageIds(v)
-	})
-}
-
-// UpdateStageIds sets the "stage_ids" field to the value that was provided on create.
-func (u *WorkflowUpsertBulk) UpdateStageIds() *WorkflowUpsertBulk {
-	return u.Update(func(s *WorkflowUpsert) {
-		s.UpdateStageIds()
 	})
 }
 

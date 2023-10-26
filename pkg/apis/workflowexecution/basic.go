@@ -1,14 +1,16 @@
 package workflowexecution
 
 import (
+	"fmt"
+
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
-	"github.com/seal-io/walrus/pkg/workflow"
 	"github.com/seal-io/walrus/utils/topic"
 )
 
@@ -17,9 +19,9 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 		Where(workflowexecution.ID(req.ID)).
 		WithStages(func(wsgq *model.WorkflowStageExecutionQuery) {
 			wsgq.WithSteps(func(wseq *model.WorkflowStepExecutionQuery) {
-				wseq.Order(model.Asc(workflowstepexecution.FieldCreateTime))
+				wseq.Order(model.Asc(workflowstepexecution.FieldOrder))
 			}).
-				Order(model.Asc(workflowstageexecution.FieldCreateTime))
+				Order(model.Asc(workflowstageexecution.FieldOrder))
 		}).
 		Only(req.Context)
 	if err != nil {
@@ -32,29 +34,44 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 func (h Handler) Update(req UpdateRequest) error {
 	entity := req.Model()
 
+	fmt.Println("workflow execution update", entity.ID, req.Status)
+
 	switch req.Status {
 	case "Succeeded":
 		status.WorkflowExecutionStatusRunning.True(entity, "")
 		status.WorkflowExecutionStatusReady.True(entity, "")
 	case "Error", "Failed":
-		status.WorkflowExecutionStatusRunning.False(entity, "execute failed")
+		status.WorkflowExecutionStatusRunning.False(entity, "")
 	case "Running":
+		status.WorkflowExecutionStatusPending.True(entity, "")
 		status.WorkflowExecutionStatusRunning.Unknown(entity, "")
+	default:
+		return nil
 	}
 
 	entity.Status.SetSummary(status.WalkWorkflowExecution(&entity.Status))
 
-	statusManager := workflow.NewStatusManager(h.modelClient)
-	if err := statusManager.HandleWorkflowExecutionFailed(req.Context, entity); err != nil {
+	update := h.modelClient.WorkflowExecutions().UpdateOne(entity).
+		SetStatus(entity.Status)
+
+	if req.Record != "" {
+		update = update.SetRecord(req.Record)
+	}
+
+	if req.Duration > 0 {
+		update = update.SetDuration(req.Duration)
+	}
+
+	entity, err := update.Save(req.Context)
+	if err != nil {
 		return err
 	}
 
-	return h.modelClient.WorkflowExecutions().UpdateOne(entity).
-		SetDescription(req.Description).
-		SetDuration(req.Duration).
-		SetRecord(req.Record).
-		SetStatus(entity.Status).
-		Exec(req.Context)
+	// Publish workflow execution topic.
+	return topic.Publish(req.Context, modelchange.Workflow, modelchange.Event{
+		Type: modelchange.EventTypeUpdate,
+		IDs:  []object.ID{entity.WorkflowID},
+	})
 }
 
 var (
@@ -71,7 +88,7 @@ var (
 )
 
 func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse, int, error) {
-	query := h.modelClient.WorkflowExecutions().Query().
+	query := h.modelClient.WithDebug().WorkflowExecutions().Query().
 		Where(workflowexecution.WorkflowID(req.Workflow.ID))
 
 	if queries, ok := req.Querying(queryFields); ok {
@@ -116,9 +133,8 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 					Where(workflowexecution.IDIn(dm.IDs...)).
 					WithStages(func(wsgq *model.WorkflowStageExecutionQuery) {
 						wsgq.WithSteps(func(wseq *model.WorkflowStepExecutionQuery) {
-							wseq.Order(model.Asc(workflowstepexecution.FieldCreateTime))
-						}).
-							Order(model.Asc(workflowstageexecution.FieldCreateTime))
+							wseq.Order(model.Asc(workflowstepexecution.FieldOrder))
+						}).Order(model.Asc(workflowstageexecution.FieldOrder))
 					}).
 					Unique(false).
 					All(stream)
@@ -172,9 +188,8 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 		Unique(false).
 		WithStages(func(wsgq *model.WorkflowStageExecutionQuery) {
 			wsgq.WithSteps(func(wseq *model.WorkflowStepExecutionQuery) {
-				wseq.Order(model.Asc(workflowstepexecution.FieldCreateTime))
-			}).
-				Order(model.Asc(workflowstageexecution.FieldCreateTime))
+				wseq.Order(model.Asc(workflowstepexecution.FieldOrder))
+			}).Order(model.Asc(workflowstageexecution.FieldOrder))
 		}).
 		All(req.Context)
 	if err != nil {

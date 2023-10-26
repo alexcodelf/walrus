@@ -19,7 +19,6 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
-	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
@@ -116,6 +115,24 @@ func (wsec *WorkflowStageExecutionCreate) SetProjectID(o object.ID) *WorkflowSta
 	return wsec
 }
 
+// SetWorkflowID sets the "workflow_id" field.
+func (wsec *WorkflowStageExecutionCreate) SetWorkflowID(o object.ID) *WorkflowStageExecutionCreate {
+	wsec.mutation.SetWorkflowID(o)
+	return wsec
+}
+
+// SetWorkflowStageID sets the "workflow_stage_id" field.
+func (wsec *WorkflowStageExecutionCreate) SetWorkflowStageID(o object.ID) *WorkflowStageExecutionCreate {
+	wsec.mutation.SetWorkflowStageID(o)
+	return wsec
+}
+
+// SetWorkflowExecutionID sets the "workflow_execution_id" field.
+func (wsec *WorkflowStageExecutionCreate) SetWorkflowExecutionID(o object.ID) *WorkflowStageExecutionCreate {
+	wsec.mutation.SetWorkflowExecutionID(o)
+	return wsec
+}
+
 // SetDuration sets the "duration" field.
 func (wsec *WorkflowStageExecutionCreate) SetDuration(i int) *WorkflowStageExecutionCreate {
 	wsec.mutation.SetDuration(i)
@@ -130,21 +147,17 @@ func (wsec *WorkflowStageExecutionCreate) SetNillableDuration(i *int) *WorkflowS
 	return wsec
 }
 
-// SetStageID sets the "stage_id" field.
-func (wsec *WorkflowStageExecutionCreate) SetStageID(o object.ID) *WorkflowStageExecutionCreate {
-	wsec.mutation.SetStageID(o)
+// SetOrder sets the "order" field.
+func (wsec *WorkflowStageExecutionCreate) SetOrder(i int) *WorkflowStageExecutionCreate {
+	wsec.mutation.SetOrder(i)
 	return wsec
 }
 
-// SetWorkflowExecutionID sets the "workflow_execution_id" field.
-func (wsec *WorkflowStageExecutionCreate) SetWorkflowExecutionID(o object.ID) *WorkflowStageExecutionCreate {
-	wsec.mutation.SetWorkflowExecutionID(o)
-	return wsec
-}
-
-// SetStepExecutionIds sets the "step_execution_ids" field.
-func (wsec *WorkflowStageExecutionCreate) SetStepExecutionIds(o []object.ID) *WorkflowStageExecutionCreate {
-	wsec.mutation.SetStepExecutionIds(o)
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wsec *WorkflowStageExecutionCreate) SetNillableOrder(i *int) *WorkflowStageExecutionCreate {
+	if i != nil {
+		wsec.SetOrder(*i)
+	}
 	return wsec
 }
 
@@ -158,20 +171,6 @@ func (wsec *WorkflowStageExecutionCreate) SetRecord(s string) *WorkflowStageExec
 func (wsec *WorkflowStageExecutionCreate) SetNillableRecord(s *string) *WorkflowStageExecutionCreate {
 	if s != nil {
 		wsec.SetRecord(*s)
-	}
-	return wsec
-}
-
-// SetInput sets the "input" field.
-func (wsec *WorkflowStageExecutionCreate) SetInput(s string) *WorkflowStageExecutionCreate {
-	wsec.mutation.SetInput(s)
-	return wsec
-}
-
-// SetNillableInput sets the "input" field if the given value is not nil.
-func (wsec *WorkflowStageExecutionCreate) SetNillableInput(s *string) *WorkflowStageExecutionCreate {
-	if s != nil {
-		wsec.SetInput(*s)
 	}
 	return wsec
 }
@@ -200,11 +199,6 @@ func (wsec *WorkflowStageExecutionCreate) AddSteps(w ...*WorkflowStepExecution) 
 		ids[i] = w[i].ID
 	}
 	return wsec.AddStepIDs(ids...)
-}
-
-// SetStage sets the "stage" edge to the WorkflowStage entity.
-func (wsec *WorkflowStageExecutionCreate) SetStage(w *WorkflowStage) *WorkflowStageExecutionCreate {
-	return wsec.SetStageID(w.ID)
 }
 
 // SetWorkflowExecution sets the "workflow_execution" edge to the WorkflowExecution entity.
@@ -275,17 +269,13 @@ func (wsec *WorkflowStageExecutionCreate) defaults() error {
 		v := workflowstageexecution.DefaultDuration
 		wsec.mutation.SetDuration(v)
 	}
-	if _, ok := wsec.mutation.StepExecutionIds(); !ok {
-		v := workflowstageexecution.DefaultStepExecutionIds
-		wsec.mutation.SetStepExecutionIds(v)
+	if _, ok := wsec.mutation.Order(); !ok {
+		v := workflowstageexecution.DefaultOrder
+		wsec.mutation.SetOrder(v)
 	}
 	if _, ok := wsec.mutation.Record(); !ok {
 		v := workflowstageexecution.DefaultRecord
 		wsec.mutation.SetRecord(v)
-	}
-	if _, ok := wsec.mutation.Input(); !ok {
-		v := workflowstageexecution.DefaultInput
-		wsec.mutation.SetInput(v)
 	}
 	return nil
 }
@@ -314,6 +304,20 @@ func (wsec *WorkflowStageExecutionCreate) check() error {
 			return &ValidationError{Name: "project_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.project_id": %w`, err)}
 		}
 	}
+	if _, ok := wsec.mutation.WorkflowID(); !ok {
+		return &ValidationError{Name: "workflow_id", err: errors.New(`model: missing required field "WorkflowStageExecution.workflow_id"`)}
+	}
+	if v, ok := wsec.mutation.WorkflowID(); ok {
+		if err := workflowstageexecution.WorkflowIDValidator(string(v)); err != nil {
+			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.workflow_id": %w`, err)}
+		}
+	}
+	if _, ok := wsec.mutation.WorkflowStageID(); !ok {
+		return &ValidationError{Name: "workflow_stage_id", err: errors.New(`model: missing required field "WorkflowStageExecution.workflow_stage_id"`)}
+	}
+	if _, ok := wsec.mutation.WorkflowExecutionID(); !ok {
+		return &ValidationError{Name: "workflow_execution_id", err: errors.New(`model: missing required field "WorkflowStageExecution.workflow_execution_id"`)}
+	}
 	if _, ok := wsec.mutation.Duration(); !ok {
 		return &ValidationError{Name: "duration", err: errors.New(`model: missing required field "WorkflowStageExecution.duration"`)}
 	}
@@ -322,26 +326,19 @@ func (wsec *WorkflowStageExecutionCreate) check() error {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.duration": %w`, err)}
 		}
 	}
-	if _, ok := wsec.mutation.StageID(); !ok {
-		return &ValidationError{Name: "stage_id", err: errors.New(`model: missing required field "WorkflowStageExecution.stage_id"`)}
+	if _, ok := wsec.mutation.Order(); !ok {
+		return &ValidationError{Name: "order", err: errors.New(`model: missing required field "WorkflowStageExecution.order"`)}
 	}
-	if _, ok := wsec.mutation.WorkflowExecutionID(); !ok {
-		return &ValidationError{Name: "workflow_execution_id", err: errors.New(`model: missing required field "WorkflowStageExecution.workflow_execution_id"`)}
-	}
-	if _, ok := wsec.mutation.StepExecutionIds(); !ok {
-		return &ValidationError{Name: "step_execution_ids", err: errors.New(`model: missing required field "WorkflowStageExecution.step_execution_ids"`)}
+	if v, ok := wsec.mutation.Order(); ok {
+		if err := workflowstageexecution.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.order": %w`, err)}
+		}
 	}
 	if _, ok := wsec.mutation.Record(); !ok {
 		return &ValidationError{Name: "record", err: errors.New(`model: missing required field "WorkflowStageExecution.record"`)}
 	}
-	if _, ok := wsec.mutation.Input(); !ok {
-		return &ValidationError{Name: "input", err: errors.New(`model: missing required field "WorkflowStageExecution.input"`)}
-	}
 	if _, ok := wsec.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowStageExecution.project"`)}
-	}
-	if _, ok := wsec.mutation.StageID(); !ok {
-		return &ValidationError{Name: "stage", err: errors.New(`model: missing required edge "WorkflowStageExecution.stage"`)}
 	}
 	if _, ok := wsec.mutation.WorkflowExecutionID(); !ok {
 		return &ValidationError{Name: "workflow_execution", err: errors.New(`model: missing required edge "WorkflowStageExecution.workflow_execution"`)}
@@ -411,21 +408,25 @@ func (wsec *WorkflowStageExecutionCreate) createSpec() (*WorkflowStageExecution,
 		_spec.SetField(workflowstageexecution.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
+	if value, ok := wsec.mutation.WorkflowID(); ok {
+		_spec.SetField(workflowstageexecution.FieldWorkflowID, field.TypeString, value)
+		_node.WorkflowID = value
+	}
+	if value, ok := wsec.mutation.WorkflowStageID(); ok {
+		_spec.SetField(workflowstageexecution.FieldWorkflowStageID, field.TypeString, value)
+		_node.WorkflowStageID = value
+	}
 	if value, ok := wsec.mutation.Duration(); ok {
 		_spec.SetField(workflowstageexecution.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
 	}
-	if value, ok := wsec.mutation.StepExecutionIds(); ok {
-		_spec.SetField(workflowstageexecution.FieldStepExecutionIds, field.TypeJSON, value)
-		_node.StepExecutionIds = value
+	if value, ok := wsec.mutation.Order(); ok {
+		_spec.SetField(workflowstageexecution.FieldOrder, field.TypeInt, value)
+		_node.Order = value
 	}
 	if value, ok := wsec.mutation.Record(); ok {
 		_spec.SetField(workflowstageexecution.FieldRecord, field.TypeString, value)
 		_node.Record = value
-	}
-	if value, ok := wsec.mutation.Input(); ok {
-		_spec.SetField(workflowstageexecution.FieldInput, field.TypeString, value)
-		_node.Input = value
 	}
 	if nodes := wsec.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -460,24 +461,6 @@ func (wsec *WorkflowStageExecutionCreate) createSpec() (*WorkflowStageExecution,
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := wsec.mutation.StageIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   workflowstageexecution.StageTable,
-			Columns: []string{workflowstageexecution.StageColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstage.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsec.schemaConfig.WorkflowStageExecution
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.StageID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := wsec.mutation.WorkflowExecutionIDs(); len(nodes) > 0 {
@@ -523,12 +506,12 @@ func (wsec *WorkflowStageExecutionCreate) Set(obj *WorkflowStageExecution) *Work
 	// Required.
 	wsec.SetName(obj.Name)
 	wsec.SetProjectID(obj.ProjectID)
-	wsec.SetDuration(obj.Duration)
-	wsec.SetStageID(obj.StageID)
+	wsec.SetWorkflowID(obj.WorkflowID)
+	wsec.SetWorkflowStageID(obj.WorkflowStageID)
 	wsec.SetWorkflowExecutionID(obj.WorkflowExecutionID)
-	wsec.SetStepExecutionIds(obj.StepExecutionIds)
+	wsec.SetDuration(obj.Duration)
+	wsec.SetOrder(obj.Order)
 	wsec.SetRecord(obj.Record)
-	wsec.SetInput(obj.Input)
 
 	// Optional.
 	if obj.Description != "" {
@@ -597,8 +580,11 @@ func (wsec *WorkflowStageExecutionCreate) SaveE(ctx context.Context, cbs ...func
 		if _, set := wsec.mutation.Field(workflowstageexecution.FieldProjectID); set {
 			obj.ProjectID = x.ProjectID
 		}
-		if _, set := wsec.mutation.Field(workflowstageexecution.FieldStageID); set {
-			obj.StageID = x.StageID
+		if _, set := wsec.mutation.Field(workflowstageexecution.FieldWorkflowID); set {
+			obj.WorkflowID = x.WorkflowID
+		}
+		if _, set := wsec.mutation.Field(workflowstageexecution.FieldWorkflowStageID); set {
+			obj.WorkflowStageID = x.WorkflowStageID
 		}
 		if _, set := wsec.mutation.Field(workflowstageexecution.FieldWorkflowExecutionID); set {
 			obj.WorkflowExecutionID = x.WorkflowExecutionID
@@ -714,8 +700,11 @@ func (wsecb *WorkflowStageExecutionCreateBulk) SaveE(ctx context.Context, cbs ..
 			if _, set := wsecb.builders[i].mutation.Field(workflowstageexecution.FieldProjectID); set {
 				objs[i].ProjectID = x[i].ProjectID
 			}
-			if _, set := wsecb.builders[i].mutation.Field(workflowstageexecution.FieldStageID); set {
-				objs[i].StageID = x[i].StageID
+			if _, set := wsecb.builders[i].mutation.Field(workflowstageexecution.FieldWorkflowID); set {
+				objs[i].WorkflowID = x[i].WorkflowID
+			}
+			if _, set := wsecb.builders[i].mutation.Field(workflowstageexecution.FieldWorkflowStageID); set {
+				objs[i].WorkflowStageID = x[i].WorkflowStageID
 			}
 			if _, set := wsecb.builders[i].mutation.Field(workflowstageexecution.FieldWorkflowExecutionID); set {
 				objs[i].WorkflowExecutionID = x[i].WorkflowExecutionID
@@ -948,15 +937,21 @@ func (u *WorkflowStageExecutionUpsert) AddDuration(v int) *WorkflowStageExecutio
 	return u
 }
 
-// SetStepExecutionIds sets the "step_execution_ids" field.
-func (u *WorkflowStageExecutionUpsert) SetStepExecutionIds(v []object.ID) *WorkflowStageExecutionUpsert {
-	u.Set(workflowstageexecution.FieldStepExecutionIds, v)
+// SetOrder sets the "order" field.
+func (u *WorkflowStageExecutionUpsert) SetOrder(v int) *WorkflowStageExecutionUpsert {
+	u.Set(workflowstageexecution.FieldOrder, v)
 	return u
 }
 
-// UpdateStepExecutionIds sets the "step_execution_ids" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsert) UpdateStepExecutionIds() *WorkflowStageExecutionUpsert {
-	u.SetExcluded(workflowstageexecution.FieldStepExecutionIds)
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStageExecutionUpsert) UpdateOrder() *WorkflowStageExecutionUpsert {
+	u.SetExcluded(workflowstageexecution.FieldOrder)
+	return u
+}
+
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStageExecutionUpsert) AddOrder(v int) *WorkflowStageExecutionUpsert {
+	u.Add(workflowstageexecution.FieldOrder, v)
 	return u
 }
 
@@ -969,18 +964,6 @@ func (u *WorkflowStageExecutionUpsert) SetRecord(v string) *WorkflowStageExecuti
 // UpdateRecord sets the "record" field to the value that was provided on create.
 func (u *WorkflowStageExecutionUpsert) UpdateRecord() *WorkflowStageExecutionUpsert {
 	u.SetExcluded(workflowstageexecution.FieldRecord)
-	return u
-}
-
-// SetInput sets the "input" field.
-func (u *WorkflowStageExecutionUpsert) SetInput(v string) *WorkflowStageExecutionUpsert {
-	u.Set(workflowstageexecution.FieldInput, v)
-	return u
-}
-
-// UpdateInput sets the "input" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsert) UpdateInput() *WorkflowStageExecutionUpsert {
-	u.SetExcluded(workflowstageexecution.FieldInput)
 	return u
 }
 
@@ -1010,8 +993,11 @@ func (u *WorkflowStageExecutionUpsertOne) UpdateNewValues() *WorkflowStageExecut
 		if _, exists := u.create.mutation.ProjectID(); exists {
 			s.SetIgnore(workflowstageexecution.FieldProjectID)
 		}
-		if _, exists := u.create.mutation.StageID(); exists {
-			s.SetIgnore(workflowstageexecution.FieldStageID)
+		if _, exists := u.create.mutation.WorkflowID(); exists {
+			s.SetIgnore(workflowstageexecution.FieldWorkflowID)
+		}
+		if _, exists := u.create.mutation.WorkflowStageID(); exists {
+			s.SetIgnore(workflowstageexecution.FieldWorkflowStageID)
 		}
 		if _, exists := u.create.mutation.WorkflowExecutionID(); exists {
 			s.SetIgnore(workflowstageexecution.FieldWorkflowExecutionID)
@@ -1166,17 +1152,24 @@ func (u *WorkflowStageExecutionUpsertOne) UpdateDuration() *WorkflowStageExecuti
 	})
 }
 
-// SetStepExecutionIds sets the "step_execution_ids" field.
-func (u *WorkflowStageExecutionUpsertOne) SetStepExecutionIds(v []object.ID) *WorkflowStageExecutionUpsertOne {
+// SetOrder sets the "order" field.
+func (u *WorkflowStageExecutionUpsertOne) SetOrder(v int) *WorkflowStageExecutionUpsertOne {
 	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.SetStepExecutionIds(v)
+		s.SetOrder(v)
 	})
 }
 
-// UpdateStepExecutionIds sets the "step_execution_ids" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsertOne) UpdateStepExecutionIds() *WorkflowStageExecutionUpsertOne {
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStageExecutionUpsertOne) AddOrder(v int) *WorkflowStageExecutionUpsertOne {
 	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.UpdateStepExecutionIds()
+		s.AddOrder(v)
+	})
+}
+
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStageExecutionUpsertOne) UpdateOrder() *WorkflowStageExecutionUpsertOne {
+	return u.Update(func(s *WorkflowStageExecutionUpsert) {
+		s.UpdateOrder()
 	})
 }
 
@@ -1191,20 +1184,6 @@ func (u *WorkflowStageExecutionUpsertOne) SetRecord(v string) *WorkflowStageExec
 func (u *WorkflowStageExecutionUpsertOne) UpdateRecord() *WorkflowStageExecutionUpsertOne {
 	return u.Update(func(s *WorkflowStageExecutionUpsert) {
 		s.UpdateRecord()
-	})
-}
-
-// SetInput sets the "input" field.
-func (u *WorkflowStageExecutionUpsertOne) SetInput(v string) *WorkflowStageExecutionUpsertOne {
-	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.SetInput(v)
-	})
-}
-
-// UpdateInput sets the "input" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsertOne) UpdateInput() *WorkflowStageExecutionUpsertOne {
-	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.UpdateInput()
 	})
 }
 
@@ -1398,8 +1377,11 @@ func (u *WorkflowStageExecutionUpsertBulk) UpdateNewValues() *WorkflowStageExecu
 			if _, exists := b.mutation.ProjectID(); exists {
 				s.SetIgnore(workflowstageexecution.FieldProjectID)
 			}
-			if _, exists := b.mutation.StageID(); exists {
-				s.SetIgnore(workflowstageexecution.FieldStageID)
+			if _, exists := b.mutation.WorkflowID(); exists {
+				s.SetIgnore(workflowstageexecution.FieldWorkflowID)
+			}
+			if _, exists := b.mutation.WorkflowStageID(); exists {
+				s.SetIgnore(workflowstageexecution.FieldWorkflowStageID)
 			}
 			if _, exists := b.mutation.WorkflowExecutionID(); exists {
 				s.SetIgnore(workflowstageexecution.FieldWorkflowExecutionID)
@@ -1555,17 +1537,24 @@ func (u *WorkflowStageExecutionUpsertBulk) UpdateDuration() *WorkflowStageExecut
 	})
 }
 
-// SetStepExecutionIds sets the "step_execution_ids" field.
-func (u *WorkflowStageExecutionUpsertBulk) SetStepExecutionIds(v []object.ID) *WorkflowStageExecutionUpsertBulk {
+// SetOrder sets the "order" field.
+func (u *WorkflowStageExecutionUpsertBulk) SetOrder(v int) *WorkflowStageExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.SetStepExecutionIds(v)
+		s.SetOrder(v)
 	})
 }
 
-// UpdateStepExecutionIds sets the "step_execution_ids" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsertBulk) UpdateStepExecutionIds() *WorkflowStageExecutionUpsertBulk {
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStageExecutionUpsertBulk) AddOrder(v int) *WorkflowStageExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.UpdateStepExecutionIds()
+		s.AddOrder(v)
+	})
+}
+
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStageExecutionUpsertBulk) UpdateOrder() *WorkflowStageExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowStageExecutionUpsert) {
+		s.UpdateOrder()
 	})
 }
 
@@ -1580,20 +1569,6 @@ func (u *WorkflowStageExecutionUpsertBulk) SetRecord(v string) *WorkflowStageExe
 func (u *WorkflowStageExecutionUpsertBulk) UpdateRecord() *WorkflowStageExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowStageExecutionUpsert) {
 		s.UpdateRecord()
-	})
-}
-
-// SetInput sets the "input" field.
-func (u *WorkflowStageExecutionUpsertBulk) SetInput(v string) *WorkflowStageExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.SetInput(v)
-	})
-}
-
-// UpdateInput sets the "input" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsertBulk) UpdateInput() *WorkflowStageExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.UpdateInput()
 	})
 }
 

@@ -20,7 +20,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
-	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -107,15 +106,23 @@ func (wsc *WorkflowStageCreate) SetWorkflowID(o object.ID) *WorkflowStageCreate 
 	return wsc
 }
 
-// SetStepIds sets the "step_ids" field.
-func (wsc *WorkflowStageCreate) SetStepIds(o []object.ID) *WorkflowStageCreate {
-	wsc.mutation.SetStepIds(o)
-	return wsc
-}
-
 // SetDependencies sets the "dependencies" field.
 func (wsc *WorkflowStageCreate) SetDependencies(o []object.ID) *WorkflowStageCreate {
 	wsc.mutation.SetDependencies(o)
+	return wsc
+}
+
+// SetOrder sets the "order" field.
+func (wsc *WorkflowStageCreate) SetOrder(i int) *WorkflowStageCreate {
+	wsc.mutation.SetOrder(i)
+	return wsc
+}
+
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wsc *WorkflowStageCreate) SetNillableOrder(i *int) *WorkflowStageCreate {
+	if i != nil {
+		wsc.SetOrder(*i)
+	}
 	return wsc
 }
 
@@ -143,21 +150,6 @@ func (wsc *WorkflowStageCreate) AddSteps(w ...*WorkflowStep) *WorkflowStageCreat
 		ids[i] = w[i].ID
 	}
 	return wsc.AddStepIDs(ids...)
-}
-
-// AddExecutionIDs adds the "executions" edge to the WorkflowStageExecution entity by IDs.
-func (wsc *WorkflowStageCreate) AddExecutionIDs(ids ...object.ID) *WorkflowStageCreate {
-	wsc.mutation.AddExecutionIDs(ids...)
-	return wsc
-}
-
-// AddExecutions adds the "executions" edges to the WorkflowStageExecution entity.
-func (wsc *WorkflowStageCreate) AddExecutions(w ...*WorkflowStageExecution) *WorkflowStageCreate {
-	ids := make([]object.ID, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wsc.AddExecutionIDs(ids...)
 }
 
 // SetWorkflow sets the "workflow" edge to the Workflow entity.
@@ -224,13 +216,13 @@ func (wsc *WorkflowStageCreate) defaults() error {
 		v := workflowstage.DefaultUpdateTime()
 		wsc.mutation.SetUpdateTime(v)
 	}
-	if _, ok := wsc.mutation.StepIds(); !ok {
-		v := workflowstage.DefaultStepIds
-		wsc.mutation.SetStepIds(v)
-	}
 	if _, ok := wsc.mutation.Dependencies(); !ok {
 		v := workflowstage.DefaultDependencies
 		wsc.mutation.SetDependencies(v)
+	}
+	if _, ok := wsc.mutation.Order(); !ok {
+		v := workflowstage.DefaultOrder
+		wsc.mutation.SetOrder(v)
 	}
 	return nil
 }
@@ -267,11 +259,16 @@ func (wsc *WorkflowStageCreate) check() error {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.workflow_id": %w`, err)}
 		}
 	}
-	if _, ok := wsc.mutation.StepIds(); !ok {
-		return &ValidationError{Name: "step_ids", err: errors.New(`model: missing required field "WorkflowStage.step_ids"`)}
-	}
 	if _, ok := wsc.mutation.Dependencies(); !ok {
 		return &ValidationError{Name: "dependencies", err: errors.New(`model: missing required field "WorkflowStage.dependencies"`)}
+	}
+	if _, ok := wsc.mutation.Order(); !ok {
+		return &ValidationError{Name: "order", err: errors.New(`model: missing required field "WorkflowStage.order"`)}
+	}
+	if v, ok := wsc.mutation.Order(); ok {
+		if err := workflowstage.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.order": %w`, err)}
+		}
 	}
 	if _, ok := wsc.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowStage.project"`)}
@@ -340,13 +337,13 @@ func (wsc *WorkflowStageCreate) createSpec() (*WorkflowStage, *sqlgraph.CreateSp
 		_spec.SetField(workflowstage.FieldUpdateTime, field.TypeTime, value)
 		_node.UpdateTime = &value
 	}
-	if value, ok := wsc.mutation.StepIds(); ok {
-		_spec.SetField(workflowstage.FieldStepIds, field.TypeJSON, value)
-		_node.StepIds = value
-	}
 	if value, ok := wsc.mutation.Dependencies(); ok {
 		_spec.SetField(workflowstage.FieldDependencies, field.TypeJSON, value)
 		_node.Dependencies = value
+	}
+	if value, ok := wsc.mutation.Order(); ok {
+		_spec.SetField(workflowstage.FieldOrder, field.TypeInt, value)
+		_node.Order = value
 	}
 	if nodes := wsc.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -378,23 +375,6 @@ func (wsc *WorkflowStageCreate) createSpec() (*WorkflowStage, *sqlgraph.CreateSp
 			},
 		}
 		edge.Schema = wsc.schemaConfig.WorkflowStep
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := wsc.mutation.ExecutionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   workflowstage.ExecutionsTable,
-			Columns: []string{workflowstage.ExecutionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsc.schemaConfig.WorkflowStageExecution
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -444,8 +424,8 @@ func (wsc *WorkflowStageCreate) Set(obj *WorkflowStage) *WorkflowStageCreate {
 	wsc.SetName(obj.Name)
 	wsc.SetProjectID(obj.ProjectID)
 	wsc.SetWorkflowID(obj.WorkflowID)
-	wsc.SetStepIds(obj.StepIds)
 	wsc.SetDependencies(obj.Dependencies)
+	wsc.SetOrder(obj.Order)
 
 	// Optional.
 	if obj.Description != "" {
@@ -814,18 +794,6 @@ func (u *WorkflowStageUpsert) UpdateUpdateTime() *WorkflowStageUpsert {
 	return u
 }
 
-// SetStepIds sets the "step_ids" field.
-func (u *WorkflowStageUpsert) SetStepIds(v []object.ID) *WorkflowStageUpsert {
-	u.Set(workflowstage.FieldStepIds, v)
-	return u
-}
-
-// UpdateStepIds sets the "step_ids" field to the value that was provided on create.
-func (u *WorkflowStageUpsert) UpdateStepIds() *WorkflowStageUpsert {
-	u.SetExcluded(workflowstage.FieldStepIds)
-	return u
-}
-
 // SetDependencies sets the "dependencies" field.
 func (u *WorkflowStageUpsert) SetDependencies(v []object.ID) *WorkflowStageUpsert {
 	u.Set(workflowstage.FieldDependencies, v)
@@ -835,6 +803,24 @@ func (u *WorkflowStageUpsert) SetDependencies(v []object.ID) *WorkflowStageUpser
 // UpdateDependencies sets the "dependencies" field to the value that was provided on create.
 func (u *WorkflowStageUpsert) UpdateDependencies() *WorkflowStageUpsert {
 	u.SetExcluded(workflowstage.FieldDependencies)
+	return u
+}
+
+// SetOrder sets the "order" field.
+func (u *WorkflowStageUpsert) SetOrder(v int) *WorkflowStageUpsert {
+	u.Set(workflowstage.FieldOrder, v)
+	return u
+}
+
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStageUpsert) UpdateOrder() *WorkflowStageUpsert {
+	u.SetExcluded(workflowstage.FieldOrder)
+	return u
+}
+
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStageUpsert) AddOrder(v int) *WorkflowStageUpsert {
+	u.Add(workflowstage.FieldOrder, v)
 	return u
 }
 
@@ -975,20 +961,6 @@ func (u *WorkflowStageUpsertOne) UpdateUpdateTime() *WorkflowStageUpsertOne {
 	})
 }
 
-// SetStepIds sets the "step_ids" field.
-func (u *WorkflowStageUpsertOne) SetStepIds(v []object.ID) *WorkflowStageUpsertOne {
-	return u.Update(func(s *WorkflowStageUpsert) {
-		s.SetStepIds(v)
-	})
-}
-
-// UpdateStepIds sets the "step_ids" field to the value that was provided on create.
-func (u *WorkflowStageUpsertOne) UpdateStepIds() *WorkflowStageUpsertOne {
-	return u.Update(func(s *WorkflowStageUpsert) {
-		s.UpdateStepIds()
-	})
-}
-
 // SetDependencies sets the "dependencies" field.
 func (u *WorkflowStageUpsertOne) SetDependencies(v []object.ID) *WorkflowStageUpsertOne {
 	return u.Update(func(s *WorkflowStageUpsert) {
@@ -1000,6 +972,27 @@ func (u *WorkflowStageUpsertOne) SetDependencies(v []object.ID) *WorkflowStageUp
 func (u *WorkflowStageUpsertOne) UpdateDependencies() *WorkflowStageUpsertOne {
 	return u.Update(func(s *WorkflowStageUpsert) {
 		s.UpdateDependencies()
+	})
+}
+
+// SetOrder sets the "order" field.
+func (u *WorkflowStageUpsertOne) SetOrder(v int) *WorkflowStageUpsertOne {
+	return u.Update(func(s *WorkflowStageUpsert) {
+		s.SetOrder(v)
+	})
+}
+
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStageUpsertOne) AddOrder(v int) *WorkflowStageUpsertOne {
+	return u.Update(func(s *WorkflowStageUpsert) {
+		s.AddOrder(v)
+	})
+}
+
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStageUpsertOne) UpdateOrder() *WorkflowStageUpsertOne {
+	return u.Update(func(s *WorkflowStageUpsert) {
+		s.UpdateOrder()
 	})
 }
 
@@ -1305,20 +1298,6 @@ func (u *WorkflowStageUpsertBulk) UpdateUpdateTime() *WorkflowStageUpsertBulk {
 	})
 }
 
-// SetStepIds sets the "step_ids" field.
-func (u *WorkflowStageUpsertBulk) SetStepIds(v []object.ID) *WorkflowStageUpsertBulk {
-	return u.Update(func(s *WorkflowStageUpsert) {
-		s.SetStepIds(v)
-	})
-}
-
-// UpdateStepIds sets the "step_ids" field to the value that was provided on create.
-func (u *WorkflowStageUpsertBulk) UpdateStepIds() *WorkflowStageUpsertBulk {
-	return u.Update(func(s *WorkflowStageUpsert) {
-		s.UpdateStepIds()
-	})
-}
-
 // SetDependencies sets the "dependencies" field.
 func (u *WorkflowStageUpsertBulk) SetDependencies(v []object.ID) *WorkflowStageUpsertBulk {
 	return u.Update(func(s *WorkflowStageUpsert) {
@@ -1330,6 +1309,27 @@ func (u *WorkflowStageUpsertBulk) SetDependencies(v []object.ID) *WorkflowStageU
 func (u *WorkflowStageUpsertBulk) UpdateDependencies() *WorkflowStageUpsertBulk {
 	return u.Update(func(s *WorkflowStageUpsert) {
 		s.UpdateDependencies()
+	})
+}
+
+// SetOrder sets the "order" field.
+func (u *WorkflowStageUpsertBulk) SetOrder(v int) *WorkflowStageUpsertBulk {
+	return u.Update(func(s *WorkflowStageUpsert) {
+		s.SetOrder(v)
+	})
+}
+
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStageUpsertBulk) AddOrder(v int) *WorkflowStageUpsertBulk {
+	return u.Update(func(s *WorkflowStageUpsert) {
+		s.AddOrder(v)
+	})
+}
+
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStageUpsertBulk) UpdateOrder() *WorkflowStageUpsertBulk {
+	return u.Update(func(s *WorkflowStageUpsert) {
+		s.UpdateOrder()
 	})
 }
 

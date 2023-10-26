@@ -3,11 +3,12 @@ package workflow
 import (
 	"context"
 
+	"k8s.io/client-go/rest"
+
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
-	"k8s.io/client-go/rest"
 )
 
 // Apply applies the workflow execution to the argo workflow server.
@@ -57,13 +58,6 @@ func CreateWorkflowExecution(
 		stageMap[wf.Edges.Stages[i].ID] = wf.Edges.Stages[i]
 	}
 
-	ordered := make(model.WorkflowStages, len(wf.Edges.Stages))
-	for i := range wf.StageIds {
-		ordered[i] = stageMap[wf.StageIds[i]]
-	}
-
-	wf.Edges.Stages = ordered
-
 	entity, err := mc.WorkflowExecutions().Create().
 		Set(workflowExecution).
 		Save(ctx)
@@ -97,8 +91,10 @@ func CreateWorkflowStageExecution(
 	stageExec := &model.WorkflowStageExecution{
 		Name:                stage.Name,
 		ProjectID:           stage.ProjectID,
-		StageID:             stage.ID,
+		WorkflowID:          stage.WorkflowID,
+		WorkflowStageID:     stage.ID,
 		WorkflowExecutionID: we.ID,
+		Order:               stage.Order,
 	}
 
 	status.WorkflowStageStatusPending.Unknown(stageExec, "")
@@ -115,13 +111,6 @@ func CreateWorkflowStageExecution(
 	for i := range stage.Edges.Steps {
 		stepMap[stage.Edges.Steps[i].ID] = stage.Edges.Steps[i]
 	}
-
-	ordered := make(model.WorkflowSteps, len(stage.Edges.Steps))
-	for i := range stage.StepIds {
-		ordered[i] = stepMap[stage.StepIds[i]]
-	}
-
-	stage.Edges.Steps = ordered
 
 	stepExecutions := make(model.WorkflowStepExecutions, len(stage.Edges.Steps))
 
@@ -148,9 +137,10 @@ func CreateWorkflowStepExecution(
 ) (*model.WorkflowStepExecution, error) {
 	stepExec := &model.WorkflowStepExecution{
 		Name:                     step.Name,
+		Type:                     step.Type,
+		Order:                    step.Order,
 		ProjectID:                step.ProjectID,
 		WorkflowID:               step.WorkflowID,
-		Type:                     step.Type,
 		WorkflowStepID:           step.ID,
 		WorkflowExecutionID:      wse.WorkflowExecutionID,
 		WorkflowStageExecutionID: wse.ID,

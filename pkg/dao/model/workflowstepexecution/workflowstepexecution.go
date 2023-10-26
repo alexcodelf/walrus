@@ -51,14 +51,12 @@ const (
 	FieldTimes = "times"
 	// FieldDuration holds the string denoting the duration field in the database.
 	FieldDuration = "duration"
+	// FieldOrder holds the string denoting the order field in the database.
+	FieldOrder = "order"
 	// FieldRecord holds the string denoting the record field in the database.
 	FieldRecord = "record"
-	// FieldInput holds the string denoting the input field in the database.
-	FieldInput = "input"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
-	// EdgeStep holds the string denoting the step edge name in mutations.
-	EdgeStep = "step"
 	// EdgeStageExecution holds the string denoting the stage_execution edge name in mutations.
 	EdgeStageExecution = "stage_execution"
 	// Table holds the table name of the workflowstepexecution in the database.
@@ -70,13 +68,6 @@ const (
 	ProjectInverseTable = "projects"
 	// ProjectColumn is the table column denoting the project relation/edge.
 	ProjectColumn = "project_id"
-	// StepTable is the table that holds the step relation/edge.
-	StepTable = "workflow_step_executions"
-	// StepInverseTable is the table name for the WorkflowStep entity.
-	// It exists in this package in order to avoid circular dependency with the "workflowstep" package.
-	StepInverseTable = "workflow_steps"
-	// StepColumn is the table column denoting the step relation/edge.
-	StepColumn = "workflow_step_id"
 	// StageExecutionTable is the table that holds the stage_execution relation/edge.
 	StageExecutionTable = "workflow_step_executions"
 	// StageExecutionInverseTable is the table name for the WorkflowStageExecution entity.
@@ -105,8 +96,8 @@ var Columns = []string{
 	FieldSpec,
 	FieldTimes,
 	FieldDuration,
+	FieldOrder,
 	FieldRecord,
-	FieldInput,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -153,10 +144,12 @@ var (
 	DefaultDuration int
 	// DurationValidator is a validator for the "duration" field. It is called by the builders before save.
 	DurationValidator func(int) error
+	// DefaultOrder holds the default value on creation for the "order" field.
+	DefaultOrder int
+	// OrderValidator is a validator for the "order" field. It is called by the builders before save.
+	OrderValidator func(int) error
 	// DefaultRecord holds the default value on creation for the "record" field.
 	DefaultRecord string
-	// DefaultInput holds the default value on creation for the "input" field.
-	DefaultInput string
 )
 
 // OrderOption defines the ordering options for the WorkflowStepExecution queries.
@@ -227,27 +220,20 @@ func ByDuration(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDuration, opts...).ToFunc()
 }
 
+// ByOrder orders the results by the order field.
+func ByOrder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOrder, opts...).ToFunc()
+}
+
 // ByRecord orders the results by the record field.
 func ByRecord(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRecord, opts...).ToFunc()
-}
-
-// ByInput orders the results by the input field.
-func ByInput(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldInput, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.
 func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newProjectStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByStepField orders the results by step field.
-func ByStepField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newStepStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -262,13 +248,6 @@ func newProjectStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProjectInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
-	)
-}
-func newStepStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(StepInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, StepTable, StepColumn),
 	)
 }
 func newStageExecutionStep() *sqlgraph.Step {

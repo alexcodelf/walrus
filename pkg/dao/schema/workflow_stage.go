@@ -32,12 +32,15 @@ func (WorkflowStage) Fields() []ent.Field {
 			Comment("ID of the workflow that this workflow stage belongs to.").
 			NotEmpty().
 			Immutable(),
-		field.JSON("step_ids", []object.ID{}).
-			Comment("IDs of the workflow steps that belong to this workflow stage.").
-			Default([]object.ID{}),
 		field.JSON("dependencies", []object.ID{}).
 			Comment("ID list of the workflow stages that this workflow stage depends on.").
 			Default([]object.ID{}),
+		field.Int("order").
+			Comment("Order of the workflow stage.").
+			NonNegative().
+			Default(0).
+			Annotations(
+				entx.SkipIO()),
 	}
 }
 
@@ -58,11 +61,6 @@ func (WorkflowStage) Edges() []ent.Edge {
 			Comment("Workflow steps that belong to this workflow stage.").
 			Annotations(
 				entsql.OnDelete(entsql.Cascade)),
-		// WorkflowStage 1-* WorkflowStageExecutions.
-		edge.To("executions", WorkflowStageExecution.Type).
-			Comment("Workflow stage executions that belong to this workflow stage.").
-			Annotations(
-				entx.SkipIO()),
 
 		// Workflow 1-* WorkflowStages.
 		edge.From("workflow", Workflow.Type).

@@ -37,16 +37,14 @@ const (
 	FieldProjectID = "project_id"
 	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
 	FieldWorkflowID = "workflow_id"
-	// FieldStepIds holds the string denoting the step_ids field in the database.
-	FieldStepIds = "step_ids"
 	// FieldDependencies holds the string denoting the dependencies field in the database.
 	FieldDependencies = "dependencies"
+	// FieldOrder holds the string denoting the order field in the database.
+	FieldOrder = "order"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeSteps holds the string denoting the steps edge name in mutations.
 	EdgeSteps = "steps"
-	// EdgeExecutions holds the string denoting the executions edge name in mutations.
-	EdgeExecutions = "executions"
 	// EdgeWorkflow holds the string denoting the workflow edge name in mutations.
 	EdgeWorkflow = "workflow"
 	// Table holds the table name of the workflowstage in the database.
@@ -64,14 +62,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "workflowstep" package.
 	StepsInverseTable = "workflow_steps"
 	// StepsColumn is the table column denoting the steps relation/edge.
-	StepsColumn = "stage_id"
-	// ExecutionsTable is the table that holds the executions relation/edge.
-	ExecutionsTable = "workflow_stage_executions"
-	// ExecutionsInverseTable is the table name for the WorkflowStageExecution entity.
-	// It exists in this package in order to avoid circular dependency with the "workflowstageexecution" package.
-	ExecutionsInverseTable = "workflow_stage_executions"
-	// ExecutionsColumn is the table column denoting the executions relation/edge.
-	ExecutionsColumn = "stage_id"
+	StepsColumn = "workflow_stage_id"
 	// WorkflowTable is the table that holds the workflow relation/edge.
 	WorkflowTable = "workflow_stages"
 	// WorkflowInverseTable is the table name for the Workflow entity.
@@ -92,8 +83,8 @@ var Columns = []string{
 	FieldUpdateTime,
 	FieldProjectID,
 	FieldWorkflowID,
-	FieldStepIds,
 	FieldDependencies,
+	FieldOrder,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -130,10 +121,12 @@ var (
 	ProjectIDValidator func(string) error
 	// WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
 	WorkflowIDValidator func(string) error
-	// DefaultStepIds holds the default value on creation for the "step_ids" field.
-	DefaultStepIds []object.ID
 	// DefaultDependencies holds the default value on creation for the "dependencies" field.
 	DefaultDependencies []object.ID
+	// DefaultOrder holds the default value on creation for the "order" field.
+	DefaultOrder int
+	// OrderValidator is a validator for the "order" field. It is called by the builders before save.
+	OrderValidator func(int) error
 )
 
 // OrderOption defines the ordering options for the WorkflowStage queries.
@@ -174,6 +167,11 @@ func ByWorkflowID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWorkflowID, opts...).ToFunc()
 }
 
+// ByOrder orders the results by the order field.
+func ByOrder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOrder, opts...).ToFunc()
+}
+
 // ByProjectField orders the results by project field.
 func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -195,20 +193,6 @@ func BySteps(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByExecutionsCount orders the results by executions count.
-func ByExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newExecutionsStep(), opts...)
-	}
-}
-
-// ByExecutions orders the results by executions terms.
-func ByExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByWorkflowField orders the results by workflow field.
 func ByWorkflowField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -227,13 +211,6 @@ func newStepsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(StepsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, StepsTable, StepsColumn),
-	)
-}
-func newExecutionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ExecutionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ExecutionsTable, ExecutionsColumn),
 	)
 }
 func newWorkflowStep() *sqlgraph.Step {

@@ -29,25 +29,29 @@ func (WorkflowStageExecution) Fields() []ent.Field {
 			Comment("ID of the project to belong.").
 			NotEmpty().
 			Immutable(),
-		field.Int("duration").
-			Comment("Duration of the workflow stage execution.").
-			NonNegative().
-			Default(0),
-		object.IDField("stage_id").
+		object.IDField("workflow_id").
+			Comment("ID of the workflow that this workflow execution belongs to.").
+			NotEmpty().
+			Immutable(),
+		object.IDField("workflow_stage_id").
 			Comment("ID of the workflow stage that this workflow stage execution belongs to.").
 			Immutable(),
 		object.IDField("workflow_execution_id").
 			Comment("ID of the workflow execution that this workflow stage execution belongs to.").
 			Immutable(),
-		field.JSON("step_execution_ids", []object.ID{}).
-			Comment("ID list of the workflow step executions that belong to this workflow stage execution.").
-			Default([]object.ID{}),
+		field.Int("duration").
+			Comment("Duration of the workflow stage execution.").
+			NonNegative().
+			Default(0),
+		field.Int("order").
+			Comment("Order of the workflow stage execution.").
+			NonNegative().
+			Default(0).
+			Annotations(
+				entx.SkipIO()),
+
 		field.String("record").
 			Comment("Log record of the workflow stage execution.").
-			Default(""),
-		field.Text("input").
-			Comment("Input of the workflow stage execution." +
-				" It's the yaml file that defines the workflow stage execution.").
 			Default(""),
 	}
 }
@@ -70,16 +74,6 @@ func (WorkflowStageExecution) Edges() []ent.Edge {
 			Comment("Workflow step executions that belong to this workflow stage execution.").
 			Annotations(
 				entsql.OnDelete(entsql.Cascade)),
-		// WorkflowStage 1-* WorkflowStageExecutions.
-		edge.From("stage", WorkflowStage.Type).
-			Ref("executions").
-			Field("stage_id").
-			Comment("Workflow stage that this workflow stage execution belongs to.").
-			Required().
-			Unique().
-			Immutable().
-			Annotations(
-				entx.SkipInput()),
 		// WorkflowExecution 1-* WorkflowStageExecutions.
 		edge.From("workflow_execution", WorkflowExecution.Type).
 			Ref("stages").

@@ -12,8 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"golang.org/x/exp/slices"
-
-	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
 const (
@@ -37,12 +35,8 @@ const (
 	FieldProjectID = "project_id"
 	// FieldEnvironmentID holds the string denoting the environment_id field in the database.
 	FieldEnvironmentID = "environment_id"
-	// FieldDisplayName holds the string denoting the display_name field in the database.
-	FieldDisplayName = "display_name"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
-	// FieldStageIds holds the string denoting the stage_ids field in the database.
-	FieldStageIds = "stage_ids"
 	// FieldParallelism holds the string denoting the parallelism field in the database.
 	FieldParallelism = "parallelism"
 	// EdgeProject holds the string denoting the project edge name in mutations.
@@ -87,9 +81,7 @@ var Columns = []string{
 	FieldUpdateTime,
 	FieldProjectID,
 	FieldEnvironmentID,
-	FieldDisplayName,
 	FieldType,
-	FieldStageIds,
 	FieldParallelism,
 }
 
@@ -125,12 +117,8 @@ var (
 	UpdateDefaultUpdateTime func() time.Time
 	// ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
 	ProjectIDValidator func(string) error
-	// DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
-	DisplayNameValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
-	// DefaultStageIds holds the default value on creation for the "stage_ids" field.
-	DefaultStageIds []object.ID
 	// DefaultParallelism holds the default value on creation for the "parallelism" field.
 	DefaultParallelism int
 	// ParallelismValidator is a validator for the "parallelism" field. It is called by the builders before save.
@@ -173,11 +161,6 @@ func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
 // ByEnvironmentID orders the results by the environment_id field.
 func ByEnvironmentID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEnvironmentID, opts...).ToFunc()
-}
-
-// ByDisplayName orders the results by the display_name field.
-func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDisplayName, opts...).ToFunc()
 }
 
 // ByType orders the results by the type field.

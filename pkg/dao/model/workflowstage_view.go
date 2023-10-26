@@ -32,8 +32,6 @@ type WorkflowStageCreateInput struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
-	// IDs of the workflow steps that belong to this workflow stage.
-	StepIds []object.ID `path:"-" query:"-" json:"stepIds,omitempty"`
 	// ID list of the workflow stages that this workflow stage depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 
@@ -52,7 +50,6 @@ func (wsci *WorkflowStageCreateInput) Model() *WorkflowStage {
 		Name:         wsci.Name,
 		Description:  wsci.Description,
 		Labels:       wsci.Labels,
-		StepIds:      wsci.StepIds,
 		Dependencies: wsci.Dependencies,
 	}
 
@@ -134,8 +131,6 @@ type WorkflowStageCreateInputsItem struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
-	// IDs of the workflow steps that belong to this workflow stage.
-	StepIds []object.ID `path:"-" query:"-" json:"stepIds,omitempty"`
 	// ID list of the workflow stages that this workflow stage depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 
@@ -198,7 +193,6 @@ func (wsci *WorkflowStageCreateInputs) Model() []*WorkflowStage {
 			Name:         wsci.Items[i].Name,
 			Description:  wsci.Items[i].Description,
 			Labels:       wsci.Items[i].Labels,
-			StepIds:      wsci.Items[i].StepIds,
 			Dependencies: wsci.Items[i].Dependencies,
 		}
 
@@ -588,8 +582,6 @@ type WorkflowStageUpdateInput struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
-	// IDs of the workflow steps that belong to this workflow stage.
-	StepIds []object.ID `path:"-" query:"-" json:"stepIds,omitempty"`
 	// ID list of the workflow stages that this workflow stage depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 
@@ -608,7 +600,6 @@ func (wsui *WorkflowStageUpdateInput) Model() *WorkflowStage {
 		ID:           wsui.ID,
 		Description:  wsui.Description,
 		Labels:       wsui.Labels,
-		StepIds:      wsui.StepIds,
 		Dependencies: wsui.Dependencies,
 	}
 
@@ -671,8 +662,6 @@ type WorkflowStageUpdateInputsItem struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
-	// IDs of the workflow steps that belong to this workflow stage.
-	StepIds []object.ID `path:"-" query:"-" json:"stepIds"`
 	// ID list of the workflow stages that this workflow stage depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies"`
 
@@ -735,7 +724,6 @@ func (wsui *WorkflowStageUpdateInputs) Model() []*WorkflowStage {
 			ID:           wsui.Items[i].ID,
 			Description:  wsui.Items[i].Description,
 			Labels:       wsui.Items[i].Labels,
-			StepIds:      wsui.Items[i].StepIds,
 			Dependencies: wsui.Items[i].Dependencies,
 		}
 
@@ -862,7 +850,6 @@ type WorkflowStageOutput struct {
 	Labels       map[string]string `json:"labels,omitempty"`
 	CreateTime   *time.Time        `json:"createTime,omitempty"`
 	UpdateTime   *time.Time        `json:"updateTime,omitempty"`
-	StepIds      []object.ID       `json:"stepIds,omitempty"`
 	Dependencies []object.ID       `json:"dependencies,omitempty"`
 
 	Project  *ProjectOutput        `json:"project,omitempty"`
@@ -893,7 +880,6 @@ func ExposeWorkflowStage(_ws *WorkflowStage) *WorkflowStageOutput {
 		Labels:       _ws.Labels,
 		CreateTime:   _ws.CreateTime,
 		UpdateTime:   _ws.UpdateTime,
-		StepIds:      _ws.StepIds,
 		Dependencies: _ws.Dependencies,
 	}
 

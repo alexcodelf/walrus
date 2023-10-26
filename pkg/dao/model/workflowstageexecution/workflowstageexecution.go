@@ -12,8 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"golang.org/x/exp/slices"
-
-	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
 const (
@@ -37,24 +35,22 @@ const (
 	FieldStatus = "status"
 	// FieldProjectID holds the string denoting the project_id field in the database.
 	FieldProjectID = "project_id"
-	// FieldDuration holds the string denoting the duration field in the database.
-	FieldDuration = "duration"
-	// FieldStageID holds the string denoting the stage_id field in the database.
-	FieldStageID = "stage_id"
+	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
+	FieldWorkflowID = "workflow_id"
+	// FieldWorkflowStageID holds the string denoting the workflow_stage_id field in the database.
+	FieldWorkflowStageID = "workflow_stage_id"
 	// FieldWorkflowExecutionID holds the string denoting the workflow_execution_id field in the database.
 	FieldWorkflowExecutionID = "workflow_execution_id"
-	// FieldStepExecutionIds holds the string denoting the step_execution_ids field in the database.
-	FieldStepExecutionIds = "step_execution_ids"
+	// FieldDuration holds the string denoting the duration field in the database.
+	FieldDuration = "duration"
+	// FieldOrder holds the string denoting the order field in the database.
+	FieldOrder = "order"
 	// FieldRecord holds the string denoting the record field in the database.
 	FieldRecord = "record"
-	// FieldInput holds the string denoting the input field in the database.
-	FieldInput = "input"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeSteps holds the string denoting the steps edge name in mutations.
 	EdgeSteps = "steps"
-	// EdgeStage holds the string denoting the stage edge name in mutations.
-	EdgeStage = "stage"
 	// EdgeWorkflowExecution holds the string denoting the workflow_execution edge name in mutations.
 	EdgeWorkflowExecution = "workflow_execution"
 	// Table holds the table name of the workflowstageexecution in the database.
@@ -73,13 +69,6 @@ const (
 	StepsInverseTable = "workflow_step_executions"
 	// StepsColumn is the table column denoting the steps relation/edge.
 	StepsColumn = "workflow_stage_execution_id"
-	// StageTable is the table that holds the stage relation/edge.
-	StageTable = "workflow_stage_executions"
-	// StageInverseTable is the table name for the WorkflowStage entity.
-	// It exists in this package in order to avoid circular dependency with the "workflowstage" package.
-	StageInverseTable = "workflow_stages"
-	// StageColumn is the table column denoting the stage relation/edge.
-	StageColumn = "stage_id"
 	// WorkflowExecutionTable is the table that holds the workflow_execution relation/edge.
 	WorkflowExecutionTable = "workflow_stage_executions"
 	// WorkflowExecutionInverseTable is the table name for the WorkflowExecution entity.
@@ -100,12 +89,12 @@ var Columns = []string{
 	FieldUpdateTime,
 	FieldStatus,
 	FieldProjectID,
-	FieldDuration,
-	FieldStageID,
+	FieldWorkflowID,
+	FieldWorkflowStageID,
 	FieldWorkflowExecutionID,
-	FieldStepExecutionIds,
+	FieldDuration,
+	FieldOrder,
 	FieldRecord,
-	FieldInput,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -140,16 +129,18 @@ var (
 	UpdateDefaultUpdateTime func() time.Time
 	// ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
 	ProjectIDValidator func(string) error
+	// WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	WorkflowIDValidator func(string) error
 	// DefaultDuration holds the default value on creation for the "duration" field.
 	DefaultDuration int
 	// DurationValidator is a validator for the "duration" field. It is called by the builders before save.
 	DurationValidator func(int) error
-	// DefaultStepExecutionIds holds the default value on creation for the "step_execution_ids" field.
-	DefaultStepExecutionIds []object.ID
+	// DefaultOrder holds the default value on creation for the "order" field.
+	DefaultOrder int
+	// OrderValidator is a validator for the "order" field. It is called by the builders before save.
+	OrderValidator func(int) error
 	// DefaultRecord holds the default value on creation for the "record" field.
 	DefaultRecord string
-	// DefaultInput holds the default value on creation for the "input" field.
-	DefaultInput string
 )
 
 // OrderOption defines the ordering options for the WorkflowStageExecution queries.
@@ -185,14 +176,14 @@ func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
 }
 
-// ByDuration orders the results by the duration field.
-func ByDuration(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDuration, opts...).ToFunc()
+// ByWorkflowID orders the results by the workflow_id field.
+func ByWorkflowID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowID, opts...).ToFunc()
 }
 
-// ByStageID orders the results by the stage_id field.
-func ByStageID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStageID, opts...).ToFunc()
+// ByWorkflowStageID orders the results by the workflow_stage_id field.
+func ByWorkflowStageID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowStageID, opts...).ToFunc()
 }
 
 // ByWorkflowExecutionID orders the results by the workflow_execution_id field.
@@ -200,14 +191,19 @@ func ByWorkflowExecutionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWorkflowExecutionID, opts...).ToFunc()
 }
 
+// ByDuration orders the results by the duration field.
+func ByDuration(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDuration, opts...).ToFunc()
+}
+
+// ByOrder orders the results by the order field.
+func ByOrder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOrder, opts...).ToFunc()
+}
+
 // ByRecord orders the results by the record field.
 func ByRecord(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRecord, opts...).ToFunc()
-}
-
-// ByInput orders the results by the input field.
-func ByInput(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldInput, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.
@@ -231,13 +227,6 @@ func BySteps(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByStageField orders the results by stage field.
-func ByStageField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newStageStep(), sql.OrderByField(field, opts...))
-	}
-}
-
 // ByWorkflowExecutionField orders the results by workflow_execution field.
 func ByWorkflowExecutionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -256,13 +245,6 @@ func newStepsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(StepsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, StepsTable, StepsColumn),
-	)
-}
-func newStageStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(StageInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, StageTable, StageColumn),
 	)
 }
 func newWorkflowExecutionStep() *sqlgraph.Step {

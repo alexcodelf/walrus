@@ -20,7 +20,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
-	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -113,27 +112,41 @@ func (wsc *WorkflowStepCreate) SetWorkflowID(o object.ID) *WorkflowStepCreate {
 	return wsc
 }
 
-// SetStageID sets the "stage_id" field.
-func (wsc *WorkflowStepCreate) SetStageID(o object.ID) *WorkflowStepCreate {
-	wsc.mutation.SetStageID(o)
+// SetWorkflowStageID sets the "workflow_stage_id" field.
+func (wsc *WorkflowStepCreate) SetWorkflowStageID(o object.ID) *WorkflowStepCreate {
+	wsc.mutation.SetWorkflowStageID(o)
 	return wsc
 }
 
 // SetSpec sets the "spec" field.
-func (wsc *WorkflowStepCreate) SetSpec(m map[string]any) *WorkflowStepCreate {
+func (wsc *WorkflowStepCreate) SetSpec(m map[string]interface{}) *WorkflowStepCreate {
 	wsc.mutation.SetSpec(m)
 	return wsc
 }
 
 // SetInput sets the "input" field.
-func (wsc *WorkflowStepCreate) SetInput(m map[string]any) *WorkflowStepCreate {
+func (wsc *WorkflowStepCreate) SetInput(m map[string]interface{}) *WorkflowStepCreate {
 	wsc.mutation.SetInput(m)
 	return wsc
 }
 
 // SetOutput sets the "output" field.
-func (wsc *WorkflowStepCreate) SetOutput(m map[string]any) *WorkflowStepCreate {
+func (wsc *WorkflowStepCreate) SetOutput(m map[string]interface{}) *WorkflowStepCreate {
 	wsc.mutation.SetOutput(m)
+	return wsc
+}
+
+// SetOrder sets the "order" field.
+func (wsc *WorkflowStepCreate) SetOrder(i int) *WorkflowStepCreate {
+	wsc.mutation.SetOrder(i)
+	return wsc
+}
+
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wsc *WorkflowStepCreate) SetNillableOrder(i *int) *WorkflowStepCreate {
+	if i != nil {
+		wsc.SetOrder(*i)
+	}
 	return wsc
 }
 
@@ -174,19 +187,10 @@ func (wsc *WorkflowStepCreate) SetProject(p *Project) *WorkflowStepCreate {
 	return wsc.SetProjectID(p.ID)
 }
 
-// AddExecutionIDs adds the "executions" edge to the WorkflowStepExecution entity by IDs.
-func (wsc *WorkflowStepCreate) AddExecutionIDs(ids ...object.ID) *WorkflowStepCreate {
-	wsc.mutation.AddExecutionIDs(ids...)
+// SetStageID sets the "stage" edge to the WorkflowStage entity by ID.
+func (wsc *WorkflowStepCreate) SetStageID(id object.ID) *WorkflowStepCreate {
+	wsc.mutation.SetStageID(id)
 	return wsc
-}
-
-// AddExecutions adds the "executions" edges to the WorkflowStepExecution entity.
-func (wsc *WorkflowStepCreate) AddExecutions(w ...*WorkflowStepExecution) *WorkflowStepCreate {
-	ids := make([]object.ID, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wsc.AddExecutionIDs(ids...)
 }
 
 // SetStage sets the "stage" edge to the WorkflowStage entity.
@@ -253,6 +257,10 @@ func (wsc *WorkflowStepCreate) defaults() error {
 		v := workflowstep.DefaultUpdateTime()
 		wsc.mutation.SetUpdateTime(v)
 	}
+	if _, ok := wsc.mutation.Order(); !ok {
+		v := workflowstep.DefaultOrder
+		wsc.mutation.SetOrder(v)
+	}
 	if _, ok := wsc.mutation.Dependencies(); !ok {
 		v := workflowstep.DefaultDependencies
 		wsc.mutation.SetDependencies(v)
@@ -304,8 +312,16 @@ func (wsc *WorkflowStepCreate) check() error {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`model: validator failed for field "WorkflowStep.workflow_id": %w`, err)}
 		}
 	}
-	if _, ok := wsc.mutation.StageID(); !ok {
-		return &ValidationError{Name: "stage_id", err: errors.New(`model: missing required field "WorkflowStep.stage_id"`)}
+	if _, ok := wsc.mutation.WorkflowStageID(); !ok {
+		return &ValidationError{Name: "workflow_stage_id", err: errors.New(`model: missing required field "WorkflowStep.workflow_stage_id"`)}
+	}
+	if _, ok := wsc.mutation.Order(); !ok {
+		return &ValidationError{Name: "order", err: errors.New(`model: missing required field "WorkflowStep.order"`)}
+	}
+	if v, ok := wsc.mutation.Order(); ok {
+		if err := workflowstep.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStep.order": %w`, err)}
+		}
 	}
 	if _, ok := wsc.mutation.Dependencies(); !ok {
 		return &ValidationError{Name: "dependencies", err: errors.New(`model: missing required field "WorkflowStep.dependencies"`)}
@@ -405,6 +421,10 @@ func (wsc *WorkflowStepCreate) createSpec() (*WorkflowStep, *sqlgraph.CreateSpec
 		_spec.SetField(workflowstep.FieldOutput, field.TypeJSON, value)
 		_node.Output = value
 	}
+	if value, ok := wsc.mutation.Order(); ok {
+		_spec.SetField(workflowstep.FieldOrder, field.TypeInt, value)
+		_node.Order = value
+	}
 	if value, ok := wsc.mutation.Dependencies(); ok {
 		_spec.SetField(workflowstep.FieldDependencies, field.TypeJSON, value)
 		_node.Dependencies = value
@@ -435,23 +455,6 @@ func (wsc *WorkflowStepCreate) createSpec() (*WorkflowStep, *sqlgraph.CreateSpec
 		_node.ProjectID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := wsc.mutation.ExecutionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   workflowstep.ExecutionsTable,
-			Columns: []string{workflowstep.ExecutionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstepexecution.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsc.schemaConfig.WorkflowStepExecution
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := wsc.mutation.StageIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -467,7 +470,7 @@ func (wsc *WorkflowStepCreate) createSpec() (*WorkflowStep, *sqlgraph.CreateSpec
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.StageID = nodes[0]
+		_node.WorkflowStageID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -497,7 +500,8 @@ func (wsc *WorkflowStepCreate) Set(obj *WorkflowStep) *WorkflowStepCreate {
 	wsc.SetType(obj.Type)
 	wsc.SetProjectID(obj.ProjectID)
 	wsc.SetWorkflowID(obj.WorkflowID)
-	wsc.SetStageID(obj.StageID)
+	wsc.SetWorkflowStageID(obj.WorkflowStageID)
+	wsc.SetOrder(obj.Order)
 	wsc.SetDependencies(obj.Dependencies)
 	wsc.SetTimeout(obj.Timeout)
 
@@ -580,8 +584,8 @@ func (wsc *WorkflowStepCreate) SaveE(ctx context.Context, cbs ...func(ctx contex
 		if _, set := wsc.mutation.Field(workflowstep.FieldWorkflowID); set {
 			obj.WorkflowID = x.WorkflowID
 		}
-		if _, set := wsc.mutation.Field(workflowstep.FieldStageID); set {
-			obj.StageID = x.StageID
+		if _, set := wsc.mutation.Field(workflowstep.FieldWorkflowStageID); set {
+			obj.WorkflowStageID = x.WorkflowStageID
 		}
 		if _, set := wsc.mutation.Field(workflowstep.FieldSpec); set {
 			obj.Spec = x.Spec
@@ -709,8 +713,8 @@ func (wscb *WorkflowStepCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx c
 			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldWorkflowID); set {
 				objs[i].WorkflowID = x[i].WorkflowID
 			}
-			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldStageID); set {
-				objs[i].StageID = x[i].StageID
+			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldWorkflowStageID); set {
+				objs[i].WorkflowStageID = x[i].WorkflowStageID
 			}
 			if _, set := wscb.builders[i].mutation.Field(workflowstep.FieldSpec); set {
 				objs[i].Spec = x[i].Spec
@@ -917,7 +921,7 @@ func (u *WorkflowStepUpsert) UpdateUpdateTime() *WorkflowStepUpsert {
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepUpsert) SetSpec(v map[string]any) *WorkflowStepUpsert {
+func (u *WorkflowStepUpsert) SetSpec(v map[string]interface{}) *WorkflowStepUpsert {
 	u.Set(workflowstep.FieldSpec, v)
 	return u
 }
@@ -935,7 +939,7 @@ func (u *WorkflowStepUpsert) ClearSpec() *WorkflowStepUpsert {
 }
 
 // SetInput sets the "input" field.
-func (u *WorkflowStepUpsert) SetInput(v map[string]any) *WorkflowStepUpsert {
+func (u *WorkflowStepUpsert) SetInput(v map[string]interface{}) *WorkflowStepUpsert {
 	u.Set(workflowstep.FieldInput, v)
 	return u
 }
@@ -953,7 +957,7 @@ func (u *WorkflowStepUpsert) ClearInput() *WorkflowStepUpsert {
 }
 
 // SetOutput sets the "output" field.
-func (u *WorkflowStepUpsert) SetOutput(v map[string]any) *WorkflowStepUpsert {
+func (u *WorkflowStepUpsert) SetOutput(v map[string]interface{}) *WorkflowStepUpsert {
 	u.Set(workflowstep.FieldOutput, v)
 	return u
 }
@@ -967,6 +971,24 @@ func (u *WorkflowStepUpsert) UpdateOutput() *WorkflowStepUpsert {
 // ClearOutput clears the value of the "output" field.
 func (u *WorkflowStepUpsert) ClearOutput() *WorkflowStepUpsert {
 	u.SetNull(workflowstep.FieldOutput)
+	return u
+}
+
+// SetOrder sets the "order" field.
+func (u *WorkflowStepUpsert) SetOrder(v int) *WorkflowStepUpsert {
+	u.Set(workflowstep.FieldOrder, v)
+	return u
+}
+
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStepUpsert) UpdateOrder() *WorkflowStepUpsert {
+	u.SetExcluded(workflowstep.FieldOrder)
+	return u
+}
+
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStepUpsert) AddOrder(v int) *WorkflowStepUpsert {
+	u.Add(workflowstep.FieldOrder, v)
 	return u
 }
 
@@ -1050,8 +1072,8 @@ func (u *WorkflowStepUpsertOne) UpdateNewValues() *WorkflowStepUpsertOne {
 		if _, exists := u.create.mutation.WorkflowID(); exists {
 			s.SetIgnore(workflowstep.FieldWorkflowID)
 		}
-		if _, exists := u.create.mutation.StageID(); exists {
-			s.SetIgnore(workflowstep.FieldStageID)
+		if _, exists := u.create.mutation.WorkflowStageID(); exists {
+			s.SetIgnore(workflowstep.FieldWorkflowStageID)
 		}
 	}))
 	return u
@@ -1162,7 +1184,7 @@ func (u *WorkflowStepUpsertOne) UpdateUpdateTime() *WorkflowStepUpsertOne {
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepUpsertOne) SetSpec(v map[string]any) *WorkflowStepUpsertOne {
+func (u *WorkflowStepUpsertOne) SetSpec(v map[string]interface{}) *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetSpec(v)
 	})
@@ -1183,7 +1205,7 @@ func (u *WorkflowStepUpsertOne) ClearSpec() *WorkflowStepUpsertOne {
 }
 
 // SetInput sets the "input" field.
-func (u *WorkflowStepUpsertOne) SetInput(v map[string]any) *WorkflowStepUpsertOne {
+func (u *WorkflowStepUpsertOne) SetInput(v map[string]interface{}) *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetInput(v)
 	})
@@ -1204,7 +1226,7 @@ func (u *WorkflowStepUpsertOne) ClearInput() *WorkflowStepUpsertOne {
 }
 
 // SetOutput sets the "output" field.
-func (u *WorkflowStepUpsertOne) SetOutput(v map[string]any) *WorkflowStepUpsertOne {
+func (u *WorkflowStepUpsertOne) SetOutput(v map[string]interface{}) *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetOutput(v)
 	})
@@ -1221,6 +1243,27 @@ func (u *WorkflowStepUpsertOne) UpdateOutput() *WorkflowStepUpsertOne {
 func (u *WorkflowStepUpsertOne) ClearOutput() *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.ClearOutput()
+	})
+}
+
+// SetOrder sets the "order" field.
+func (u *WorkflowStepUpsertOne) SetOrder(v int) *WorkflowStepUpsertOne {
+	return u.Update(func(s *WorkflowStepUpsert) {
+		s.SetOrder(v)
+	})
+}
+
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStepUpsertOne) AddOrder(v int) *WorkflowStepUpsertOne {
+	return u.Update(func(s *WorkflowStepUpsert) {
+		s.AddOrder(v)
+	})
+}
+
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStepUpsertOne) UpdateOrder() *WorkflowStepUpsertOne {
+	return u.Update(func(s *WorkflowStepUpsert) {
+		s.UpdateOrder()
 	})
 }
 
@@ -1476,8 +1519,8 @@ func (u *WorkflowStepUpsertBulk) UpdateNewValues() *WorkflowStepUpsertBulk {
 			if _, exists := b.mutation.WorkflowID(); exists {
 				s.SetIgnore(workflowstep.FieldWorkflowID)
 			}
-			if _, exists := b.mutation.StageID(); exists {
-				s.SetIgnore(workflowstep.FieldStageID)
+			if _, exists := b.mutation.WorkflowStageID(); exists {
+				s.SetIgnore(workflowstep.FieldWorkflowStageID)
 			}
 		}
 	}))
@@ -1589,7 +1632,7 @@ func (u *WorkflowStepUpsertBulk) UpdateUpdateTime() *WorkflowStepUpsertBulk {
 }
 
 // SetSpec sets the "spec" field.
-func (u *WorkflowStepUpsertBulk) SetSpec(v map[string]any) *WorkflowStepUpsertBulk {
+func (u *WorkflowStepUpsertBulk) SetSpec(v map[string]interface{}) *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetSpec(v)
 	})
@@ -1610,7 +1653,7 @@ func (u *WorkflowStepUpsertBulk) ClearSpec() *WorkflowStepUpsertBulk {
 }
 
 // SetInput sets the "input" field.
-func (u *WorkflowStepUpsertBulk) SetInput(v map[string]any) *WorkflowStepUpsertBulk {
+func (u *WorkflowStepUpsertBulk) SetInput(v map[string]interface{}) *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetInput(v)
 	})
@@ -1631,7 +1674,7 @@ func (u *WorkflowStepUpsertBulk) ClearInput() *WorkflowStepUpsertBulk {
 }
 
 // SetOutput sets the "output" field.
-func (u *WorkflowStepUpsertBulk) SetOutput(v map[string]any) *WorkflowStepUpsertBulk {
+func (u *WorkflowStepUpsertBulk) SetOutput(v map[string]interface{}) *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetOutput(v)
 	})
@@ -1648,6 +1691,27 @@ func (u *WorkflowStepUpsertBulk) UpdateOutput() *WorkflowStepUpsertBulk {
 func (u *WorkflowStepUpsertBulk) ClearOutput() *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.ClearOutput()
+	})
+}
+
+// SetOrder sets the "order" field.
+func (u *WorkflowStepUpsertBulk) SetOrder(v int) *WorkflowStepUpsertBulk {
+	return u.Update(func(s *WorkflowStepUpsert) {
+		s.SetOrder(v)
+	})
+}
+
+// AddOrder adds v to the "order" field.
+func (u *WorkflowStepUpsertBulk) AddOrder(v int) *WorkflowStepUpsertBulk {
+	return u.Update(func(s *WorkflowStepUpsert) {
+		s.AddOrder(v)
+	})
+}
+
+// UpdateOrder sets the "order" field to the value that was provided on create.
+func (u *WorkflowStepUpsertBulk) UpdateOrder() *WorkflowStepUpsertBulk {
+	return u.Update(func(s *WorkflowStepUpsert) {
+		s.UpdateOrder()
 	})
 }
 

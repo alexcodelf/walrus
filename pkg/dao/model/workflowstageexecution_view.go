@@ -24,6 +24,10 @@ type WorkflowStageExecutionCreateInput struct {
 	// WorkflowExecution indicates to create WorkflowStageExecution entity MUST under the WorkflowExecution route.
 	WorkflowExecution *WorkflowExecutionQueryInput `path:",inline" query:"-" json:"-"`
 
+	// ID of the workflow stage that this workflow stage execution belongs to.
+	WorkflowStageID object.ID `path:"-" query:"-" json:"workflowStageID"`
+	// ID of the workflow that this workflow execution belongs to.
+	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -32,12 +36,8 @@ type WorkflowStageExecutionCreateInput struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// ID list of the workflow step executions that belong to this workflow stage execution.
-	StepExecutionIds []object.ID `path:"-" query:"-" json:"stepExecutionIds,omitempty"`
 	// Log record of the workflow stage execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
-	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
-	Input string `path:"-" query:"-" json:"input,omitempty"`
 
 	// Steps specifies full inserting the new WorkflowStepExecution entities of the WorkflowStageExecution entity.
 	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
@@ -51,13 +51,13 @@ func (wseci *WorkflowStageExecutionCreateInput) Model() *WorkflowStageExecution 
 	}
 
 	_wse := &WorkflowStageExecution{
-		Name:             wseci.Name,
-		Description:      wseci.Description,
-		Labels:           wseci.Labels,
-		Duration:         wseci.Duration,
-		StepExecutionIds: wseci.StepExecutionIds,
-		Record:           wseci.Record,
-		Input:            wseci.Input,
+		WorkflowStageID: wseci.WorkflowStageID,
+		WorkflowID:      wseci.WorkflowID,
+		Name:            wseci.Name,
+		Description:     wseci.Description,
+		Labels:          wseci.Labels,
+		Duration:        wseci.Duration,
+		Record:          wseci.Record,
 	}
 
 	if wseci.WorkflowExecution != nil {
@@ -123,6 +123,10 @@ func (wseci *WorkflowStageExecutionCreateInput) ValidateWith(ctx context.Context
 
 // WorkflowStageExecutionCreateInputs holds the creation input item of the WorkflowStageExecution entities.
 type WorkflowStageExecutionCreateInputsItem struct {
+	// ID of the workflow stage that this workflow stage execution belongs to.
+	WorkflowStageID object.ID `path:"-" query:"-" json:"workflowStageID"`
+	// ID of the workflow that this workflow execution belongs to.
+	WorkflowID object.ID `path:"-" query:"-" json:"workflowID"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -131,12 +135,8 @@ type WorkflowStageExecutionCreateInputsItem struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// ID list of the workflow step executions that belong to this workflow stage execution.
-	StepExecutionIds []object.ID `path:"-" query:"-" json:"stepExecutionIds,omitempty"`
 	// Log record of the workflow stage execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
-	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
-	Input string `path:"-" query:"-" json:"input,omitempty"`
 
 	// Steps specifies full inserting the new WorkflowStepExecution entities.
 	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
@@ -192,13 +192,13 @@ func (wseci *WorkflowStageExecutionCreateInputs) Model() []*WorkflowStageExecuti
 
 	for i := range wseci.Items {
 		_wse := &WorkflowStageExecution{
-			Name:             wseci.Items[i].Name,
-			Description:      wseci.Items[i].Description,
-			Labels:           wseci.Items[i].Labels,
-			Duration:         wseci.Items[i].Duration,
-			StepExecutionIds: wseci.Items[i].StepExecutionIds,
-			Record:           wseci.Items[i].Record,
-			Input:            wseci.Items[i].Input,
+			WorkflowStageID: wseci.Items[i].WorkflowStageID,
+			WorkflowID:      wseci.Items[i].WorkflowID,
+			Name:            wseci.Items[i].Name,
+			Description:     wseci.Items[i].Description,
+			Labels:          wseci.Items[i].Labels,
+			Duration:        wseci.Items[i].Duration,
+			Record:          wseci.Items[i].Record,
 		}
 
 		if wseci.WorkflowExecution != nil {
@@ -541,12 +541,8 @@ type WorkflowStageExecutionUpdateInput struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// ID list of the workflow step executions that belong to this workflow stage execution.
-	StepExecutionIds []object.ID `path:"-" query:"-" json:"stepExecutionIds,omitempty"`
 	// Log record of the workflow stage execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
-	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
-	Input string `path:"-" query:"-" json:"input,omitempty"`
 
 	// Steps indicates replacing the stale WorkflowStepExecution entities.
 	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
@@ -560,13 +556,11 @@ func (wseui *WorkflowStageExecutionUpdateInput) Model() *WorkflowStageExecution 
 	}
 
 	_wse := &WorkflowStageExecution{
-		ID:               wseui.ID,
-		Description:      wseui.Description,
-		Labels:           wseui.Labels,
-		Duration:         wseui.Duration,
-		StepExecutionIds: wseui.StepExecutionIds,
-		Record:           wseui.Record,
-		Input:            wseui.Input,
+		ID:          wseui.ID,
+		Description: wseui.Description,
+		Labels:      wseui.Labels,
+		Duration:    wseui.Duration,
+		Record:      wseui.Record,
 	}
 
 	if wseui.Steps != nil {
@@ -630,12 +624,8 @@ type WorkflowStageExecutionUpdateInputsItem struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `path:"-" query:"-" json:"duration"`
-	// ID list of the workflow step executions that belong to this workflow stage execution.
-	StepExecutionIds []object.ID `path:"-" query:"-" json:"stepExecutionIds"`
 	// Log record of the workflow stage execution.
 	Record string `path:"-" query:"-" json:"record"`
-	// Input of the workflow stage execution. It's the yaml file that defines the workflow stage execution.
-	Input string `path:"-" query:"-" json:"input"`
 
 	// Steps indicates replacing the stale WorkflowStepExecution entities.
 	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
@@ -691,13 +681,11 @@ func (wseui *WorkflowStageExecutionUpdateInputs) Model() []*WorkflowStageExecuti
 
 	for i := range wseui.Items {
 		_wse := &WorkflowStageExecution{
-			ID:               wseui.Items[i].ID,
-			Description:      wseui.Items[i].Description,
-			Labels:           wseui.Items[i].Labels,
-			Duration:         wseui.Items[i].Duration,
-			StepExecutionIds: wseui.Items[i].StepExecutionIds,
-			Record:           wseui.Items[i].Record,
-			Input:            wseui.Items[i].Input,
+			ID:          wseui.Items[i].ID,
+			Description: wseui.Items[i].Description,
+			Labels:      wseui.Items[i].Labels,
+			Duration:    wseui.Items[i].Duration,
+			Record:      wseui.Items[i].Record,
 		}
 
 		if wseui.Items[i].Steps != nil {
@@ -806,21 +794,20 @@ func (wseui *WorkflowStageExecutionUpdateInputs) ValidateWith(ctx context.Contex
 
 // WorkflowStageExecutionOutput holds the output of the WorkflowStageExecution entity.
 type WorkflowStageExecutionOutput struct {
-	ID               object.ID         `json:"id,omitempty"`
-	Name             string            `json:"name,omitempty"`
-	Description      string            `json:"description,omitempty"`
-	Labels           map[string]string `json:"labels,omitempty"`
-	CreateTime       *time.Time        `json:"createTime,omitempty"`
-	UpdateTime       *time.Time        `json:"updateTime,omitempty"`
-	Status           status.Status     `json:"status,omitempty"`
-	Duration         int               `json:"duration,omitempty"`
-	StepExecutionIds []object.ID       `json:"stepExecutionIds,omitempty"`
-	Record           string            `json:"record,omitempty"`
-	Input            string            `json:"input,omitempty"`
+	ID              object.ID         `json:"id,omitempty"`
+	Name            string            `json:"name,omitempty"`
+	Description     string            `json:"description,omitempty"`
+	Labels          map[string]string `json:"labels,omitempty"`
+	CreateTime      *time.Time        `json:"createTime,omitempty"`
+	UpdateTime      *time.Time        `json:"updateTime,omitempty"`
+	Status          status.Status     `json:"status,omitempty"`
+	WorkflowID      object.ID         `json:"workflowID,omitempty"`
+	WorkflowStageID object.ID         `json:"workflowStageID,omitempty"`
+	Duration        int               `json:"duration,omitempty"`
+	Record          string            `json:"record,omitempty"`
 
 	Project           *ProjectOutput                 `json:"project,omitempty"`
 	Steps             []*WorkflowStepExecutionOutput `json:"steps,omitempty"`
-	Stage             *WorkflowStageOutput           `json:"stage,omitempty"`
 	WorkflowExecution *WorkflowExecutionOutput       `json:"workflowExecution,omitempty"`
 }
 
@@ -841,17 +828,17 @@ func ExposeWorkflowStageExecution(_wse *WorkflowStageExecution) *WorkflowStageEx
 	}
 
 	wseo := &WorkflowStageExecutionOutput{
-		ID:               _wse.ID,
-		Name:             _wse.Name,
-		Description:      _wse.Description,
-		Labels:           _wse.Labels,
-		CreateTime:       _wse.CreateTime,
-		UpdateTime:       _wse.UpdateTime,
-		Status:           _wse.Status,
-		Duration:         _wse.Duration,
-		StepExecutionIds: _wse.StepExecutionIds,
-		Record:           _wse.Record,
-		Input:            _wse.Input,
+		ID:              _wse.ID,
+		Name:            _wse.Name,
+		Description:     _wse.Description,
+		Labels:          _wse.Labels,
+		CreateTime:      _wse.CreateTime,
+		UpdateTime:      _wse.UpdateTime,
+		Status:          _wse.Status,
+		WorkflowID:      _wse.WorkflowID,
+		WorkflowStageID: _wse.WorkflowStageID,
+		Duration:        _wse.Duration,
+		Record:          _wse.Record,
 	}
 
 	if _wse.Edges.Project != nil {
@@ -863,13 +850,6 @@ func ExposeWorkflowStageExecution(_wse *WorkflowStageExecution) *WorkflowStageEx
 	}
 	if _wse.Edges.Steps != nil {
 		wseo.Steps = ExposeWorkflowStepExecutions(_wse.Edges.Steps)
-	}
-	if _wse.Edges.Stage != nil {
-		wseo.Stage = ExposeWorkflowStage(_wse.Edges.Stage)
-	} else if _wse.StageID != "" {
-		wseo.Stage = &WorkflowStageOutput{
-			ID: _wse.StageID,
-		}
 	}
 	if _wse.Edges.WorkflowExecution != nil {
 		wseo.WorkflowExecution = ExposeWorkflowExecution(_wse.Edges.WorkflowExecution)

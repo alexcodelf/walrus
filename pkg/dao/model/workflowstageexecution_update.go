@@ -16,7 +16,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 
 	"github.com/seal-io/walrus/pkg/dao/model/internal"
@@ -133,15 +132,24 @@ func (wseu *WorkflowStageExecutionUpdate) AddDuration(i int) *WorkflowStageExecu
 	return wseu
 }
 
-// SetStepExecutionIds sets the "step_execution_ids" field.
-func (wseu *WorkflowStageExecutionUpdate) SetStepExecutionIds(o []object.ID) *WorkflowStageExecutionUpdate {
-	wseu.mutation.SetStepExecutionIds(o)
+// SetOrder sets the "order" field.
+func (wseu *WorkflowStageExecutionUpdate) SetOrder(i int) *WorkflowStageExecutionUpdate {
+	wseu.mutation.ResetOrder()
+	wseu.mutation.SetOrder(i)
 	return wseu
 }
 
-// AppendStepExecutionIds appends o to the "step_execution_ids" field.
-func (wseu *WorkflowStageExecutionUpdate) AppendStepExecutionIds(o []object.ID) *WorkflowStageExecutionUpdate {
-	wseu.mutation.AppendStepExecutionIds(o)
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wseu *WorkflowStageExecutionUpdate) SetNillableOrder(i *int) *WorkflowStageExecutionUpdate {
+	if i != nil {
+		wseu.SetOrder(*i)
+	}
+	return wseu
+}
+
+// AddOrder adds i to the "order" field.
+func (wseu *WorkflowStageExecutionUpdate) AddOrder(i int) *WorkflowStageExecutionUpdate {
+	wseu.mutation.AddOrder(i)
 	return wseu
 }
 
@@ -155,20 +163,6 @@ func (wseu *WorkflowStageExecutionUpdate) SetRecord(s string) *WorkflowStageExec
 func (wseu *WorkflowStageExecutionUpdate) SetNillableRecord(s *string) *WorkflowStageExecutionUpdate {
 	if s != nil {
 		wseu.SetRecord(*s)
-	}
-	return wseu
-}
-
-// SetInput sets the "input" field.
-func (wseu *WorkflowStageExecutionUpdate) SetInput(s string) *WorkflowStageExecutionUpdate {
-	wseu.mutation.SetInput(s)
-	return wseu
-}
-
-// SetNillableInput sets the "input" field if the given value is not nil.
-func (wseu *WorkflowStageExecutionUpdate) SetNillableInput(s *string) *WorkflowStageExecutionUpdate {
-	if s != nil {
-		wseu.SetInput(*s)
 	}
 	return wseu
 }
@@ -263,11 +257,13 @@ func (wseu *WorkflowStageExecutionUpdate) check() error {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.duration": %w`, err)}
 		}
 	}
+	if v, ok := wseu.mutation.Order(); ok {
+		if err := workflowstageexecution.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.order": %w`, err)}
+		}
+	}
 	if _, ok := wseu.mutation.ProjectID(); wseu.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.project"`)
-	}
-	if _, ok := wseu.mutation.StageID(); wseu.mutation.StageCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.stage"`)
 	}
 	if _, ok := wseu.mutation.WorkflowExecutionID(); wseu.mutation.WorkflowExecutionCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.workflow_execution"`)
@@ -325,9 +321,8 @@ func (wseu *WorkflowStageExecutionUpdate) Set(obj *WorkflowStageExecution) *Work
 		wseu.SetStatus(obj.Status)
 	}
 	wseu.SetDuration(obj.Duration)
-	wseu.SetStepExecutionIds(obj.StepExecutionIds)
+	wseu.SetOrder(obj.Order)
 	wseu.SetRecord(obj.Record)
-	wseu.SetInput(obj.Input)
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -391,19 +386,14 @@ func (wseu *WorkflowStageExecutionUpdate) sqlSave(ctx context.Context) (n int, e
 	if value, ok := wseu.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowstageexecution.FieldDuration, field.TypeInt, value)
 	}
-	if value, ok := wseu.mutation.StepExecutionIds(); ok {
-		_spec.SetField(workflowstageexecution.FieldStepExecutionIds, field.TypeJSON, value)
+	if value, ok := wseu.mutation.Order(); ok {
+		_spec.SetField(workflowstageexecution.FieldOrder, field.TypeInt, value)
 	}
-	if value, ok := wseu.mutation.AppendedStepExecutionIds(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflowstageexecution.FieldStepExecutionIds, value)
-		})
+	if value, ok := wseu.mutation.AddedOrder(); ok {
+		_spec.AddField(workflowstageexecution.FieldOrder, field.TypeInt, value)
 	}
 	if value, ok := wseu.mutation.Record(); ok {
 		_spec.SetField(workflowstageexecution.FieldRecord, field.TypeString, value)
-	}
-	if value, ok := wseu.mutation.Input(); ok {
-		_spec.SetField(workflowstageexecution.FieldInput, field.TypeString, value)
 	}
 	if wseu.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -569,15 +559,24 @@ func (wseuo *WorkflowStageExecutionUpdateOne) AddDuration(i int) *WorkflowStageE
 	return wseuo
 }
 
-// SetStepExecutionIds sets the "step_execution_ids" field.
-func (wseuo *WorkflowStageExecutionUpdateOne) SetStepExecutionIds(o []object.ID) *WorkflowStageExecutionUpdateOne {
-	wseuo.mutation.SetStepExecutionIds(o)
+// SetOrder sets the "order" field.
+func (wseuo *WorkflowStageExecutionUpdateOne) SetOrder(i int) *WorkflowStageExecutionUpdateOne {
+	wseuo.mutation.ResetOrder()
+	wseuo.mutation.SetOrder(i)
 	return wseuo
 }
 
-// AppendStepExecutionIds appends o to the "step_execution_ids" field.
-func (wseuo *WorkflowStageExecutionUpdateOne) AppendStepExecutionIds(o []object.ID) *WorkflowStageExecutionUpdateOne {
-	wseuo.mutation.AppendStepExecutionIds(o)
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wseuo *WorkflowStageExecutionUpdateOne) SetNillableOrder(i *int) *WorkflowStageExecutionUpdateOne {
+	if i != nil {
+		wseuo.SetOrder(*i)
+	}
+	return wseuo
+}
+
+// AddOrder adds i to the "order" field.
+func (wseuo *WorkflowStageExecutionUpdateOne) AddOrder(i int) *WorkflowStageExecutionUpdateOne {
+	wseuo.mutation.AddOrder(i)
 	return wseuo
 }
 
@@ -591,20 +590,6 @@ func (wseuo *WorkflowStageExecutionUpdateOne) SetRecord(s string) *WorkflowStage
 func (wseuo *WorkflowStageExecutionUpdateOne) SetNillableRecord(s *string) *WorkflowStageExecutionUpdateOne {
 	if s != nil {
 		wseuo.SetRecord(*s)
-	}
-	return wseuo
-}
-
-// SetInput sets the "input" field.
-func (wseuo *WorkflowStageExecutionUpdateOne) SetInput(s string) *WorkflowStageExecutionUpdateOne {
-	wseuo.mutation.SetInput(s)
-	return wseuo
-}
-
-// SetNillableInput sets the "input" field if the given value is not nil.
-func (wseuo *WorkflowStageExecutionUpdateOne) SetNillableInput(s *string) *WorkflowStageExecutionUpdateOne {
-	if s != nil {
-		wseuo.SetInput(*s)
 	}
 	return wseuo
 }
@@ -712,11 +697,13 @@ func (wseuo *WorkflowStageExecutionUpdateOne) check() error {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.duration": %w`, err)}
 		}
 	}
+	if v, ok := wseuo.mutation.Order(); ok {
+		if err := workflowstageexecution.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.order": %w`, err)}
+		}
+	}
 	if _, ok := wseuo.mutation.ProjectID(); wseuo.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.project"`)
-	}
-	if _, ok := wseuo.mutation.StageID(); wseuo.mutation.StageCleared() && !ok {
-		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.stage"`)
 	}
 	if _, ok := wseuo.mutation.WorkflowExecutionID(); wseuo.mutation.WorkflowExecutionCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStageExecution.workflow_execution"`)
@@ -794,14 +781,11 @@ func (wseuo *WorkflowStageExecutionUpdateOne) Set(obj *WorkflowStageExecution) *
 			if db.Duration != obj.Duration {
 				wseuo.SetDuration(obj.Duration)
 			}
-			if !reflect.DeepEqual(db.StepExecutionIds, obj.StepExecutionIds) {
-				wseuo.SetStepExecutionIds(obj.StepExecutionIds)
+			if db.Order != obj.Order {
+				wseuo.SetOrder(obj.Order)
 			}
 			if db.Record != obj.Record {
 				wseuo.SetRecord(obj.Record)
-			}
-			if db.Input != obj.Input {
-				wseuo.SetInput(obj.Input)
 			}
 
 			// With Default.
@@ -868,14 +852,11 @@ func (wseuo *WorkflowStageExecutionUpdateOne) SaveE(ctx context.Context, cbs ...
 		if _, set := wseuo.mutation.Field(workflowstageexecution.FieldDuration); set {
 			obj.Duration = x.Duration
 		}
-		if _, set := wseuo.mutation.Field(workflowstageexecution.FieldStepExecutionIds); set {
-			obj.StepExecutionIds = x.StepExecutionIds
+		if _, set := wseuo.mutation.Field(workflowstageexecution.FieldOrder); set {
+			obj.Order = x.Order
 		}
 		if _, set := wseuo.mutation.Field(workflowstageexecution.FieldRecord); set {
 			obj.Record = x.Record
-		}
-		if _, set := wseuo.mutation.Field(workflowstageexecution.FieldInput); set {
-			obj.Input = x.Input
 		}
 		obj.Edges = x.Edges
 	}
@@ -980,19 +961,14 @@ func (wseuo *WorkflowStageExecutionUpdateOne) sqlSave(ctx context.Context) (_nod
 	if value, ok := wseuo.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowstageexecution.FieldDuration, field.TypeInt, value)
 	}
-	if value, ok := wseuo.mutation.StepExecutionIds(); ok {
-		_spec.SetField(workflowstageexecution.FieldStepExecutionIds, field.TypeJSON, value)
+	if value, ok := wseuo.mutation.Order(); ok {
+		_spec.SetField(workflowstageexecution.FieldOrder, field.TypeInt, value)
 	}
-	if value, ok := wseuo.mutation.AppendedStepExecutionIds(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflowstageexecution.FieldStepExecutionIds, value)
-		})
+	if value, ok := wseuo.mutation.AddedOrder(); ok {
+		_spec.AddField(workflowstageexecution.FieldOrder, field.TypeInt, value)
 	}
 	if value, ok := wseuo.mutation.Record(); ok {
 		_spec.SetField(workflowstageexecution.FieldRecord, field.TypeString, value)
-	}
-	if value, ok := wseuo.mutation.Input(); ok {
-		_spec.SetField(workflowstageexecution.FieldInput, field.TypeString, value)
 	}
 	if wseuo.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{

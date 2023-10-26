@@ -4788,25 +4788,6 @@ func (c *WorkflowStageClient) QuerySteps(ws *WorkflowStage) *WorkflowStepQuery {
 	return query
 }
 
-// QueryExecutions queries the executions edge of a WorkflowStage.
-func (c *WorkflowStageClient) QueryExecutions(ws *WorkflowStage) *WorkflowStageExecutionQuery {
-	query := (&WorkflowStageExecutionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ws.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(workflowstage.Table, workflowstage.FieldID, id),
-			sqlgraph.To(workflowstageexecution.Table, workflowstageexecution.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, workflowstage.ExecutionsTable, workflowstage.ExecutionsColumn),
-		)
-		schemaConfig := ws.schemaConfig
-		step.To.Schema = schemaConfig.WorkflowStageExecution
-		step.Edge.Schema = schemaConfig.WorkflowStageExecution
-		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryWorkflow queries the workflow edge of a WorkflowStage.
 func (c *WorkflowStageClient) QueryWorkflow(ws *WorkflowStage) *WorkflowQuery {
 	query := (&WorkflowClient{config: c.config}).Query()
@@ -4984,25 +4965,6 @@ func (c *WorkflowStageExecutionClient) QuerySteps(wse *WorkflowStageExecution) *
 	return query
 }
 
-// QueryStage queries the stage edge of a WorkflowStageExecution.
-func (c *WorkflowStageExecutionClient) QueryStage(wse *WorkflowStageExecution) *WorkflowStageQuery {
-	query := (&WorkflowStageClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := wse.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(workflowstageexecution.Table, workflowstageexecution.FieldID, id),
-			sqlgraph.To(workflowstage.Table, workflowstage.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, workflowstageexecution.StageTable, workflowstageexecution.StageColumn),
-		)
-		schemaConfig := wse.schemaConfig
-		step.To.Schema = schemaConfig.WorkflowStage
-		step.Edge.Schema = schemaConfig.WorkflowStageExecution
-		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryWorkflowExecution queries the workflow_execution edge of a WorkflowStageExecution.
 func (c *WorkflowStageExecutionClient) QueryWorkflowExecution(wse *WorkflowStageExecution) *WorkflowExecutionQuery {
 	query := (&WorkflowExecutionClient{config: c.config}).Query()
@@ -5161,25 +5123,6 @@ func (c *WorkflowStepClient) QueryProject(ws *WorkflowStep) *ProjectQuery {
 	return query
 }
 
-// QueryExecutions queries the executions edge of a WorkflowStep.
-func (c *WorkflowStepClient) QueryExecutions(ws *WorkflowStep) *WorkflowStepExecutionQuery {
-	query := (&WorkflowStepExecutionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ws.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(workflowstep.Table, workflowstep.FieldID, id),
-			sqlgraph.To(workflowstepexecution.Table, workflowstepexecution.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, workflowstep.ExecutionsTable, workflowstep.ExecutionsColumn),
-		)
-		schemaConfig := ws.schemaConfig
-		step.To.Schema = schemaConfig.WorkflowStepExecution
-		step.Edge.Schema = schemaConfig.WorkflowStepExecution
-		fromV = sqlgraph.Neighbors(ws.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryStage queries the stage edge of a WorkflowStep.
 func (c *WorkflowStepClient) QueryStage(ws *WorkflowStep) *WorkflowStageQuery {
 	query := (&WorkflowStageClient{config: c.config}).Query()
@@ -5331,25 +5274,6 @@ func (c *WorkflowStepExecutionClient) QueryProject(wse *WorkflowStepExecution) *
 		)
 		schemaConfig := wse.schemaConfig
 		step.To.Schema = schemaConfig.Project
-		step.Edge.Schema = schemaConfig.WorkflowStepExecution
-		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryStep queries the step edge of a WorkflowStepExecution.
-func (c *WorkflowStepExecutionClient) QueryStep(wse *WorkflowStepExecution) *WorkflowStepQuery {
-	query := (&WorkflowStepClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := wse.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(workflowstepexecution.Table, workflowstepexecution.FieldID, id),
-			sqlgraph.To(workflowstep.Table, workflowstep.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, workflowstepexecution.StepTable, workflowstepexecution.StepColumn),
-		)
-		schemaConfig := wse.schemaConfig
-		step.To.Schema = schemaConfig.WorkflowStep
 		step.Edge.Schema = schemaConfig.WorkflowStepExecution
 		fromV = sqlgraph.Neighbors(wse.driver.Dialect(), step)
 		return fromV, nil

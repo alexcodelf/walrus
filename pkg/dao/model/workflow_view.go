@@ -27,8 +27,6 @@ type WorkflowCreateInput struct {
 
 	// Type of the workflow.
 	Type string `path:"-" query:"-" json:"type"`
-	// Display name is the human readable name that is shown to the user.
-	DisplayName string `path:"-" query:"-" json:"displayName"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -37,8 +35,6 @@ type WorkflowCreateInput struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// ID of the environment that this workflow belongs to.
 	EnvironmentID object.ID `path:"-" query:"-" json:"environmentID,omitempty"`
-	// ID list of the stages that belong to this workflow.
-	StageIds []object.ID `path:"-" query:"-" json:"stageIds,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `path:"-" query:"-" json:"parallelism,omitempty"`
 
@@ -55,12 +51,10 @@ func (wci *WorkflowCreateInput) Model() *Workflow {
 
 	_w := &Workflow{
 		Type:          wci.Type,
-		DisplayName:   wci.DisplayName,
 		Name:          wci.Name,
 		Description:   wci.Description,
 		Labels:        wci.Labels,
 		EnvironmentID: wci.EnvironmentID,
-		StageIds:      wci.StageIds,
 		Parallelism:   wci.Parallelism,
 	}
 
@@ -129,8 +123,6 @@ func (wci *WorkflowCreateInput) ValidateWith(ctx context.Context, cs ClientSet, 
 type WorkflowCreateInputsItem struct {
 	// Type of the workflow.
 	Type string `path:"-" query:"-" json:"type"`
-	// Display name is the human readable name that is shown to the user.
-	DisplayName string `path:"-" query:"-" json:"displayName"`
 	// Name holds the value of the "name" field.
 	Name string `path:"-" query:"-" json:"name"`
 	// Description holds the value of the "description" field.
@@ -139,8 +131,6 @@ type WorkflowCreateInputsItem struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// ID of the environment that this workflow belongs to.
 	EnvironmentID object.ID `path:"-" query:"-" json:"environmentID,omitempty"`
-	// ID list of the stages that belong to this workflow.
-	StageIds []object.ID `path:"-" query:"-" json:"stageIds,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `path:"-" query:"-" json:"parallelism,omitempty"`
 
@@ -199,12 +189,10 @@ func (wci *WorkflowCreateInputs) Model() []*Workflow {
 	for i := range wci.Items {
 		_w := &Workflow{
 			Type:          wci.Items[i].Type,
-			DisplayName:   wci.Items[i].DisplayName,
 			Name:          wci.Items[i].Name,
 			Description:   wci.Items[i].Description,
 			Labels:        wci.Items[i].Labels,
 			EnvironmentID: wci.Items[i].EnvironmentID,
-			StageIds:      wci.Items[i].StageIds,
 			Parallelism:   wci.Items[i].Parallelism,
 		}
 
@@ -588,10 +576,6 @@ type WorkflowUpdateInput struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
-	// Display name is the human readable name that is shown to the user.
-	DisplayName string `path:"-" query:"-" json:"displayName,omitempty"`
-	// ID list of the stages that belong to this workflow.
-	StageIds []object.ID `path:"-" query:"-" json:"stageIds,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `path:"-" query:"-" json:"parallelism,omitempty"`
 
@@ -611,8 +595,6 @@ func (wui *WorkflowUpdateInput) Model() *Workflow {
 		Name:        wui.Name,
 		Description: wui.Description,
 		Labels:      wui.Labels,
-		DisplayName: wui.DisplayName,
-		StageIds:    wui.StageIds,
 		Parallelism: wui.Parallelism,
 	}
 
@@ -677,10 +659,6 @@ type WorkflowUpdateInputsItem struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
-	// Display name is the human readable name that is shown to the user.
-	DisplayName string `path:"-" query:"-" json:"displayName"`
-	// ID list of the stages that belong to this workflow.
-	StageIds []object.ID `path:"-" query:"-" json:"stageIds"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `path:"-" query:"-" json:"parallelism"`
 
@@ -742,8 +720,6 @@ func (wui *WorkflowUpdateInputs) Model() []*Workflow {
 			Name:        wui.Items[i].Name,
 			Description: wui.Items[i].Description,
 			Labels:      wui.Items[i].Labels,
-			DisplayName: wui.Items[i].DisplayName,
-			StageIds:    wui.Items[i].StageIds,
 			Parallelism: wui.Items[i].Parallelism,
 		}
 
@@ -888,9 +864,7 @@ type WorkflowOutput struct {
 	CreateTime    *time.Time        `json:"createTime,omitempty"`
 	UpdateTime    *time.Time        `json:"updateTime,omitempty"`
 	EnvironmentID object.ID         `json:"environmentID,omitempty"`
-	DisplayName   string            `json:"displayName,omitempty"`
 	Type          string            `json:"type,omitempty"`
-	StageIds      []object.ID       `json:"stageIds,omitempty"`
 	Parallelism   int               `json:"parallelism,omitempty"`
 
 	Project    *ProjectOutput             `json:"project,omitempty"`
@@ -922,9 +896,7 @@ func ExposeWorkflow(_w *Workflow) *WorkflowOutput {
 		CreateTime:    _w.CreateTime,
 		UpdateTime:    _w.UpdateTime,
 		EnvironmentID: _w.EnvironmentID,
-		DisplayName:   _w.DisplayName,
 		Type:          _w.Type,
-		StageIds:      _w.StageIds,
 		Parallelism:   _w.Parallelism,
 	}
 

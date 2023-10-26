@@ -91,11 +91,6 @@ func EnvironmentID(v object.ID) predicate.Workflow {
 	return predicate.Workflow(sql.FieldEQ(FieldEnvironmentID, v))
 }
 
-// DisplayName applies equality check predicate on the "display_name" field. It's identical to DisplayNameEQ.
-func DisplayName(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldEQ(FieldDisplayName, v))
-}
-
 // Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
 func Type(v string) predicate.Workflow {
 	return predicate.Workflow(sql.FieldEQ(FieldType, v))
@@ -494,71 +489,6 @@ func EnvironmentIDEqualFold(v object.ID) predicate.Workflow {
 func EnvironmentIDContainsFold(v object.ID) predicate.Workflow {
 	vc := string(v)
 	return predicate.Workflow(sql.FieldContainsFold(FieldEnvironmentID, vc))
-}
-
-// DisplayNameEQ applies the EQ predicate on the "display_name" field.
-func DisplayNameEQ(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldEQ(FieldDisplayName, v))
-}
-
-// DisplayNameNEQ applies the NEQ predicate on the "display_name" field.
-func DisplayNameNEQ(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldNEQ(FieldDisplayName, v))
-}
-
-// DisplayNameIn applies the In predicate on the "display_name" field.
-func DisplayNameIn(vs ...string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldIn(FieldDisplayName, vs...))
-}
-
-// DisplayNameNotIn applies the NotIn predicate on the "display_name" field.
-func DisplayNameNotIn(vs ...string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldNotIn(FieldDisplayName, vs...))
-}
-
-// DisplayNameGT applies the GT predicate on the "display_name" field.
-func DisplayNameGT(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldGT(FieldDisplayName, v))
-}
-
-// DisplayNameGTE applies the GTE predicate on the "display_name" field.
-func DisplayNameGTE(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldGTE(FieldDisplayName, v))
-}
-
-// DisplayNameLT applies the LT predicate on the "display_name" field.
-func DisplayNameLT(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldLT(FieldDisplayName, v))
-}
-
-// DisplayNameLTE applies the LTE predicate on the "display_name" field.
-func DisplayNameLTE(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldLTE(FieldDisplayName, v))
-}
-
-// DisplayNameContains applies the Contains predicate on the "display_name" field.
-func DisplayNameContains(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldContains(FieldDisplayName, v))
-}
-
-// DisplayNameHasPrefix applies the HasPrefix predicate on the "display_name" field.
-func DisplayNameHasPrefix(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldHasPrefix(FieldDisplayName, v))
-}
-
-// DisplayNameHasSuffix applies the HasSuffix predicate on the "display_name" field.
-func DisplayNameHasSuffix(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldHasSuffix(FieldDisplayName, v))
-}
-
-// DisplayNameEqualFold applies the EqualFold predicate on the "display_name" field.
-func DisplayNameEqualFold(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldEqualFold(FieldDisplayName, v))
-}
-
-// DisplayNameContainsFold applies the ContainsFold predicate on the "display_name" field.
-func DisplayNameContainsFold(v string) predicate.Workflow {
-	return predicate.Workflow(sql.FieldContainsFold(FieldDisplayName, v))
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.

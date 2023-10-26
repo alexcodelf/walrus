@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"entgo.io/ent/dialect/sql"
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
@@ -57,9 +58,9 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 		Where(workflow.ID(req.ID)).
 		WithStages(func(sgq *model.WorkflowStageQuery) {
 			sgq.WithSteps(func(wsq *model.WorkflowStepQuery) {
-				wsq.Order(model.Asc(workflowstep.FieldCreateTime))
+				wsq.Order(model.Asc(workflowstep.FieldOrder))
 			}).
-				Order(model.Asc(workflowstage.FieldCreateTime))
+				Order(model.Asc(workflowstage.FieldOrder))
 		}).
 		Only(req.Context)
 	if err != nil {
@@ -83,6 +84,32 @@ var (
 	sortFields = []string{
 		workflow.FieldID,
 		workflow.FieldName,
+	}
+
+	workflowExecutionLatestQuery = func(weq *model.WorkflowExecutionQuery) {
+		weq.Where(func(s *sql.Selector) {
+			sq := s.Clone().
+				AppendSelectExprAs(
+					sql.RowNumber().
+						PartitionBy(workflowexecution.FieldWorkflowID).
+						OrderBy(sql.Desc(workflowexecution.FieldCreateTime)),
+					"row_number",
+				).
+				Where(s.P()).
+				From(s.Table()).
+				As(workflowexecution.Table)
+
+			s.Where(sql.EQ(s.C("row_number"), 1)).
+				From(sq)
+		}).WithStages(func(sgq *model.WorkflowStageExecutionQuery) {
+			sgq.Select(
+				workflowstageexecution.FieldID,
+				workflowstageexecution.FieldName,
+				workflowstageexecution.FieldStatus,
+				workflowexecution.FieldDuration,
+				workflowexecution.FieldCreateTime,
+			)
+		})
 	}
 )
 
@@ -130,16 +157,7 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 				entities, err := query.Clone().
 					Where(workflow.IDIn(dm.IDs...)).
 					Unique(false).
-					WithExecutions(func(weq *model.WorkflowExecutionQuery) {
-						weq.WithStages(func(sgq *model.WorkflowStageExecutionQuery) {
-							sgq.Select(
-								workflowstageexecution.FieldID,
-								workflowstageexecution.FieldName,
-								workflowstageexecution.FieldStatus,
-							)
-						}).Order(model.Desc(workflowexecution.FieldCreateTime)).
-							Limit(1)
-					}).
+					WithExecutions(workflowExecutionLatestQuery).
 					All(stream)
 				if err != nil {
 					return nil, 0, err
@@ -189,16 +207,7 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 
 	entities, err := query.
 		Unique(false).
-		WithExecutions(func(weq *model.WorkflowExecutionQuery) {
-			weq.WithStages(func(sgq *model.WorkflowStageExecutionQuery) {
-				sgq.Select(
-					workflowstageexecution.FieldID,
-					workflowstageexecution.FieldName,
-					workflowstageexecution.FieldStatus,
-				)
-			}).Order(model.Desc(workflow.FieldCreateTime)).
-				Limit(1)
-		}).
+		WithExecutions(workflowExecutionLatestQuery).
 		All(req.Context)
 	if err != nil {
 		return nil, 0, err

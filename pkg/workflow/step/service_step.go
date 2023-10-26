@@ -29,9 +29,14 @@ curl -o config.tar.gz -X POST \
 {{workflow.parameters.server}}/v1/projects/{{workflow.parameters.projectID}}/environments/{{inputs.parameters.environmentID}}/services/_/workflow \
 -H 'Content-Type: application/json' \
 -H "Authorization: Bearer {{workflow.parameters.token}}" \
--d '{{inputs.parameters.executionSpec}}' $tlsVerify -s
+-d '{{inputs.parameters.executionSpec}}' $tlsVerify -s --fail --show-error
 
-tar -xzf config.tar.gz
+if tar -xzf config.tar.gz; then
+    echo "Extraction successful"
+else
+    echo "Extraction failed"
+    cat config.tar.gz
+fi
 
 # run terraform
 terraform {{inputs.parameters.tfCommand}}`

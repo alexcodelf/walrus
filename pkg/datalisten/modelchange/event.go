@@ -27,10 +27,6 @@ var (
 	Workflow = topic.Topic(migrate.WorkflowsTable.Name)
 	// WorkflowExecution is the topic for model.WorkflowExecution.
 	WorkflowExecution = topic.Topic(migrate.WorkflowExecutionsTable.Name)
-	// WorkflowStageExecution is the topic for model.WorkflowStageExecution.
-	WorkflowStageExecution = topic.Topic(migrate.WorkflowStageExecutionsTable.Name)
-	// WorkflowStepExecution is the topic for model.WorkflowStepExecution.
-	WorkflowStepExecution = topic.Topic(migrate.WorkflowStepExecutionsTable.Name)
 )
 
 // tableNameSet holds the set for interested table names,

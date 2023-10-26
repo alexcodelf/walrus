@@ -96,9 +96,14 @@ func WorkflowID(v object.ID) predicate.WorkflowStep {
 	return predicate.WorkflowStep(sql.FieldEQ(FieldWorkflowID, v))
 }
 
-// StageID applies equality check predicate on the "stage_id" field. It's identical to StageIDEQ.
-func StageID(v object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldEQ(FieldStageID, v))
+// WorkflowStageID applies equality check predicate on the "workflow_stage_id" field. It's identical to WorkflowStageIDEQ.
+func WorkflowStageID(v object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldEQ(FieldWorkflowStageID, v))
+}
+
+// Order applies equality check predicate on the "order" field. It's identical to OrderEQ.
+func Order(v int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldEQ(FieldOrder, v))
 }
 
 // Timeout applies equality check predicate on the "timeout" field. It's identical to TimeoutEQ.
@@ -551,74 +556,74 @@ func WorkflowIDContainsFold(v object.ID) predicate.WorkflowStep {
 	return predicate.WorkflowStep(sql.FieldContainsFold(FieldWorkflowID, vc))
 }
 
-// StageIDEQ applies the EQ predicate on the "stage_id" field.
-func StageIDEQ(v object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldEQ(FieldStageID, v))
+// WorkflowStageIDEQ applies the EQ predicate on the "workflow_stage_id" field.
+func WorkflowStageIDEQ(v object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldEQ(FieldWorkflowStageID, v))
 }
 
-// StageIDNEQ applies the NEQ predicate on the "stage_id" field.
-func StageIDNEQ(v object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldNEQ(FieldStageID, v))
+// WorkflowStageIDNEQ applies the NEQ predicate on the "workflow_stage_id" field.
+func WorkflowStageIDNEQ(v object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldNEQ(FieldWorkflowStageID, v))
 }
 
-// StageIDIn applies the In predicate on the "stage_id" field.
-func StageIDIn(vs ...object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldIn(FieldStageID, vs...))
+// WorkflowStageIDIn applies the In predicate on the "workflow_stage_id" field.
+func WorkflowStageIDIn(vs ...object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldIn(FieldWorkflowStageID, vs...))
 }
 
-// StageIDNotIn applies the NotIn predicate on the "stage_id" field.
-func StageIDNotIn(vs ...object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldNotIn(FieldStageID, vs...))
+// WorkflowStageIDNotIn applies the NotIn predicate on the "workflow_stage_id" field.
+func WorkflowStageIDNotIn(vs ...object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldNotIn(FieldWorkflowStageID, vs...))
 }
 
-// StageIDGT applies the GT predicate on the "stage_id" field.
-func StageIDGT(v object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldGT(FieldStageID, v))
+// WorkflowStageIDGT applies the GT predicate on the "workflow_stage_id" field.
+func WorkflowStageIDGT(v object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldGT(FieldWorkflowStageID, v))
 }
 
-// StageIDGTE applies the GTE predicate on the "stage_id" field.
-func StageIDGTE(v object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldGTE(FieldStageID, v))
+// WorkflowStageIDGTE applies the GTE predicate on the "workflow_stage_id" field.
+func WorkflowStageIDGTE(v object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldGTE(FieldWorkflowStageID, v))
 }
 
-// StageIDLT applies the LT predicate on the "stage_id" field.
-func StageIDLT(v object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldLT(FieldStageID, v))
+// WorkflowStageIDLT applies the LT predicate on the "workflow_stage_id" field.
+func WorkflowStageIDLT(v object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldLT(FieldWorkflowStageID, v))
 }
 
-// StageIDLTE applies the LTE predicate on the "stage_id" field.
-func StageIDLTE(v object.ID) predicate.WorkflowStep {
-	return predicate.WorkflowStep(sql.FieldLTE(FieldStageID, v))
+// WorkflowStageIDLTE applies the LTE predicate on the "workflow_stage_id" field.
+func WorkflowStageIDLTE(v object.ID) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldLTE(FieldWorkflowStageID, v))
 }
 
-// StageIDContains applies the Contains predicate on the "stage_id" field.
-func StageIDContains(v object.ID) predicate.WorkflowStep {
+// WorkflowStageIDContains applies the Contains predicate on the "workflow_stage_id" field.
+func WorkflowStageIDContains(v object.ID) predicate.WorkflowStep {
 	vc := string(v)
-	return predicate.WorkflowStep(sql.FieldContains(FieldStageID, vc))
+	return predicate.WorkflowStep(sql.FieldContains(FieldWorkflowStageID, vc))
 }
 
-// StageIDHasPrefix applies the HasPrefix predicate on the "stage_id" field.
-func StageIDHasPrefix(v object.ID) predicate.WorkflowStep {
+// WorkflowStageIDHasPrefix applies the HasPrefix predicate on the "workflow_stage_id" field.
+func WorkflowStageIDHasPrefix(v object.ID) predicate.WorkflowStep {
 	vc := string(v)
-	return predicate.WorkflowStep(sql.FieldHasPrefix(FieldStageID, vc))
+	return predicate.WorkflowStep(sql.FieldHasPrefix(FieldWorkflowStageID, vc))
 }
 
-// StageIDHasSuffix applies the HasSuffix predicate on the "stage_id" field.
-func StageIDHasSuffix(v object.ID) predicate.WorkflowStep {
+// WorkflowStageIDHasSuffix applies the HasSuffix predicate on the "workflow_stage_id" field.
+func WorkflowStageIDHasSuffix(v object.ID) predicate.WorkflowStep {
 	vc := string(v)
-	return predicate.WorkflowStep(sql.FieldHasSuffix(FieldStageID, vc))
+	return predicate.WorkflowStep(sql.FieldHasSuffix(FieldWorkflowStageID, vc))
 }
 
-// StageIDEqualFold applies the EqualFold predicate on the "stage_id" field.
-func StageIDEqualFold(v object.ID) predicate.WorkflowStep {
+// WorkflowStageIDEqualFold applies the EqualFold predicate on the "workflow_stage_id" field.
+func WorkflowStageIDEqualFold(v object.ID) predicate.WorkflowStep {
 	vc := string(v)
-	return predicate.WorkflowStep(sql.FieldEqualFold(FieldStageID, vc))
+	return predicate.WorkflowStep(sql.FieldEqualFold(FieldWorkflowStageID, vc))
 }
 
-// StageIDContainsFold applies the ContainsFold predicate on the "stage_id" field.
-func StageIDContainsFold(v object.ID) predicate.WorkflowStep {
+// WorkflowStageIDContainsFold applies the ContainsFold predicate on the "workflow_stage_id" field.
+func WorkflowStageIDContainsFold(v object.ID) predicate.WorkflowStep {
 	vc := string(v)
-	return predicate.WorkflowStep(sql.FieldContainsFold(FieldStageID, vc))
+	return predicate.WorkflowStep(sql.FieldContainsFold(FieldWorkflowStageID, vc))
 }
 
 // SpecIsNil applies the IsNil predicate on the "spec" field.
@@ -649,6 +654,46 @@ func OutputIsNil() predicate.WorkflowStep {
 // OutputNotNil applies the NotNil predicate on the "output" field.
 func OutputNotNil() predicate.WorkflowStep {
 	return predicate.WorkflowStep(sql.FieldNotNull(FieldOutput))
+}
+
+// OrderEQ applies the EQ predicate on the "order" field.
+func OrderEQ(v int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldEQ(FieldOrder, v))
+}
+
+// OrderNEQ applies the NEQ predicate on the "order" field.
+func OrderNEQ(v int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldNEQ(FieldOrder, v))
+}
+
+// OrderIn applies the In predicate on the "order" field.
+func OrderIn(vs ...int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldIn(FieldOrder, vs...))
+}
+
+// OrderNotIn applies the NotIn predicate on the "order" field.
+func OrderNotIn(vs ...int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldNotIn(FieldOrder, vs...))
+}
+
+// OrderGT applies the GT predicate on the "order" field.
+func OrderGT(v int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldGT(FieldOrder, v))
+}
+
+// OrderGTE applies the GTE predicate on the "order" field.
+func OrderGTE(v int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldGTE(FieldOrder, v))
+}
+
+// OrderLT applies the LT predicate on the "order" field.
+func OrderLT(v int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldLT(FieldOrder, v))
+}
+
+// OrderLTE applies the LTE predicate on the "order" field.
+func OrderLTE(v int) predicate.WorkflowStep {
+	return predicate.WorkflowStep(sql.FieldLTE(FieldOrder, v))
 }
 
 // RetryStrategyIsNil applies the IsNil predicate on the "retryStrategy" field.
@@ -722,35 +767,6 @@ func HasProjectWith(preds ...predicate.Project) predicate.WorkflowStep {
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.Project
 		step.Edge.Schema = schemaConfig.WorkflowStep
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasExecutions applies the HasEdge predicate on the "executions" edge.
-func HasExecutions() predicate.WorkflowStep {
-	return predicate.WorkflowStep(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ExecutionsTable, ExecutionsColumn),
-		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.WorkflowStepExecution
-		step.Edge.Schema = schemaConfig.WorkflowStepExecution
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasExecutionsWith applies the HasEdge predicate on the "executions" edge with a given conditions (other predicates).
-func HasExecutionsWith(preds ...predicate.WorkflowStepExecution) predicate.WorkflowStep {
-	return predicate.WorkflowStep(func(s *sql.Selector) {
-		step := newExecutionsStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.WorkflowStepExecution
-		step.Edge.Schema = schemaConfig.WorkflowStepExecution
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

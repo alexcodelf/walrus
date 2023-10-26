@@ -51,12 +51,8 @@ type WorkflowExecution struct {
 	Progress string `json:"progress,omitempty"`
 	// Duration of the workflow execution.
 	Duration int `json:"duration,omitempty"`
-	// ID list of the stage executions that belong to this workflow execution.
-	StageExecutionIds []object.ID `json:"stage_execution_ids,omitempty"`
 	// Log record of the workflow execution.
 	Record string `json:"record,omitempty"`
-	// Input of the workflow execution. It's the yaml file that defines the workflow execution.
-	Input string `json:"input,omitempty"`
 	// Trigger of the workflow execution.
 	Trigger types.WorkflowExecutionTrigger `json:"trigger,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -118,13 +114,13 @@ func (*WorkflowExecution) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflowexecution.FieldLabels, workflowexecution.FieldAnnotations, workflowexecution.FieldStatus, workflowexecution.FieldStageExecutionIds, workflowexecution.FieldTrigger:
+		case workflowexecution.FieldLabels, workflowexecution.FieldAnnotations, workflowexecution.FieldStatus, workflowexecution.FieldTrigger:
 			values[i] = new([]byte)
 		case workflowexecution.FieldID, workflowexecution.FieldProjectID, workflowexecution.FieldWorkflowID, workflowexecution.FieldSubjectID:
 			values[i] = new(object.ID)
 		case workflowexecution.FieldDuration:
 			values[i] = new(sql.NullInt64)
-		case workflowexecution.FieldName, workflowexecution.FieldDescription, workflowexecution.FieldProgress, workflowexecution.FieldRecord, workflowexecution.FieldInput:
+		case workflowexecution.FieldName, workflowexecution.FieldDescription, workflowexecution.FieldProgress, workflowexecution.FieldRecord:
 			values[i] = new(sql.NullString)
 		case workflowexecution.FieldCreateTime, workflowexecution.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -229,25 +225,11 @@ func (we *WorkflowExecution) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				we.Duration = int(value.Int64)
 			}
-		case workflowexecution.FieldStageExecutionIds:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field stage_execution_ids", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &we.StageExecutionIds); err != nil {
-					return fmt.Errorf("unmarshal field stage_execution_ids: %w", err)
-				}
-			}
 		case workflowexecution.FieldRecord:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field record", values[i])
 			} else if value.Valid {
 				we.Record = value.String
-			}
-		case workflowexecution.FieldInput:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field input", values[i])
-			} else if value.Valid {
-				we.Input = value.String
 			}
 		case workflowexecution.FieldTrigger:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -348,14 +330,8 @@ func (we *WorkflowExecution) String() string {
 	builder.WriteString("duration=")
 	builder.WriteString(fmt.Sprintf("%v", we.Duration))
 	builder.WriteString(", ")
-	builder.WriteString("stage_execution_ids=")
-	builder.WriteString(fmt.Sprintf("%v", we.StageExecutionIds))
-	builder.WriteString(", ")
 	builder.WriteString("record=")
 	builder.WriteString(we.Record)
-	builder.WriteString(", ")
-	builder.WriteString("input=")
-	builder.WriteString(we.Input)
 	builder.WriteString(", ")
 	builder.WriteString("trigger=")
 	builder.WriteString(fmt.Sprintf("%v", we.Trigger))

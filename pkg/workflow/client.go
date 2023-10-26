@@ -6,6 +6,10 @@ import (
 
 	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
 	"github.com/argoproj/argo-workflows/v3/pkg/apiclient/workflow"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
@@ -13,9 +17,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/k8s"
 	"github.com/seal-io/walrus/utils/log"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // Client is the interface that defines the operations of workflow engine.
@@ -120,10 +121,11 @@ func (s *ArgoWorkflowClient) Resume(ctx context.Context, opts ResumeOptions) err
 }
 
 func (s *ArgoWorkflowClient) Resubmit(ctx context.Context, opts ResubmitOptions) error {
-	_, err := s.apiClient.NewWorkflowServiceClient().ResubmitWorkflow(s.apiClient.Ctx, &workflow.WorkflowResubmitRequest{
-		Name:      opts.WorkflowExecution.Name,
-		Namespace: types.WalrusWorkflowNamespace,
-	})
+	_, err := s.apiClient.NewWorkflowServiceClient().
+		ResubmitWorkflow(s.apiClient.Ctx, &workflow.WorkflowResubmitRequest{
+			Name:      opts.WorkflowExecution.Name,
+			Namespace: types.WalrusWorkflowNamespace,
+		})
 
 	return err
 }

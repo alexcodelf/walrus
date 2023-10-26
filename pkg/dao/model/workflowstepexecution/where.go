@@ -121,14 +121,14 @@ func Duration(v int) predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(sql.FieldEQ(FieldDuration, v))
 }
 
+// Order applies equality check predicate on the "order" field. It's identical to OrderEQ.
+func Order(v int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldEQ(FieldOrder, v))
+}
+
 // Record applies equality check predicate on the "record" field. It's identical to RecordEQ.
 func Record(v string) predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(sql.FieldEQ(FieldRecord, v))
-}
-
-// Input applies equality check predicate on the "input" field. It's identical to InputEQ.
-func Input(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldEQ(FieldInput, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -886,6 +886,46 @@ func DurationLTE(v int) predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(sql.FieldLTE(FieldDuration, v))
 }
 
+// OrderEQ applies the EQ predicate on the "order" field.
+func OrderEQ(v int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldEQ(FieldOrder, v))
+}
+
+// OrderNEQ applies the NEQ predicate on the "order" field.
+func OrderNEQ(v int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldNEQ(FieldOrder, v))
+}
+
+// OrderIn applies the In predicate on the "order" field.
+func OrderIn(vs ...int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldIn(FieldOrder, vs...))
+}
+
+// OrderNotIn applies the NotIn predicate on the "order" field.
+func OrderNotIn(vs ...int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldNotIn(FieldOrder, vs...))
+}
+
+// OrderGT applies the GT predicate on the "order" field.
+func OrderGT(v int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldGT(FieldOrder, v))
+}
+
+// OrderGTE applies the GTE predicate on the "order" field.
+func OrderGTE(v int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldGTE(FieldOrder, v))
+}
+
+// OrderLT applies the LT predicate on the "order" field.
+func OrderLT(v int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldLT(FieldOrder, v))
+}
+
+// OrderLTE applies the LTE predicate on the "order" field.
+func OrderLTE(v int) predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldLTE(FieldOrder, v))
+}
+
 // RecordEQ applies the EQ predicate on the "record" field.
 func RecordEQ(v string) predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(sql.FieldEQ(FieldRecord, v))
@@ -951,71 +991,6 @@ func RecordContainsFold(v string) predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(sql.FieldContainsFold(FieldRecord, v))
 }
 
-// InputEQ applies the EQ predicate on the "input" field.
-func InputEQ(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldEQ(FieldInput, v))
-}
-
-// InputNEQ applies the NEQ predicate on the "input" field.
-func InputNEQ(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldNEQ(FieldInput, v))
-}
-
-// InputIn applies the In predicate on the "input" field.
-func InputIn(vs ...string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldIn(FieldInput, vs...))
-}
-
-// InputNotIn applies the NotIn predicate on the "input" field.
-func InputNotIn(vs ...string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldNotIn(FieldInput, vs...))
-}
-
-// InputGT applies the GT predicate on the "input" field.
-func InputGT(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldGT(FieldInput, v))
-}
-
-// InputGTE applies the GTE predicate on the "input" field.
-func InputGTE(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldGTE(FieldInput, v))
-}
-
-// InputLT applies the LT predicate on the "input" field.
-func InputLT(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldLT(FieldInput, v))
-}
-
-// InputLTE applies the LTE predicate on the "input" field.
-func InputLTE(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldLTE(FieldInput, v))
-}
-
-// InputContains applies the Contains predicate on the "input" field.
-func InputContains(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldContains(FieldInput, v))
-}
-
-// InputHasPrefix applies the HasPrefix predicate on the "input" field.
-func InputHasPrefix(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldHasPrefix(FieldInput, v))
-}
-
-// InputHasSuffix applies the HasSuffix predicate on the "input" field.
-func InputHasSuffix(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldHasSuffix(FieldInput, v))
-}
-
-// InputEqualFold applies the EqualFold predicate on the "input" field.
-func InputEqualFold(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldEqualFold(FieldInput, v))
-}
-
-// InputContainsFold applies the ContainsFold predicate on the "input" field.
-func InputContainsFold(v string) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(sql.FieldContainsFold(FieldInput, v))
-}
-
 // HasProject applies the HasEdge predicate on the "project" edge.
 func HasProject() predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(func(s *sql.Selector) {
@@ -1036,35 +1011,6 @@ func HasProjectWith(preds ...predicate.Project) predicate.WorkflowStepExecution 
 		step := newProjectStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.Project
-		step.Edge.Schema = schemaConfig.WorkflowStepExecution
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasStep applies the HasEdge predicate on the "step" edge.
-func HasStep() predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, StepTable, StepColumn),
-		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.WorkflowStep
-		step.Edge.Schema = schemaConfig.WorkflowStepExecution
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasStepWith applies the HasEdge predicate on the "step" edge with a given conditions (other predicates).
-func HasStepWith(preds ...predicate.WorkflowStep) predicate.WorkflowStepExecution {
-	return predicate.WorkflowStepExecution(func(s *sql.Selector) {
-		step := newStepStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.WorkflowStep
 		step.Edge.Schema = schemaConfig.WorkflowStepExecution
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

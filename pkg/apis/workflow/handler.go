@@ -5,7 +5,6 @@ import (
 
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/apis/workflowexecution"
-	"github.com/seal-io/walrus/pkg/apis/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model"
 )
 
@@ -27,10 +26,6 @@ func (Handler) Kind() string {
 
 func (h Handler) SubResourceHandlers() []runtime.IResourceHandler {
 	return []runtime.IResourceHandler{
-		runtime.Alias(
-			workflowstage.Handle(h.modelClient, h.k8sConfig),
-			"Stage",
-		),
 		runtime.Alias(
 			workflowexecution.Handle(h.modelClient, h.k8sConfig),
 			"Execution",

@@ -44,15 +44,8 @@ func (WorkflowExecution) Fields() []ent.Field {
 			Comment("Duration of the workflow execution.").
 			NonNegative().
 			Default(0),
-		field.JSON("stage_execution_ids", []object.ID{}).
-			Comment("ID list of the stage executions that belong to this workflow execution.").
-			Default([]object.ID{}),
 		field.Text("record").
 			Comment("Log record of the workflow execution.").
-			Default(""),
-		// TODO encrypt this field.
-		field.Text("input").
-			Comment("Input of the workflow execution. It's the yaml file that defines the workflow execution.").
 			Default(""),
 		field.JSON("trigger", types.WorkflowExecutionTrigger{}).
 			Comment("Trigger of the workflow execution.").

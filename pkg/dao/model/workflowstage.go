@@ -41,10 +41,10 @@ type WorkflowStage struct {
 	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the workflow that this workflow stage belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
-	// IDs of the workflow steps that belong to this workflow stage.
-	StepIds []object.ID `json:"step_ids,omitempty"`
 	// ID list of the workflow stages that this workflow stage depends on.
 	Dependencies []object.ID `json:"dependencies,omitempty"`
+	// Order of the workflow stage.
+	Order int `json:"order,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WorkflowStageQuery when eager-loading is set.
 	Edges        WorkflowStageEdges `json:"edges,omitempty"`
@@ -57,13 +57,11 @@ type WorkflowStageEdges struct {
 	Project *Project `json:"project,omitempty"`
 	// Workflow steps that belong to this workflow stage.
 	Steps []*WorkflowStep `json:"steps,omitempty"`
-	// Workflow stage executions that belong to this workflow stage.
-	Executions []*WorkflowStageExecution `json:"executions,omitempty"`
 	// Workflow that this workflow stage belongs to.
 	Workflow *Workflow `json:"workflow,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // ProjectOrErr returns the Project value or an error if the edge
@@ -88,19 +86,10 @@ func (e WorkflowStageEdges) StepsOrErr() ([]*WorkflowStep, error) {
 	return nil, &NotLoadedError{edge: "steps"}
 }
 
-// ExecutionsOrErr returns the Executions value or an error if the edge
-// was not loaded in eager-loading.
-func (e WorkflowStageEdges) ExecutionsOrErr() ([]*WorkflowStageExecution, error) {
-	if e.loadedTypes[2] {
-		return e.Executions, nil
-	}
-	return nil, &NotLoadedError{edge: "executions"}
-}
-
 // WorkflowOrErr returns the Workflow value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowStageEdges) WorkflowOrErr() (*Workflow, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		if e.Workflow == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflow.Label}
@@ -115,10 +104,12 @@ func (*WorkflowStage) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflowstage.FieldLabels, workflowstage.FieldAnnotations, workflowstage.FieldStepIds, workflowstage.FieldDependencies:
+		case workflowstage.FieldLabels, workflowstage.FieldAnnotations, workflowstage.FieldDependencies:
 			values[i] = new([]byte)
 		case workflowstage.FieldID, workflowstage.FieldProjectID, workflowstage.FieldWorkflowID:
 			values[i] = new(object.ID)
+		case workflowstage.FieldOrder:
+			values[i] = new(sql.NullInt64)
 		case workflowstage.FieldName, workflowstage.FieldDescription:
 			values[i] = new(sql.NullString)
 		case workflowstage.FieldCreateTime, workflowstage.FieldUpdateTime:
@@ -198,14 +189,6 @@ func (ws *WorkflowStage) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				ws.WorkflowID = *value
 			}
-		case workflowstage.FieldStepIds:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field step_ids", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ws.StepIds); err != nil {
-					return fmt.Errorf("unmarshal field step_ids: %w", err)
-				}
-			}
 		case workflowstage.FieldDependencies:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field dependencies", values[i])
@@ -213,6 +196,12 @@ func (ws *WorkflowStage) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &ws.Dependencies); err != nil {
 					return fmt.Errorf("unmarshal field dependencies: %w", err)
 				}
+			}
+		case workflowstage.FieldOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field order", values[i])
+			} else if value.Valid {
+				ws.Order = int(value.Int64)
 			}
 		default:
 			ws.selectValues.Set(columns[i], values[i])
@@ -235,11 +224,6 @@ func (ws *WorkflowStage) QueryProject() *ProjectQuery {
 // QuerySteps queries the "steps" edge of the WorkflowStage entity.
 func (ws *WorkflowStage) QuerySteps() *WorkflowStepQuery {
 	return NewWorkflowStageClient(ws.config).QuerySteps(ws)
-}
-
-// QueryExecutions queries the "executions" edge of the WorkflowStage entity.
-func (ws *WorkflowStage) QueryExecutions() *WorkflowStageExecutionQuery {
-	return NewWorkflowStageClient(ws.config).QueryExecutions(ws)
 }
 
 // QueryWorkflow queries the "workflow" edge of the WorkflowStage entity.
@@ -298,11 +282,11 @@ func (ws *WorkflowStage) String() string {
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", ws.WorkflowID))
 	builder.WriteString(", ")
-	builder.WriteString("step_ids=")
-	builder.WriteString(fmt.Sprintf("%v", ws.StepIds))
-	builder.WriteString(", ")
 	builder.WriteString("dependencies=")
 	builder.WriteString(fmt.Sprintf("%v", ws.Dependencies))
+	builder.WriteString(", ")
+	builder.WriteString("order=")
+	builder.WriteString(fmt.Sprintf("%v", ws.Order))
 	builder.WriteByte(')')
 	return builder.String()
 }

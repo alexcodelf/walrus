@@ -40,12 +40,8 @@ type Workflow struct {
 	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the environment that this workflow belongs to.
 	EnvironmentID object.ID `json:"environment_id,omitempty"`
-	// Display name is the human readable name that is shown to the user.
-	DisplayName string `json:"display_name,omitempty"`
 	// Type of the workflow.
 	Type string `json:"type,omitempty"`
-	// ID list of the stages that belong to this workflow.
-	StageIds []object.ID `json:"stage_ids,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `json:"parallelism,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -103,13 +99,13 @@ func (*Workflow) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflow.FieldLabels, workflow.FieldAnnotations, workflow.FieldStageIds:
+		case workflow.FieldLabels, workflow.FieldAnnotations:
 			values[i] = new([]byte)
 		case workflow.FieldID, workflow.FieldProjectID, workflow.FieldEnvironmentID:
 			values[i] = new(object.ID)
 		case workflow.FieldParallelism:
 			values[i] = new(sql.NullInt64)
-		case workflow.FieldName, workflow.FieldDescription, workflow.FieldDisplayName, workflow.FieldType:
+		case workflow.FieldName, workflow.FieldDescription, workflow.FieldType:
 			values[i] = new(sql.NullString)
 		case workflow.FieldCreateTime, workflow.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -188,25 +184,11 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				w.EnvironmentID = *value
 			}
-		case workflow.FieldDisplayName:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field display_name", values[i])
-			} else if value.Valid {
-				w.DisplayName = value.String
-			}
 		case workflow.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
 				w.Type = value.String
-			}
-		case workflow.FieldStageIds:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field stage_ids", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &w.StageIds); err != nil {
-					return fmt.Errorf("unmarshal field stage_ids: %w", err)
-				}
 			}
 		case workflow.FieldParallelism:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -293,14 +275,8 @@ func (w *Workflow) String() string {
 	builder.WriteString("environment_id=")
 	builder.WriteString(fmt.Sprintf("%v", w.EnvironmentID))
 	builder.WriteString(", ")
-	builder.WriteString("display_name=")
-	builder.WriteString(w.DisplayName)
-	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(w.Type)
-	builder.WriteString(", ")
-	builder.WriteString("stage_ids=")
-	builder.WriteString(fmt.Sprintf("%v", w.StageIds))
 	builder.WriteString(", ")
 	builder.WriteString("parallelism=")
 	builder.WriteString(fmt.Sprintf("%v", w.Parallelism))

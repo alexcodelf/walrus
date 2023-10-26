@@ -39,14 +39,16 @@ const (
 	FieldProjectID = "project_id"
 	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
 	FieldWorkflowID = "workflow_id"
-	// FieldStageID holds the string denoting the stage_id field in the database.
-	FieldStageID = "stage_id"
+	// FieldWorkflowStageID holds the string denoting the workflow_stage_id field in the database.
+	FieldWorkflowStageID = "workflow_stage_id"
 	// FieldSpec holds the string denoting the spec field in the database.
 	FieldSpec = "spec"
 	// FieldInput holds the string denoting the input field in the database.
 	FieldInput = "input"
 	// FieldOutput holds the string denoting the output field in the database.
 	FieldOutput = "output"
+	// FieldOrder holds the string denoting the order field in the database.
+	FieldOrder = "order"
 	// FieldDependencies holds the string denoting the dependencies field in the database.
 	FieldDependencies = "dependencies"
 	// FieldRetryStrategy holds the string denoting the retrystrategy field in the database.
@@ -55,8 +57,6 @@ const (
 	FieldTimeout = "timeout"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
-	// EdgeExecutions holds the string denoting the executions edge name in mutations.
-	EdgeExecutions = "executions"
 	// EdgeStage holds the string denoting the stage edge name in mutations.
 	EdgeStage = "stage"
 	// Table holds the table name of the workflowstep in the database.
@@ -68,20 +68,13 @@ const (
 	ProjectInverseTable = "projects"
 	// ProjectColumn is the table column denoting the project relation/edge.
 	ProjectColumn = "project_id"
-	// ExecutionsTable is the table that holds the executions relation/edge.
-	ExecutionsTable = "workflow_step_executions"
-	// ExecutionsInverseTable is the table name for the WorkflowStepExecution entity.
-	// It exists in this package in order to avoid circular dependency with the "workflowstepexecution" package.
-	ExecutionsInverseTable = "workflow_step_executions"
-	// ExecutionsColumn is the table column denoting the executions relation/edge.
-	ExecutionsColumn = "workflow_step_id"
 	// StageTable is the table that holds the stage relation/edge.
 	StageTable = "workflow_steps"
 	// StageInverseTable is the table name for the WorkflowStage entity.
 	// It exists in this package in order to avoid circular dependency with the "workflowstage" package.
 	StageInverseTable = "workflow_stages"
 	// StageColumn is the table column denoting the stage relation/edge.
-	StageColumn = "stage_id"
+	StageColumn = "workflow_stage_id"
 )
 
 // Columns holds all SQL columns for workflowstep fields.
@@ -96,10 +89,11 @@ var Columns = []string{
 	FieldType,
 	FieldProjectID,
 	FieldWorkflowID,
-	FieldStageID,
+	FieldWorkflowStageID,
 	FieldSpec,
 	FieldInput,
 	FieldOutput,
+	FieldOrder,
 	FieldDependencies,
 	FieldRetryStrategy,
 	FieldTimeout,
@@ -141,6 +135,10 @@ var (
 	ProjectIDValidator func(string) error
 	// WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
 	WorkflowIDValidator func(string) error
+	// DefaultOrder holds the default value on creation for the "order" field.
+	DefaultOrder int
+	// OrderValidator is a validator for the "order" field. It is called by the builders before save.
+	OrderValidator func(int) error
 	// DefaultDependencies holds the default value on creation for the "dependencies" field.
 	DefaultDependencies []object.ID
 	// DefaultTimeout holds the default value on creation for the "timeout" field.
@@ -192,9 +190,14 @@ func ByWorkflowID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWorkflowID, opts...).ToFunc()
 }
 
-// ByStageID orders the results by the stage_id field.
-func ByStageID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStageID, opts...).ToFunc()
+// ByWorkflowStageID orders the results by the workflow_stage_id field.
+func ByWorkflowStageID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowStageID, opts...).ToFunc()
+}
+
+// ByOrder orders the results by the order field.
+func ByOrder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOrder, opts...).ToFunc()
 }
 
 // ByTimeout orders the results by the timeout field.
@@ -209,20 +212,6 @@ func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByExecutionsCount orders the results by executions count.
-func ByExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newExecutionsStep(), opts...)
-	}
-}
-
-// ByExecutions orders the results by executions terms.
-func ByExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByStageField orders the results by stage field.
 func ByStageField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -234,13 +223,6 @@ func newProjectStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProjectInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
-	)
-}
-func newExecutionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ExecutionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ExecutionsTable, ExecutionsColumn),
 	)
 }
 func newStageStep() *sqlgraph.Step {

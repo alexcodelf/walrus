@@ -7,7 +7,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
-	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
 func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *model.Workflow) error {
@@ -25,7 +24,6 @@ func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *mod
 
 	// Add new items.
 	newItems := entity.Edges.Stages
-	stageIDs := make([]object.ID, len(newItems))
 
 	for i := range newItems {
 		if newItems[i] == nil {
@@ -33,6 +31,7 @@ func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *mod
 		}
 		newItems[i].WorkflowID = entity.ID
 		newItems[i].ProjectID = entity.ProjectID
+		newItems[i].Order = i
 
 		newItems[i], err = mc.WorkflowStages().Create().
 			Set(newItems[i]).
@@ -40,14 +39,12 @@ func WorkflowStagesEdgeSave(ctx context.Context, mc model.ClientSet, entity *mod
 		if err != nil {
 			return err
 		}
-		stageIDs[i] = newItems[i].ID
 	}
 
 	entity.Edges.Stages = newItems // Feedback.
 
 	// Save workflow stage IDs.
 	err = mc.Workflows().UpdateOneID(entity.ID).
-		SetStageIds(stageIDs).
 		Exec(ctx)
 	if err != nil {
 		return err
@@ -64,7 +61,7 @@ func WorkflowStageStepsEdgeSave(ctx context.Context, mc model.ClientSet, entity 
 
 	// Delete stale items.
 	_, err := mc.WorkflowSteps().Delete().
-		Where(workflowstep.StageID(entity.ID)).
+		Where(workflowstep.WorkflowStageID(entity.ID)).
 		Exec(ctx)
 	if err != nil {
 		return err
@@ -72,15 +69,15 @@ func WorkflowStageStepsEdgeSave(ctx context.Context, mc model.ClientSet, entity 
 
 	// Add new items.
 	newItems := entity.Edges.Steps
-	stepIDs := make([]object.ID, len(newItems))
 
 	for i := range newItems {
 		if newItems[i] == nil {
 			return errors.New("invalid input: nil relationship")
 		}
-		newItems[i].StageID = entity.ID
+		newItems[i].WorkflowStageID = entity.ID
 		newItems[i].ProjectID = entity.ProjectID
 		newItems[i].WorkflowID = entity.WorkflowID
+		newItems[i].Order = i
 		// TODO avoid save in loop.
 		newItems[i], err = mc.WorkflowSteps().Create().
 			Set(newItems[i]).
@@ -88,18 +85,9 @@ func WorkflowStageStepsEdgeSave(ctx context.Context, mc model.ClientSet, entity 
 		if err != nil {
 			return err
 		}
-		stepIDs[i] = newItems[i].ID
 	}
 
 	entity.Edges.Steps = newItems // Feedback.
-
-	// Save workflow step IDs.
-	err = mc.WorkflowStages().UpdateOneID(entity.ID).
-		SetStepIds(stepIDs).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }

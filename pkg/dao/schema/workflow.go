@@ -40,16 +40,10 @@ func (Workflow) Fields() []ent.Field {
 			Comment("ID of the environment that this workflow belongs to.").
 			Optional().
 			Immutable(),
-		field.String("display_name").
-			Comment("Display name is the human readable name that is shown to the user.").
-			NotEmpty(),
 		field.String("type").
 			Comment("Type of the workflow.").
 			NotEmpty().
 			Immutable(),
-		field.JSON("stage_ids", []object.ID{}).
-			Comment("ID list of the stages that belong to this workflow.").
-			Default([]object.ID{}),
 		field.Int("parallelism").
 			Comment("Number of task pods that can be executed in parallel of workflow.").
 			Positive().

@@ -16,7 +16,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 
 	"github.com/seal-io/walrus/pkg/dao/model/internal"
@@ -89,24 +88,6 @@ func (wu *WorkflowUpdate) ClearAnnotations() *WorkflowUpdate {
 // SetUpdateTime sets the "update_time" field.
 func (wu *WorkflowUpdate) SetUpdateTime(t time.Time) *WorkflowUpdate {
 	wu.mutation.SetUpdateTime(t)
-	return wu
-}
-
-// SetDisplayName sets the "display_name" field.
-func (wu *WorkflowUpdate) SetDisplayName(s string) *WorkflowUpdate {
-	wu.mutation.SetDisplayName(s)
-	return wu
-}
-
-// SetStageIds sets the "stage_ids" field.
-func (wu *WorkflowUpdate) SetStageIds(o []object.ID) *WorkflowUpdate {
-	wu.mutation.SetStageIds(o)
-	return wu
-}
-
-// AppendStageIds appends o to the "stage_ids" field.
-func (wu *WorkflowUpdate) AppendStageIds(o []object.ID) *WorkflowUpdate {
-	wu.mutation.AppendStageIds(o)
 	return wu
 }
 
@@ -252,11 +233,6 @@ func (wu *WorkflowUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (wu *WorkflowUpdate) check() error {
-	if v, ok := wu.mutation.DisplayName(); ok {
-		if err := workflow.DisplayNameValidator(v); err != nil {
-			return &ValidationError{Name: "display_name", err: fmt.Errorf(`model: validator failed for field "Workflow.display_name": %w`, err)}
-		}
-	}
 	if v, ok := wu.mutation.Parallelism(); ok {
 		if err := workflow.ParallelismValidator(v); err != nil {
 			return &ValidationError{Name: "parallelism", err: fmt.Errorf(`model: validator failed for field "Workflow.parallelism": %w`, err)}
@@ -314,8 +290,6 @@ func (wu *WorkflowUpdate) Set(obj *Workflow) *WorkflowUpdate {
 	if !reflect.ValueOf(obj.Annotations).IsZero() {
 		wu.SetAnnotations(obj.Annotations)
 	}
-	wu.SetDisplayName(obj.DisplayName)
-	wu.SetStageIds(obj.StageIds)
 	wu.SetParallelism(obj.Parallelism)
 
 	// With Default.
@@ -370,17 +344,6 @@ func (wu *WorkflowUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if wu.mutation.EnvironmentIDCleared() {
 		_spec.ClearField(workflow.FieldEnvironmentID, field.TypeString)
-	}
-	if value, ok := wu.mutation.DisplayName(); ok {
-		_spec.SetField(workflow.FieldDisplayName, field.TypeString, value)
-	}
-	if value, ok := wu.mutation.StageIds(); ok {
-		_spec.SetField(workflow.FieldStageIds, field.TypeJSON, value)
-	}
-	if value, ok := wu.mutation.AppendedStageIds(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflow.FieldStageIds, value)
-		})
 	}
 	if value, ok := wu.mutation.Parallelism(); ok {
 		_spec.SetField(workflow.FieldParallelism, field.TypeInt, value)
@@ -559,24 +522,6 @@ func (wuo *WorkflowUpdateOne) SetUpdateTime(t time.Time) *WorkflowUpdateOne {
 	return wuo
 }
 
-// SetDisplayName sets the "display_name" field.
-func (wuo *WorkflowUpdateOne) SetDisplayName(s string) *WorkflowUpdateOne {
-	wuo.mutation.SetDisplayName(s)
-	return wuo
-}
-
-// SetStageIds sets the "stage_ids" field.
-func (wuo *WorkflowUpdateOne) SetStageIds(o []object.ID) *WorkflowUpdateOne {
-	wuo.mutation.SetStageIds(o)
-	return wuo
-}
-
-// AppendStageIds appends o to the "stage_ids" field.
-func (wuo *WorkflowUpdateOne) AppendStageIds(o []object.ID) *WorkflowUpdateOne {
-	wuo.mutation.AppendStageIds(o)
-	return wuo
-}
-
 // SetParallelism sets the "parallelism" field.
 func (wuo *WorkflowUpdateOne) SetParallelism(i int) *WorkflowUpdateOne {
 	wuo.mutation.ResetParallelism()
@@ -732,11 +677,6 @@ func (wuo *WorkflowUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (wuo *WorkflowUpdateOne) check() error {
-	if v, ok := wuo.mutation.DisplayName(); ok {
-		if err := workflow.DisplayNameValidator(v); err != nil {
-			return &ValidationError{Name: "display_name", err: fmt.Errorf(`model: validator failed for field "Workflow.display_name": %w`, err)}
-		}
-	}
 	if v, ok := wuo.mutation.Parallelism(); ok {
 		if err := workflow.ParallelismValidator(v); err != nil {
 			return &ValidationError{Name: "parallelism", err: fmt.Errorf(`model: validator failed for field "Workflow.parallelism": %w`, err)}
@@ -810,12 +750,6 @@ func (wuo *WorkflowUpdateOne) Set(obj *Workflow) *WorkflowUpdateOne {
 					wuo.SetAnnotations(obj.Annotations)
 				}
 			}
-			if db.DisplayName != obj.DisplayName {
-				wuo.SetDisplayName(obj.DisplayName)
-			}
-			if !reflect.DeepEqual(db.StageIds, obj.StageIds) {
-				wuo.SetStageIds(obj.StageIds)
-			}
 			if db.Parallelism != obj.Parallelism {
 				wuo.SetParallelism(obj.Parallelism)
 			}
@@ -877,12 +811,6 @@ func (wuo *WorkflowUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx context
 		}
 		if _, set := wuo.mutation.Field(workflow.FieldAnnotations); set {
 			obj.Annotations = x.Annotations
-		}
-		if _, set := wuo.mutation.Field(workflow.FieldDisplayName); set {
-			obj.DisplayName = x.DisplayName
-		}
-		if _, set := wuo.mutation.Field(workflow.FieldStageIds); set {
-			obj.StageIds = x.StageIds
 		}
 		if _, set := wuo.mutation.Field(workflow.FieldParallelism); set {
 			obj.Parallelism = x.Parallelism
@@ -980,17 +908,6 @@ func (wuo *WorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Workflow, err
 	}
 	if wuo.mutation.EnvironmentIDCleared() {
 		_spec.ClearField(workflow.FieldEnvironmentID, field.TypeString)
-	}
-	if value, ok := wuo.mutation.DisplayName(); ok {
-		_spec.SetField(workflow.FieldDisplayName, field.TypeString, value)
-	}
-	if value, ok := wuo.mutation.StageIds(); ok {
-		_spec.SetField(workflow.FieldStageIds, field.TypeJSON, value)
-	}
-	if value, ok := wuo.mutation.AppendedStageIds(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflow.FieldStageIds, value)
-		})
 	}
 	if value, ok := wuo.mutation.Parallelism(); ok {
 		_spec.SetField(workflow.FieldParallelism, field.TypeInt, value)

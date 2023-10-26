@@ -22,7 +22,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/internal"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
-	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -92,18 +91,6 @@ func (wsu *WorkflowStageUpdate) SetUpdateTime(t time.Time) *WorkflowStageUpdate 
 	return wsu
 }
 
-// SetStepIds sets the "step_ids" field.
-func (wsu *WorkflowStageUpdate) SetStepIds(o []object.ID) *WorkflowStageUpdate {
-	wsu.mutation.SetStepIds(o)
-	return wsu
-}
-
-// AppendStepIds appends o to the "step_ids" field.
-func (wsu *WorkflowStageUpdate) AppendStepIds(o []object.ID) *WorkflowStageUpdate {
-	wsu.mutation.AppendStepIds(o)
-	return wsu
-}
-
 // SetDependencies sets the "dependencies" field.
 func (wsu *WorkflowStageUpdate) SetDependencies(o []object.ID) *WorkflowStageUpdate {
 	wsu.mutation.SetDependencies(o)
@@ -113,6 +100,27 @@ func (wsu *WorkflowStageUpdate) SetDependencies(o []object.ID) *WorkflowStageUpd
 // AppendDependencies appends o to the "dependencies" field.
 func (wsu *WorkflowStageUpdate) AppendDependencies(o []object.ID) *WorkflowStageUpdate {
 	wsu.mutation.AppendDependencies(o)
+	return wsu
+}
+
+// SetOrder sets the "order" field.
+func (wsu *WorkflowStageUpdate) SetOrder(i int) *WorkflowStageUpdate {
+	wsu.mutation.ResetOrder()
+	wsu.mutation.SetOrder(i)
+	return wsu
+}
+
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wsu *WorkflowStageUpdate) SetNillableOrder(i *int) *WorkflowStageUpdate {
+	if i != nil {
+		wsu.SetOrder(*i)
+	}
+	return wsu
+}
+
+// AddOrder adds i to the "order" field.
+func (wsu *WorkflowStageUpdate) AddOrder(i int) *WorkflowStageUpdate {
+	wsu.mutation.AddOrder(i)
 	return wsu
 }
 
@@ -129,21 +137,6 @@ func (wsu *WorkflowStageUpdate) AddSteps(w ...*WorkflowStep) *WorkflowStageUpdat
 		ids[i] = w[i].ID
 	}
 	return wsu.AddStepIDs(ids...)
-}
-
-// AddExecutionIDs adds the "executions" edge to the WorkflowStageExecution entity by IDs.
-func (wsu *WorkflowStageUpdate) AddExecutionIDs(ids ...object.ID) *WorkflowStageUpdate {
-	wsu.mutation.AddExecutionIDs(ids...)
-	return wsu
-}
-
-// AddExecutions adds the "executions" edges to the WorkflowStageExecution entity.
-func (wsu *WorkflowStageUpdate) AddExecutions(w ...*WorkflowStageExecution) *WorkflowStageUpdate {
-	ids := make([]object.ID, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wsu.AddExecutionIDs(ids...)
 }
 
 // Mutation returns the WorkflowStageMutation object of the builder.
@@ -170,27 +163,6 @@ func (wsu *WorkflowStageUpdate) RemoveSteps(w ...*WorkflowStep) *WorkflowStageUp
 		ids[i] = w[i].ID
 	}
 	return wsu.RemoveStepIDs(ids...)
-}
-
-// ClearExecutions clears all "executions" edges to the WorkflowStageExecution entity.
-func (wsu *WorkflowStageUpdate) ClearExecutions() *WorkflowStageUpdate {
-	wsu.mutation.ClearExecutions()
-	return wsu
-}
-
-// RemoveExecutionIDs removes the "executions" edge to WorkflowStageExecution entities by IDs.
-func (wsu *WorkflowStageUpdate) RemoveExecutionIDs(ids ...object.ID) *WorkflowStageUpdate {
-	wsu.mutation.RemoveExecutionIDs(ids...)
-	return wsu
-}
-
-// RemoveExecutions removes "executions" edges to WorkflowStageExecution entities.
-func (wsu *WorkflowStageUpdate) RemoveExecutions(w ...*WorkflowStageExecution) *WorkflowStageUpdate {
-	ids := make([]object.ID, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wsu.RemoveExecutionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -237,6 +209,11 @@ func (wsu *WorkflowStageUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (wsu *WorkflowStageUpdate) check() error {
+	if v, ok := wsu.mutation.Order(); ok {
+		if err := workflowstage.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.order": %w`, err)}
+		}
+	}
 	if _, ok := wsu.mutation.ProjectID(); wsu.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStage.project"`)
 	}
@@ -292,8 +269,8 @@ func (wsu *WorkflowStageUpdate) Set(obj *WorkflowStage) *WorkflowStageUpdate {
 	if !reflect.ValueOf(obj.Annotations).IsZero() {
 		wsu.SetAnnotations(obj.Annotations)
 	}
-	wsu.SetStepIds(obj.StepIds)
 	wsu.SetDependencies(obj.Dependencies)
+	wsu.SetOrder(obj.Order)
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -345,14 +322,6 @@ func (wsu *WorkflowStageUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if value, ok := wsu.mutation.UpdateTime(); ok {
 		_spec.SetField(workflowstage.FieldUpdateTime, field.TypeTime, value)
 	}
-	if value, ok := wsu.mutation.StepIds(); ok {
-		_spec.SetField(workflowstage.FieldStepIds, field.TypeJSON, value)
-	}
-	if value, ok := wsu.mutation.AppendedStepIds(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflowstage.FieldStepIds, value)
-		})
-	}
 	if value, ok := wsu.mutation.Dependencies(); ok {
 		_spec.SetField(workflowstage.FieldDependencies, field.TypeJSON, value)
 	}
@@ -360,6 +329,12 @@ func (wsu *WorkflowStageUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, workflowstage.FieldDependencies, value)
 		})
+	}
+	if value, ok := wsu.mutation.Order(); ok {
+		_spec.SetField(workflowstage.FieldOrder, field.TypeInt, value)
+	}
+	if value, ok := wsu.mutation.AddedOrder(); ok {
+		_spec.AddField(workflowstage.FieldOrder, field.TypeInt, value)
 	}
 	if wsu.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -404,54 +379,6 @@ func (wsu *WorkflowStageUpdate) sqlSave(ctx context.Context) (n int, err error) 
 			},
 		}
 		edge.Schema = wsu.schemaConfig.WorkflowStep
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if wsu.mutation.ExecutionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   workflowstage.ExecutionsTable,
-			Columns: []string{workflowstage.ExecutionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsu.schemaConfig.WorkflowStageExecution
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := wsu.mutation.RemovedExecutionsIDs(); len(nodes) > 0 && !wsu.mutation.ExecutionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   workflowstage.ExecutionsTable,
-			Columns: []string{workflowstage.ExecutionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsu.schemaConfig.WorkflowStageExecution
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := wsu.mutation.ExecutionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   workflowstage.ExecutionsTable,
-			Columns: []string{workflowstage.ExecutionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsu.schemaConfig.WorkflowStageExecution
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -532,18 +459,6 @@ func (wsuo *WorkflowStageUpdateOne) SetUpdateTime(t time.Time) *WorkflowStageUpd
 	return wsuo
 }
 
-// SetStepIds sets the "step_ids" field.
-func (wsuo *WorkflowStageUpdateOne) SetStepIds(o []object.ID) *WorkflowStageUpdateOne {
-	wsuo.mutation.SetStepIds(o)
-	return wsuo
-}
-
-// AppendStepIds appends o to the "step_ids" field.
-func (wsuo *WorkflowStageUpdateOne) AppendStepIds(o []object.ID) *WorkflowStageUpdateOne {
-	wsuo.mutation.AppendStepIds(o)
-	return wsuo
-}
-
 // SetDependencies sets the "dependencies" field.
 func (wsuo *WorkflowStageUpdateOne) SetDependencies(o []object.ID) *WorkflowStageUpdateOne {
 	wsuo.mutation.SetDependencies(o)
@@ -553,6 +468,27 @@ func (wsuo *WorkflowStageUpdateOne) SetDependencies(o []object.ID) *WorkflowStag
 // AppendDependencies appends o to the "dependencies" field.
 func (wsuo *WorkflowStageUpdateOne) AppendDependencies(o []object.ID) *WorkflowStageUpdateOne {
 	wsuo.mutation.AppendDependencies(o)
+	return wsuo
+}
+
+// SetOrder sets the "order" field.
+func (wsuo *WorkflowStageUpdateOne) SetOrder(i int) *WorkflowStageUpdateOne {
+	wsuo.mutation.ResetOrder()
+	wsuo.mutation.SetOrder(i)
+	return wsuo
+}
+
+// SetNillableOrder sets the "order" field if the given value is not nil.
+func (wsuo *WorkflowStageUpdateOne) SetNillableOrder(i *int) *WorkflowStageUpdateOne {
+	if i != nil {
+		wsuo.SetOrder(*i)
+	}
+	return wsuo
+}
+
+// AddOrder adds i to the "order" field.
+func (wsuo *WorkflowStageUpdateOne) AddOrder(i int) *WorkflowStageUpdateOne {
+	wsuo.mutation.AddOrder(i)
 	return wsuo
 }
 
@@ -569,21 +505,6 @@ func (wsuo *WorkflowStageUpdateOne) AddSteps(w ...*WorkflowStep) *WorkflowStageU
 		ids[i] = w[i].ID
 	}
 	return wsuo.AddStepIDs(ids...)
-}
-
-// AddExecutionIDs adds the "executions" edge to the WorkflowStageExecution entity by IDs.
-func (wsuo *WorkflowStageUpdateOne) AddExecutionIDs(ids ...object.ID) *WorkflowStageUpdateOne {
-	wsuo.mutation.AddExecutionIDs(ids...)
-	return wsuo
-}
-
-// AddExecutions adds the "executions" edges to the WorkflowStageExecution entity.
-func (wsuo *WorkflowStageUpdateOne) AddExecutions(w ...*WorkflowStageExecution) *WorkflowStageUpdateOne {
-	ids := make([]object.ID, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wsuo.AddExecutionIDs(ids...)
 }
 
 // Mutation returns the WorkflowStageMutation object of the builder.
@@ -610,27 +531,6 @@ func (wsuo *WorkflowStageUpdateOne) RemoveSteps(w ...*WorkflowStep) *WorkflowSta
 		ids[i] = w[i].ID
 	}
 	return wsuo.RemoveStepIDs(ids...)
-}
-
-// ClearExecutions clears all "executions" edges to the WorkflowStageExecution entity.
-func (wsuo *WorkflowStageUpdateOne) ClearExecutions() *WorkflowStageUpdateOne {
-	wsuo.mutation.ClearExecutions()
-	return wsuo
-}
-
-// RemoveExecutionIDs removes the "executions" edge to WorkflowStageExecution entities by IDs.
-func (wsuo *WorkflowStageUpdateOne) RemoveExecutionIDs(ids ...object.ID) *WorkflowStageUpdateOne {
-	wsuo.mutation.RemoveExecutionIDs(ids...)
-	return wsuo
-}
-
-// RemoveExecutions removes "executions" edges to WorkflowStageExecution entities.
-func (wsuo *WorkflowStageUpdateOne) RemoveExecutions(w ...*WorkflowStageExecution) *WorkflowStageUpdateOne {
-	ids := make([]object.ID, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return wsuo.RemoveExecutionIDs(ids...)
 }
 
 // Where appends a list predicates to the WorkflowStageUpdate builder.
@@ -690,6 +590,11 @@ func (wsuo *WorkflowStageUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (wsuo *WorkflowStageUpdateOne) check() error {
+	if v, ok := wsuo.mutation.Order(); ok {
+		if err := workflowstage.OrderValidator(v); err != nil {
+			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStage.order": %w`, err)}
+		}
+	}
 	if _, ok := wsuo.mutation.ProjectID(); wsuo.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "WorkflowStage.project"`)
 	}
@@ -761,11 +666,11 @@ func (wsuo *WorkflowStageUpdateOne) Set(obj *WorkflowStage) *WorkflowStageUpdate
 					wsuo.SetAnnotations(obj.Annotations)
 				}
 			}
-			if !reflect.DeepEqual(db.StepIds, obj.StepIds) {
-				wsuo.SetStepIds(obj.StepIds)
-			}
 			if !reflect.DeepEqual(db.Dependencies, obj.Dependencies) {
 				wsuo.SetDependencies(obj.Dependencies)
+			}
+			if db.Order != obj.Order {
+				wsuo.SetOrder(obj.Order)
 			}
 
 			// With Default.
@@ -826,11 +731,11 @@ func (wsuo *WorkflowStageUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx c
 		if _, set := wsuo.mutation.Field(workflowstage.FieldAnnotations); set {
 			obj.Annotations = x.Annotations
 		}
-		if _, set := wsuo.mutation.Field(workflowstage.FieldStepIds); set {
-			obj.StepIds = x.StepIds
-		}
 		if _, set := wsuo.mutation.Field(workflowstage.FieldDependencies); set {
 			obj.Dependencies = x.Dependencies
+		}
+		if _, set := wsuo.mutation.Field(workflowstage.FieldOrder); set {
+			obj.Order = x.Order
 		}
 		obj.Edges = x.Edges
 	}
@@ -923,14 +828,6 @@ func (wsuo *WorkflowStageUpdateOne) sqlSave(ctx context.Context) (_node *Workflo
 	if value, ok := wsuo.mutation.UpdateTime(); ok {
 		_spec.SetField(workflowstage.FieldUpdateTime, field.TypeTime, value)
 	}
-	if value, ok := wsuo.mutation.StepIds(); ok {
-		_spec.SetField(workflowstage.FieldStepIds, field.TypeJSON, value)
-	}
-	if value, ok := wsuo.mutation.AppendedStepIds(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflowstage.FieldStepIds, value)
-		})
-	}
 	if value, ok := wsuo.mutation.Dependencies(); ok {
 		_spec.SetField(workflowstage.FieldDependencies, field.TypeJSON, value)
 	}
@@ -938,6 +835,12 @@ func (wsuo *WorkflowStageUpdateOne) sqlSave(ctx context.Context) (_node *Workflo
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, workflowstage.FieldDependencies, value)
 		})
+	}
+	if value, ok := wsuo.mutation.Order(); ok {
+		_spec.SetField(workflowstage.FieldOrder, field.TypeInt, value)
+	}
+	if value, ok := wsuo.mutation.AddedOrder(); ok {
+		_spec.AddField(workflowstage.FieldOrder, field.TypeInt, value)
 	}
 	if wsuo.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -982,54 +885,6 @@ func (wsuo *WorkflowStageUpdateOne) sqlSave(ctx context.Context) (_node *Workflo
 			},
 		}
 		edge.Schema = wsuo.schemaConfig.WorkflowStep
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if wsuo.mutation.ExecutionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   workflowstage.ExecutionsTable,
-			Columns: []string{workflowstage.ExecutionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsuo.schemaConfig.WorkflowStageExecution
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := wsuo.mutation.RemovedExecutionsIDs(); len(nodes) > 0 && !wsuo.mutation.ExecutionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   workflowstage.ExecutionsTable,
-			Columns: []string{workflowstage.ExecutionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsuo.schemaConfig.WorkflowStageExecution
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := wsuo.mutation.ExecutionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   workflowstage.ExecutionsTable,
-			Columns: []string{workflowstage.ExecutionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = wsuo.schemaConfig.WorkflowStageExecution
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}

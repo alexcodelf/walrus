@@ -16,7 +16,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 
 	"github.com/seal-io/walrus/pkg/dao/model/internal"
@@ -140,18 +139,6 @@ func (weu *WorkflowExecutionUpdate) AddDuration(i int) *WorkflowExecutionUpdate 
 	return weu
 }
 
-// SetStageExecutionIds sets the "stage_execution_ids" field.
-func (weu *WorkflowExecutionUpdate) SetStageExecutionIds(o []object.ID) *WorkflowExecutionUpdate {
-	weu.mutation.SetStageExecutionIds(o)
-	return weu
-}
-
-// AppendStageExecutionIds appends o to the "stage_execution_ids" field.
-func (weu *WorkflowExecutionUpdate) AppendStageExecutionIds(o []object.ID) *WorkflowExecutionUpdate {
-	weu.mutation.AppendStageExecutionIds(o)
-	return weu
-}
-
 // SetRecord sets the "record" field.
 func (weu *WorkflowExecutionUpdate) SetRecord(s string) *WorkflowExecutionUpdate {
 	weu.mutation.SetRecord(s)
@@ -162,20 +149,6 @@ func (weu *WorkflowExecutionUpdate) SetRecord(s string) *WorkflowExecutionUpdate
 func (weu *WorkflowExecutionUpdate) SetNillableRecord(s *string) *WorkflowExecutionUpdate {
 	if s != nil {
 		weu.SetRecord(*s)
-	}
-	return weu
-}
-
-// SetInput sets the "input" field.
-func (weu *WorkflowExecutionUpdate) SetInput(s string) *WorkflowExecutionUpdate {
-	weu.mutation.SetInput(s)
-	return weu
-}
-
-// SetNillableInput sets the "input" field if the given value is not nil.
-func (weu *WorkflowExecutionUpdate) SetNillableInput(s *string) *WorkflowExecutionUpdate {
-	if s != nil {
-		weu.SetInput(*s)
 	}
 	return weu
 }
@@ -344,9 +317,7 @@ func (weu *WorkflowExecutionUpdate) Set(obj *WorkflowExecution) *WorkflowExecuti
 	}
 	weu.SetProgress(obj.Progress)
 	weu.SetDuration(obj.Duration)
-	weu.SetStageExecutionIds(obj.StageExecutionIds)
 	weu.SetRecord(obj.Record)
-	weu.SetInput(obj.Input)
 	weu.SetTrigger(obj.Trigger)
 
 	// With Default.
@@ -414,19 +385,8 @@ func (weu *WorkflowExecutionUpdate) sqlSave(ctx context.Context) (n int, err err
 	if value, ok := weu.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowexecution.FieldDuration, field.TypeInt, value)
 	}
-	if value, ok := weu.mutation.StageExecutionIds(); ok {
-		_spec.SetField(workflowexecution.FieldStageExecutionIds, field.TypeJSON, value)
-	}
-	if value, ok := weu.mutation.AppendedStageExecutionIds(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflowexecution.FieldStageExecutionIds, value)
-		})
-	}
 	if value, ok := weu.mutation.Record(); ok {
 		_spec.SetField(workflowexecution.FieldRecord, field.TypeString, value)
-	}
-	if value, ok := weu.mutation.Input(); ok {
-		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
 	}
 	if value, ok := weu.mutation.Trigger(); ok {
 		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)
@@ -601,18 +561,6 @@ func (weuo *WorkflowExecutionUpdateOne) AddDuration(i int) *WorkflowExecutionUpd
 	return weuo
 }
 
-// SetStageExecutionIds sets the "stage_execution_ids" field.
-func (weuo *WorkflowExecutionUpdateOne) SetStageExecutionIds(o []object.ID) *WorkflowExecutionUpdateOne {
-	weuo.mutation.SetStageExecutionIds(o)
-	return weuo
-}
-
-// AppendStageExecutionIds appends o to the "stage_execution_ids" field.
-func (weuo *WorkflowExecutionUpdateOne) AppendStageExecutionIds(o []object.ID) *WorkflowExecutionUpdateOne {
-	weuo.mutation.AppendStageExecutionIds(o)
-	return weuo
-}
-
 // SetRecord sets the "record" field.
 func (weuo *WorkflowExecutionUpdateOne) SetRecord(s string) *WorkflowExecutionUpdateOne {
 	weuo.mutation.SetRecord(s)
@@ -623,20 +571,6 @@ func (weuo *WorkflowExecutionUpdateOne) SetRecord(s string) *WorkflowExecutionUp
 func (weuo *WorkflowExecutionUpdateOne) SetNillableRecord(s *string) *WorkflowExecutionUpdateOne {
 	if s != nil {
 		weuo.SetRecord(*s)
-	}
-	return weuo
-}
-
-// SetInput sets the "input" field.
-func (weuo *WorkflowExecutionUpdateOne) SetInput(s string) *WorkflowExecutionUpdateOne {
-	weuo.mutation.SetInput(s)
-	return weuo
-}
-
-// SetNillableInput sets the "input" field if the given value is not nil.
-func (weuo *WorkflowExecutionUpdateOne) SetNillableInput(s *string) *WorkflowExecutionUpdateOne {
-	if s != nil {
-		weuo.SetInput(*s)
 	}
 	return weuo
 }
@@ -840,14 +774,8 @@ func (weuo *WorkflowExecutionUpdateOne) Set(obj *WorkflowExecution) *WorkflowExe
 			if db.Duration != obj.Duration {
 				weuo.SetDuration(obj.Duration)
 			}
-			if !reflect.DeepEqual(db.StageExecutionIds, obj.StageExecutionIds) {
-				weuo.SetStageExecutionIds(obj.StageExecutionIds)
-			}
 			if db.Record != obj.Record {
 				weuo.SetRecord(obj.Record)
-			}
-			if db.Input != obj.Input {
-				weuo.SetInput(obj.Input)
 			}
 			if !reflect.DeepEqual(db.Trigger, obj.Trigger) {
 				weuo.SetTrigger(obj.Trigger)
@@ -920,14 +848,8 @@ func (weuo *WorkflowExecutionUpdateOne) SaveE(ctx context.Context, cbs ...func(c
 		if _, set := weuo.mutation.Field(workflowexecution.FieldDuration); set {
 			obj.Duration = x.Duration
 		}
-		if _, set := weuo.mutation.Field(workflowexecution.FieldStageExecutionIds); set {
-			obj.StageExecutionIds = x.StageExecutionIds
-		}
 		if _, set := weuo.mutation.Field(workflowexecution.FieldRecord); set {
 			obj.Record = x.Record
-		}
-		if _, set := weuo.mutation.Field(workflowexecution.FieldInput); set {
-			obj.Input = x.Input
 		}
 		if _, set := weuo.mutation.Field(workflowexecution.FieldTrigger); set {
 			obj.Trigger = x.Trigger
@@ -1038,19 +960,8 @@ func (weuo *WorkflowExecutionUpdateOne) sqlSave(ctx context.Context) (_node *Wor
 	if value, ok := weuo.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowexecution.FieldDuration, field.TypeInt, value)
 	}
-	if value, ok := weuo.mutation.StageExecutionIds(); ok {
-		_spec.SetField(workflowexecution.FieldStageExecutionIds, field.TypeJSON, value)
-	}
-	if value, ok := weuo.mutation.AppendedStageExecutionIds(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, workflowexecution.FieldStageExecutionIds, value)
-		})
-	}
 	if value, ok := weuo.mutation.Record(); ok {
 		_spec.SetField(workflowexecution.FieldRecord, field.TypeString, value)
-	}
-	if value, ok := weuo.mutation.Input(); ok {
-		_spec.SetField(workflowexecution.FieldInput, field.TypeString, value)
 	}
 	if value, ok := weuo.mutation.Trigger(); ok {
 		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)

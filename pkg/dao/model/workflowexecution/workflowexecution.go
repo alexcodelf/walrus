@@ -14,7 +14,6 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/seal-io/walrus/pkg/dao/types"
-	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
 const (
@@ -46,12 +45,8 @@ const (
 	FieldProgress = "progress"
 	// FieldDuration holds the string denoting the duration field in the database.
 	FieldDuration = "duration"
-	// FieldStageExecutionIds holds the string denoting the stage_execution_ids field in the database.
-	FieldStageExecutionIds = "stage_execution_ids"
 	// FieldRecord holds the string denoting the record field in the database.
 	FieldRecord = "record"
-	// FieldInput holds the string denoting the input field in the database.
-	FieldInput = "input"
 	// FieldTrigger holds the string denoting the trigger field in the database.
 	FieldTrigger = "trigger"
 	// EdgeProject holds the string denoting the project edge name in mutations.
@@ -100,9 +95,7 @@ var Columns = []string{
 	FieldSubjectID,
 	FieldProgress,
 	FieldDuration,
-	FieldStageExecutionIds,
 	FieldRecord,
-	FieldInput,
 	FieldTrigger,
 }
 
@@ -144,12 +137,8 @@ var (
 	DefaultDuration int
 	// DurationValidator is a validator for the "duration" field. It is called by the builders before save.
 	DurationValidator func(int) error
-	// DefaultStageExecutionIds holds the default value on creation for the "stage_execution_ids" field.
-	DefaultStageExecutionIds []object.ID
 	// DefaultRecord holds the default value on creation for the "record" field.
 	DefaultRecord string
-	// DefaultInput holds the default value on creation for the "input" field.
-	DefaultInput string
 	// DefaultTrigger holds the default value on creation for the "trigger" field.
 	DefaultTrigger types.WorkflowExecutionTrigger
 )
@@ -210,11 +199,6 @@ func ByDuration(opts ...sql.OrderTermOption) OrderOption {
 // ByRecord orders the results by the record field.
 func ByRecord(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRecord, opts...).ToFunc()
-}
-
-// ByInput orders the results by the input field.
-func ByInput(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldInput, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.

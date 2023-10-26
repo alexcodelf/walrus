@@ -20,13 +20,17 @@ func (h Handler) RouteGetLatestExecutionRequest(req RouteGetLatestExecutionReque
 		Order(model.Desc(workflowexecution.FieldCreateTime)).
 		WithStages(func(wsq *model.WorkflowStageExecutionQuery) {
 			wsq.WithSteps(func(weeq *model.WorkflowStepExecutionQuery) {
-				weeq.Order(model.Asc(workflowstepexecution.FieldCreateTime))
+				weeq.Order(model.Asc(workflowstepexecution.FieldOrder))
 			}).
-				Order(model.Asc(workflowstageexecution.FieldCreateTime))
+				Order(model.Asc(workflowstageexecution.FieldOrder))
 		}).
 		First(req.Context)
-	if err != nil {
+	if err != nil && !model.IsNotFound(err) {
 		return nil, err
+	}
+
+	if wf == nil {
+		return nil, nil
 	}
 
 	return model.ExposeWorkflowExecution(wf), nil
@@ -37,8 +41,8 @@ func (h Handler) RouteApplyRequest(req RouteApplyRequest) (RouteApplyResponse, e
 		Where(workflow.ID(req.ID)).
 		WithStages(func(wsq *model.WorkflowStageQuery) {
 			wsq.WithSteps(func(wsq *model.WorkflowStepQuery) {
-				wsq.Order(model.Asc(workflowstep.FieldCreateTime))
-			}).Order(model.Asc(workflowstage.FieldCreateTime))
+				wsq.Order(model.Asc(workflowstep.FieldOrder))
+			}).Order(model.Asc(workflowstage.FieldOrder))
 		}).
 		Only(req.Context)
 	if err != nil {

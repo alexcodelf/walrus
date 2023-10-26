@@ -15,7 +15,6 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
-	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -54,15 +53,15 @@ type WorkflowStepExecution struct {
 	// Type of the workflow step execution.
 	Type string `json:"type,omitempty"`
 	// Spec of the workflow step execution.
-	Spec map[string]any `json:"spec,omitempty"`
+	Spec map[string]interface{} `json:"spec,omitempty"`
 	// Number of times that this workflow step execution has been executed.
 	Times int `json:"times,omitempty"`
 	// Duration of the workflow step execution.
 	Duration int `json:"duration,omitempty"`
+	// Order of the workflow step execution.
+	Order int `json:"order,omitempty"`
 	// Log record of the workflow step execution.
 	Record string `json:"record,omitempty"`
-	// Input of the workflow step execution. It's the yaml file that defines the workflow step execution.
-	Input string `json:"input,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WorkflowStepExecutionQuery when eager-loading is set.
 	Edges        WorkflowStepExecutionEdges `json:"edges,omitempty"`
@@ -73,13 +72,11 @@ type WorkflowStepExecution struct {
 type WorkflowStepExecutionEdges struct {
 	// Project to which the workflow step execution belongs.
 	Project *Project `json:"project,omitempty"`
-	// Workflow step that this workflow step execution belongs to.
-	Step *WorkflowStep `json:"step,omitempty"`
 	// Workflow stage execution that this workflow step execution belongs to.
 	StageExecution *WorkflowStageExecution `json:"stage_execution,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [2]bool
 }
 
 // ProjectOrErr returns the Project value or an error if the edge
@@ -95,23 +92,10 @@ func (e WorkflowStepExecutionEdges) ProjectOrErr() (*Project, error) {
 	return nil, &NotLoadedError{edge: "project"}
 }
 
-// StepOrErr returns the Step value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e WorkflowStepExecutionEdges) StepOrErr() (*WorkflowStep, error) {
-	if e.loadedTypes[1] {
-		if e.Step == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: workflowstep.Label}
-		}
-		return e.Step, nil
-	}
-	return nil, &NotLoadedError{edge: "step"}
-}
-
 // StageExecutionOrErr returns the StageExecution value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowStepExecutionEdges) StageExecutionOrErr() (*WorkflowStageExecution, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		if e.StageExecution == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflowstageexecution.Label}
@@ -130,9 +114,9 @@ func (*WorkflowStepExecution) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case workflowstepexecution.FieldID, workflowstepexecution.FieldWorkflowStepID, workflowstepexecution.FieldWorkflowExecutionID, workflowstepexecution.FieldWorkflowStageExecutionID, workflowstepexecution.FieldProjectID, workflowstepexecution.FieldWorkflowID:
 			values[i] = new(object.ID)
-		case workflowstepexecution.FieldTimes, workflowstepexecution.FieldDuration:
+		case workflowstepexecution.FieldTimes, workflowstepexecution.FieldDuration, workflowstepexecution.FieldOrder:
 			values[i] = new(sql.NullInt64)
-		case workflowstepexecution.FieldName, workflowstepexecution.FieldDescription, workflowstepexecution.FieldType, workflowstepexecution.FieldRecord, workflowstepexecution.FieldInput:
+		case workflowstepexecution.FieldName, workflowstepexecution.FieldDescription, workflowstepexecution.FieldType, workflowstepexecution.FieldRecord:
 			values[i] = new(sql.NullString)
 		case workflowstepexecution.FieldCreateTime, workflowstepexecution.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -263,17 +247,17 @@ func (wse *WorkflowStepExecution) assignValues(columns []string, values []any) e
 			} else if value.Valid {
 				wse.Duration = int(value.Int64)
 			}
+		case workflowstepexecution.FieldOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field order", values[i])
+			} else if value.Valid {
+				wse.Order = int(value.Int64)
+			}
 		case workflowstepexecution.FieldRecord:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field record", values[i])
 			} else if value.Valid {
 				wse.Record = value.String
-			}
-		case workflowstepexecution.FieldInput:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field input", values[i])
-			} else if value.Valid {
-				wse.Input = value.String
 			}
 		default:
 			wse.selectValues.Set(columns[i], values[i])
@@ -291,11 +275,6 @@ func (wse *WorkflowStepExecution) Value(name string) (ent.Value, error) {
 // QueryProject queries the "project" edge of the WorkflowStepExecution entity.
 func (wse *WorkflowStepExecution) QueryProject() *ProjectQuery {
 	return NewWorkflowStepExecutionClient(wse.config).QueryProject(wse)
-}
-
-// QueryStep queries the "step" edge of the WorkflowStepExecution entity.
-func (wse *WorkflowStepExecution) QueryStep() *WorkflowStepQuery {
-	return NewWorkflowStepExecutionClient(wse.config).QueryStep(wse)
 }
 
 // QueryStageExecution queries the "stage_execution" edge of the WorkflowStepExecution entity.
@@ -378,11 +357,11 @@ func (wse *WorkflowStepExecution) String() string {
 	builder.WriteString("duration=")
 	builder.WriteString(fmt.Sprintf("%v", wse.Duration))
 	builder.WriteString(", ")
+	builder.WriteString("order=")
+	builder.WriteString(fmt.Sprintf("%v", wse.Order))
+	builder.WriteString(", ")
 	builder.WriteString("record=")
 	builder.WriteString(wse.Record)
-	builder.WriteString(", ")
-	builder.WriteString("input=")
-	builder.WriteString(wse.Input)
 	builder.WriteByte(')')
 	return builder.String()
 }
