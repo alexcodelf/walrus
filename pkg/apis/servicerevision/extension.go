@@ -10,10 +10,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
-	corev1 "k8s.io/api/core/v1"
 
 	revisionbus "github.com/seal-io/walrus/pkg/bus/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao"
@@ -24,13 +20,11 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/service"
 	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
-	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/deployer/terraform"
-	"github.com/seal-io/walrus/pkg/k8s"
 	"github.com/seal-io/walrus/pkg/operator"
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
 	"github.com/seal-io/walrus/pkg/serviceresources"
@@ -403,33 +397,11 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 			return err
 		}
 
-		// TODO use edge.
-		workflowExecution, err := h.modelClient.WorkflowExecutions().Query().
-			Where(workflowexecution.ID(stepExecution.WorkflowExecutionID)).
-			Only(ctx)
-		if err != nil {
-			return err
-		}
-
-		apiConfig := k8s.ToClientCmdApiConfig(h.kubeConfig)
-		clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
-
-		ctx, apiClient, err := apiclient.NewClientFromOpts(apiclient.Opts{
-			ClientConfigSupplier: func() clientcmd.ClientConfig {
-				return clientConfig
-			},
-			Context: ctx,
-		})
-		if err != nil {
-			return err
-		}
-
-		return workflow.StreamWorkflowLogs(ctx, workflow.StreamLogsOptions{
-			Workflow:  workflowExecution.Name,
-			ApiClient: apiClient,
-			Selector:  fmt.Sprintf("step-execution-id=%s", stepExecution.ID),
-			LogOptions: &corev1.PodLogOptions{
-				Container: "main",
+		return workflow.StreamWorkflowStepExecutionLogs(ctx, workflow.StreamWorkflowStepExecutionLogsOptions{
+			StepExecutionLogOptions: workflow.StepExecutionLogOptions{
+				ModelClient:   h.modelClient,
+				RestCfg:       h.kubeConfig,
+				StepExecution: stepExecution,
 			},
 			Out: out,
 		})

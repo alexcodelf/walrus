@@ -6,61 +6,59 @@ import (
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	revisionbus "github.com/seal-io/walrus/pkg/bus/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model"
-	"github.com/seal-io/walrus/pkg/dao/model/service"
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
+	pkgworkflow "github.com/seal-io/walrus/pkg/workflow"
 	"github.com/seal-io/walrus/pkg/workflow/step/types"
+	"github.com/seal-io/walrus/utils/log"
 	"github.com/seal-io/walrus/utils/topic"
 )
 
 func (h Handler) Update(req UpdateRequest) error {
-	entity := req.Model()
+	entity, err := h.modelClient.WorkflowStepExecutions().Query().
+		Where(workflowstepexecution.ID(req.ID)).
+		Only(req.Context)
+	if err != nil {
+		return err
+	}
 
 	switch req.Status {
 	case "Succeeded":
-		status.WorkflowStepExecutionStatusReady.Reset(entity, "")
+		status.WorkflowStepExecutionStatusRunning.True(entity, "")
 		status.WorkflowStepExecutionStatusReady.True(entity, "")
 	case "Error", "Failed":
-		status.WorkflowStepExecutionStatusRunning.Reset(entity, "")
 		status.WorkflowStepExecutionStatusRunning.False(entity, "execute failed")
 	case "Running":
-		status.WorkflowStepExecutionStatusRunning.Reset(entity, "")
+		status.WorkflowStepExecutionStatusRunning.Unknown(entity, "")
 	}
 
 	fmt.Println("开始了", req.ID, req.Status)
 
 	entity.Status.SetSummary(status.WalkWorkflowStepExecution(&entity.Status))
 
-	entity, err := h.modelClient.WorkflowStepExecutions().UpdateOne(entity).
-		SetRecord(req.Record).
-		SetDuration(req.Duration).
-		SetStatus(entity.Status).
-		Save(req.Context)
-	if err != nil {
-		return err
-	}
-
 	if entity.Type == types.StepTypeService.String() {
-		service, err := h.modelClient.Services().Query().
-			Where(service.WorkflowStepID(entity.WorkflowStepID)).
-			Only(req.Context)
-		if err != nil {
-			return err
+		if req.Status == "Running" {
+			return nil
 		}
 
 		latestRevision, err := h.modelClient.ServiceRevisions().Query().
-			Where(servicerevision.ServiceID(service.ID)).
+			Where(servicerevision.WorkflowStepExecutionID(req.ID)).
 			Order(model.Desc(servicerevision.FieldCreateTime)).
-			First(req.Context)
-		if err != nil {
+			Only(req.Context)
+		if err != nil && !model.IsNotFound(err) {
 			return err
+		}
+
+		if latestRevision == nil {
+			log.WithName("workflowstepexecution").Info("no service revision found", "workflowStepExecutionID", req.ID)
+			return nil
 		}
 
 		switch req.Status {
 		case "Succeeded":
-			status.ServiceRevisionStatusReady.Reset(latestRevision, "")
+			status.ServiceRevisionStatusRunning.True(latestRevision, "")
 			status.ServiceRevisionStatusReady.True(latestRevision, "")
 
 		case "Failed", "Error":
@@ -78,10 +76,30 @@ func (h Handler) Update(req UpdateRequest) error {
 			return err
 		}
 
-		return revisionbus.Notify(req.Context, h.modelClient, latestRevision)
+		err = revisionbus.Notify(req.Context, h.modelClient, latestRevision)
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
+	// If the record is empty, get it from workflow step logs from pod.
+	if req.Record == "" {
+		logs, err := pkgworkflow.GetWorkflowStepExecutionLogs(req.Context, pkgworkflow.StepExecutionLogOptions{
+			RestCfg:       h.k8sConfig,
+			ModelClient:   h.modelClient,
+			StepExecution: entity,
+		})
+		if err != nil {
+			return err
+		}
+		req.Record = string(logs)
+	}
+
+	return h.modelClient.WorkflowStepExecutions().UpdateOne(entity).
+		SetRecord(req.Record).
+		SetDuration(req.Duration).
+		SetStatus(entity.Status).
+		Exec(req.Context)
 }
 
 var (

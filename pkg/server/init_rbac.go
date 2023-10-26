@@ -266,6 +266,20 @@ func createSubjects(ctx context.Context, mc model.ClientSet) error {
 			},
 			Builtin: true,
 		},
+		{
+			Kind:        types.SubjectKindUser,
+			Domain:      types.SubjectDomainBuiltin,
+			Name:        "bot",
+			Description: "The bot user to execute background tasks.",
+			Edges: model.SubjectEdges{
+				Roles: []*model.SubjectRoleRelationship{
+					{
+						RoleID: types.SystemRoleAdmin,
+					},
+				},
+			},
+			Builtin: true,
+		},
 	}
 
 	return mc.WithTx(ctx, func(tx *model.Tx) error {

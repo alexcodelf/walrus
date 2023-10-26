@@ -3,22 +3,21 @@ package workflow
 import (
 	"context"
 
-	"k8s.io/client-go/tools/clientcmd"
-
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
+	"k8s.io/client-go/rest"
 )
 
 // Apply applies the workflow execution to the argo workflow server.
 func Apply(
 	ctx context.Context,
 	mc model.ClientSet,
-	clientConfig clientcmd.ClientConfig,
+	restCfg *rest.Config,
 	wf *model.Workflow,
 ) (*model.WorkflowExecution, error) {
-	client, err := NewArgoWorkflowClient(mc, clientConfig)
+	client, err := NewArgoWorkflowClient(mc, restCfg)
 	if err != nil {
 		return nil, err
 	}

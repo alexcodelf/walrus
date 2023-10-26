@@ -19,6 +19,7 @@ import (
 	"github.com/seal-io/walrus/utils/strs"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
@@ -88,7 +89,7 @@ func (t *TemplateManager) GetWorkflowExecutionWorkflow(
 
 	wf := &v1alpha1.Workflow{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("%s-%s", workflowExecution.Name, workflowExecution.WorkflowID.String()),
+			Name: fmt.Sprintf("%s-%s", workflowExecution.Name, workflowExecution.ID.String()),
 		},
 		Spec: v1alpha1.WorkflowSpec{
 			Entrypoint: "entrypoint",
@@ -213,6 +214,7 @@ func (t *TemplateManager) GetWorkflowExecutionTemplates(
 
 // getExitTemplate returns template for workflow exit handler.
 func (t *TemplateManager) GetWorkflowExecutionExitTemplate(wf *model.WorkflowExecution) *v1alpha1.Template {
+	limit := intstr.FromInt(3)
 	return &v1alpha1.Template{
 		Name: workflowExitTemplateName,
 		Inputs: v1alpha1.Inputs{
@@ -245,6 +247,10 @@ func (t *TemplateManager) GetWorkflowExecutionExitTemplate(wf *model.WorkflowExe
 				"status": "{{workflow.status}}",
 				"id": "{{inputs.parameters.workflowExecutionID}}"
 			}`,
+		},
+		RetryStrategy: &v1alpha1.RetryStrategy{
+			RetryPolicy: v1alpha1.RetryPolicyOnFailure,
+			Limit:       &limit,
 		},
 	}
 }
@@ -306,6 +312,7 @@ func (t *TemplateManager) GetStageExecutionStatusTemplate(
 	name string,
 	stageExecution *model.WorkflowStageExecution,
 ) *v1alpha1.Template {
+	limit := intstr.FromInt(3)
 	return &v1alpha1.Template{
 		Name: name,
 		Inputs: v1alpha1.Inputs{
@@ -346,6 +353,10 @@ func (t *TemplateManager) GetStageExecutionStatusTemplate(
 			}`,
 			SuccessCondition:   "response.statusCode >= 200 && response.statusCode < 300",
 			InsecureSkipVerify: !apiconfig.TlsCertified.Get(),
+		},
+		RetryStrategy: &v1alpha1.RetryStrategy{
+			RetryPolicy: v1alpha1.RetryPolicyOnFailure,
+			Limit:       &limit,
 		},
 	}
 }
@@ -482,6 +493,7 @@ func (t *TemplateManager) GetStepExecutionStatusTemplate(
 	name string,
 	stepExecution *model.WorkflowStepExecution,
 ) *v1alpha1.Template {
+	limit := intstr.FromInt(3)
 	return &v1alpha1.Template{
 		Name: name,
 		Inputs: v1alpha1.Inputs{
@@ -527,6 +539,10 @@ func (t *TemplateManager) GetStepExecutionStatusTemplate(
 			}`,
 			SuccessCondition:   "response.statusCode >= 200 && response.statusCode < 300",
 			InsecureSkipVerify: !apiconfig.TlsCertified.Get(),
+		},
+		RetryStrategy: &v1alpha1.RetryStrategy{
+			RetryPolicy: v1alpha1.RetryPolicyOnFailure,
+			Limit:       &limit,
 		},
 	}
 }

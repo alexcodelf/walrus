@@ -3,17 +3,22 @@ package workflow
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
 	"github.com/argoproj/argo-workflows/v3/pkg/apiclient/workflow"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 
+	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
+	"github.com/seal-io/walrus/utils/strs"
 )
 
-// StreamLogsOptions contains options for streaming workflow logs.
-type StreamLogsOptions struct {
+// LogOptions contains options for workflow logs.
+type LogOptions struct {
 	Workflow   string
 	PodName    string
 	Grep       string
@@ -27,7 +32,7 @@ type StreamLogsOptions struct {
 // With selector step-execution-id=stepExecutionID it can filter logs by step name.
 func StreamWorkflowLogs(
 	ctx context.Context,
-	opts StreamLogsOptions,
+	opts LogOptions,
 ) error {
 	serviceClient := opts.ApiClient.NewWorkflowServiceClient()
 
@@ -60,4 +65,97 @@ func StreamWorkflowLogs(
 	}
 }
 
-func GetWorkflowTemplateLogs() {}
+type StepExecutionLogOptions struct {
+	ModelClient   model.ClientSet
+	RestCfg       *rest.Config
+	StepExecution *model.WorkflowStepExecution
+}
+
+func GetWorkflowStepExecutionLogs(ctx context.Context, opts StepExecutionLogOptions) ([]byte, error) {
+	apiClient, err := NewArgoAPIClient(opts.RestCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	workflowExecution, err := opts.ModelClient.WorkflowExecutions().Query().
+		Where(workflowexecution.ID(opts.StepExecution.WorkflowExecutionID)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	logsClient, err := apiClient.NewWorkflowServiceClient().WorkflowLogs(apiClient.Ctx, &workflow.WorkflowLogRequest{
+		Name:      strs.Join(workflowExecution.Name, workflowExecution.ID.String()),
+		Namespace: types.WalrusWorkflowNamespace,
+		LogOptions: &corev1.PodLogOptions{
+			Container: "main",
+		},
+		Selector: fmt.Sprintf("step-execution-id=%s", opts.StepExecution.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	logs := []byte{}
+
+	for {
+		event, err := logsClient.Recv()
+		if errors.Is(err, io.EOF) {
+			return logs, nil
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		logs = append(logs, []byte(event.Content+"\n")...)
+	}
+}
+
+type StreamWorkflowStepExecutionLogsOptions struct {
+	StepExecutionLogOptions
+
+	Out io.Writer
+}
+
+func StreamWorkflowStepExecutionLogs(ctx context.Context, opts StreamWorkflowStepExecutionLogsOptions) error {
+	apiClient, err := NewArgoAPIClient(opts.RestCfg)
+	if err != nil {
+		return err
+	}
+
+	workflowExecution, err := opts.ModelClient.WorkflowExecutions().Query().
+		Where(workflowexecution.ID(opts.StepExecution.WorkflowExecutionID)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+
+	logsClient, err := apiClient.NewWorkflowServiceClient().WorkflowLogs(apiClient.Ctx, &workflow.WorkflowLogRequest{
+		Name:      strs.Join(workflowExecution.Name, workflowExecution.ID.String()),
+		Namespace: types.WalrusWorkflowNamespace,
+		LogOptions: &corev1.PodLogOptions{
+			Container: "main",
+		},
+		Selector: fmt.Sprintf("step-execution-id=%s", opts.StepExecution.ID),
+	})
+	if err != nil {
+		return err
+	}
+
+	for {
+		event, err := logsClient.Recv()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		_, err = opts.Out.Write([]byte(event.Content + "\n"))
+		if err != nil {
+			return err
+		}
+	}
+}

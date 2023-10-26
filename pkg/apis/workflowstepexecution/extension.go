@@ -13,6 +13,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/k8s"
 	"github.com/seal-io/walrus/pkg/workflow"
+	"github.com/seal-io/walrus/utils/strs"
 )
 
 func (h Handler) RouteLog(req RouteLogRequest) error {
@@ -56,8 +57,8 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 		return err
 	}
 
-	return workflow.StreamWorkflowLogs(ctx, workflow.StreamLogsOptions{
-		Workflow:  workflowExec.Name,
+	return workflow.StreamWorkflowLogs(ctx, workflow.LogOptions{
+		Workflow:  strs.Join(workflowExec.Name, workflowExec.ID.String()),
 		ApiClient: apiClient,
 		Selector:  fmt.Sprintf("step-execution-id=%s", wse.ID),
 		LogOptions: &corev1.PodLogOptions{
@@ -75,12 +76,7 @@ func (h Handler) RouteApprove(req RouteApproveRequest) error {
 		return err
 	}
 
-	// Check permission to approve.
-
-	apiConfig := k8s.ToClientCmdApiConfig(h.k8sConfig)
-	clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
-
-	client, err := workflow.NewArgoWorkflowClient(h.modelClient, clientConfig)
+	client, err := workflow.NewArgoWorkflowClient(h.modelClient, h.k8sConfig)
 	if err != nil {
 		return err
 	}
