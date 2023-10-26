@@ -85,7 +85,7 @@ func GetWorkflowStepExecutionLogs(ctx context.Context, opts StepExecutionLogOpti
 	}
 
 	logsClient, err := apiClient.NewWorkflowServiceClient().WorkflowLogs(apiClient.Ctx, &workflow.WorkflowLogRequest{
-		Name:      strs.Join(workflowExecution.Name, workflowExecution.ID.String()),
+		Name:      strs.Join("-", workflowExecution.Name, workflowExecution.ID.String()),
 		Namespace: types.WalrusWorkflowNamespace,
 		LogOptions: &corev1.PodLogOptions{
 			Container: "main",
@@ -132,7 +132,7 @@ func StreamWorkflowStepExecutionLogs(ctx context.Context, opts StreamWorkflowSte
 	}
 
 	logsClient, err := apiClient.NewWorkflowServiceClient().WorkflowLogs(apiClient.Ctx, &workflow.WorkflowLogRequest{
-		Name:      strs.Join(workflowExecution.Name, workflowExecution.ID.String()),
+		Name:      strs.Join("-", workflowExecution.Name, workflowExecution.ID.String()),
 		Namespace: types.WalrusWorkflowNamespace,
 		LogOptions: &corev1.PodLogOptions{
 			Container: "main",

@@ -2,18 +2,10 @@ package workflowstepexecution
 
 import (
 	"context"
-	"fmt"
 	"io"
 
-	"github.com/argoproj/argo-workflows/v3/pkg/apiclient"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
-	"github.com/seal-io/walrus/pkg/k8s"
 	"github.com/seal-io/walrus/pkg/workflow"
-	"github.com/seal-io/walrus/utils/strs"
 )
 
 func (h Handler) RouteLog(req RouteLogRequest) error {
@@ -37,32 +29,11 @@ func (h Handler) RouteLog(req RouteLogRequest) error {
 		return err
 	}
 
-	workflowExec, err := h.modelClient.WorkflowExecutions().Query().
-		Where(workflowexecution.ID(wse.WorkflowExecutionID)).
-		Only(ctx)
-	if err != nil {
-		return err
-	}
-
-	apiConfig := k8s.ToClientCmdApiConfig(h.k8sConfig)
-	clientConfig := clientcmd.NewDefaultClientConfig(apiConfig, nil)
-
-	ctx, apiClient, err := apiclient.NewClientFromOpts(apiclient.Opts{
-		ClientConfigSupplier: func() clientcmd.ClientConfig {
-			return clientConfig
-		},
-		Context: ctx,
-	})
-	if err != nil {
-		return err
-	}
-
-	return workflow.StreamWorkflowLogs(ctx, workflow.LogOptions{
-		Workflow:  strs.Join(workflowExec.Name, workflowExec.ID.String()),
-		ApiClient: apiClient,
-		Selector:  fmt.Sprintf("step-execution-id=%s", wse.ID),
-		LogOptions: &corev1.PodLogOptions{
-			Container: "main",
+	return workflow.StreamWorkflowStepExecutionLogs(ctx, workflow.StreamWorkflowStepExecutionLogsOptions{
+		StepExecutionLogOptions: workflow.StepExecutionLogOptions{
+			RestCfg:       h.k8sConfig,
+			ModelClient:   h.modelClient,
+			StepExecution: wse,
 		},
 		Out: out,
 	})
