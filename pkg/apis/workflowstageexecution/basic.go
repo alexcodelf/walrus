@@ -2,7 +2,9 @@ package workflowstageexecution
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
@@ -10,7 +12,12 @@ import (
 )
 
 func (h Handler) Update(req UpdateRequest) error {
-	entity := req.Model()
+	entity, err := h.modelClient.WorkflowStageExecutions().Query().
+		Where(workflowstageexecution.ID(req.ID)).
+		Only(req.Context)
+	if err != nil {
+		return err
+	}
 
 	fmt.Println("stage execution update", entity.ID, req.Status)
 
@@ -29,10 +36,14 @@ func (h Handler) Update(req UpdateRequest) error {
 
 	entity.Status.SetSummary(status.WalkWorkflowStageExecution(&entity.Status))
 
-	entity, err := h.modelClient.WorkflowStageExecutions().UpdateOne(entity).
-		SetRecord(req.Record).
-		SetStatus(entity.Status).
-		Save(req.Context)
+	update := h.modelClient.WorkflowStageExecutions().UpdateOne(entity).
+		SetStatus(entity.Status)
+
+	if req.Status == "Succeeded" {
+		update.SetDuration(int(time.Since(*entity.CreateTime).Seconds()))
+	}
+
+	entity, err = update.Save(req.Context)
 	if err != nil {
 		return err
 	}

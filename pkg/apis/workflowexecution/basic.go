@@ -1,7 +1,7 @@
 package workflowexecution
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/dao/model"
@@ -32,9 +32,12 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 }
 
 func (h Handler) Update(req UpdateRequest) error {
-	entity := req.Model()
-
-	fmt.Println("workflow execution update", entity.ID, req.Status)
+	entity, err := h.modelClient.WorkflowExecutions().Query().
+		Where(workflowexecution.ID(req.ID)).
+		Only(req.Context)
+	if err != nil {
+		return err
+	}
 
 	switch req.Status {
 	case "Succeeded":
@@ -54,15 +57,11 @@ func (h Handler) Update(req UpdateRequest) error {
 	update := h.modelClient.WorkflowExecutions().UpdateOne(entity).
 		SetStatus(entity.Status)
 
-	if req.Record != "" {
-		update = update.SetRecord(req.Record)
+	if req.Status == "Succeeded" {
+		update.SetDuration(int(time.Since(*entity.CreateTime).Seconds()))
 	}
 
-	if req.Duration > 0 {
-		update = update.SetDuration(req.Duration)
-	}
-
-	entity, err := update.Save(req.Context)
+	entity, err = update.Save(req.Context)
 	if err != nil {
 		return err
 	}
@@ -88,7 +87,7 @@ var (
 )
 
 func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse, int, error) {
-	query := h.modelClient.WithDebug().WorkflowExecutions().Query().
+	query := h.modelClient.WorkflowExecutions().Query().
 		Where(workflowexecution.WorkflowID(req.Workflow.ID))
 
 	if queries, ok := req.Querying(queryFields); ok {

@@ -18,6 +18,17 @@ import (
 	"github.com/seal-io/walrus/utils/topic"
 )
 
+func (h Handler) Get(req GetRequest) (GetResponse, error) {
+	entity, err := h.modelClient.WorkflowStepExecutions().Query().
+		Where(workflowstepexecution.ID(req.ID)).
+		Only(req.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	return model.ExposeWorkflowStepExecution(entity), nil
+}
+
 func (h Handler) Update(req UpdateRequest) error {
 	entity, err := h.modelClient.WorkflowStepExecutions().Query().
 		Where(workflowstepexecution.ID(req.ID)).
@@ -45,10 +56,6 @@ func (h Handler) Update(req UpdateRequest) error {
 
 	update := h.modelClient.WorkflowStepExecutions().UpdateOne(entity).
 		SetStatus(entity.Status)
-
-	if req.Record != "" {
-		update = update.SetRecord(req.Record)
-	}
 
 	if req.Duration > 0 {
 		update = update.SetDuration(req.Duration)
@@ -117,23 +124,13 @@ func (h Handler) Update(req UpdateRequest) error {
 		logger := log.WithName("workflowstepexecution")
 		subCtx := context.Background()
 		// If the record is empty, get it from workflow step logs from pod.
-		if req.Record == "" {
-			logs, err := pkgworkflow.GetWorkflowStepExecutionLogs(subCtx, pkgworkflow.StepExecutionLogOptions{
-				RestCfg:       h.k8sConfig,
-				ModelClient:   h.modelClient,
-				StepExecution: entity,
-			})
-			if err != nil {
-				logger.Error(err, "get workflow step execution logs failed")
-				return
-			}
-
-			err = h.modelClient.WorkflowStepExecutions().UpdateOne(entity).
-				SetRecord(string(logs)).
-				Exec(subCtx)
-			if err != nil {
-				logger.Error(err, "update workflow step execution record failed")
-			}
+		rerr := pkgworkflow.SetWorkflowStepExecutionLogs(subCtx, pkgworkflow.StepExecutionLogOptions{
+			RestCfg:       h.k8sConfig,
+			ModelClient:   h.modelClient,
+			StepExecution: entity,
+		})
+		if rerr != nil {
+			logger.Error(rerr, "failed to set workflow step execution logs")
 		}
 	})
 

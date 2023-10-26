@@ -159,3 +159,18 @@ func StreamWorkflowStepExecutionLogs(ctx context.Context, opts StreamWorkflowSte
 		}
 	}
 }
+
+func SetWorkflowStepExecutionLogs(ctx context.Context, opts StepExecutionLogOptions) error {
+	logs, err := GetWorkflowStepExecutionLogs(ctx, StepExecutionLogOptions{
+		RestCfg:       opts.RestCfg,
+		ModelClient:   opts.ModelClient,
+		StepExecution: opts.StepExecution,
+	})
+	if err != nil {
+		return err
+	}
+
+	return opts.ModelClient.WorkflowStepExecutions().UpdateOne(opts.StepExecution).
+		SetRecord(string(logs)).
+		Exec(ctx)
+}

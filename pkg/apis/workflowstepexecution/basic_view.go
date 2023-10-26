@@ -4,6 +4,14 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 )
 
+type (
+	GetRequest struct {
+		model.WorkflowStepExecutionQueryInput `path:",inline"`
+	}
+
+	GetResponse = *model.WorkflowStepExecutionOutput
+)
+
 type UpdateRequest struct {
 	model.WorkflowStepExecutionUpdateInput `path:",inline" json:",inline"`
 
