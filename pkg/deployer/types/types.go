@@ -24,9 +24,7 @@ type Deployer interface {
 }
 
 // ApplyOptions holds the options of Deployer's Apply action.
-type ApplyOptions struct {
-}
+type ApplyOptions struct{}
 
 // DestroyOptions holds the options of Deployer's Destroy action.
-type DestroyOptions struct {
-}
+type DestroyOptions struct{}

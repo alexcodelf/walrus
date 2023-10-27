@@ -31,6 +31,10 @@ import (
 const (
 	JobTypeApply   = "apply"
 	JobTypeDestroy = "destroy"
+
+	// SecretMountPath the path to mount the secret.
+	// TODO (alex) make it more general.
+	SecretMountPath = "/var/terraform/secrets"
 )
 
 type JobCreateOptions struct {
@@ -65,8 +69,7 @@ const (
 	_jobNameFormat = "tf-job-%s-%s"
 	// _jobSecretPrefix the prefix of secret name.
 	_jobSecretPrefix = "tf-secret-"
-	// _secretMountPath the path to mount the secret.
-	_secretMountPath = "/var/terraform/secrets"
+
 	// _workdir the working directory of the job.
 	_workdir = "/var/terraform/workspace"
 )
@@ -118,15 +121,13 @@ func (r JobReconciler) syncApplicationRevisionStatus(ctx context.Context, job *b
 	}
 
 	// If the application revision status is not running, then skip it.
-	if !status.ServiceRevisionStatusReady.IsUnknown(appRevision) {
+	if !status.ServiceRevisionStatusRunning.IsUnknown(appRevision) {
 		return nil
 	}
 
 	if job.Status.Succeeded == 0 && job.Status.Failed == 0 {
 		return nil
 	}
-
-	status.ServiceRevisionStatusReady.True(appRevision, "")
 
 	// Get job pods logs.
 	record, err := r.getJobPodsLogs(ctx, job.Name)
@@ -137,11 +138,13 @@ func (r JobReconciler) syncApplicationRevisionStatus(ctx context.Context, job *b
 
 	if job.Status.Succeeded > 0 {
 		r.Logger.Info("succeed", "application-revision", appRevisionID)
+		status.ServiceRevisionStatusRunning.True(appRevision, "")
+		status.ServiceRevisionStatusReady.True(appRevision, "")
 	}
 
 	if job.Status.Failed > 0 {
 		r.Logger.Info("failed", "application-revision", appRevisionID)
-		status.ServiceRevisionStatusReady.False(appRevision, "")
+		status.ServiceRevisionStatusRunning.False(appRevision, "failed to deploy")
 	}
 
 	// Report to application revision.
@@ -271,8 +274,8 @@ func CreateSecret(ctx context.Context, clientSet *kubernetes.Clientset, name str
 func getPodTemplate(applicationRevisionID, configName string, opts JobCreateOptions) corev1.PodTemplateSpec {
 	var (
 		command       = []string{"/bin/sh", "-c"}
-		deployCommand = fmt.Sprintf("cp %s/main.tf main.tf && ", _secretMountPath)
-		varfile       = fmt.Sprintf(" -var-file=%s/terraform.tfvars", _secretMountPath)
+		deployCommand = fmt.Sprintf("cp %s/main.tf main.tf && ", SecretMountPath)
+		varfile       = fmt.Sprintf(" -var-file=%s/terraform.tfvars", SecretMountPath)
 	)
 
 	switch opts.Type {
@@ -305,7 +308,7 @@ func getPodTemplate(applicationRevisionID, configName string, opts JobCreateOpti
 					VolumeMounts: []corev1.VolumeMount{
 						{
 							Name:      configName,
-							MountPath: _secretMountPath,
+							MountPath: SecretMountPath,
 							ReadOnly:  false,
 						},
 					},

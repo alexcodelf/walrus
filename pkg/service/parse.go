@@ -1,26 +1,37 @@
-package terraform
+package service
 
 import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 
 	"entgo.io/ent/dialect/sql"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"github.com/seal-io/walrus/pkg/dao/model/service"
-	"github.com/seal-io/walrus/pkg/dao/model/servicerelationship"
-	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
-	"github.com/seal-io/walrus/pkg/dao/model/variable"
-	"github.com/seal-io/walrus/pkg/dao/types"
-	"github.com/seal-io/walrus/pkg/dao/types/object"
-
 	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/model/variable"
 	"github.com/seal-io/walrus/pkg/dao/types/crypto"
+	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/terraform/parser"
 )
 
-type ServiceOpts struct {
+const (
+	// VariablePrefix the prefix of the variable name.
+	VariablePrefix = "_walrus_var_"
+	// ServicePrefix the prefix of the service output name.
+	ServicePrefix = "_walrus_service_"
+)
+
+var (
+	// _variableReg the regexp to match the variable.
+	_variableReg = regexp.MustCompile(`\${var\.([a-zA-Z0-9_-]+)}`)
+	// _serviceReg the regexp to match the service output.
+	_serviceReg = regexp.MustCompile(`\${service\.([^.}]+)\.([^.}]+)}`)
+)
+
+// ParseAttributesOptions options for parse attributes.
+type ParseAttributesOptions struct {
 	ServiceRevision *model.ServiceRevision
 
 	ServiceName string
@@ -35,7 +46,7 @@ func ParseModuleAttributes(
 	mc model.ClientSet,
 	attributes map[string]any,
 	onlyValidated bool,
-	opts ServiceOpts,
+	opts ParseAttributesOptions,
 ) (variables model.Variables, outputs map[string]parser.OutputState, err error) {
 	var (
 		templateVariables        []string
@@ -59,14 +70,14 @@ func ParseModuleAttributes(
 			})
 		}
 	} else {
-		variables, err = getVariables(ctx, mc, templateVariables, opts.ProjectID, opts.EnvironmentID)
+		variables, err = GetVariables(ctx, mc, templateVariables, opts.ProjectID, opts.EnvironmentID)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
 	if !onlyValidated {
-		outputs, err = getServiceDependencyOutputsByID(
+		outputs, err = GetServiceDependencyOutputsByID(
 			ctx,
 			mc,
 			opts.ServiceRevision.ServiceID,
@@ -135,11 +146,11 @@ func parseAttributeReplace(
 			}
 
 			variableNames = append(variableNames, matched...)
-			variableRepl := "${var." + _variablePrefix + "${1}}"
+			variableRepl := "${var." + VariablePrefix + "${1}}"
 			str = _variableReg.ReplaceAllString(str, variableRepl)
 
 			serviceOutputs = append(serviceOutputs, serviceMatched...)
-			serviceRepl := "${var." + _servicePrefix + "${1}_${2}}"
+			serviceRepl := "${var." + ServicePrefix + "${1}_${2}}"
 
 			if replaced {
 				attributes[key] = _serviceReg.ReplaceAllString(str, serviceRepl)
@@ -166,11 +177,13 @@ func parseAttributeReplace(
 	return variableNames, serviceOutputs
 }
 
-func getVariables(
+// GetVariables get revision used variables from environment and project.
+func GetVariables(
 	ctx context.Context,
 	client model.ClientSet,
 	variableNames []string,
-	projectID, environmentID object.ID,
+	projectID,
+	environmentID object.ID,
 ) (model.Variables, error) {
 	var variables model.Variables
 
@@ -267,91 +280,4 @@ func getVariables(
 	}
 
 	return variables, nil
-}
-
-// getServiceDependencyOutputsByID gets the dependency outputs of the service by service id.
-func getServiceDependencyOutputsByID(
-	ctx context.Context,
-	client model.ClientSet,
-	serviceID object.ID,
-	dependOutputs []string,
-) (map[string]parser.OutputState, error) {
-	entity, err := client.Services().Query().
-		Where(service.ID(serviceID)).
-		WithDependencies(func(sq *model.ServiceRelationshipQuery) {
-			sq.Where(func(s *sql.Selector) {
-				s.Where(sql.ColumnsNEQ(servicerelationship.FieldServiceID, servicerelationship.FieldDependencyID))
-			})
-		}).
-		Only(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	dependencyServiceIDs := make([]object.ID, 0, len(entity.Edges.Dependencies))
-
-	for _, d := range entity.Edges.Dependencies {
-		if d.Type != types.ServiceRelationshipTypeImplicit {
-			continue
-		}
-
-		dependencyServiceIDs = append(dependencyServiceIDs, d.DependencyID)
-	}
-
-	return getServiceDependencyOutputs(ctx, client, dependencyServiceIDs, dependOutputs)
-}
-
-// getServiceDependencyOutputs gets the dependency outputs of the service.
-func getServiceDependencyOutputs(
-	ctx context.Context,
-	client model.ClientSet,
-	dependencyServiceIDs []object.ID,
-	dependOutputs []string,
-) (map[string]parser.OutputState, error) {
-	dependencyRevisions, err := client.ServiceRevisions().Query().
-		Select(
-			servicerevision.FieldID,
-			servicerevision.FieldAttributes,
-			servicerevision.FieldOutput,
-			servicerevision.FieldServiceID,
-			servicerevision.FieldProjectID,
-		).
-		Where(func(s *sql.Selector) {
-			sq := s.Clone().
-				AppendSelectExprAs(
-					sql.RowNumber().
-						PartitionBy(servicerevision.FieldServiceID).
-						OrderBy(sql.Desc(servicerevision.FieldCreateTime)),
-					"row_number",
-				).
-				Where(s.P()).
-				From(s.Table()).
-				As(servicerevision.Table)
-
-			// Query the latest revision of the service.
-			s.Where(sql.EQ(s.C("row_number"), 1)).
-				From(sq)
-		}).Where(servicerevision.ServiceIDIn(dependencyServiceIDs...)).
-		All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	outputs := make(map[string]parser.OutputState, 0)
-	dependSets := sets.NewString(dependOutputs...)
-
-	for _, r := range dependencyRevisions {
-		revisionOutput, err := parser.ParseStateOutputRawMap(r)
-		if err != nil {
-			return nil, err
-		}
-
-		for n, o := range revisionOutput {
-			if dependSets.Has(n) {
-				outputs[n] = o
-			}
-		}
-	}
-
-	return outputs, nil
 }
