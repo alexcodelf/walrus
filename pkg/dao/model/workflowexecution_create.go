@@ -116,6 +116,12 @@ func (wec *WorkflowExecutionCreate) SetProjectID(o object.ID) *WorkflowExecution
 	return wec
 }
 
+// SetVersion sets the "version" field.
+func (wec *WorkflowExecutionCreate) SetVersion(i int) *WorkflowExecutionCreate {
+	wec.mutation.SetVersion(i)
+	return wec
+}
+
 // SetWorkflowID sets the "workflow_id" field.
 func (wec *WorkflowExecutionCreate) SetWorkflowID(o object.ID) *WorkflowExecutionCreate {
 	wec.mutation.SetWorkflowID(o)
@@ -125,12 +131,6 @@ func (wec *WorkflowExecutionCreate) SetWorkflowID(o object.ID) *WorkflowExecutio
 // SetSubjectID sets the "subject_id" field.
 func (wec *WorkflowExecutionCreate) SetSubjectID(o object.ID) *WorkflowExecutionCreate {
 	wec.mutation.SetSubjectID(o)
-	return wec
-}
-
-// SetProgress sets the "progress" field.
-func (wec *WorkflowExecutionCreate) SetProgress(s string) *WorkflowExecutionCreate {
-	wec.mutation.SetProgress(s)
 	return wec
 }
 
@@ -144,20 +144,6 @@ func (wec *WorkflowExecutionCreate) SetDuration(i int) *WorkflowExecutionCreate 
 func (wec *WorkflowExecutionCreate) SetNillableDuration(i *int) *WorkflowExecutionCreate {
 	if i != nil {
 		wec.SetDuration(*i)
-	}
-	return wec
-}
-
-// SetRecord sets the "record" field.
-func (wec *WorkflowExecutionCreate) SetRecord(s string) *WorkflowExecutionCreate {
-	wec.mutation.SetRecord(s)
-	return wec
-}
-
-// SetNillableRecord sets the "record" field if the given value is not nil.
-func (wec *WorkflowExecutionCreate) SetNillableRecord(s *string) *WorkflowExecutionCreate {
-	if s != nil {
-		wec.SetRecord(*s)
 	}
 	return wec
 }
@@ -270,10 +256,6 @@ func (wec *WorkflowExecutionCreate) defaults() error {
 		v := workflowexecution.DefaultDuration
 		wec.mutation.SetDuration(v)
 	}
-	if _, ok := wec.mutation.Record(); !ok {
-		v := workflowexecution.DefaultRecord
-		wec.mutation.SetRecord(v)
-	}
 	if _, ok := wec.mutation.Trigger(); !ok {
 		v := workflowexecution.DefaultTrigger
 		wec.mutation.SetTrigger(v)
@@ -305,6 +287,14 @@ func (wec *WorkflowExecutionCreate) check() error {
 			return &ValidationError{Name: "project_id", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.project_id": %w`, err)}
 		}
 	}
+	if _, ok := wec.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`model: missing required field "WorkflowExecution.version"`)}
+	}
+	if v, ok := wec.mutation.Version(); ok {
+		if err := workflowexecution.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.version": %w`, err)}
+		}
+	}
 	if _, ok := wec.mutation.WorkflowID(); !ok {
 		return &ValidationError{Name: "workflow_id", err: errors.New(`model: missing required field "WorkflowExecution.workflow_id"`)}
 	}
@@ -316,9 +306,6 @@ func (wec *WorkflowExecutionCreate) check() error {
 	if _, ok := wec.mutation.SubjectID(); !ok {
 		return &ValidationError{Name: "subject_id", err: errors.New(`model: missing required field "WorkflowExecution.subject_id"`)}
 	}
-	if _, ok := wec.mutation.Progress(); !ok {
-		return &ValidationError{Name: "progress", err: errors.New(`model: missing required field "WorkflowExecution.progress"`)}
-	}
 	if _, ok := wec.mutation.Duration(); !ok {
 		return &ValidationError{Name: "duration", err: errors.New(`model: missing required field "WorkflowExecution.duration"`)}
 	}
@@ -326,9 +313,6 @@ func (wec *WorkflowExecutionCreate) check() error {
 		if err := workflowexecution.DurationValidator(v); err != nil {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.duration": %w`, err)}
 		}
-	}
-	if _, ok := wec.mutation.Record(); !ok {
-		return &ValidationError{Name: "record", err: errors.New(`model: missing required field "WorkflowExecution.record"`)}
 	}
 	if _, ok := wec.mutation.Trigger(); !ok {
 		return &ValidationError{Name: "trigger", err: errors.New(`model: missing required field "WorkflowExecution.trigger"`)}
@@ -404,21 +388,17 @@ func (wec *WorkflowExecutionCreate) createSpec() (*WorkflowExecution, *sqlgraph.
 		_spec.SetField(workflowexecution.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
+	if value, ok := wec.mutation.Version(); ok {
+		_spec.SetField(workflowexecution.FieldVersion, field.TypeInt, value)
+		_node.Version = value
+	}
 	if value, ok := wec.mutation.SubjectID(); ok {
 		_spec.SetField(workflowexecution.FieldSubjectID, field.TypeString, value)
 		_node.SubjectID = value
 	}
-	if value, ok := wec.mutation.Progress(); ok {
-		_spec.SetField(workflowexecution.FieldProgress, field.TypeString, value)
-		_node.Progress = value
-	}
 	if value, ok := wec.mutation.Duration(); ok {
 		_spec.SetField(workflowexecution.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
-	}
-	if value, ok := wec.mutation.Record(); ok {
-		_spec.SetField(workflowexecution.FieldRecord, field.TypeString, value)
-		_node.Record = value
 	}
 	if value, ok := wec.mutation.Trigger(); ok {
 		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)
@@ -502,11 +482,10 @@ func (wec *WorkflowExecutionCreate) Set(obj *WorkflowExecution) *WorkflowExecuti
 	// Required.
 	wec.SetName(obj.Name)
 	wec.SetProjectID(obj.ProjectID)
+	wec.SetVersion(obj.Version)
 	wec.SetWorkflowID(obj.WorkflowID)
 	wec.SetSubjectID(obj.SubjectID)
-	wec.SetProgress(obj.Progress)
 	wec.SetDuration(obj.Duration)
-	wec.SetRecord(obj.Record)
 	wec.SetTrigger(obj.Trigger)
 
 	// Optional.
@@ -576,14 +555,14 @@ func (wec *WorkflowExecutionCreate) SaveE(ctx context.Context, cbs ...func(ctx c
 		if _, set := wec.mutation.Field(workflowexecution.FieldProjectID); set {
 			obj.ProjectID = x.ProjectID
 		}
+		if _, set := wec.mutation.Field(workflowexecution.FieldVersion); set {
+			obj.Version = x.Version
+		}
 		if _, set := wec.mutation.Field(workflowexecution.FieldWorkflowID); set {
 			obj.WorkflowID = x.WorkflowID
 		}
 		if _, set := wec.mutation.Field(workflowexecution.FieldSubjectID); set {
 			obj.SubjectID = x.SubjectID
-		}
-		if _, set := wec.mutation.Field(workflowexecution.FieldProgress); set {
-			obj.Progress = x.Progress
 		}
 		obj.Edges = x.Edges
 	}
@@ -696,14 +675,14 @@ func (wecb *WorkflowExecutionCreateBulk) SaveE(ctx context.Context, cbs ...func(
 			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldProjectID); set {
 				objs[i].ProjectID = x[i].ProjectID
 			}
+			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldVersion); set {
+				objs[i].Version = x[i].Version
+			}
 			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldWorkflowID); set {
 				objs[i].WorkflowID = x[i].WorkflowID
 			}
 			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldSubjectID); set {
 				objs[i].SubjectID = x[i].SubjectID
-			}
-			if _, set := wecb.builders[i].mutation.Field(workflowexecution.FieldProgress); set {
-				objs[i].Progress = x[i].Progress
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -915,15 +894,21 @@ func (u *WorkflowExecutionUpsert) ClearStatus() *WorkflowExecutionUpsert {
 	return u
 }
 
-// SetProgress sets the "progress" field.
-func (u *WorkflowExecutionUpsert) SetProgress(v string) *WorkflowExecutionUpsert {
-	u.Set(workflowexecution.FieldProgress, v)
+// SetVersion sets the "version" field.
+func (u *WorkflowExecutionUpsert) SetVersion(v int) *WorkflowExecutionUpsert {
+	u.Set(workflowexecution.FieldVersion, v)
 	return u
 }
 
-// UpdateProgress sets the "progress" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsert) UpdateProgress() *WorkflowExecutionUpsert {
-	u.SetExcluded(workflowexecution.FieldProgress)
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsert) UpdateVersion() *WorkflowExecutionUpsert {
+	u.SetExcluded(workflowexecution.FieldVersion)
+	return u
+}
+
+// AddVersion adds v to the "version" field.
+func (u *WorkflowExecutionUpsert) AddVersion(v int) *WorkflowExecutionUpsert {
+	u.Add(workflowexecution.FieldVersion, v)
 	return u
 }
 
@@ -942,18 +927,6 @@ func (u *WorkflowExecutionUpsert) UpdateDuration() *WorkflowExecutionUpsert {
 // AddDuration adds v to the "duration" field.
 func (u *WorkflowExecutionUpsert) AddDuration(v int) *WorkflowExecutionUpsert {
 	u.Add(workflowexecution.FieldDuration, v)
-	return u
-}
-
-// SetRecord sets the "record" field.
-func (u *WorkflowExecutionUpsert) SetRecord(v string) *WorkflowExecutionUpsert {
-	u.Set(workflowexecution.FieldRecord, v)
-	return u
-}
-
-// UpdateRecord sets the "record" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsert) UpdateRecord() *WorkflowExecutionUpsert {
-	u.SetExcluded(workflowexecution.FieldRecord)
 	return u
 }
 
@@ -1130,17 +1103,24 @@ func (u *WorkflowExecutionUpsertOne) ClearStatus() *WorkflowExecutionUpsertOne {
 	})
 }
 
-// SetProgress sets the "progress" field.
-func (u *WorkflowExecutionUpsertOne) SetProgress(v string) *WorkflowExecutionUpsertOne {
+// SetVersion sets the "version" field.
+func (u *WorkflowExecutionUpsertOne) SetVersion(v int) *WorkflowExecutionUpsertOne {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetProgress(v)
+		s.SetVersion(v)
 	})
 }
 
-// UpdateProgress sets the "progress" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertOne) UpdateProgress() *WorkflowExecutionUpsertOne {
+// AddVersion adds v to the "version" field.
+func (u *WorkflowExecutionUpsertOne) AddVersion(v int) *WorkflowExecutionUpsertOne {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateProgress()
+		s.AddVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertOne) UpdateVersion() *WorkflowExecutionUpsertOne {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.UpdateVersion()
 	})
 }
 
@@ -1162,20 +1142,6 @@ func (u *WorkflowExecutionUpsertOne) AddDuration(v int) *WorkflowExecutionUpsert
 func (u *WorkflowExecutionUpsertOne) UpdateDuration() *WorkflowExecutionUpsertOne {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
 		s.UpdateDuration()
-	})
-}
-
-// SetRecord sets the "record" field.
-func (u *WorkflowExecutionUpsertOne) SetRecord(v string) *WorkflowExecutionUpsertOne {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetRecord(v)
-	})
-}
-
-// UpdateRecord sets the "record" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertOne) UpdateRecord() *WorkflowExecutionUpsertOne {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateRecord()
 	})
 }
 
@@ -1519,17 +1485,24 @@ func (u *WorkflowExecutionUpsertBulk) ClearStatus() *WorkflowExecutionUpsertBulk
 	})
 }
 
-// SetProgress sets the "progress" field.
-func (u *WorkflowExecutionUpsertBulk) SetProgress(v string) *WorkflowExecutionUpsertBulk {
+// SetVersion sets the "version" field.
+func (u *WorkflowExecutionUpsertBulk) SetVersion(v int) *WorkflowExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetProgress(v)
+		s.SetVersion(v)
 	})
 }
 
-// UpdateProgress sets the "progress" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertBulk) UpdateProgress() *WorkflowExecutionUpsertBulk {
+// AddVersion adds v to the "version" field.
+func (u *WorkflowExecutionUpsertBulk) AddVersion(v int) *WorkflowExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateProgress()
+		s.AddVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *WorkflowExecutionUpsertBulk) UpdateVersion() *WorkflowExecutionUpsertBulk {
+	return u.Update(func(s *WorkflowExecutionUpsert) {
+		s.UpdateVersion()
 	})
 }
 
@@ -1551,20 +1524,6 @@ func (u *WorkflowExecutionUpsertBulk) AddDuration(v int) *WorkflowExecutionUpser
 func (u *WorkflowExecutionUpsertBulk) UpdateDuration() *WorkflowExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowExecutionUpsert) {
 		s.UpdateDuration()
-	})
-}
-
-// SetRecord sets the "record" field.
-func (u *WorkflowExecutionUpsertBulk) SetRecord(v string) *WorkflowExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.SetRecord(v)
-	})
-}
-
-// UpdateRecord sets the "record" field to the value that was provided on create.
-func (u *WorkflowExecutionUpsertBulk) UpdateRecord() *WorkflowExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowExecutionUpsert) {
-		s.UpdateRecord()
 	})
 }
 

@@ -51,6 +51,8 @@ const (
 	FieldTimes = "times"
 	// FieldDuration holds the string denoting the duration field in the database.
 	FieldDuration = "duration"
+	// FieldRetryStrategy holds the string denoting the retrystrategy field in the database.
+	FieldRetryStrategy = "retry_strategy"
 	// FieldOrder holds the string denoting the order field in the database.
 	FieldOrder = "order"
 	// FieldRecord holds the string denoting the record field in the database.
@@ -96,6 +98,7 @@ var Columns = []string{
 	FieldSpec,
 	FieldTimes,
 	FieldDuration,
+	FieldRetryStrategy,
 	FieldOrder,
 	FieldRecord,
 }

@@ -49,10 +49,6 @@ func (WorkflowStageExecution) Fields() []ent.Field {
 			Default(0).
 			Annotations(
 				entx.SkipIO()),
-
-		field.String("record").
-			Comment("Log record of the workflow stage execution.").
-			Default(""),
 	}
 }
 

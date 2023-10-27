@@ -52,8 +52,6 @@ type WorkflowStageExecution struct {
 	Duration int `json:"duration,omitempty"`
 	// Order of the workflow stage execution.
 	Order int `json:"order,omitempty"`
-	// Log record of the workflow stage execution.
-	Record string `json:"record,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WorkflowStageExecutionQuery when eager-loading is set.
 	Edges        WorkflowStageExecutionEdges `json:"edges,omitempty"`
@@ -119,7 +117,7 @@ func (*WorkflowStageExecution) scanValues(columns []string) ([]any, error) {
 			values[i] = new(object.ID)
 		case workflowstageexecution.FieldDuration, workflowstageexecution.FieldOrder:
 			values[i] = new(sql.NullInt64)
-		case workflowstageexecution.FieldName, workflowstageexecution.FieldDescription, workflowstageexecution.FieldRecord:
+		case workflowstageexecution.FieldName, workflowstageexecution.FieldDescription:
 			values[i] = new(sql.NullString)
 		case workflowstageexecution.FieldCreateTime, workflowstageexecution.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -230,12 +228,6 @@ func (wse *WorkflowStageExecution) assignValues(columns []string, values []any) 
 			} else if value.Valid {
 				wse.Order = int(value.Int64)
 			}
-		case workflowstageexecution.FieldRecord:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field record", values[i])
-			} else if value.Valid {
-				wse.Record = value.String
-			}
 		default:
 			wse.selectValues.Set(columns[i], values[i])
 		}
@@ -329,9 +321,6 @@ func (wse *WorkflowStageExecution) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("order=")
 	builder.WriteString(fmt.Sprintf("%v", wse.Order))
-	builder.WriteString(", ")
-	builder.WriteString("record=")
-	builder.WriteString(wse.Record)
 	builder.WriteByte(')')
 	return builder.String()
 }

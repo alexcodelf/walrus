@@ -8,6 +8,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/entx"
 	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
@@ -56,6 +57,9 @@ func (WorkflowStepExecution) Fields() []ent.Field {
 			Comment("Duration of the workflow step execution.").
 			NonNegative().
 			Default(0),
+		field.JSON("retryStrategy", types.RetryStrategy{}).
+			Comment("Retry policy of the workflow step.").
+			Optional(),
 		field.Int("order").
 			Comment("Order of the workflow step execution.").
 			NonNegative().

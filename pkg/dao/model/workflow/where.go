@@ -101,6 +101,11 @@ func Parallelism(v int) predicate.Workflow {
 	return predicate.Workflow(sql.FieldEQ(FieldParallelism, v))
 }
 
+// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
+func Version(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldEQ(FieldVersion, v))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Workflow {
 	return predicate.Workflow(sql.FieldEQ(FieldName, v))
@@ -594,6 +599,46 @@ func ParallelismLT(v int) predicate.Workflow {
 // ParallelismLTE applies the LTE predicate on the "parallelism" field.
 func ParallelismLTE(v int) predicate.Workflow {
 	return predicate.Workflow(sql.FieldLTE(FieldParallelism, v))
+}
+
+// VersionEQ applies the EQ predicate on the "version" field.
+func VersionEQ(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldEQ(FieldVersion, v))
+}
+
+// VersionNEQ applies the NEQ predicate on the "version" field.
+func VersionNEQ(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldNEQ(FieldVersion, v))
+}
+
+// VersionIn applies the In predicate on the "version" field.
+func VersionIn(vs ...int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldIn(FieldVersion, vs...))
+}
+
+// VersionNotIn applies the NotIn predicate on the "version" field.
+func VersionNotIn(vs ...int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldNotIn(FieldVersion, vs...))
+}
+
+// VersionGT applies the GT predicate on the "version" field.
+func VersionGT(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldGT(FieldVersion, v))
+}
+
+// VersionGTE applies the GTE predicate on the "version" field.
+func VersionGTE(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldGTE(FieldVersion, v))
+}
+
+// VersionLT applies the LT predicate on the "version" field.
+func VersionLT(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldLT(FieldVersion, v))
+}
+
+// VersionLTE applies the LTE predicate on the "version" field.
+func VersionLTE(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldLTE(FieldVersion, v))
 }
 
 // HasProject applies the HasEdge predicate on the "project" edge.

@@ -44,6 +44,8 @@ type Workflow struct {
 	Type string `json:"type,omitempty"`
 	// Number of task pods that can be executed in parallel of workflow.
 	Parallelism int `json:"parallelism,omitempty"`
+	// Version of the workflow.
+	Version int `json:"version,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WorkflowQuery when eager-loading is set.
 	Edges        WorkflowEdges `json:"edges,omitempty"`
@@ -103,7 +105,7 @@ func (*Workflow) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case workflow.FieldID, workflow.FieldProjectID, workflow.FieldEnvironmentID:
 			values[i] = new(object.ID)
-		case workflow.FieldParallelism:
+		case workflow.FieldParallelism, workflow.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case workflow.FieldName, workflow.FieldDescription, workflow.FieldType:
 			values[i] = new(sql.NullString)
@@ -196,6 +198,12 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				w.Parallelism = int(value.Int64)
 			}
+		case workflow.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				w.Version = int(value.Int64)
+			}
 		default:
 			w.selectValues.Set(columns[i], values[i])
 		}
@@ -280,6 +288,9 @@ func (w *Workflow) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("parallelism=")
 	builder.WriteString(fmt.Sprintf("%v", w.Parallelism))
+	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", w.Version))
 	builder.WriteByte(')')
 	return builder.String()
 }

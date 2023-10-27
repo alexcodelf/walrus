@@ -25,8 +25,6 @@ type WorkflowExecutionCreateInput struct {
 	// Workflow indicates to create WorkflowExecution entity MUST under the Workflow route.
 	Workflow *WorkflowQueryInput `path:",inline" query:"-" json:"-"`
 
-	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
-	Progress string `path:"-" query:"-" json:"progress"`
 	// ID of the subject that this workflow execution belongs to.
 	SubjectID object.ID `path:"-" query:"-" json:"subjectID"`
 	// Name holds the value of the "name" field.
@@ -37,10 +35,6 @@ type WorkflowExecutionCreateInput struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// Log record of the workflow execution.
-	Record string `path:"-" query:"-" json:"record,omitempty"`
-	// Trigger of the workflow execution.
-	Trigger types.WorkflowExecutionTrigger `path:"-" query:"-" json:"trigger,omitempty"`
 }
 
 // Model returns the WorkflowExecution entity for creating,
@@ -51,14 +45,11 @@ func (weci *WorkflowExecutionCreateInput) Model() *WorkflowExecution {
 	}
 
 	_we := &WorkflowExecution{
-		Progress:    weci.Progress,
 		SubjectID:   weci.SubjectID,
 		Name:        weci.Name,
 		Description: weci.Description,
 		Labels:      weci.Labels,
 		Duration:    weci.Duration,
-		Record:      weci.Record,
-		Trigger:     weci.Trigger,
 	}
 
 	return _we
@@ -95,8 +86,6 @@ func (weci *WorkflowExecutionCreateInput) ValidateWith(ctx context.Context, cs C
 
 // WorkflowExecutionCreateInputs holds the creation input item of the WorkflowExecution entities.
 type WorkflowExecutionCreateInputsItem struct {
-	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
-	Progress string `path:"-" query:"-" json:"progress"`
 	// ID of the subject that this workflow execution belongs to.
 	SubjectID object.ID `path:"-" query:"-" json:"subjectID"`
 	// Name holds the value of the "name" field.
@@ -107,10 +96,6 @@ type WorkflowExecutionCreateInputsItem struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// Log record of the workflow execution.
-	Record string `path:"-" query:"-" json:"record,omitempty"`
-	// Trigger of the workflow execution.
-	Trigger types.WorkflowExecutionTrigger `path:"-" query:"-" json:"trigger,omitempty"`
 }
 
 // ValidateWith checks the WorkflowExecutionCreateInputsItem entity with the given context and client set.
@@ -149,14 +134,11 @@ func (weci *WorkflowExecutionCreateInputs) Model() []*WorkflowExecution {
 
 	for i := range weci.Items {
 		_we := &WorkflowExecution{
-			Progress:    weci.Items[i].Progress,
 			SubjectID:   weci.Items[i].SubjectID,
 			Name:        weci.Items[i].Name,
 			Description: weci.Items[i].Description,
 			Labels:      weci.Items[i].Labels,
 			Duration:    weci.Items[i].Duration,
-			Record:      weci.Items[i].Record,
-			Trigger:     weci.Items[i].Trigger,
 		}
 
 		_wes[i] = _we
@@ -481,14 +463,8 @@ type WorkflowExecutionUpdateInput struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
-	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
-	Progress string `path:"-" query:"-" json:"progress,omitempty"`
 	// Duration of the workflow execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// Log record of the workflow execution.
-	Record string `path:"-" query:"-" json:"record,omitempty"`
-	// Trigger of the workflow execution.
-	Trigger types.WorkflowExecutionTrigger `path:"-" query:"-" json:"trigger,omitempty"`
 }
 
 // Model returns the WorkflowExecution entity for modifying,
@@ -502,10 +478,7 @@ func (weui *WorkflowExecutionUpdateInput) Model() *WorkflowExecution {
 		ID:          weui.ID,
 		Description: weui.Description,
 		Labels:      weui.Labels,
-		Progress:    weui.Progress,
 		Duration:    weui.Duration,
-		Record:      weui.Record,
-		Trigger:     weui.Trigger,
 	}
 
 	return _we
@@ -542,14 +515,8 @@ type WorkflowExecutionUpdateInputsItem struct {
 	Description string `path:"-" query:"-" json:"description,omitempty"`
 	// Labels holds the value of the "labels" field.
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
-	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
-	Progress string `path:"-" query:"-" json:"progress"`
 	// Duration of the workflow execution.
 	Duration int `path:"-" query:"-" json:"duration"`
-	// Log record of the workflow execution.
-	Record string `path:"-" query:"-" json:"record"`
-	// Trigger of the workflow execution.
-	Trigger types.WorkflowExecutionTrigger `path:"-" query:"-" json:"trigger"`
 }
 
 // ValidateWith checks the WorkflowExecutionUpdateInputsItem entity with the given context and client set.
@@ -591,10 +558,7 @@ func (weui *WorkflowExecutionUpdateInputs) Model() []*WorkflowExecution {
 			ID:          weui.Items[i].ID,
 			Description: weui.Items[i].Description,
 			Labels:      weui.Items[i].Labels,
-			Progress:    weui.Items[i].Progress,
 			Duration:    weui.Items[i].Duration,
-			Record:      weui.Items[i].Record,
-			Trigger:     weui.Items[i].Trigger,
 		}
 
 		_wes[i] = _we
@@ -698,10 +662,9 @@ type WorkflowExecutionOutput struct {
 	CreateTime  *time.Time                     `json:"createTime,omitempty"`
 	UpdateTime  *time.Time                     `json:"updateTime,omitempty"`
 	Status      status.Status                  `json:"status,omitempty"`
+	Version     int                            `json:"version,omitempty"`
 	SubjectID   object.ID                      `json:"subjectID,omitempty"`
-	Progress    string                         `json:"progress,omitempty"`
 	Duration    int                            `json:"duration,omitempty"`
-	Record      string                         `json:"record,omitempty"`
 	Trigger     types.WorkflowExecutionTrigger `json:"trigger,omitempty"`
 
 	Project  *ProjectOutput                  `json:"project,omitempty"`
@@ -733,10 +696,9 @@ func ExposeWorkflowExecution(_we *WorkflowExecution) *WorkflowExecutionOutput {
 		CreateTime:  _we.CreateTime,
 		UpdateTime:  _we.UpdateTime,
 		Status:      _we.Status,
+		Version:     _we.Version,
 		SubjectID:   _we.SubjectID,
-		Progress:    _we.Progress,
 		Duration:    _we.Duration,
-		Record:      _we.Record,
 		Trigger:     _we.Trigger,
 	}
 

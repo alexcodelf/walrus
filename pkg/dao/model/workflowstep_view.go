@@ -11,9 +11,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
+
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
 	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
-	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
@@ -46,7 +47,7 @@ type WorkflowStepCreateInput struct {
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.
-	RetryStrategy types.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
+	RetryStrategy v1alpha1.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
 	// Timeout seconds of the workflow step, 0 means no timeout.
 	Timeout int `path:"-" query:"-" json:"timeout,omitempty"`
 }
@@ -138,7 +139,7 @@ type WorkflowStepCreateInputsItem struct {
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.
-	RetryStrategy types.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
+	RetryStrategy v1alpha1.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
 	// Timeout seconds of the workflow step, 0 means no timeout.
 	Timeout int `path:"-" query:"-" json:"timeout,omitempty"`
 }
@@ -577,7 +578,7 @@ type WorkflowStepUpdateInput struct {
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.
-	RetryStrategy types.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
+	RetryStrategy v1alpha1.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
 	// Timeout seconds of the workflow step, 0 means no timeout.
 	Timeout int `path:"-" query:"-" json:"timeout,omitempty"`
 }
@@ -644,7 +645,7 @@ type WorkflowStepUpdateInputsItem struct {
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `path:"-" query:"-" json:"dependencies"`
 	// Retry policy of the workflow step.
-	RetryStrategy types.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
+	RetryStrategy v1alpha1.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
 	// Timeout seconds of the workflow step, 0 means no timeout.
 	Timeout int `path:"-" query:"-" json:"timeout"`
 }
@@ -815,7 +816,7 @@ type WorkflowStepOutput struct {
 	Input         map[string]interface{} `json:"input,omitempty"`
 	Output        map[string]interface{} `json:"output,omitempty"`
 	Dependencies  []object.ID            `json:"dependencies,omitempty"`
-	RetryStrategy types.RetryStrategy    `json:"retryStrategy,omitempty"`
+	RetryStrategy v1alpha1.RetryStrategy `json:"retryStrategy,omitempty"`
 	Timeout       int                    `json:"timeout,omitempty"`
 
 	Project *ProjectOutput       `json:"project,omitempty"`

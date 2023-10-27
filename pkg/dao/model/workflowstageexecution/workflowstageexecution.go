@@ -45,8 +45,6 @@ const (
 	FieldDuration = "duration"
 	// FieldOrder holds the string denoting the order field in the database.
 	FieldOrder = "order"
-	// FieldRecord holds the string denoting the record field in the database.
-	FieldRecord = "record"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeSteps holds the string denoting the steps edge name in mutations.
@@ -94,7 +92,6 @@ var Columns = []string{
 	FieldWorkflowExecutionID,
 	FieldDuration,
 	FieldOrder,
-	FieldRecord,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -139,8 +136,6 @@ var (
 	DefaultOrder int
 	// OrderValidator is a validator for the "order" field. It is called by the builders before save.
 	OrderValidator func(int) error
-	// DefaultRecord holds the default value on creation for the "record" field.
-	DefaultRecord string
 )
 
 // OrderOption defines the ordering options for the WorkflowStageExecution queries.
@@ -199,11 +194,6 @@ func ByDuration(opts ...sql.OrderTermOption) OrderOption {
 // ByOrder orders the results by the order field.
 func ByOrder(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOrder, opts...).ToFunc()
-}
-
-// ByRecord orders the results by the record field.
-func ByRecord(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldRecord, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.

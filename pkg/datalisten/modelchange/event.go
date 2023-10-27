@@ -39,6 +39,8 @@ var tableNameSet = sets.NewString(
 	string(ServiceResource),
 	string(ServiceRevision),
 	string(Template),
+	string(Workflow),
+	string(WorkflowExecution),
 	// Disallow subscribing from topic.
 	migrate.SettingsTable.Name,
 )

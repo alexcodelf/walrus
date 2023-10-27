@@ -108,7 +108,7 @@ var (
 				workflowstageexecution.FieldStatus,
 				workflowexecution.FieldDuration,
 				workflowexecution.FieldCreateTime,
-			)
+			).Order(model.Asc(workflowstageexecution.FieldOrder))
 		})
 	}
 )

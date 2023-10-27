@@ -30,6 +30,11 @@ func (WorkflowExecution) Fields() []ent.Field {
 			Comment("ID of the project to belong.").
 			NotEmpty().
 			Immutable(),
+		field.Int("version").
+			Comment("Version of the workflow execution.").
+			NonNegative().
+			Annotations(
+				entx.SkipInput(entx.WithCreate(), entx.WithUpdate())),
 		object.IDField("workflow_id").
 			Comment("ID of the workflow that this workflow execution belongs to.").
 			NotEmpty().
@@ -37,19 +42,15 @@ func (WorkflowExecution) Fields() []ent.Field {
 		object.IDField("subject_id").
 			Comment("ID of the subject that this workflow execution belongs to.").
 			Immutable(),
-		field.String("progress").
-			Comment("Progress of the workflow. N/M format," +
-				"N is number of stages completed, M is total number of stages."),
 		field.Int("duration").
 			Comment("Duration of the workflow execution.").
 			NonNegative().
 			Default(0),
-		field.Text("record").
-			Comment("Log record of the workflow execution.").
-			Default(""),
 		field.JSON("trigger", types.WorkflowExecutionTrigger{}).
 			Comment("Trigger of the workflow execution.").
-			Default(types.WorkflowExecutionTrigger{}),
+			Default(types.WorkflowExecutionTrigger{}).
+			Annotations(
+				entx.SkipInput(entx.WithCreate(), entx.WithUpdate())),
 	}
 }
 

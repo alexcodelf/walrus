@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
 	"github.com/seal-io/walrus/pkg/dao/model/internal"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
@@ -160,6 +161,26 @@ func (wseu *WorkflowStepExecutionUpdate) SetNillableDuration(i *int) *WorkflowSt
 // AddDuration adds i to the "duration" field.
 func (wseu *WorkflowStepExecutionUpdate) AddDuration(i int) *WorkflowStepExecutionUpdate {
 	wseu.mutation.AddDuration(i)
+	return wseu
+}
+
+// SetRetryStrategy sets the "retryStrategy" field.
+func (wseu *WorkflowStepExecutionUpdate) SetRetryStrategy(vs v1alpha1.RetryStrategy) *WorkflowStepExecutionUpdate {
+	wseu.mutation.SetRetryStrategy(vs)
+	return wseu
+}
+
+// SetNillableRetryStrategy sets the "retryStrategy" field if the given value is not nil.
+func (wseu *WorkflowStepExecutionUpdate) SetNillableRetryStrategy(vs *v1alpha1.RetryStrategy) *WorkflowStepExecutionUpdate {
+	if vs != nil {
+		wseu.SetRetryStrategy(*vs)
+	}
+	return wseu
+}
+
+// ClearRetryStrategy clears the value of the "retryStrategy" field.
+func (wseu *WorkflowStepExecutionUpdate) ClearRetryStrategy() *WorkflowStepExecutionUpdate {
+	wseu.mutation.ClearRetryStrategy()
 	return wseu
 }
 
@@ -327,6 +348,11 @@ func (wseu *WorkflowStepExecutionUpdate) Set(obj *WorkflowStepExecution) *Workfl
 	}
 	wseu.SetTimes(obj.Times)
 	wseu.SetDuration(obj.Duration)
+	if !reflect.ValueOf(obj.RetryStrategy).IsZero() {
+		wseu.SetRetryStrategy(obj.RetryStrategy)
+	} else {
+		wseu.ClearRetryStrategy()
+	}
 	wseu.SetOrder(obj.Order)
 	wseu.SetRecord(obj.Record)
 
@@ -403,6 +429,12 @@ func (wseu *WorkflowStepExecutionUpdate) sqlSave(ctx context.Context) (n int, er
 	}
 	if value, ok := wseu.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowstepexecution.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := wseu.mutation.RetryStrategy(); ok {
+		_spec.SetField(workflowstepexecution.FieldRetryStrategy, field.TypeJSON, value)
+	}
+	if wseu.mutation.RetryStrategyCleared() {
+		_spec.ClearField(workflowstepexecution.FieldRetryStrategy, field.TypeJSON)
 	}
 	if value, ok := wseu.mutation.Order(); ok {
 		_spec.SetField(workflowstepexecution.FieldOrder, field.TypeInt, value)
@@ -559,6 +591,26 @@ func (wseuo *WorkflowStepExecutionUpdateOne) SetNillableDuration(i *int) *Workfl
 // AddDuration adds i to the "duration" field.
 func (wseuo *WorkflowStepExecutionUpdateOne) AddDuration(i int) *WorkflowStepExecutionUpdateOne {
 	wseuo.mutation.AddDuration(i)
+	return wseuo
+}
+
+// SetRetryStrategy sets the "retryStrategy" field.
+func (wseuo *WorkflowStepExecutionUpdateOne) SetRetryStrategy(vs v1alpha1.RetryStrategy) *WorkflowStepExecutionUpdateOne {
+	wseuo.mutation.SetRetryStrategy(vs)
+	return wseuo
+}
+
+// SetNillableRetryStrategy sets the "retryStrategy" field if the given value is not nil.
+func (wseuo *WorkflowStepExecutionUpdateOne) SetNillableRetryStrategy(vs *v1alpha1.RetryStrategy) *WorkflowStepExecutionUpdateOne {
+	if vs != nil {
+		wseuo.SetRetryStrategy(*vs)
+	}
+	return wseuo
+}
+
+// ClearRetryStrategy clears the value of the "retryStrategy" field.
+func (wseuo *WorkflowStepExecutionUpdateOne) ClearRetryStrategy() *WorkflowStepExecutionUpdateOne {
+	wseuo.mutation.ClearRetryStrategy()
 	return wseuo
 }
 
@@ -763,6 +815,13 @@ func (wseuo *WorkflowStepExecutionUpdateOne) Set(obj *WorkflowStepExecution) *Wo
 			if db.Duration != obj.Duration {
 				wseuo.SetDuration(obj.Duration)
 			}
+			if !reflect.ValueOf(obj.RetryStrategy).IsZero() {
+				if !reflect.DeepEqual(db.RetryStrategy, obj.RetryStrategy) {
+					wseuo.SetRetryStrategy(obj.RetryStrategy)
+				}
+			} else {
+				wseuo.ClearRetryStrategy()
+			}
 			if db.Order != obj.Order {
 				wseuo.SetOrder(obj.Order)
 			}
@@ -839,6 +898,9 @@ func (wseuo *WorkflowStepExecutionUpdateOne) SaveE(ctx context.Context, cbs ...f
 		}
 		if _, set := wseuo.mutation.Field(workflowstepexecution.FieldDuration); set {
 			obj.Duration = x.Duration
+		}
+		if _, set := wseuo.mutation.Field(workflowstepexecution.FieldRetryStrategy); set {
+			obj.RetryStrategy = x.RetryStrategy
 		}
 		if _, set := wseuo.mutation.Field(workflowstepexecution.FieldOrder); set {
 			obj.Order = x.Order
@@ -960,6 +1022,12 @@ func (wseuo *WorkflowStepExecutionUpdateOne) sqlSave(ctx context.Context) (_node
 	}
 	if value, ok := wseuo.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowstepexecution.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := wseuo.mutation.RetryStrategy(); ok {
+		_spec.SetField(workflowstepexecution.FieldRetryStrategy, field.TypeJSON, value)
+	}
+	if wseuo.mutation.RetryStrategyCleared() {
+		_spec.ClearField(workflowstepexecution.FieldRetryStrategy, field.TypeJSON)
 	}
 	if value, ok := wseuo.mutation.Order(); ok {
 		_spec.SetField(workflowstepexecution.FieldOrder, field.TypeInt, value)

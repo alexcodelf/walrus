@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
@@ -22,12 +23,12 @@ func (h Handler) Update(req UpdateRequest) error {
 	fmt.Println("stage execution update", entity.ID, req.Status)
 
 	switch req.Status {
-	case "Succeeded":
+	case types.ExecutionStatusSucceeded:
 		status.WorkflowStageExecutionStatusRunning.True(entity, "")
 		status.WorkflowStageExecutionStatusReady.True(entity, "")
-	case "Error", "Failed":
+	case types.ExecutionStatusFailed, types.ExecutionStatusError:
 		status.WorkflowStageExecutionStatusRunning.False(entity, "execute failed")
-	case "Running":
+	case types.ExecutionStatusRunning:
 		status.WorkflowExecutionStatusPending.True(entity, "")
 		status.WorkflowStageExecutionStatusRunning.Unknown(entity, "")
 	default:
@@ -39,7 +40,7 @@ func (h Handler) Update(req UpdateRequest) error {
 	update := h.modelClient.WorkflowStageExecutions().UpdateOne(entity).
 		SetStatus(entity.Status)
 
-	if req.Status == "Succeeded" {
+	if req.Status == types.ExecutionStatusSucceeded {
 		update.SetDuration(int(time.Since(*entity.CreateTime).Seconds()))
 	}
 

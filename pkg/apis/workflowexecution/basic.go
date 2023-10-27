@@ -8,6 +8,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
@@ -19,7 +20,9 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 		Where(workflowexecution.ID(req.ID)).
 		WithStages(func(wsgq *model.WorkflowStageExecutionQuery) {
 			wsgq.WithSteps(func(wseq *model.WorkflowStepExecutionQuery) {
-				wseq.Order(model.Asc(workflowstepexecution.FieldOrder))
+				wseq.
+					Select(workflowexecution.WithoutFields(workflowstepexecution.FieldRecord)...).
+					Order(model.Asc(workflowstepexecution.FieldOrder))
 			}).
 				Order(model.Asc(workflowstageexecution.FieldOrder))
 		}).
@@ -40,12 +43,12 @@ func (h Handler) Update(req UpdateRequest) error {
 	}
 
 	switch req.Status {
-	case "Succeeded":
+	case types.ExecutionStatusSucceeded:
 		status.WorkflowExecutionStatusRunning.True(entity, "")
 		status.WorkflowExecutionStatusReady.True(entity, "")
-	case "Error", "Failed":
+	case types.ExecutionStatusFailed, types.ExecutionStatusError:
 		status.WorkflowExecutionStatusRunning.False(entity, "")
-	case "Running":
+	case types.ExecutionStatusRunning:
 		status.WorkflowExecutionStatusPending.True(entity, "")
 		status.WorkflowExecutionStatusRunning.Unknown(entity, "")
 	default:
@@ -57,7 +60,7 @@ func (h Handler) Update(req UpdateRequest) error {
 	update := h.modelClient.WorkflowExecutions().UpdateOne(entity).
 		SetStatus(entity.Status)
 
-	if req.Status == "Succeeded" {
+	if req.Status == types.ExecutionStatusSucceeded {
 		update.SetDuration(int(time.Since(*entity.CreateTime).Seconds()))
 	}
 
@@ -132,7 +135,8 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 					Where(workflowexecution.IDIn(dm.IDs...)).
 					WithStages(func(wsgq *model.WorkflowStageExecutionQuery) {
 						wsgq.WithSteps(func(wseq *model.WorkflowStepExecutionQuery) {
-							wseq.Order(model.Asc(workflowstepexecution.FieldOrder))
+							wseq.Select(workflowexecution.WithoutFields(workflowstepexecution.FieldRecord)...).
+								Order(model.Asc(workflowstepexecution.FieldOrder))
 						}).Order(model.Asc(workflowstageexecution.FieldOrder))
 					}).
 					Unique(false).
@@ -187,7 +191,8 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 		Unique(false).
 		WithStages(func(wsgq *model.WorkflowStageExecutionQuery) {
 			wsgq.WithSteps(func(wseq *model.WorkflowStepExecutionQuery) {
-				wseq.Order(model.Asc(workflowstepexecution.FieldOrder))
+				wseq.Select(workflowexecution.WithoutFields(workflowstepexecution.FieldRecord)...).
+					Order(model.Asc(workflowstepexecution.FieldOrder))
 			}).Order(model.Asc(workflowstageexecution.FieldOrder))
 		}).
 		All(req.Context)

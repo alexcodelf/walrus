@@ -6,6 +6,7 @@ import (
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
 	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
@@ -17,8 +18,8 @@ func (t Type) String() string {
 }
 
 const (
-	StepTypeService  Type = "service"
-	StepTypeApproval Type = "approval"
+	StepTypeService  Type = types.WorkflowStepTypeService
+	StepTypeApproval Type = types.WorkflowStepTypeApproval
 )
 
 type StepManager interface {

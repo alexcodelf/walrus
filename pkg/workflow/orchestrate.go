@@ -2,56 +2,15 @@ package workflow
 
 import (
 	"context"
-
-	"k8s.io/client-go/rest"
+	"fmt"
 
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/model/subject"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
-
-// Apply applies the workflow execution to the argo workflow server.
-func Apply(
-	ctx context.Context,
-	mc model.ClientSet,
-	restCfg *rest.Config,
-	wf *model.Workflow,
-) (*model.WorkflowExecution, error) {
-	client, err := NewArgoWorkflowClient(mc, restCfg)
-	if err != nil {
-		return nil, err
-	}
-
-	s := session.MustGetSubject(ctx)
-
-	wfe, err := CreateWorkflowExecution(ctx, mc, wf)
-	if err != nil {
-		return nil, err
-	}
-
-	return wfe, client.Submit(ctx, SubmitOptions{
-		WorkflowExecution: wfe,
-		SubjectID:         s.ID,
-	})
-}
-
-// Resubmit resubmits the workflow execution to the argo workflow server.
-func Resubmit(
-	ctx context.Context,
-	mc model.ClientSet,
-	restCfg *rest.Config,
-	wfe *model.WorkflowExecution,
-) error {
-	client, err := NewArgoWorkflowClient(mc, restCfg)
-	if err != nil {
-		return err
-	}
-
-	return client.Resubmit(ctx, ResubmitOptions{
-		WorkflowExecution: wfe,
-	})
-}
 
 func CreateWorkflowExecution(
 	ctx context.Context,
@@ -60,11 +19,31 @@ func CreateWorkflowExecution(
 ) (*model.WorkflowExecution, error) {
 	s := session.MustGetSubject(ctx)
 
+	var trigger types.WorkflowExecutionTrigger
+
+	switch wf.Type {
+	case types.WorkflowTypeDefault:
+		userSubject, err := mc.Subjects().Query().
+			Where(subject.ID(s.ID)).
+			Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		trigger = types.WorkflowExecutionTrigger{
+			Type: types.WorkflowExecutionTriggerTypeManual,
+			User: userSubject.Name,
+		}
+	default:
+		return nil, fmt.Errorf("invalid workflow type: %s", wf.Type)
+	}
+
 	workflowExecution := &model.WorkflowExecution{
 		Name:       wf.Name,
 		ProjectID:  wf.ProjectID,
 		WorkflowID: wf.ID,
 		SubjectID:  s.ID,
+		Trigger:    trigger,
+		Version:    wf.Version + 1,
 	}
 
 	status.WorkflowExecutionStatusPending.Unknown(workflowExecution, "")
@@ -162,6 +141,7 @@ func CreateWorkflowStepExecution(
 		WorkflowExecutionID:      wse.WorkflowExecutionID,
 		WorkflowStageExecutionID: wse.ID,
 		Spec:                     step.Spec,
+		RetryStrategy:            step.RetryStrategy,
 	}
 
 	status.WorkflowStepExecutionStatusPending.Unknown(stepExec, "")

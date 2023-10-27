@@ -12,11 +12,11 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
-	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/utils/json"
 )
@@ -57,7 +57,7 @@ type WorkflowStep struct {
 	// ID list of the workflow steps that this workflow step depends on.
 	Dependencies []object.ID `json:"dependencies,omitempty"`
 	// Retry policy of the workflow step.
-	RetryStrategy types.RetryStrategy `json:"retryStrategy,omitempty"`
+	RetryStrategy v1alpha1.RetryStrategy `json:"retryStrategy,omitempty"`
 	// Timeout seconds of the workflow step, 0 means no timeout.
 	Timeout int `json:"timeout,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.

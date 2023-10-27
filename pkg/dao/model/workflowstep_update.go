@@ -18,11 +18,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
 	"github.com/seal-io/walrus/pkg/dao/model/internal"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
-	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
@@ -161,8 +161,16 @@ func (wsu *WorkflowStepUpdate) AppendDependencies(o []object.ID) *WorkflowStepUp
 }
 
 // SetRetryStrategy sets the "retryStrategy" field.
-func (wsu *WorkflowStepUpdate) SetRetryStrategy(ts types.RetryStrategy) *WorkflowStepUpdate {
-	wsu.mutation.SetRetryStrategy(ts)
+func (wsu *WorkflowStepUpdate) SetRetryStrategy(vs v1alpha1.RetryStrategy) *WorkflowStepUpdate {
+	wsu.mutation.SetRetryStrategy(vs)
+	return wsu
+}
+
+// SetNillableRetryStrategy sets the "retryStrategy" field if the given value is not nil.
+func (wsu *WorkflowStepUpdate) SetNillableRetryStrategy(vs *v1alpha1.RetryStrategy) *WorkflowStepUpdate {
+	if vs != nil {
+		wsu.SetRetryStrategy(*vs)
+	}
 	return wsu
 }
 
@@ -570,8 +578,16 @@ func (wsuo *WorkflowStepUpdateOne) AppendDependencies(o []object.ID) *WorkflowSt
 }
 
 // SetRetryStrategy sets the "retryStrategy" field.
-func (wsuo *WorkflowStepUpdateOne) SetRetryStrategy(ts types.RetryStrategy) *WorkflowStepUpdateOne {
-	wsuo.mutation.SetRetryStrategy(ts)
+func (wsuo *WorkflowStepUpdateOne) SetRetryStrategy(vs v1alpha1.RetryStrategy) *WorkflowStepUpdateOne {
+	wsuo.mutation.SetRetryStrategy(vs)
+	return wsuo
+}
+
+// SetNillableRetryStrategy sets the "retryStrategy" field if the given value is not nil.
+func (wsuo *WorkflowStepUpdateOne) SetNillableRetryStrategy(vs *v1alpha1.RetryStrategy) *WorkflowStepUpdateOne {
+	if vs != nil {
+		wsuo.SetRetryStrategy(*vs)
+	}
 	return wsuo
 }
 

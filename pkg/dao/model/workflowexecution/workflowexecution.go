@@ -37,16 +37,14 @@ const (
 	FieldStatus = "status"
 	// FieldProjectID holds the string denoting the project_id field in the database.
 	FieldProjectID = "project_id"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
 	FieldWorkflowID = "workflow_id"
 	// FieldSubjectID holds the string denoting the subject_id field in the database.
 	FieldSubjectID = "subject_id"
-	// FieldProgress holds the string denoting the progress field in the database.
-	FieldProgress = "progress"
 	// FieldDuration holds the string denoting the duration field in the database.
 	FieldDuration = "duration"
-	// FieldRecord holds the string denoting the record field in the database.
-	FieldRecord = "record"
 	// FieldTrigger holds the string denoting the trigger field in the database.
 	FieldTrigger = "trigger"
 	// EdgeProject holds the string denoting the project edge name in mutations.
@@ -91,11 +89,10 @@ var Columns = []string{
 	FieldUpdateTime,
 	FieldStatus,
 	FieldProjectID,
+	FieldVersion,
 	FieldWorkflowID,
 	FieldSubjectID,
-	FieldProgress,
 	FieldDuration,
-	FieldRecord,
 	FieldTrigger,
 }
 
@@ -131,14 +128,14 @@ var (
 	UpdateDefaultUpdateTime func() time.Time
 	// ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
 	ProjectIDValidator func(string) error
+	// VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	VersionValidator func(int) error
 	// WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
 	WorkflowIDValidator func(string) error
 	// DefaultDuration holds the default value on creation for the "duration" field.
 	DefaultDuration int
 	// DurationValidator is a validator for the "duration" field. It is called by the builders before save.
 	DurationValidator func(int) error
-	// DefaultRecord holds the default value on creation for the "record" field.
-	DefaultRecord string
 	// DefaultTrigger holds the default value on creation for the "trigger" field.
 	DefaultTrigger types.WorkflowExecutionTrigger
 )
@@ -176,6 +173,11 @@ func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
 }
 
+// ByVersion orders the results by the version field.
+func ByVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersion, opts...).ToFunc()
+}
+
 // ByWorkflowID orders the results by the workflow_id field.
 func ByWorkflowID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWorkflowID, opts...).ToFunc()
@@ -186,19 +188,9 @@ func BySubjectID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubjectID, opts...).ToFunc()
 }
 
-// ByProgress orders the results by the progress field.
-func ByProgress(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldProgress, opts...).ToFunc()
-}
-
 // ByDuration orders the results by the duration field.
 func ByDuration(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDuration, opts...).ToFunc()
-}
-
-// ByRecord orders the results by the record field.
-func ByRecord(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldRecord, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.

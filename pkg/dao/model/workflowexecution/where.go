@@ -86,6 +86,11 @@ func ProjectID(v object.ID) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldProjectID, v))
 }
 
+// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
+func Version(v int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldEQ(FieldVersion, v))
+}
+
 // WorkflowID applies equality check predicate on the "workflow_id" field. It's identical to WorkflowIDEQ.
 func WorkflowID(v object.ID) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldWorkflowID, v))
@@ -96,19 +101,9 @@ func SubjectID(v object.ID) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldSubjectID, v))
 }
 
-// Progress applies equality check predicate on the "progress" field. It's identical to ProgressEQ.
-func Progress(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEQ(FieldProgress, v))
-}
-
 // Duration applies equality check predicate on the "duration" field. It's identical to DurationEQ.
 func Duration(v int) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldDuration, v))
-}
-
-// Record applies equality check predicate on the "record" field. It's identical to RecordEQ.
-func Record(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEQ(FieldRecord, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -431,6 +426,46 @@ func ProjectIDContainsFold(v object.ID) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldProjectID, vc))
 }
 
+// VersionEQ applies the EQ predicate on the "version" field.
+func VersionEQ(v int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldEQ(FieldVersion, v))
+}
+
+// VersionNEQ applies the NEQ predicate on the "version" field.
+func VersionNEQ(v int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldNEQ(FieldVersion, v))
+}
+
+// VersionIn applies the In predicate on the "version" field.
+func VersionIn(vs ...int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldIn(FieldVersion, vs...))
+}
+
+// VersionNotIn applies the NotIn predicate on the "version" field.
+func VersionNotIn(vs ...int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldNotIn(FieldVersion, vs...))
+}
+
+// VersionGT applies the GT predicate on the "version" field.
+func VersionGT(v int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldGT(FieldVersion, v))
+}
+
+// VersionGTE applies the GTE predicate on the "version" field.
+func VersionGTE(v int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldGTE(FieldVersion, v))
+}
+
+// VersionLT applies the LT predicate on the "version" field.
+func VersionLT(v int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldLT(FieldVersion, v))
+}
+
+// VersionLTE applies the LTE predicate on the "version" field.
+func VersionLTE(v int) predicate.WorkflowExecution {
+	return predicate.WorkflowExecution(sql.FieldLTE(FieldVersion, v))
+}
+
 // WorkflowIDEQ applies the EQ predicate on the "workflow_id" field.
 func WorkflowIDEQ(v object.ID) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldWorkflowID, v))
@@ -571,71 +606,6 @@ func SubjectIDContainsFold(v object.ID) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldSubjectID, vc))
 }
 
-// ProgressEQ applies the EQ predicate on the "progress" field.
-func ProgressEQ(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEQ(FieldProgress, v))
-}
-
-// ProgressNEQ applies the NEQ predicate on the "progress" field.
-func ProgressNEQ(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldNEQ(FieldProgress, v))
-}
-
-// ProgressIn applies the In predicate on the "progress" field.
-func ProgressIn(vs ...string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldIn(FieldProgress, vs...))
-}
-
-// ProgressNotIn applies the NotIn predicate on the "progress" field.
-func ProgressNotIn(vs ...string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldNotIn(FieldProgress, vs...))
-}
-
-// ProgressGT applies the GT predicate on the "progress" field.
-func ProgressGT(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldGT(FieldProgress, v))
-}
-
-// ProgressGTE applies the GTE predicate on the "progress" field.
-func ProgressGTE(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldGTE(FieldProgress, v))
-}
-
-// ProgressLT applies the LT predicate on the "progress" field.
-func ProgressLT(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldLT(FieldProgress, v))
-}
-
-// ProgressLTE applies the LTE predicate on the "progress" field.
-func ProgressLTE(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldLTE(FieldProgress, v))
-}
-
-// ProgressContains applies the Contains predicate on the "progress" field.
-func ProgressContains(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldContains(FieldProgress, v))
-}
-
-// ProgressHasPrefix applies the HasPrefix predicate on the "progress" field.
-func ProgressHasPrefix(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldHasPrefix(FieldProgress, v))
-}
-
-// ProgressHasSuffix applies the HasSuffix predicate on the "progress" field.
-func ProgressHasSuffix(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldHasSuffix(FieldProgress, v))
-}
-
-// ProgressEqualFold applies the EqualFold predicate on the "progress" field.
-func ProgressEqualFold(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEqualFold(FieldProgress, v))
-}
-
-// ProgressContainsFold applies the ContainsFold predicate on the "progress" field.
-func ProgressContainsFold(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldProgress, v))
-}
-
 // DurationEQ applies the EQ predicate on the "duration" field.
 func DurationEQ(v int) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldEQ(FieldDuration, v))
@@ -674,71 +644,6 @@ func DurationLT(v int) predicate.WorkflowExecution {
 // DurationLTE applies the LTE predicate on the "duration" field.
 func DurationLTE(v int) predicate.WorkflowExecution {
 	return predicate.WorkflowExecution(sql.FieldLTE(FieldDuration, v))
-}
-
-// RecordEQ applies the EQ predicate on the "record" field.
-func RecordEQ(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEQ(FieldRecord, v))
-}
-
-// RecordNEQ applies the NEQ predicate on the "record" field.
-func RecordNEQ(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldNEQ(FieldRecord, v))
-}
-
-// RecordIn applies the In predicate on the "record" field.
-func RecordIn(vs ...string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldIn(FieldRecord, vs...))
-}
-
-// RecordNotIn applies the NotIn predicate on the "record" field.
-func RecordNotIn(vs ...string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldNotIn(FieldRecord, vs...))
-}
-
-// RecordGT applies the GT predicate on the "record" field.
-func RecordGT(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldGT(FieldRecord, v))
-}
-
-// RecordGTE applies the GTE predicate on the "record" field.
-func RecordGTE(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldGTE(FieldRecord, v))
-}
-
-// RecordLT applies the LT predicate on the "record" field.
-func RecordLT(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldLT(FieldRecord, v))
-}
-
-// RecordLTE applies the LTE predicate on the "record" field.
-func RecordLTE(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldLTE(FieldRecord, v))
-}
-
-// RecordContains applies the Contains predicate on the "record" field.
-func RecordContains(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldContains(FieldRecord, v))
-}
-
-// RecordHasPrefix applies the HasPrefix predicate on the "record" field.
-func RecordHasPrefix(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldHasPrefix(FieldRecord, v))
-}
-
-// RecordHasSuffix applies the HasSuffix predicate on the "record" field.
-func RecordHasSuffix(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldHasSuffix(FieldRecord, v))
-}
-
-// RecordEqualFold applies the EqualFold predicate on the "record" field.
-func RecordEqualFold(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldEqualFold(FieldRecord, v))
-}
-
-// RecordContainsFold applies the ContainsFold predicate on the "record" field.
-func RecordContainsFold(v string) predicate.WorkflowExecution {
-	return predicate.WorkflowExecution(sql.FieldContainsFold(FieldRecord, v))
 }
 
 // HasProject applies the HasEdge predicate on the "project" edge.

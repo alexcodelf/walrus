@@ -161,20 +161,6 @@ func (wsec *WorkflowStageExecutionCreate) SetNillableOrder(i *int) *WorkflowStag
 	return wsec
 }
 
-// SetRecord sets the "record" field.
-func (wsec *WorkflowStageExecutionCreate) SetRecord(s string) *WorkflowStageExecutionCreate {
-	wsec.mutation.SetRecord(s)
-	return wsec
-}
-
-// SetNillableRecord sets the "record" field if the given value is not nil.
-func (wsec *WorkflowStageExecutionCreate) SetNillableRecord(s *string) *WorkflowStageExecutionCreate {
-	if s != nil {
-		wsec.SetRecord(*s)
-	}
-	return wsec
-}
-
 // SetID sets the "id" field.
 func (wsec *WorkflowStageExecutionCreate) SetID(o object.ID) *WorkflowStageExecutionCreate {
 	wsec.mutation.SetID(o)
@@ -273,10 +259,6 @@ func (wsec *WorkflowStageExecutionCreate) defaults() error {
 		v := workflowstageexecution.DefaultOrder
 		wsec.mutation.SetOrder(v)
 	}
-	if _, ok := wsec.mutation.Record(); !ok {
-		v := workflowstageexecution.DefaultRecord
-		wsec.mutation.SetRecord(v)
-	}
 	return nil
 }
 
@@ -333,9 +315,6 @@ func (wsec *WorkflowStageExecutionCreate) check() error {
 		if err := workflowstageexecution.OrderValidator(v); err != nil {
 			return &ValidationError{Name: "order", err: fmt.Errorf(`model: validator failed for field "WorkflowStageExecution.order": %w`, err)}
 		}
-	}
-	if _, ok := wsec.mutation.Record(); !ok {
-		return &ValidationError{Name: "record", err: errors.New(`model: missing required field "WorkflowStageExecution.record"`)}
 	}
 	if _, ok := wsec.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "WorkflowStageExecution.project"`)}
@@ -424,10 +403,6 @@ func (wsec *WorkflowStageExecutionCreate) createSpec() (*WorkflowStageExecution,
 		_spec.SetField(workflowstageexecution.FieldOrder, field.TypeInt, value)
 		_node.Order = value
 	}
-	if value, ok := wsec.mutation.Record(); ok {
-		_spec.SetField(workflowstageexecution.FieldRecord, field.TypeString, value)
-		_node.Record = value
-	}
 	if nodes := wsec.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -511,7 +486,6 @@ func (wsec *WorkflowStageExecutionCreate) Set(obj *WorkflowStageExecution) *Work
 	wsec.SetWorkflowExecutionID(obj.WorkflowExecutionID)
 	wsec.SetDuration(obj.Duration)
 	wsec.SetOrder(obj.Order)
-	wsec.SetRecord(obj.Record)
 
 	// Optional.
 	if obj.Description != "" {
@@ -955,18 +929,6 @@ func (u *WorkflowStageExecutionUpsert) AddOrder(v int) *WorkflowStageExecutionUp
 	return u
 }
 
-// SetRecord sets the "record" field.
-func (u *WorkflowStageExecutionUpsert) SetRecord(v string) *WorkflowStageExecutionUpsert {
-	u.Set(workflowstageexecution.FieldRecord, v)
-	return u
-}
-
-// UpdateRecord sets the "record" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsert) UpdateRecord() *WorkflowStageExecutionUpsert {
-	u.SetExcluded(workflowstageexecution.FieldRecord)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1170,20 +1132,6 @@ func (u *WorkflowStageExecutionUpsertOne) AddOrder(v int) *WorkflowStageExecutio
 func (u *WorkflowStageExecutionUpsertOne) UpdateOrder() *WorkflowStageExecutionUpsertOne {
 	return u.Update(func(s *WorkflowStageExecutionUpsert) {
 		s.UpdateOrder()
-	})
-}
-
-// SetRecord sets the "record" field.
-func (u *WorkflowStageExecutionUpsertOne) SetRecord(v string) *WorkflowStageExecutionUpsertOne {
-	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.SetRecord(v)
-	})
-}
-
-// UpdateRecord sets the "record" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsertOne) UpdateRecord() *WorkflowStageExecutionUpsertOne {
-	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.UpdateRecord()
 	})
 }
 
@@ -1555,20 +1503,6 @@ func (u *WorkflowStageExecutionUpsertBulk) AddOrder(v int) *WorkflowStageExecuti
 func (u *WorkflowStageExecutionUpsertBulk) UpdateOrder() *WorkflowStageExecutionUpsertBulk {
 	return u.Update(func(s *WorkflowStageExecutionUpsert) {
 		s.UpdateOrder()
-	})
-}
-
-// SetRecord sets the "record" field.
-func (u *WorkflowStageExecutionUpsertBulk) SetRecord(v string) *WorkflowStageExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.SetRecord(v)
-	})
-}
-
-// UpdateRecord sets the "record" field to the value that was provided on create.
-func (u *WorkflowStageExecutionUpsertBulk) UpdateRecord() *WorkflowStageExecutionUpsertBulk {
-	return u.Update(func(s *WorkflowStageExecutionUpsert) {
-		s.UpdateRecord()
 	})
 }
 

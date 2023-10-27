@@ -866,6 +866,7 @@ type WorkflowOutput struct {
 	EnvironmentID object.ID         `json:"environmentID,omitempty"`
 	Type          string            `json:"type,omitempty"`
 	Parallelism   int               `json:"parallelism,omitempty"`
+	Version       int               `json:"version,omitempty"`
 
 	Project    *ProjectOutput             `json:"project,omitempty"`
 	Stages     []*WorkflowStageOutput     `json:"stages,omitempty"`
@@ -898,6 +899,7 @@ func ExposeWorkflow(_w *Workflow) *WorkflowOutput {
 		EnvironmentID: _w.EnvironmentID,
 		Type:          _w.Type,
 		Parallelism:   _w.Parallelism,
+		Version:       _w.Version,
 	}
 
 	if _w.Edges.Project != nil {

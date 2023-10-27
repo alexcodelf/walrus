@@ -36,8 +36,6 @@ type WorkflowStageExecutionCreateInput struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// Log record of the workflow stage execution.
-	Record string `path:"-" query:"-" json:"record,omitempty"`
 
 	// Steps specifies full inserting the new WorkflowStepExecution entities of the WorkflowStageExecution entity.
 	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
@@ -57,7 +55,6 @@ func (wseci *WorkflowStageExecutionCreateInput) Model() *WorkflowStageExecution 
 		Description:     wseci.Description,
 		Labels:          wseci.Labels,
 		Duration:        wseci.Duration,
-		Record:          wseci.Record,
 	}
 
 	if wseci.WorkflowExecution != nil {
@@ -135,8 +132,6 @@ type WorkflowStageExecutionCreateInputsItem struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// Log record of the workflow stage execution.
-	Record string `path:"-" query:"-" json:"record,omitempty"`
 
 	// Steps specifies full inserting the new WorkflowStepExecution entities.
 	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
@@ -198,7 +193,6 @@ func (wseci *WorkflowStageExecutionCreateInputs) Model() []*WorkflowStageExecuti
 			Description:     wseci.Items[i].Description,
 			Labels:          wseci.Items[i].Labels,
 			Duration:        wseci.Items[i].Duration,
-			Record:          wseci.Items[i].Record,
 		}
 
 		if wseci.WorkflowExecution != nil {
@@ -541,8 +535,6 @@ type WorkflowStageExecutionUpdateInput struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
-	// Log record of the workflow stage execution.
-	Record string `path:"-" query:"-" json:"record,omitempty"`
 
 	// Steps indicates replacing the stale WorkflowStepExecution entities.
 	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
@@ -560,7 +552,6 @@ func (wseui *WorkflowStageExecutionUpdateInput) Model() *WorkflowStageExecution 
 		Description: wseui.Description,
 		Labels:      wseui.Labels,
 		Duration:    wseui.Duration,
-		Record:      wseui.Record,
 	}
 
 	if wseui.Steps != nil {
@@ -624,8 +615,6 @@ type WorkflowStageExecutionUpdateInputsItem struct {
 	Labels map[string]string `path:"-" query:"-" json:"labels,omitempty"`
 	// Duration of the workflow stage execution.
 	Duration int `path:"-" query:"-" json:"duration"`
-	// Log record of the workflow stage execution.
-	Record string `path:"-" query:"-" json:"record"`
 
 	// Steps indicates replacing the stale WorkflowStepExecution entities.
 	Steps []*WorkflowStepExecutionCreateInput `uri:"-" query:"-" json:"steps,omitempty"`
@@ -685,7 +674,6 @@ func (wseui *WorkflowStageExecutionUpdateInputs) Model() []*WorkflowStageExecuti
 			Description: wseui.Items[i].Description,
 			Labels:      wseui.Items[i].Labels,
 			Duration:    wseui.Items[i].Duration,
-			Record:      wseui.Items[i].Record,
 		}
 
 		if wseui.Items[i].Steps != nil {
@@ -804,7 +792,6 @@ type WorkflowStageExecutionOutput struct {
 	WorkflowID      object.ID         `json:"workflowID,omitempty"`
 	WorkflowStageID object.ID         `json:"workflowStageID,omitempty"`
 	Duration        int               `json:"duration,omitempty"`
-	Record          string            `json:"record,omitempty"`
 
 	Project           *ProjectOutput                 `json:"project,omitempty"`
 	Steps             []*WorkflowStepExecutionOutput `json:"steps,omitempty"`
@@ -838,7 +825,6 @@ func ExposeWorkflowStageExecution(_wse *WorkflowStageExecution) *WorkflowStageEx
 		WorkflowID:      _wse.WorkflowID,
 		WorkflowStageID: _wse.WorkflowStageID,
 		Duration:        _wse.Duration,
-		Record:          _wse.Record,
 	}
 
 	if _wse.Edges.Project != nil {

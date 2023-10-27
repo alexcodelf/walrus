@@ -39,6 +39,8 @@ const (
 	FieldType = "type"
 	// FieldParallelism holds the string denoting the parallelism field in the database.
 	FieldParallelism = "parallelism"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeStages holds the string denoting the stages edge name in mutations.
@@ -83,6 +85,7 @@ var Columns = []string{
 	FieldEnvironmentID,
 	FieldType,
 	FieldParallelism,
+	FieldVersion,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -123,6 +126,10 @@ var (
 	DefaultParallelism int
 	// ParallelismValidator is a validator for the "parallelism" field. It is called by the builders before save.
 	ParallelismValidator func(int) error
+	// DefaultVersion holds the default value on creation for the "version" field.
+	DefaultVersion int
+	// VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	VersionValidator func(int) error
 )
 
 // OrderOption defines the ordering options for the Workflow queries.
@@ -171,6 +178,11 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 // ByParallelism orders the results by the parallelism field.
 func ByParallelism(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldParallelism, opts...).ToFunc()
+}
+
+// ByVersion orders the results by the version field.
+func ByVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersion, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.

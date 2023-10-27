@@ -153,20 +153,6 @@ func (wseu *WorkflowStageExecutionUpdate) AddOrder(i int) *WorkflowStageExecutio
 	return wseu
 }
 
-// SetRecord sets the "record" field.
-func (wseu *WorkflowStageExecutionUpdate) SetRecord(s string) *WorkflowStageExecutionUpdate {
-	wseu.mutation.SetRecord(s)
-	return wseu
-}
-
-// SetNillableRecord sets the "record" field if the given value is not nil.
-func (wseu *WorkflowStageExecutionUpdate) SetNillableRecord(s *string) *WorkflowStageExecutionUpdate {
-	if s != nil {
-		wseu.SetRecord(*s)
-	}
-	return wseu
-}
-
 // AddStepIDs adds the "steps" edge to the WorkflowStepExecution entity by IDs.
 func (wseu *WorkflowStageExecutionUpdate) AddStepIDs(ids ...object.ID) *WorkflowStageExecutionUpdate {
 	wseu.mutation.AddStepIDs(ids...)
@@ -322,7 +308,6 @@ func (wseu *WorkflowStageExecutionUpdate) Set(obj *WorkflowStageExecution) *Work
 	}
 	wseu.SetDuration(obj.Duration)
 	wseu.SetOrder(obj.Order)
-	wseu.SetRecord(obj.Record)
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -391,9 +376,6 @@ func (wseu *WorkflowStageExecutionUpdate) sqlSave(ctx context.Context) (n int, e
 	}
 	if value, ok := wseu.mutation.AddedOrder(); ok {
 		_spec.AddField(workflowstageexecution.FieldOrder, field.TypeInt, value)
-	}
-	if value, ok := wseu.mutation.Record(); ok {
-		_spec.SetField(workflowstageexecution.FieldRecord, field.TypeString, value)
 	}
 	if wseu.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -577,20 +559,6 @@ func (wseuo *WorkflowStageExecutionUpdateOne) SetNillableOrder(i *int) *Workflow
 // AddOrder adds i to the "order" field.
 func (wseuo *WorkflowStageExecutionUpdateOne) AddOrder(i int) *WorkflowStageExecutionUpdateOne {
 	wseuo.mutation.AddOrder(i)
-	return wseuo
-}
-
-// SetRecord sets the "record" field.
-func (wseuo *WorkflowStageExecutionUpdateOne) SetRecord(s string) *WorkflowStageExecutionUpdateOne {
-	wseuo.mutation.SetRecord(s)
-	return wseuo
-}
-
-// SetNillableRecord sets the "record" field if the given value is not nil.
-func (wseuo *WorkflowStageExecutionUpdateOne) SetNillableRecord(s *string) *WorkflowStageExecutionUpdateOne {
-	if s != nil {
-		wseuo.SetRecord(*s)
-	}
 	return wseuo
 }
 
@@ -784,9 +752,6 @@ func (wseuo *WorkflowStageExecutionUpdateOne) Set(obj *WorkflowStageExecution) *
 			if db.Order != obj.Order {
 				wseuo.SetOrder(obj.Order)
 			}
-			if db.Record != obj.Record {
-				wseuo.SetRecord(obj.Record)
-			}
 
 			// With Default.
 			if (obj.UpdateTime != nil) && (!reflect.DeepEqual(db.UpdateTime, obj.UpdateTime)) {
@@ -854,9 +819,6 @@ func (wseuo *WorkflowStageExecutionUpdateOne) SaveE(ctx context.Context, cbs ...
 		}
 		if _, set := wseuo.mutation.Field(workflowstageexecution.FieldOrder); set {
 			obj.Order = x.Order
-		}
-		if _, set := wseuo.mutation.Field(workflowstageexecution.FieldRecord); set {
-			obj.Record = x.Record
 		}
 		obj.Edges = x.Edges
 	}
@@ -966,9 +928,6 @@ func (wseuo *WorkflowStageExecutionUpdateOne) sqlSave(ctx context.Context) (_nod
 	}
 	if value, ok := wseuo.mutation.AddedOrder(); ok {
 		_spec.AddField(workflowstageexecution.FieldOrder, field.TypeInt, value)
-	}
-	if value, ok := wseuo.mutation.Record(); ok {
-		_spec.SetField(workflowstageexecution.FieldRecord, field.TypeString, value)
 	}
 	if wseuo.mutation.StepsCleared() {
 		edge := &sqlgraph.EdgeSpec{

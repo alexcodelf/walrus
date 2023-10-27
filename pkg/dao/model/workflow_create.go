@@ -134,6 +134,20 @@ func (wc *WorkflowCreate) SetNillableParallelism(i *int) *WorkflowCreate {
 	return wc
 }
 
+// SetVersion sets the "version" field.
+func (wc *WorkflowCreate) SetVersion(i int) *WorkflowCreate {
+	wc.mutation.SetVersion(i)
+	return wc
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (wc *WorkflowCreate) SetNillableVersion(i *int) *WorkflowCreate {
+	if i != nil {
+		wc.SetVersion(*i)
+	}
+	return wc
+}
+
 // SetID sets the "id" field.
 func (wc *WorkflowCreate) SetID(o object.ID) *WorkflowCreate {
 	wc.mutation.SetID(o)
@@ -238,6 +252,10 @@ func (wc *WorkflowCreate) defaults() error {
 		v := workflow.DefaultParallelism
 		wc.mutation.SetParallelism(v)
 	}
+	if _, ok := wc.mutation.Version(); !ok {
+		v := workflow.DefaultVersion
+		wc.mutation.SetVersion(v)
+	}
 	return nil
 }
 
@@ -279,6 +297,14 @@ func (wc *WorkflowCreate) check() error {
 	if v, ok := wc.mutation.Parallelism(); ok {
 		if err := workflow.ParallelismValidator(v); err != nil {
 			return &ValidationError{Name: "parallelism", err: fmt.Errorf(`model: validator failed for field "Workflow.parallelism": %w`, err)}
+		}
+	}
+	if _, ok := wc.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`model: missing required field "Workflow.version"`)}
+	}
+	if v, ok := wc.mutation.Version(); ok {
+		if err := workflow.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`model: validator failed for field "Workflow.version": %w`, err)}
 		}
 	}
 	if _, ok := wc.mutation.ProjectID(); !ok {
@@ -356,6 +382,10 @@ func (wc *WorkflowCreate) createSpec() (*Workflow, *sqlgraph.CreateSpec) {
 	if value, ok := wc.mutation.Parallelism(); ok {
 		_spec.SetField(workflow.FieldParallelism, field.TypeInt, value)
 		_node.Parallelism = value
+	}
+	if value, ok := wc.mutation.Version(); ok {
+		_spec.SetField(workflow.FieldVersion, field.TypeInt, value)
+		_node.Version = value
 	}
 	if nodes := wc.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -436,6 +466,7 @@ func (wc *WorkflowCreate) Set(obj *Workflow) *WorkflowCreate {
 	wc.SetProjectID(obj.ProjectID)
 	wc.SetType(obj.Type)
 	wc.SetParallelism(obj.Parallelism)
+	wc.SetVersion(obj.Version)
 
 	// Optional.
 	if obj.Description != "" {
@@ -856,6 +887,24 @@ func (u *WorkflowUpsert) AddParallelism(v int) *WorkflowUpsert {
 	return u
 }
 
+// SetVersion sets the "version" field.
+func (u *WorkflowUpsert) SetVersion(v int) *WorkflowUpsert {
+	u.Set(workflow.FieldVersion, v)
+	return u
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *WorkflowUpsert) UpdateVersion() *WorkflowUpsert {
+	u.SetExcluded(workflow.FieldVersion)
+	return u
+}
+
+// AddVersion adds v to the "version" field.
+func (u *WorkflowUpsert) AddVersion(v int) *WorkflowUpsert {
+	u.Add(workflow.FieldVersion, v)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1014,6 +1063,27 @@ func (u *WorkflowUpsertOne) AddParallelism(v int) *WorkflowUpsertOne {
 func (u *WorkflowUpsertOne) UpdateParallelism() *WorkflowUpsertOne {
 	return u.Update(func(s *WorkflowUpsert) {
 		s.UpdateParallelism()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *WorkflowUpsertOne) SetVersion(v int) *WorkflowUpsertOne {
+	return u.Update(func(s *WorkflowUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// AddVersion adds v to the "version" field.
+func (u *WorkflowUpsertOne) AddVersion(v int) *WorkflowUpsertOne {
+	return u.Update(func(s *WorkflowUpsert) {
+		s.AddVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *WorkflowUpsertOne) UpdateVersion() *WorkflowUpsertOne {
+	return u.Update(func(s *WorkflowUpsert) {
+		s.UpdateVersion()
 	})
 }
 
@@ -1340,6 +1410,27 @@ func (u *WorkflowUpsertBulk) AddParallelism(v int) *WorkflowUpsertBulk {
 func (u *WorkflowUpsertBulk) UpdateParallelism() *WorkflowUpsertBulk {
 	return u.Update(func(s *WorkflowUpsert) {
 		s.UpdateParallelism()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *WorkflowUpsertBulk) SetVersion(v int) *WorkflowUpsertBulk {
+	return u.Update(func(s *WorkflowUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// AddVersion adds v to the "version" field.
+func (u *WorkflowUpsertBulk) AddVersion(v int) *WorkflowUpsertBulk {
+	return u.Update(func(s *WorkflowUpsert) {
+		s.AddVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *WorkflowUpsertBulk) UpdateVersion() *WorkflowUpsertBulk {
+	return u.Update(func(s *WorkflowUpsert) {
+		s.UpdateVersion()
 	})
 }
 

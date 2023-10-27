@@ -7,6 +7,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/utils/validation"
 )
 
@@ -21,6 +22,14 @@ type (
 func (r *CreateRequest) Validate() error {
 	if err := r.WorkflowCreateInput.Validate(); err != nil {
 		return err
+	}
+
+	if err := validation.IsDNSLabel(r.Name); err != nil {
+		return fmt.Errorf("invalid name: %w", err)
+	}
+
+	if err := validateType(r.Type); err != nil {
+		return fmt.Errorf("invalid type: %w", err)
 	}
 
 	return nil
@@ -58,6 +67,14 @@ type (
 	DeleteResponse = *model.WorkflowDeleteInput
 )
 
+func (r *DeleteRequest) Validate() error {
+	if err := r.WorkflowQueryInput.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type (
 	CollectionGetRequest struct {
 		model.WorkflowQueryInputs `path:",inline"`
@@ -77,3 +94,13 @@ func (r *CollectionGetRequest) SetStream(stream runtime.RequestUnidiStream) {
 }
 
 type CollectionDeleteRequest = model.WorkflowDeleteInputs
+
+func validateType(workflowType string) error {
+	switch workflowType {
+	case types.WorkflowTypeDefault:
+		return nil
+	// Add more workflow types here.
+	default:
+		return fmt.Errorf("invalid workflow type: %s", workflowType)
+	}
+}

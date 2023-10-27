@@ -111,11 +111,6 @@ func Order(v int) predicate.WorkflowStageExecution {
 	return predicate.WorkflowStageExecution(sql.FieldEQ(FieldOrder, v))
 }
 
-// Record applies equality check predicate on the "record" field. It's identical to RecordEQ.
-func Record(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldEQ(FieldRecord, v))
-}
-
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.WorkflowStageExecution {
 	return predicate.WorkflowStageExecution(sql.FieldEQ(FieldName, v))
@@ -724,71 +719,6 @@ func OrderLT(v int) predicate.WorkflowStageExecution {
 // OrderLTE applies the LTE predicate on the "order" field.
 func OrderLTE(v int) predicate.WorkflowStageExecution {
 	return predicate.WorkflowStageExecution(sql.FieldLTE(FieldOrder, v))
-}
-
-// RecordEQ applies the EQ predicate on the "record" field.
-func RecordEQ(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldEQ(FieldRecord, v))
-}
-
-// RecordNEQ applies the NEQ predicate on the "record" field.
-func RecordNEQ(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldNEQ(FieldRecord, v))
-}
-
-// RecordIn applies the In predicate on the "record" field.
-func RecordIn(vs ...string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldIn(FieldRecord, vs...))
-}
-
-// RecordNotIn applies the NotIn predicate on the "record" field.
-func RecordNotIn(vs ...string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldNotIn(FieldRecord, vs...))
-}
-
-// RecordGT applies the GT predicate on the "record" field.
-func RecordGT(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldGT(FieldRecord, v))
-}
-
-// RecordGTE applies the GTE predicate on the "record" field.
-func RecordGTE(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldGTE(FieldRecord, v))
-}
-
-// RecordLT applies the LT predicate on the "record" field.
-func RecordLT(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldLT(FieldRecord, v))
-}
-
-// RecordLTE applies the LTE predicate on the "record" field.
-func RecordLTE(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldLTE(FieldRecord, v))
-}
-
-// RecordContains applies the Contains predicate on the "record" field.
-func RecordContains(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldContains(FieldRecord, v))
-}
-
-// RecordHasPrefix applies the HasPrefix predicate on the "record" field.
-func RecordHasPrefix(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldHasPrefix(FieldRecord, v))
-}
-
-// RecordHasSuffix applies the HasSuffix predicate on the "record" field.
-func RecordHasSuffix(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldHasSuffix(FieldRecord, v))
-}
-
-// RecordEqualFold applies the EqualFold predicate on the "record" field.
-func RecordEqualFold(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldEqualFold(FieldRecord, v))
-}
-
-// RecordContainsFold applies the ContainsFold predicate on the "record" field.
-func RecordContainsFold(v string) predicate.WorkflowStageExecution {
-	return predicate.WorkflowStageExecution(sql.FieldContainsFold(FieldRecord, v))
 }
 
 // HasProject applies the HasEdge predicate on the "project" edge.

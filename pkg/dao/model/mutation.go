@@ -14,6 +14,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
 	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/connector"
@@ -22170,6 +22171,8 @@ type WorkflowMutation struct {
 	_type             *string
 	parallelism       *int
 	addparallelism    *int
+	version           *int
+	addversion        *int
 	clearedFields     map[string]struct{}
 	project           *object.ID
 	clearedproject    bool
@@ -22720,6 +22723,62 @@ func (m *WorkflowMutation) ResetParallelism() {
 	m.addparallelism = nil
 }
 
+// SetVersion sets the "version" field.
+func (m *WorkflowMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *WorkflowMutation) Version() (r int, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the Workflow entity.
+// If the Workflow object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowMutation) OldVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *WorkflowMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *WorkflowMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *WorkflowMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
 // ClearProject clears the "project" edge to the Project entity.
 func (m *WorkflowMutation) ClearProject() {
 	m.clearedproject = true
@@ -22888,7 +22947,7 @@ func (m *WorkflowMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.name != nil {
 		fields = append(fields, workflow.FieldName)
 	}
@@ -22919,6 +22978,9 @@ func (m *WorkflowMutation) Fields() []string {
 	if m.parallelism != nil {
 		fields = append(fields, workflow.FieldParallelism)
 	}
+	if m.version != nil {
+		fields = append(fields, workflow.FieldVersion)
+	}
 	return fields
 }
 
@@ -22947,6 +23009,8 @@ func (m *WorkflowMutation) Field(name string) (ent.Value, bool) {
 		return m.GetType()
 	case workflow.FieldParallelism:
 		return m.Parallelism()
+	case workflow.FieldVersion:
+		return m.Version()
 	}
 	return nil, false
 }
@@ -22976,6 +23040,8 @@ func (m *WorkflowMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldType(ctx)
 	case workflow.FieldParallelism:
 		return m.OldParallelism(ctx)
+	case workflow.FieldVersion:
+		return m.OldVersion(ctx)
 	}
 	return nil, fmt.Errorf("unknown Workflow field %s", name)
 }
@@ -23055,6 +23121,13 @@ func (m *WorkflowMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetParallelism(v)
 		return nil
+	case workflow.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Workflow field %s", name)
 }
@@ -23066,6 +23139,9 @@ func (m *WorkflowMutation) AddedFields() []string {
 	if m.addparallelism != nil {
 		fields = append(fields, workflow.FieldParallelism)
 	}
+	if m.addversion != nil {
+		fields = append(fields, workflow.FieldVersion)
+	}
 	return fields
 }
 
@@ -23076,6 +23152,8 @@ func (m *WorkflowMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case workflow.FieldParallelism:
 		return m.AddedParallelism()
+	case workflow.FieldVersion:
+		return m.AddedVersion()
 	}
 	return nil, false
 }
@@ -23091,6 +23169,13 @@ func (m *WorkflowMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddParallelism(v)
+		return nil
+	case workflow.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Workflow numeric field %s", name)
@@ -23175,6 +23260,9 @@ func (m *WorkflowMutation) ResetField(name string) error {
 		return nil
 	case workflow.FieldParallelism:
 		m.ResetParallelism()
+		return nil
+	case workflow.FieldVersion:
+		m.ResetVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown Workflow field %s", name)
@@ -23321,11 +23409,11 @@ type WorkflowExecutionMutation struct {
 	create_time     *time.Time
 	update_time     *time.Time
 	status          *status.Status
+	version         *int
+	addversion      *int
 	subject_id      *object.ID
-	progress        *string
 	duration        *int
 	addduration     *int
-	record          *string
 	trigger         *types.WorkflowExecutionTrigger
 	clearedFields   map[string]struct{}
 	project         *object.ID
@@ -23784,6 +23872,62 @@ func (m *WorkflowExecutionMutation) ResetProjectID() {
 	m.project = nil
 }
 
+// SetVersion sets the "version" field.
+func (m *WorkflowExecutionMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *WorkflowExecutionMutation) Version() (r int, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the WorkflowExecution entity.
+// If the WorkflowExecution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowExecutionMutation) OldVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *WorkflowExecutionMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *WorkflowExecutionMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *WorkflowExecutionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
 // SetWorkflowID sets the "workflow_id" field.
 func (m *WorkflowExecutionMutation) SetWorkflowID(o object.ID) {
 	m.workflow = &o
@@ -23856,42 +24000,6 @@ func (m *WorkflowExecutionMutation) ResetSubjectID() {
 	m.subject_id = nil
 }
 
-// SetProgress sets the "progress" field.
-func (m *WorkflowExecutionMutation) SetProgress(s string) {
-	m.progress = &s
-}
-
-// Progress returns the value of the "progress" field in the mutation.
-func (m *WorkflowExecutionMutation) Progress() (r string, exists bool) {
-	v := m.progress
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldProgress returns the old "progress" field's value of the WorkflowExecution entity.
-// If the WorkflowExecution object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowExecutionMutation) OldProgress(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldProgress is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldProgress requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldProgress: %w", err)
-	}
-	return oldValue.Progress, nil
-}
-
-// ResetProgress resets all changes to the "progress" field.
-func (m *WorkflowExecutionMutation) ResetProgress() {
-	m.progress = nil
-}
-
 // SetDuration sets the "duration" field.
 func (m *WorkflowExecutionMutation) SetDuration(i int) {
 	m.duration = &i
@@ -23946,42 +24054,6 @@ func (m *WorkflowExecutionMutation) AddedDuration() (r int, exists bool) {
 func (m *WorkflowExecutionMutation) ResetDuration() {
 	m.duration = nil
 	m.addduration = nil
-}
-
-// SetRecord sets the "record" field.
-func (m *WorkflowExecutionMutation) SetRecord(s string) {
-	m.record = &s
-}
-
-// Record returns the value of the "record" field in the mutation.
-func (m *WorkflowExecutionMutation) Record() (r string, exists bool) {
-	v := m.record
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldRecord returns the old "record" field's value of the WorkflowExecution entity.
-// If the WorkflowExecution object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowExecutionMutation) OldRecord(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldRecord is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldRecord requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldRecord: %w", err)
-	}
-	return oldValue.Record, nil
-}
-
-// ResetRecord resets all changes to the "record" field.
-func (m *WorkflowExecutionMutation) ResetRecord() {
-	m.record = nil
 }
 
 // SetTrigger sets the "trigger" field.
@@ -24160,7 +24232,7 @@ func (m *WorkflowExecutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowExecutionMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 13)
 	if m.name != nil {
 		fields = append(fields, workflowexecution.FieldName)
 	}
@@ -24185,20 +24257,17 @@ func (m *WorkflowExecutionMutation) Fields() []string {
 	if m.project != nil {
 		fields = append(fields, workflowexecution.FieldProjectID)
 	}
+	if m.version != nil {
+		fields = append(fields, workflowexecution.FieldVersion)
+	}
 	if m.workflow != nil {
 		fields = append(fields, workflowexecution.FieldWorkflowID)
 	}
 	if m.subject_id != nil {
 		fields = append(fields, workflowexecution.FieldSubjectID)
 	}
-	if m.progress != nil {
-		fields = append(fields, workflowexecution.FieldProgress)
-	}
 	if m.duration != nil {
 		fields = append(fields, workflowexecution.FieldDuration)
-	}
-	if m.record != nil {
-		fields = append(fields, workflowexecution.FieldRecord)
 	}
 	if m.trigger != nil {
 		fields = append(fields, workflowexecution.FieldTrigger)
@@ -24227,16 +24296,14 @@ func (m *WorkflowExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case workflowexecution.FieldProjectID:
 		return m.ProjectID()
+	case workflowexecution.FieldVersion:
+		return m.Version()
 	case workflowexecution.FieldWorkflowID:
 		return m.WorkflowID()
 	case workflowexecution.FieldSubjectID:
 		return m.SubjectID()
-	case workflowexecution.FieldProgress:
-		return m.Progress()
 	case workflowexecution.FieldDuration:
 		return m.Duration()
-	case workflowexecution.FieldRecord:
-		return m.Record()
 	case workflowexecution.FieldTrigger:
 		return m.Trigger()
 	}
@@ -24264,16 +24331,14 @@ func (m *WorkflowExecutionMutation) OldField(ctx context.Context, name string) (
 		return m.OldStatus(ctx)
 	case workflowexecution.FieldProjectID:
 		return m.OldProjectID(ctx)
+	case workflowexecution.FieldVersion:
+		return m.OldVersion(ctx)
 	case workflowexecution.FieldWorkflowID:
 		return m.OldWorkflowID(ctx)
 	case workflowexecution.FieldSubjectID:
 		return m.OldSubjectID(ctx)
-	case workflowexecution.FieldProgress:
-		return m.OldProgress(ctx)
 	case workflowexecution.FieldDuration:
 		return m.OldDuration(ctx)
-	case workflowexecution.FieldRecord:
-		return m.OldRecord(ctx)
 	case workflowexecution.FieldTrigger:
 		return m.OldTrigger(ctx)
 	}
@@ -24341,6 +24406,13 @@ func (m *WorkflowExecutionMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetProjectID(v)
 		return nil
+	case workflowexecution.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
 	case workflowexecution.FieldWorkflowID:
 		v, ok := value.(object.ID)
 		if !ok {
@@ -24355,26 +24427,12 @@ func (m *WorkflowExecutionMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetSubjectID(v)
 		return nil
-	case workflowexecution.FieldProgress:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetProgress(v)
-		return nil
 	case workflowexecution.FieldDuration:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDuration(v)
-		return nil
-	case workflowexecution.FieldRecord:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetRecord(v)
 		return nil
 	case workflowexecution.FieldTrigger:
 		v, ok := value.(types.WorkflowExecutionTrigger)
@@ -24391,6 +24449,9 @@ func (m *WorkflowExecutionMutation) SetField(name string, value ent.Value) error
 // this mutation.
 func (m *WorkflowExecutionMutation) AddedFields() []string {
 	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, workflowexecution.FieldVersion)
+	}
 	if m.addduration != nil {
 		fields = append(fields, workflowexecution.FieldDuration)
 	}
@@ -24402,6 +24463,8 @@ func (m *WorkflowExecutionMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *WorkflowExecutionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case workflowexecution.FieldVersion:
+		return m.AddedVersion()
 	case workflowexecution.FieldDuration:
 		return m.AddedDuration()
 	}
@@ -24413,6 +24476,13 @@ func (m *WorkflowExecutionMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *WorkflowExecutionMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case workflowexecution.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
 	case workflowexecution.FieldDuration:
 		v, ok := value.(int)
 		if !ok {
@@ -24498,20 +24568,17 @@ func (m *WorkflowExecutionMutation) ResetField(name string) error {
 	case workflowexecution.FieldProjectID:
 		m.ResetProjectID()
 		return nil
+	case workflowexecution.FieldVersion:
+		m.ResetVersion()
+		return nil
 	case workflowexecution.FieldWorkflowID:
 		m.ResetWorkflowID()
 		return nil
 	case workflowexecution.FieldSubjectID:
 		m.ResetSubjectID()
 		return nil
-	case workflowexecution.FieldProgress:
-		m.ResetProgress()
-		return nil
 	case workflowexecution.FieldDuration:
 		m.ResetDuration()
-		return nil
-	case workflowexecution.FieldRecord:
-		m.ResetRecord()
 		return nil
 	case workflowexecution.FieldTrigger:
 		m.ResetTrigger()
@@ -25772,7 +25839,6 @@ type WorkflowStageExecutionMutation struct {
 	addduration               *int
 	_order                    *int
 	add_order                 *int
-	record                    *string
 	clearedFields             map[string]struct{}
 	project                   *object.ID
 	clearedproject            bool
@@ -26450,42 +26516,6 @@ func (m *WorkflowStageExecutionMutation) ResetOrder() {
 	m.add_order = nil
 }
 
-// SetRecord sets the "record" field.
-func (m *WorkflowStageExecutionMutation) SetRecord(s string) {
-	m.record = &s
-}
-
-// Record returns the value of the "record" field in the mutation.
-func (m *WorkflowStageExecutionMutation) Record() (r string, exists bool) {
-	v := m.record
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldRecord returns the old "record" field's value of the WorkflowStageExecution entity.
-// If the WorkflowStageExecution object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStageExecutionMutation) OldRecord(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldRecord is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldRecord requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldRecord: %w", err)
-	}
-	return oldValue.Record, nil
-}
-
-// ResetRecord resets all changes to the "record" field.
-func (m *WorkflowStageExecutionMutation) ResetRecord() {
-	m.record = nil
-}
-
 // ClearProject clears the "project" edge to the Project entity.
 func (m *WorkflowStageExecutionMutation) ClearProject() {
 	m.clearedproject = true
@@ -26626,7 +26656,7 @@ func (m *WorkflowStageExecutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStageExecutionMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 13)
 	if m.name != nil {
 		fields = append(fields, workflowstageexecution.FieldName)
 	}
@@ -26666,9 +26696,6 @@ func (m *WorkflowStageExecutionMutation) Fields() []string {
 	if m._order != nil {
 		fields = append(fields, workflowstageexecution.FieldOrder)
 	}
-	if m.record != nil {
-		fields = append(fields, workflowstageexecution.FieldRecord)
-	}
 	return fields
 }
 
@@ -26703,8 +26730,6 @@ func (m *WorkflowStageExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.Duration()
 	case workflowstageexecution.FieldOrder:
 		return m.Order()
-	case workflowstageexecution.FieldRecord:
-		return m.Record()
 	}
 	return nil, false
 }
@@ -26740,8 +26765,6 @@ func (m *WorkflowStageExecutionMutation) OldField(ctx context.Context, name stri
 		return m.OldDuration(ctx)
 	case workflowstageexecution.FieldOrder:
 		return m.OldOrder(ctx)
-	case workflowstageexecution.FieldRecord:
-		return m.OldRecord(ctx)
 	}
 	return nil, fmt.Errorf("unknown WorkflowStageExecution field %s", name)
 }
@@ -26841,13 +26864,6 @@ func (m *WorkflowStageExecutionMutation) SetField(name string, value ent.Value) 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetOrder(v)
-		return nil
-	case workflowstageexecution.FieldRecord:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetRecord(v)
 		return nil
 	}
 	return fmt.Errorf("unknown WorkflowStageExecution field %s", name)
@@ -26990,9 +27006,6 @@ func (m *WorkflowStageExecutionMutation) ResetField(name string) error {
 		return nil
 	case workflowstageexecution.FieldOrder:
 		m.ResetOrder()
-		return nil
-	case workflowstageexecution.FieldRecord:
-		m.ResetRecord()
 		return nil
 	}
 	return fmt.Errorf("unknown WorkflowStageExecution field %s", name)
@@ -27139,7 +27152,7 @@ type WorkflowStepMutation struct {
 	add_order          *int
 	dependencies       *[]object.ID
 	appenddependencies []object.ID
-	retryStrategy      *types.RetryStrategy
+	retryStrategy      *v1alpha1.RetryStrategy
 	timeout            *int
 	addtimeout         *int
 	clearedFields      map[string]struct{}
@@ -27910,12 +27923,12 @@ func (m *WorkflowStepMutation) ResetDependencies() {
 }
 
 // SetRetryStrategy sets the "retryStrategy" field.
-func (m *WorkflowStepMutation) SetRetryStrategy(ts types.RetryStrategy) {
-	m.retryStrategy = &ts
+func (m *WorkflowStepMutation) SetRetryStrategy(vs v1alpha1.RetryStrategy) {
+	m.retryStrategy = &vs
 }
 
 // RetryStrategy returns the value of the "retryStrategy" field in the mutation.
-func (m *WorkflowStepMutation) RetryStrategy() (r types.RetryStrategy, exists bool) {
+func (m *WorkflowStepMutation) RetryStrategy() (r v1alpha1.RetryStrategy, exists bool) {
 	v := m.retryStrategy
 	if v == nil {
 		return
@@ -27926,7 +27939,7 @@ func (m *WorkflowStepMutation) RetryStrategy() (r types.RetryStrategy, exists bo
 // OldRetryStrategy returns the old "retryStrategy" field's value of the WorkflowStep entity.
 // If the WorkflowStep object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WorkflowStepMutation) OldRetryStrategy(ctx context.Context) (v types.RetryStrategy, err error) {
+func (m *WorkflowStepMutation) OldRetryStrategy(ctx context.Context) (v v1alpha1.RetryStrategy, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldRetryStrategy is only allowed on UpdateOne operations")
 	}
@@ -28365,7 +28378,7 @@ func (m *WorkflowStepMutation) SetField(name string, value ent.Value) error {
 		m.SetDependencies(v)
 		return nil
 	case workflowstep.FieldRetryStrategy:
-		v, ok := value.(types.RetryStrategy)
+		v, ok := value.(v1alpha1.RetryStrategy)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -28668,6 +28681,7 @@ type WorkflowStepExecutionMutation struct {
 	addtimes               *int
 	duration               *int
 	addduration            *int
+	retryStrategy          *v1alpha1.RetryStrategy
 	_order                 *int
 	add_order              *int
 	record                 *string
@@ -29466,6 +29480,55 @@ func (m *WorkflowStepExecutionMutation) ResetDuration() {
 	m.addduration = nil
 }
 
+// SetRetryStrategy sets the "retryStrategy" field.
+func (m *WorkflowStepExecutionMutation) SetRetryStrategy(vs v1alpha1.RetryStrategy) {
+	m.retryStrategy = &vs
+}
+
+// RetryStrategy returns the value of the "retryStrategy" field in the mutation.
+func (m *WorkflowStepExecutionMutation) RetryStrategy() (r v1alpha1.RetryStrategy, exists bool) {
+	v := m.retryStrategy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetryStrategy returns the old "retryStrategy" field's value of the WorkflowStepExecution entity.
+// If the WorkflowStepExecution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkflowStepExecutionMutation) OldRetryStrategy(ctx context.Context) (v v1alpha1.RetryStrategy, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetryStrategy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetryStrategy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetryStrategy: %w", err)
+	}
+	return oldValue.RetryStrategy, nil
+}
+
+// ClearRetryStrategy clears the value of the "retryStrategy" field.
+func (m *WorkflowStepExecutionMutation) ClearRetryStrategy() {
+	m.retryStrategy = nil
+	m.clearedFields[workflowstepexecution.FieldRetryStrategy] = struct{}{}
+}
+
+// RetryStrategyCleared returns if the "retryStrategy" field was cleared in this mutation.
+func (m *WorkflowStepExecutionMutation) RetryStrategyCleared() bool {
+	_, ok := m.clearedFields[workflowstepexecution.FieldRetryStrategy]
+	return ok
+}
+
+// ResetRetryStrategy resets all changes to the "retryStrategy" field.
+func (m *WorkflowStepExecutionMutation) ResetRetryStrategy() {
+	m.retryStrategy = nil
+	delete(m.clearedFields, workflowstepexecution.FieldRetryStrategy)
+}
+
 // SetOrder sets the "order" field.
 func (m *WorkflowStepExecutionMutation) SetOrder(i int) {
 	m._order = &i
@@ -29657,7 +29720,7 @@ func (m *WorkflowStepExecutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkflowStepExecutionMutation) Fields() []string {
-	fields := make([]string, 0, 18)
+	fields := make([]string, 0, 19)
 	if m.name != nil {
 		fields = append(fields, workflowstepexecution.FieldName)
 	}
@@ -29706,6 +29769,9 @@ func (m *WorkflowStepExecutionMutation) Fields() []string {
 	if m.duration != nil {
 		fields = append(fields, workflowstepexecution.FieldDuration)
 	}
+	if m.retryStrategy != nil {
+		fields = append(fields, workflowstepexecution.FieldRetryStrategy)
+	}
 	if m._order != nil {
 		fields = append(fields, workflowstepexecution.FieldOrder)
 	}
@@ -29752,6 +29818,8 @@ func (m *WorkflowStepExecutionMutation) Field(name string) (ent.Value, bool) {
 		return m.Times()
 	case workflowstepexecution.FieldDuration:
 		return m.Duration()
+	case workflowstepexecution.FieldRetryStrategy:
+		return m.RetryStrategy()
 	case workflowstepexecution.FieldOrder:
 		return m.Order()
 	case workflowstepexecution.FieldRecord:
@@ -29797,6 +29865,8 @@ func (m *WorkflowStepExecutionMutation) OldField(ctx context.Context, name strin
 		return m.OldTimes(ctx)
 	case workflowstepexecution.FieldDuration:
 		return m.OldDuration(ctx)
+	case workflowstepexecution.FieldRetryStrategy:
+		return m.OldRetryStrategy(ctx)
 	case workflowstepexecution.FieldOrder:
 		return m.OldOrder(ctx)
 	case workflowstepexecution.FieldRecord:
@@ -29922,6 +29992,13 @@ func (m *WorkflowStepExecutionMutation) SetField(name string, value ent.Value) e
 		}
 		m.SetDuration(v)
 		return nil
+	case workflowstepexecution.FieldRetryStrategy:
+		v, ok := value.(v1alpha1.RetryStrategy)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetryStrategy(v)
+		return nil
 	case workflowstepexecution.FieldOrder:
 		v, ok := value.(int)
 		if !ok {
@@ -30020,6 +30097,9 @@ func (m *WorkflowStepExecutionMutation) ClearedFields() []string {
 	if m.FieldCleared(workflowstepexecution.FieldSpec) {
 		fields = append(fields, workflowstepexecution.FieldSpec)
 	}
+	if m.FieldCleared(workflowstepexecution.FieldRetryStrategy) {
+		fields = append(fields, workflowstepexecution.FieldRetryStrategy)
+	}
 	return fields
 }
 
@@ -30048,6 +30128,9 @@ func (m *WorkflowStepExecutionMutation) ClearField(name string) error {
 		return nil
 	case workflowstepexecution.FieldSpec:
 		m.ClearSpec()
+		return nil
+	case workflowstepexecution.FieldRetryStrategy:
+		m.ClearRetryStrategy()
 		return nil
 	}
 	return fmt.Errorf("unknown WorkflowStepExecution nullable field %s", name)
@@ -30104,6 +30187,9 @@ func (m *WorkflowStepExecutionMutation) ResetField(name string) error {
 		return nil
 	case workflowstepexecution.FieldDuration:
 		m.ResetDuration()
+		return nil
+	case workflowstepexecution.FieldRetryStrategy:
+		m.ResetRetryStrategy()
 		return nil
 	case workflowstepexecution.FieldOrder:
 		m.ResetOrder()

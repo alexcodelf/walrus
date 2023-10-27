@@ -16,11 +16,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
-	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
@@ -157,8 +157,16 @@ func (wsc *WorkflowStepCreate) SetDependencies(o []object.ID) *WorkflowStepCreat
 }
 
 // SetRetryStrategy sets the "retryStrategy" field.
-func (wsc *WorkflowStepCreate) SetRetryStrategy(ts types.RetryStrategy) *WorkflowStepCreate {
-	wsc.mutation.SetRetryStrategy(ts)
+func (wsc *WorkflowStepCreate) SetRetryStrategy(vs v1alpha1.RetryStrategy) *WorkflowStepCreate {
+	wsc.mutation.SetRetryStrategy(vs)
+	return wsc
+}
+
+// SetNillableRetryStrategy sets the "retryStrategy" field if the given value is not nil.
+func (wsc *WorkflowStepCreate) SetNillableRetryStrategy(vs *v1alpha1.RetryStrategy) *WorkflowStepCreate {
+	if vs != nil {
+		wsc.SetRetryStrategy(*vs)
+	}
 	return wsc
 }
 
@@ -1005,7 +1013,7 @@ func (u *WorkflowStepUpsert) UpdateDependencies() *WorkflowStepUpsert {
 }
 
 // SetRetryStrategy sets the "retryStrategy" field.
-func (u *WorkflowStepUpsert) SetRetryStrategy(v types.RetryStrategy) *WorkflowStepUpsert {
+func (u *WorkflowStepUpsert) SetRetryStrategy(v v1alpha1.RetryStrategy) *WorkflowStepUpsert {
 	u.Set(workflowstep.FieldRetryStrategy, v)
 	return u
 }
@@ -1282,7 +1290,7 @@ func (u *WorkflowStepUpsertOne) UpdateDependencies() *WorkflowStepUpsertOne {
 }
 
 // SetRetryStrategy sets the "retryStrategy" field.
-func (u *WorkflowStepUpsertOne) SetRetryStrategy(v types.RetryStrategy) *WorkflowStepUpsertOne {
+func (u *WorkflowStepUpsertOne) SetRetryStrategy(v v1alpha1.RetryStrategy) *WorkflowStepUpsertOne {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetRetryStrategy(v)
 	})
@@ -1730,7 +1738,7 @@ func (u *WorkflowStepUpsertBulk) UpdateDependencies() *WorkflowStepUpsertBulk {
 }
 
 // SetRetryStrategy sets the "retryStrategy" field.
-func (u *WorkflowStepUpsertBulk) SetRetryStrategy(v types.RetryStrategy) *WorkflowStepUpsertBulk {
+func (u *WorkflowStepUpsertBulk) SetRetryStrategy(v v1alpha1.RetryStrategy) *WorkflowStepUpsertBulk {
 	return u.Update(func(s *WorkflowStepUpsert) {
 		s.SetRetryStrategy(v)
 	})

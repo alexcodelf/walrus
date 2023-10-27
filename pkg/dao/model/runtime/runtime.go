@@ -843,6 +843,12 @@ func init() {
 	workflow.DefaultParallelism = workflowDescParallelism.Default.(int)
 	// workflow.ParallelismValidator is a validator for the "parallelism" field. It is called by the builders before save.
 	workflow.ParallelismValidator = workflowDescParallelism.Validators[0].(func(int) error)
+	// workflowDescVersion is the schema descriptor for version field.
+	workflowDescVersion := workflowFields[4].Descriptor()
+	// workflow.DefaultVersion holds the default value on creation for the version field.
+	workflow.DefaultVersion = workflowDescVersion.Default.(int)
+	// workflow.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	workflow.VersionValidator = workflowDescVersion.Validators[0].(func(int) error)
 	workflowexecutionMixin := schema.WorkflowExecution{}.Mixin()
 	workflowexecutionMixinHooks0 := workflowexecutionMixin[0].Hooks()
 	workflowexecution.Hooks[0] = workflowexecutionMixinHooks0[0]
@@ -878,8 +884,12 @@ func init() {
 	workflowexecutionDescProjectID := workflowexecutionFields[0].Descriptor()
 	// workflowexecution.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
 	workflowexecution.ProjectIDValidator = workflowexecutionDescProjectID.Validators[0].(func(string) error)
+	// workflowexecutionDescVersion is the schema descriptor for version field.
+	workflowexecutionDescVersion := workflowexecutionFields[1].Descriptor()
+	// workflowexecution.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	workflowexecution.VersionValidator = workflowexecutionDescVersion.Validators[0].(func(int) error)
 	// workflowexecutionDescWorkflowID is the schema descriptor for workflow_id field.
-	workflowexecutionDescWorkflowID := workflowexecutionFields[1].Descriptor()
+	workflowexecutionDescWorkflowID := workflowexecutionFields[2].Descriptor()
 	// workflowexecution.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
 	workflowexecution.WorkflowIDValidator = workflowexecutionDescWorkflowID.Validators[0].(func(string) error)
 	// workflowexecutionDescDuration is the schema descriptor for duration field.
@@ -888,12 +898,8 @@ func init() {
 	workflowexecution.DefaultDuration = workflowexecutionDescDuration.Default.(int)
 	// workflowexecution.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
 	workflowexecution.DurationValidator = workflowexecutionDescDuration.Validators[0].(func(int) error)
-	// workflowexecutionDescRecord is the schema descriptor for record field.
-	workflowexecutionDescRecord := workflowexecutionFields[5].Descriptor()
-	// workflowexecution.DefaultRecord holds the default value on creation for the record field.
-	workflowexecution.DefaultRecord = workflowexecutionDescRecord.Default.(string)
 	// workflowexecutionDescTrigger is the schema descriptor for trigger field.
-	workflowexecutionDescTrigger := workflowexecutionFields[6].Descriptor()
+	workflowexecutionDescTrigger := workflowexecutionFields[5].Descriptor()
 	// workflowexecution.DefaultTrigger holds the default value on creation for the trigger field.
 	workflowexecution.DefaultTrigger = workflowexecutionDescTrigger.Default.(types.WorkflowExecutionTrigger)
 	workflowstageMixin := schema.WorkflowStage{}.Mixin()
@@ -996,10 +1002,6 @@ func init() {
 	workflowstageexecution.DefaultOrder = workflowstageexecutionDescOrder.Default.(int)
 	// workflowstageexecution.OrderValidator is a validator for the "order" field. It is called by the builders before save.
 	workflowstageexecution.OrderValidator = workflowstageexecutionDescOrder.Validators[0].(func(int) error)
-	// workflowstageexecutionDescRecord is the schema descriptor for record field.
-	workflowstageexecutionDescRecord := workflowstageexecutionFields[6].Descriptor()
-	// workflowstageexecution.DefaultRecord holds the default value on creation for the record field.
-	workflowstageexecution.DefaultRecord = workflowstageexecutionDescRecord.Default.(string)
 	workflowstepMixin := schema.WorkflowStep{}.Mixin()
 	workflowstepMixinHooks0 := workflowstepMixin[0].Hooks()
 	workflowstep.Hooks[0] = workflowstepMixinHooks0[0]
@@ -1115,13 +1117,13 @@ func init() {
 	// workflowstepexecution.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
 	workflowstepexecution.DurationValidator = workflowstepexecutionDescDuration.Validators[0].(func(int) error)
 	// workflowstepexecutionDescOrder is the schema descriptor for order field.
-	workflowstepexecutionDescOrder := workflowstepexecutionFields[9].Descriptor()
+	workflowstepexecutionDescOrder := workflowstepexecutionFields[10].Descriptor()
 	// workflowstepexecution.DefaultOrder holds the default value on creation for the order field.
 	workflowstepexecution.DefaultOrder = workflowstepexecutionDescOrder.Default.(int)
 	// workflowstepexecution.OrderValidator is a validator for the "order" field. It is called by the builders before save.
 	workflowstepexecution.OrderValidator = workflowstepexecutionDescOrder.Validators[0].(func(int) error)
 	// workflowstepexecutionDescRecord is the schema descriptor for record field.
-	workflowstepexecutionDescRecord := workflowstepexecutionFields[10].Descriptor()
+	workflowstepexecutionDescRecord := workflowstepexecutionFields[11].Descriptor()
 	// workflowstepexecution.DefaultRecord holds the default value on creation for the record field.
 	workflowstepexecution.DefaultRecord = workflowstepexecutionDescRecord.Default.(string)
 	workflowsteptemplateMixin := schema.WorkflowStepTemplate{}.Mixin()

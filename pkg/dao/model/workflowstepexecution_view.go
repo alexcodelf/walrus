@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
+
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
@@ -47,6 +49,8 @@ type WorkflowStepExecutionCreateInput struct {
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
+	// Retry policy of the workflow step.
+	RetryStrategy v1alpha1.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
 	// Log record of the workflow step execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 }
@@ -69,6 +73,7 @@ func (wseci *WorkflowStepExecutionCreateInput) Model() *WorkflowStepExecution {
 		Spec:                wseci.Spec,
 		Times:               wseci.Times,
 		Duration:            wseci.Duration,
+		RetryStrategy:       wseci.RetryStrategy,
 		Record:              wseci.Record,
 	}
 
@@ -139,6 +144,8 @@ type WorkflowStepExecutionCreateInputsItem struct {
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
+	// Retry policy of the workflow step.
+	RetryStrategy v1alpha1.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
 	// Log record of the workflow step execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 }
@@ -191,6 +198,7 @@ func (wseci *WorkflowStepExecutionCreateInputs) Model() []*WorkflowStepExecution
 			Spec:                wseci.Items[i].Spec,
 			Times:               wseci.Items[i].Times,
 			Duration:            wseci.Items[i].Duration,
+			RetryStrategy:       wseci.Items[i].RetryStrategy,
 			Record:              wseci.Items[i].Record,
 		}
 
@@ -574,6 +582,8 @@ type WorkflowStepExecutionUpdateInput struct {
 	Times int `path:"-" query:"-" json:"times,omitempty"`
 	// Duration of the workflow step execution.
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
+	// Retry policy of the workflow step.
+	RetryStrategy v1alpha1.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
 	// Log record of the workflow step execution.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 }
@@ -586,13 +596,14 @@ func (wseui *WorkflowStepExecutionUpdateInput) Model() *WorkflowStepExecution {
 	}
 
 	_wse := &WorkflowStepExecution{
-		ID:          wseui.ID,
-		Description: wseui.Description,
-		Labels:      wseui.Labels,
-		Spec:        wseui.Spec,
-		Times:       wseui.Times,
-		Duration:    wseui.Duration,
-		Record:      wseui.Record,
+		ID:            wseui.ID,
+		Description:   wseui.Description,
+		Labels:        wseui.Labels,
+		Spec:          wseui.Spec,
+		Times:         wseui.Times,
+		Duration:      wseui.Duration,
+		RetryStrategy: wseui.RetryStrategy,
+		Record:        wseui.Record,
 	}
 
 	return _wse
@@ -635,6 +646,8 @@ type WorkflowStepExecutionUpdateInputsItem struct {
 	Times int `path:"-" query:"-" json:"times"`
 	// Duration of the workflow step execution.
 	Duration int `path:"-" query:"-" json:"duration"`
+	// Retry policy of the workflow step.
+	RetryStrategy v1alpha1.RetryStrategy `path:"-" query:"-" json:"retryStrategy,omitempty"`
 	// Log record of the workflow step execution.
 	Record string `path:"-" query:"-" json:"record"`
 }
@@ -677,13 +690,14 @@ func (wseui *WorkflowStepExecutionUpdateInputs) Model() []*WorkflowStepExecution
 
 	for i := range wseui.Items {
 		_wse := &WorkflowStepExecution{
-			ID:          wseui.Items[i].ID,
-			Description: wseui.Items[i].Description,
-			Labels:      wseui.Items[i].Labels,
-			Spec:        wseui.Items[i].Spec,
-			Times:       wseui.Items[i].Times,
-			Duration:    wseui.Items[i].Duration,
-			Record:      wseui.Items[i].Record,
+			ID:            wseui.Items[i].ID,
+			Description:   wseui.Items[i].Description,
+			Labels:        wseui.Items[i].Labels,
+			Spec:          wseui.Items[i].Spec,
+			Times:         wseui.Items[i].Times,
+			Duration:      wseui.Items[i].Duration,
+			RetryStrategy: wseui.Items[i].RetryStrategy,
+			Record:        wseui.Items[i].Record,
 		}
 
 		_wses[i] = _wse
@@ -805,6 +819,7 @@ type WorkflowStepExecutionOutput struct {
 	Spec                map[string]interface{} `json:"spec,omitempty"`
 	Times               int                    `json:"times,omitempty"`
 	Duration            int                    `json:"duration,omitempty"`
+	RetryStrategy       v1alpha1.RetryStrategy `json:"retryStrategy,omitempty"`
 	Record              string                 `json:"record,omitempty"`
 
 	Project        *ProjectOutput                `json:"project,omitempty"`
@@ -842,6 +857,7 @@ func ExposeWorkflowStepExecution(_wse *WorkflowStepExecution) *WorkflowStepExecu
 		Spec:                _wse.Spec,
 		Times:               _wse.Times,
 		Duration:            _wse.Duration,
+		RetryStrategy:       _wse.RetryStrategy,
 		Record:              _wse.Record,
 	}
 

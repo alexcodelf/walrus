@@ -48,6 +48,12 @@ func (Workflow) Fields() []ent.Field {
 			Comment("Number of task pods that can be executed in parallel of workflow.").
 			Positive().
 			Default(10),
+		field.Int("version").
+			Comment("Version of the workflow.").
+			NonNegative().
+			Default(0).
+			Annotations(
+				entx.SkipInput(entx.WithCreate(), entx.WithUpdate())),
 	}
 }
 

@@ -112,9 +112,16 @@ func (weu *WorkflowExecutionUpdate) ClearStatus() *WorkflowExecutionUpdate {
 	return weu
 }
 
-// SetProgress sets the "progress" field.
-func (weu *WorkflowExecutionUpdate) SetProgress(s string) *WorkflowExecutionUpdate {
-	weu.mutation.SetProgress(s)
+// SetVersion sets the "version" field.
+func (weu *WorkflowExecutionUpdate) SetVersion(i int) *WorkflowExecutionUpdate {
+	weu.mutation.ResetVersion()
+	weu.mutation.SetVersion(i)
+	return weu
+}
+
+// AddVersion adds i to the "version" field.
+func (weu *WorkflowExecutionUpdate) AddVersion(i int) *WorkflowExecutionUpdate {
+	weu.mutation.AddVersion(i)
 	return weu
 }
 
@@ -136,20 +143,6 @@ func (weu *WorkflowExecutionUpdate) SetNillableDuration(i *int) *WorkflowExecuti
 // AddDuration adds i to the "duration" field.
 func (weu *WorkflowExecutionUpdate) AddDuration(i int) *WorkflowExecutionUpdate {
 	weu.mutation.AddDuration(i)
-	return weu
-}
-
-// SetRecord sets the "record" field.
-func (weu *WorkflowExecutionUpdate) SetRecord(s string) *WorkflowExecutionUpdate {
-	weu.mutation.SetRecord(s)
-	return weu
-}
-
-// SetNillableRecord sets the "record" field if the given value is not nil.
-func (weu *WorkflowExecutionUpdate) SetNillableRecord(s *string) *WorkflowExecutionUpdate {
-	if s != nil {
-		weu.SetRecord(*s)
-	}
 	return weu
 }
 
@@ -252,6 +245,11 @@ func (weu *WorkflowExecutionUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (weu *WorkflowExecutionUpdate) check() error {
+	if v, ok := weu.mutation.Version(); ok {
+		if err := workflowexecution.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.version": %w`, err)}
+		}
+	}
 	if v, ok := weu.mutation.Duration(); ok {
 		if err := workflowexecution.DurationValidator(v); err != nil {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.duration": %w`, err)}
@@ -315,9 +313,8 @@ func (weu *WorkflowExecutionUpdate) Set(obj *WorkflowExecution) *WorkflowExecuti
 	if !reflect.ValueOf(obj.Status).IsZero() {
 		weu.SetStatus(obj.Status)
 	}
-	weu.SetProgress(obj.Progress)
+	weu.SetVersion(obj.Version)
 	weu.SetDuration(obj.Duration)
-	weu.SetRecord(obj.Record)
 	weu.SetTrigger(obj.Trigger)
 
 	// With Default.
@@ -376,17 +373,17 @@ func (weu *WorkflowExecutionUpdate) sqlSave(ctx context.Context) (n int, err err
 	if weu.mutation.StatusCleared() {
 		_spec.ClearField(workflowexecution.FieldStatus, field.TypeJSON)
 	}
-	if value, ok := weu.mutation.Progress(); ok {
-		_spec.SetField(workflowexecution.FieldProgress, field.TypeString, value)
+	if value, ok := weu.mutation.Version(); ok {
+		_spec.SetField(workflowexecution.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := weu.mutation.AddedVersion(); ok {
+		_spec.AddField(workflowexecution.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := weu.mutation.Duration(); ok {
 		_spec.SetField(workflowexecution.FieldDuration, field.TypeInt, value)
 	}
 	if value, ok := weu.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowexecution.FieldDuration, field.TypeInt, value)
-	}
-	if value, ok := weu.mutation.Record(); ok {
-		_spec.SetField(workflowexecution.FieldRecord, field.TypeString, value)
 	}
 	if value, ok := weu.mutation.Trigger(); ok {
 		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)
@@ -534,9 +531,16 @@ func (weuo *WorkflowExecutionUpdateOne) ClearStatus() *WorkflowExecutionUpdateOn
 	return weuo
 }
 
-// SetProgress sets the "progress" field.
-func (weuo *WorkflowExecutionUpdateOne) SetProgress(s string) *WorkflowExecutionUpdateOne {
-	weuo.mutation.SetProgress(s)
+// SetVersion sets the "version" field.
+func (weuo *WorkflowExecutionUpdateOne) SetVersion(i int) *WorkflowExecutionUpdateOne {
+	weuo.mutation.ResetVersion()
+	weuo.mutation.SetVersion(i)
+	return weuo
+}
+
+// AddVersion adds i to the "version" field.
+func (weuo *WorkflowExecutionUpdateOne) AddVersion(i int) *WorkflowExecutionUpdateOne {
+	weuo.mutation.AddVersion(i)
 	return weuo
 }
 
@@ -558,20 +562,6 @@ func (weuo *WorkflowExecutionUpdateOne) SetNillableDuration(i *int) *WorkflowExe
 // AddDuration adds i to the "duration" field.
 func (weuo *WorkflowExecutionUpdateOne) AddDuration(i int) *WorkflowExecutionUpdateOne {
 	weuo.mutation.AddDuration(i)
-	return weuo
-}
-
-// SetRecord sets the "record" field.
-func (weuo *WorkflowExecutionUpdateOne) SetRecord(s string) *WorkflowExecutionUpdateOne {
-	weuo.mutation.SetRecord(s)
-	return weuo
-}
-
-// SetNillableRecord sets the "record" field if the given value is not nil.
-func (weuo *WorkflowExecutionUpdateOne) SetNillableRecord(s *string) *WorkflowExecutionUpdateOne {
-	if s != nil {
-		weuo.SetRecord(*s)
-	}
 	return weuo
 }
 
@@ -687,6 +677,11 @@ func (weuo *WorkflowExecutionUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (weuo *WorkflowExecutionUpdateOne) check() error {
+	if v, ok := weuo.mutation.Version(); ok {
+		if err := workflowexecution.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.version": %w`, err)}
+		}
+	}
 	if v, ok := weuo.mutation.Duration(); ok {
 		if err := workflowexecution.DurationValidator(v); err != nil {
 			return &ValidationError{Name: "duration", err: fmt.Errorf(`model: validator failed for field "WorkflowExecution.duration": %w`, err)}
@@ -768,14 +763,11 @@ func (weuo *WorkflowExecutionUpdateOne) Set(obj *WorkflowExecution) *WorkflowExe
 					weuo.SetStatus(obj.Status)
 				}
 			}
-			if db.Progress != obj.Progress {
-				weuo.SetProgress(obj.Progress)
+			if db.Version != obj.Version {
+				weuo.SetVersion(obj.Version)
 			}
 			if db.Duration != obj.Duration {
 				weuo.SetDuration(obj.Duration)
-			}
-			if db.Record != obj.Record {
-				weuo.SetRecord(obj.Record)
 			}
 			if !reflect.DeepEqual(db.Trigger, obj.Trigger) {
 				weuo.SetTrigger(obj.Trigger)
@@ -842,14 +834,11 @@ func (weuo *WorkflowExecutionUpdateOne) SaveE(ctx context.Context, cbs ...func(c
 		if _, set := weuo.mutation.Field(workflowexecution.FieldStatus); set {
 			obj.Status = x.Status
 		}
-		if _, set := weuo.mutation.Field(workflowexecution.FieldProgress); set {
-			obj.Progress = x.Progress
+		if _, set := weuo.mutation.Field(workflowexecution.FieldVersion); set {
+			obj.Version = x.Version
 		}
 		if _, set := weuo.mutation.Field(workflowexecution.FieldDuration); set {
 			obj.Duration = x.Duration
-		}
-		if _, set := weuo.mutation.Field(workflowexecution.FieldRecord); set {
-			obj.Record = x.Record
 		}
 		if _, set := weuo.mutation.Field(workflowexecution.FieldTrigger); set {
 			obj.Trigger = x.Trigger
@@ -951,17 +940,17 @@ func (weuo *WorkflowExecutionUpdateOne) sqlSave(ctx context.Context) (_node *Wor
 	if weuo.mutation.StatusCleared() {
 		_spec.ClearField(workflowexecution.FieldStatus, field.TypeJSON)
 	}
-	if value, ok := weuo.mutation.Progress(); ok {
-		_spec.SetField(workflowexecution.FieldProgress, field.TypeString, value)
+	if value, ok := weuo.mutation.Version(); ok {
+		_spec.SetField(workflowexecution.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := weuo.mutation.AddedVersion(); ok {
+		_spec.AddField(workflowexecution.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := weuo.mutation.Duration(); ok {
 		_spec.SetField(workflowexecution.FieldDuration, field.TypeInt, value)
 	}
 	if value, ok := weuo.mutation.AddedDuration(); ok {
 		_spec.AddField(workflowexecution.FieldDuration, field.TypeInt, value)
-	}
-	if value, ok := weuo.mutation.Record(); ok {
-		_spec.SetField(workflowexecution.FieldRecord, field.TypeString, value)
 	}
 	if value, ok := weuo.mutation.Trigger(); ok {
 		_spec.SetField(workflowexecution.FieldTrigger, field.TypeJSON, value)

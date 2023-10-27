@@ -12,6 +12,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
@@ -58,6 +59,8 @@ type WorkflowStepExecution struct {
 	Times int `json:"times,omitempty"`
 	// Duration of the workflow step execution.
 	Duration int `json:"duration,omitempty"`
+	// Retry policy of the workflow step.
+	RetryStrategy v1alpha1.RetryStrategy `json:"retryStrategy,omitempty"`
 	// Order of the workflow step execution.
 	Order int `json:"order,omitempty"`
 	// Log record of the workflow step execution.
@@ -110,7 +113,7 @@ func (*WorkflowStepExecution) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workflowstepexecution.FieldLabels, workflowstepexecution.FieldAnnotations, workflowstepexecution.FieldStatus, workflowstepexecution.FieldSpec:
+		case workflowstepexecution.FieldLabels, workflowstepexecution.FieldAnnotations, workflowstepexecution.FieldStatus, workflowstepexecution.FieldSpec, workflowstepexecution.FieldRetryStrategy:
 			values[i] = new([]byte)
 		case workflowstepexecution.FieldID, workflowstepexecution.FieldWorkflowStepID, workflowstepexecution.FieldWorkflowExecutionID, workflowstepexecution.FieldWorkflowStageExecutionID, workflowstepexecution.FieldProjectID, workflowstepexecution.FieldWorkflowID:
 			values[i] = new(object.ID)
@@ -247,6 +250,14 @@ func (wse *WorkflowStepExecution) assignValues(columns []string, values []any) e
 			} else if value.Valid {
 				wse.Duration = int(value.Int64)
 			}
+		case workflowstepexecution.FieldRetryStrategy:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field retryStrategy", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &wse.RetryStrategy); err != nil {
+					return fmt.Errorf("unmarshal field retryStrategy: %w", err)
+				}
+			}
 		case workflowstepexecution.FieldOrder:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field order", values[i])
@@ -356,6 +367,9 @@ func (wse *WorkflowStepExecution) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("duration=")
 	builder.WriteString(fmt.Sprintf("%v", wse.Duration))
+	builder.WriteString(", ")
+	builder.WriteString("retryStrategy=")
+	builder.WriteString(fmt.Sprintf("%v", wse.RetryStrategy))
 	builder.WriteString(", ")
 	builder.WriteString("order=")
 	builder.WriteString(fmt.Sprintf("%v", wse.Order))

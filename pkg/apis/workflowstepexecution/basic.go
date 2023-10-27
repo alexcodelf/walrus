@@ -8,11 +8,12 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
+	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/datalisten/modelchange"
 	pkgworkflow "github.com/seal-io/walrus/pkg/workflow"
-	"github.com/seal-io/walrus/pkg/workflow/step/types"
+	steptypes "github.com/seal-io/walrus/pkg/workflow/step/types"
 	"github.com/seal-io/walrus/utils/gopool"
 	"github.com/seal-io/walrus/utils/log"
 	"github.com/seal-io/walrus/utils/topic"
@@ -40,12 +41,12 @@ func (h Handler) Update(req UpdateRequest) error {
 	fmt.Println("step execution update", entity.ID, req.Status)
 
 	switch req.Status {
-	case "Succeeded":
+	case types.ExecutionStatusSucceeded:
 		status.WorkflowStepExecutionStatusRunning.True(entity, "")
 		status.WorkflowStepExecutionStatusReady.True(entity, "")
-	case "Error", "Failed":
+	case types.ExecutionStatusFailed, types.ExecutionStatusError:
 		status.WorkflowStepExecutionStatusRunning.False(entity, "execute failed")
-	case "Running":
+	case types.ExecutionStatusRunning:
 		status.WorkflowExecutionStatusPending.True(entity, "")
 		status.WorkflowStepExecutionStatusRunning.Unknown(entity, "")
 	default:
@@ -76,7 +77,7 @@ func (h Handler) Update(req UpdateRequest) error {
 		return err
 	}
 
-	if entity.Type == types.StepTypeService.String() {
+	if entity.Type == steptypes.StepTypeService.String() {
 		if req.Status == "Running" {
 			return nil
 		}

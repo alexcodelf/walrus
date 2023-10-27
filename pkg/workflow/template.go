@@ -65,6 +65,7 @@ var (
 )
 
 // TemplateManager is the manager of workflow templates.
+// Manager generate argo workflow definition with model.WorkflowExecution.
 // It generates templates for workflow with workflow, stage and step executions.
 type TemplateManager struct {
 	mc model.ClientSet
@@ -77,6 +78,7 @@ func NewTemplateManager(mc model.ClientSet) *TemplateManager {
 }
 
 // GetWorkflowExecutionWorkflow returns an argo workflow for a workflow execution.
+// The workflow execution MUST contains edges of stage and step executions.
 func (t *TemplateManager) GetWorkflowExecutionWorkflow(
 	ctx context.Context,
 	workflowExecution *model.WorkflowExecution,
@@ -89,7 +91,6 @@ func (t *TemplateManager) GetWorkflowExecutionWorkflow(
 		return nil, err
 	}
 
-	// TODO using bot subject to create token.
 	at, err := auths.CreateAccessToken(ctx,
 		t.mc, s.ID, types.TokenKindDeployment, workflowExecution.ID.String(), pointer.Int(_1Day))
 	if err != nil {
@@ -225,7 +226,7 @@ func (t *TemplateManager) GetWorkflowExecutionStatusTemplate(
 ) *v1alpha1.Template {
 	status := "{{workflow.status}}"
 	if name == workflowEnterTemplateName {
-		status = "Running"
+		status = types.ExecutionStatusRunning
 	}
 
 	return &v1alpha1.Template{
@@ -318,21 +319,21 @@ func (t *TemplateManager) GetStageExecutionExtendTemplates(
 						Hooks: v1alpha1.LifecycleHooks{
 							"failed": getLifecycleHook(
 								stageTemplates[2].Name,
-								"Failed",
+								types.ExecutionStatusFailed,
 								fmt.Sprintf("steps[\"%s\"].status == \"Failed\"",
 									main,
 								),
 							),
 							"succeeded": getLifecycleHook(
 								stageTemplates[2].Name,
-								"Succeeded",
+								types.ExecutionStatusSucceeded,
 								fmt.Sprintf("steps[\"%s\"].status == \"Succeeded\"",
 									main,
 								),
 							),
 							"error": getLifecycleHook(
 								stageTemplates[2].Name,
-								"Error",
+								types.ExecutionStatusError,
 								fmt.Sprintf("steps[\"%s\"].status == \"Error\"",
 									main,
 								),
@@ -515,21 +516,21 @@ func (t *TemplateManager) GetStepExecutionExtendTemplates(
 						Hooks: v1alpha1.LifecycleHooks{
 							"succeeded": getLifecycleHook(
 								stepTemplates[2].Name,
-								"Succeeded",
+								types.ExecutionStatusSucceeded,
 								fmt.Sprintf("steps[\"%s\"].status == \"Succeeded\"",
 									main,
 								),
 							),
 							"failed": getLifecycleHook(
 								stepTemplates[2].Name,
-								"Failed",
+								types.ExecutionStatusFailed,
 								fmt.Sprintf("steps[\"%s\"].status == \"Failed\"",
 									main,
 								),
 							),
 							"error": getLifecycleHook(
 								stepTemplates[2].Name,
-								"Error",
+								types.ExecutionStatusError,
 								fmt.Sprintf("steps[\"%s\"].status == \"Error\"",
 									main,
 								),
@@ -651,14 +652,6 @@ func (t *TemplateManager) stepExecutionExitTemplate(stepExecution *model.Workflo
 	)
 }
 
-func statusTemplateName(id object.ID, templateType, stage string) string {
-	return strs.Join("-", templateName(id, templateType), stage)
-}
-
-func templateName(id object.ID, templateType string) string {
-	return strs.Join("-", templateType, id.String())
-}
-
 // getLifecycleHook returns a lifecycle hook of target tasks or steps.
 func getLifecycleHook(templateName, status, expression string) v1alpha1.LifecycleHook {
 	return v1alpha1.LifecycleHook{
@@ -673,4 +666,12 @@ func getLifecycleHook(templateName, status, expression string) v1alpha1.Lifecycl
 		},
 		Expression: expression,
 	}
+}
+
+func statusTemplateName(id object.ID, templateType, stage string) string {
+	return strs.Join("-", templateName(id, templateType), stage)
+}
+
+func templateName(id object.ID, templateType string) string {
+	return strs.Join("-", templateType, id.String())
 }

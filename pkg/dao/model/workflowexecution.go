@@ -43,16 +43,14 @@ type WorkflowExecution struct {
 	Status status.Status `json:"status,omitempty"`
 	// ID of the project to belong.
 	ProjectID object.ID `json:"project_id,omitempty"`
+	// Version of the workflow execution.
+	Version int `json:"version,omitempty"`
 	// ID of the workflow that this workflow execution belongs to.
 	WorkflowID object.ID `json:"workflow_id,omitempty"`
 	// ID of the subject that this workflow execution belongs to.
 	SubjectID object.ID `json:"subject_id,omitempty"`
-	// Progress of the workflow. N/M format,N is number of stages completed, M is total number of stages.
-	Progress string `json:"progress,omitempty"`
 	// Duration of the workflow execution.
 	Duration int `json:"duration,omitempty"`
-	// Log record of the workflow execution.
-	Record string `json:"record,omitempty"`
 	// Trigger of the workflow execution.
 	Trigger types.WorkflowExecutionTrigger `json:"trigger,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -118,9 +116,9 @@ func (*WorkflowExecution) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case workflowexecution.FieldID, workflowexecution.FieldProjectID, workflowexecution.FieldWorkflowID, workflowexecution.FieldSubjectID:
 			values[i] = new(object.ID)
-		case workflowexecution.FieldDuration:
+		case workflowexecution.FieldVersion, workflowexecution.FieldDuration:
 			values[i] = new(sql.NullInt64)
-		case workflowexecution.FieldName, workflowexecution.FieldDescription, workflowexecution.FieldProgress, workflowexecution.FieldRecord:
+		case workflowexecution.FieldName, workflowexecution.FieldDescription:
 			values[i] = new(sql.NullString)
 		case workflowexecution.FieldCreateTime, workflowexecution.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -201,6 +199,12 @@ func (we *WorkflowExecution) assignValues(columns []string, values []any) error 
 			} else if value != nil {
 				we.ProjectID = *value
 			}
+		case workflowexecution.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				we.Version = int(value.Int64)
+			}
 		case workflowexecution.FieldWorkflowID:
 			if value, ok := values[i].(*object.ID); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
@@ -213,23 +217,11 @@ func (we *WorkflowExecution) assignValues(columns []string, values []any) error 
 			} else if value != nil {
 				we.SubjectID = *value
 			}
-		case workflowexecution.FieldProgress:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field progress", values[i])
-			} else if value.Valid {
-				we.Progress = value.String
-			}
 		case workflowexecution.FieldDuration:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field duration", values[i])
 			} else if value.Valid {
 				we.Duration = int(value.Int64)
-			}
-		case workflowexecution.FieldRecord:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field record", values[i])
-			} else if value.Valid {
-				we.Record = value.String
 			}
 		case workflowexecution.FieldTrigger:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -318,20 +310,17 @@ func (we *WorkflowExecution) String() string {
 	builder.WriteString("project_id=")
 	builder.WriteString(fmt.Sprintf("%v", we.ProjectID))
 	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", we.Version))
+	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
 	builder.WriteString(fmt.Sprintf("%v", we.WorkflowID))
 	builder.WriteString(", ")
 	builder.WriteString("subject_id=")
 	builder.WriteString(fmt.Sprintf("%v", we.SubjectID))
 	builder.WriteString(", ")
-	builder.WriteString("progress=")
-	builder.WriteString(we.Progress)
-	builder.WriteString(", ")
 	builder.WriteString("duration=")
 	builder.WriteString(fmt.Sprintf("%v", we.Duration))
-	builder.WriteString(", ")
-	builder.WriteString("record=")
-	builder.WriteString(we.Record)
 	builder.WriteString(", ")
 	builder.WriteString("trigger=")
 	builder.WriteString(fmt.Sprintf("%v", we.Trigger))

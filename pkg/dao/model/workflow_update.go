@@ -112,6 +112,27 @@ func (wu *WorkflowUpdate) AddParallelism(i int) *WorkflowUpdate {
 	return wu
 }
 
+// SetVersion sets the "version" field.
+func (wu *WorkflowUpdate) SetVersion(i int) *WorkflowUpdate {
+	wu.mutation.ResetVersion()
+	wu.mutation.SetVersion(i)
+	return wu
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (wu *WorkflowUpdate) SetNillableVersion(i *int) *WorkflowUpdate {
+	if i != nil {
+		wu.SetVersion(*i)
+	}
+	return wu
+}
+
+// AddVersion adds i to the "version" field.
+func (wu *WorkflowUpdate) AddVersion(i int) *WorkflowUpdate {
+	wu.mutation.AddVersion(i)
+	return wu
+}
+
 // AddStageIDs adds the "stages" edge to the WorkflowStage entity by IDs.
 func (wu *WorkflowUpdate) AddStageIDs(ids ...object.ID) *WorkflowUpdate {
 	wu.mutation.AddStageIDs(ids...)
@@ -238,6 +259,11 @@ func (wu *WorkflowUpdate) check() error {
 			return &ValidationError{Name: "parallelism", err: fmt.Errorf(`model: validator failed for field "Workflow.parallelism": %w`, err)}
 		}
 	}
+	if v, ok := wu.mutation.Version(); ok {
+		if err := workflow.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`model: validator failed for field "Workflow.version": %w`, err)}
+		}
+	}
 	if _, ok := wu.mutation.ProjectID(); wu.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "Workflow.project"`)
 	}
@@ -291,6 +317,7 @@ func (wu *WorkflowUpdate) Set(obj *Workflow) *WorkflowUpdate {
 		wu.SetAnnotations(obj.Annotations)
 	}
 	wu.SetParallelism(obj.Parallelism)
+	wu.SetVersion(obj.Version)
 
 	// With Default.
 	if obj.UpdateTime != nil {
@@ -350,6 +377,12 @@ func (wu *WorkflowUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := wu.mutation.AddedParallelism(); ok {
 		_spec.AddField(workflow.FieldParallelism, field.TypeInt, value)
+	}
+	if value, ok := wu.mutation.Version(); ok {
+		_spec.SetField(workflow.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := wu.mutation.AddedVersion(); ok {
+		_spec.AddField(workflow.FieldVersion, field.TypeInt, value)
 	}
 	if wu.mutation.StagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -543,6 +576,27 @@ func (wuo *WorkflowUpdateOne) AddParallelism(i int) *WorkflowUpdateOne {
 	return wuo
 }
 
+// SetVersion sets the "version" field.
+func (wuo *WorkflowUpdateOne) SetVersion(i int) *WorkflowUpdateOne {
+	wuo.mutation.ResetVersion()
+	wuo.mutation.SetVersion(i)
+	return wuo
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (wuo *WorkflowUpdateOne) SetNillableVersion(i *int) *WorkflowUpdateOne {
+	if i != nil {
+		wuo.SetVersion(*i)
+	}
+	return wuo
+}
+
+// AddVersion adds i to the "version" field.
+func (wuo *WorkflowUpdateOne) AddVersion(i int) *WorkflowUpdateOne {
+	wuo.mutation.AddVersion(i)
+	return wuo
+}
+
 // AddStageIDs adds the "stages" edge to the WorkflowStage entity by IDs.
 func (wuo *WorkflowUpdateOne) AddStageIDs(ids ...object.ID) *WorkflowUpdateOne {
 	wuo.mutation.AddStageIDs(ids...)
@@ -682,6 +736,11 @@ func (wuo *WorkflowUpdateOne) check() error {
 			return &ValidationError{Name: "parallelism", err: fmt.Errorf(`model: validator failed for field "Workflow.parallelism": %w`, err)}
 		}
 	}
+	if v, ok := wuo.mutation.Version(); ok {
+		if err := workflow.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`model: validator failed for field "Workflow.version": %w`, err)}
+		}
+	}
 	if _, ok := wuo.mutation.ProjectID(); wuo.mutation.ProjectCleared() && !ok {
 		return errors.New(`model: clearing a required unique edge "Workflow.project"`)
 	}
@@ -753,6 +812,9 @@ func (wuo *WorkflowUpdateOne) Set(obj *Workflow) *WorkflowUpdateOne {
 			if db.Parallelism != obj.Parallelism {
 				wuo.SetParallelism(obj.Parallelism)
 			}
+			if db.Version != obj.Version {
+				wuo.SetVersion(obj.Version)
+			}
 
 			// With Default.
 			if (obj.UpdateTime != nil) && (!reflect.DeepEqual(db.UpdateTime, obj.UpdateTime)) {
@@ -814,6 +876,9 @@ func (wuo *WorkflowUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx context
 		}
 		if _, set := wuo.mutation.Field(workflow.FieldParallelism); set {
 			obj.Parallelism = x.Parallelism
+		}
+		if _, set := wuo.mutation.Field(workflow.FieldVersion); set {
+			obj.Version = x.Version
 		}
 		obj.Edges = x.Edges
 	}
@@ -914,6 +979,12 @@ func (wuo *WorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Workflow, err
 	}
 	if value, ok := wuo.mutation.AddedParallelism(); ok {
 		_spec.AddField(workflow.FieldParallelism, field.TypeInt, value)
+	}
+	if value, ok := wuo.mutation.Version(); ok {
+		_spec.SetField(workflow.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := wuo.mutation.AddedVersion(); ok {
+		_spec.AddField(workflow.FieldVersion, field.TypeInt, value)
 	}
 	if wuo.mutation.StagesCleared() {
 		edge := &sqlgraph.EdgeSpec{

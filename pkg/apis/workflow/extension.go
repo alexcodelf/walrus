@@ -58,6 +58,17 @@ func (h Handler) RouteApplyRequest(req RouteApplyRequest) (RouteApplyResponse, e
 
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return model.ExposeWorkflowExecution(wfe), err
+	// Update workflow version.
+	wf, err = h.modelClient.Workflows().UpdateOne(wf).
+		AddVersion(1).
+		Save(req.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	return model.ExposeWorkflowExecution(wfe), nil
 }

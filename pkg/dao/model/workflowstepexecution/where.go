@@ -886,6 +886,16 @@ func DurationLTE(v int) predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(sql.FieldLTE(FieldDuration, v))
 }
 
+// RetryStrategyIsNil applies the IsNil predicate on the "retryStrategy" field.
+func RetryStrategyIsNil() predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldIsNull(FieldRetryStrategy))
+}
+
+// RetryStrategyNotNil applies the NotNil predicate on the "retryStrategy" field.
+func RetryStrategyNotNil() predicate.WorkflowStepExecution {
+	return predicate.WorkflowStepExecution(sql.FieldNotNull(FieldRetryStrategy))
+}
+
 // OrderEQ applies the EQ predicate on the "order" field.
 func OrderEQ(v int) predicate.WorkflowStepExecution {
 	return predicate.WorkflowStepExecution(sql.FieldEQ(FieldOrder, v))
