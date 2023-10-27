@@ -108,11 +108,6 @@ func Variables(v crypto.Map[string, string]) predicate.ServiceRevision {
 	return predicate.ServiceRevision(sql.FieldEQ(FieldVariables, v))
 }
 
-// InputPlan applies equality check predicate on the "input_plan" field. It's identical to InputPlanEQ.
-func InputPlan(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldEQ(FieldInputPlan, v))
-}
-
 // Output applies equality check predicate on the "output" field. It's identical to OutputEQ.
 func Output(v string) predicate.ServiceRevision {
 	return predicate.ServiceRevision(sql.FieldEQ(FieldOutput, v))
@@ -681,71 +676,6 @@ func VariablesLT(v crypto.Map[string, string]) predicate.ServiceRevision {
 // VariablesLTE applies the LTE predicate on the "variables" field.
 func VariablesLTE(v crypto.Map[string, string]) predicate.ServiceRevision {
 	return predicate.ServiceRevision(sql.FieldLTE(FieldVariables, v))
-}
-
-// InputPlanEQ applies the EQ predicate on the "input_plan" field.
-func InputPlanEQ(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldEQ(FieldInputPlan, v))
-}
-
-// InputPlanNEQ applies the NEQ predicate on the "input_plan" field.
-func InputPlanNEQ(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldNEQ(FieldInputPlan, v))
-}
-
-// InputPlanIn applies the In predicate on the "input_plan" field.
-func InputPlanIn(vs ...string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldIn(FieldInputPlan, vs...))
-}
-
-// InputPlanNotIn applies the NotIn predicate on the "input_plan" field.
-func InputPlanNotIn(vs ...string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldNotIn(FieldInputPlan, vs...))
-}
-
-// InputPlanGT applies the GT predicate on the "input_plan" field.
-func InputPlanGT(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldGT(FieldInputPlan, v))
-}
-
-// InputPlanGTE applies the GTE predicate on the "input_plan" field.
-func InputPlanGTE(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldGTE(FieldInputPlan, v))
-}
-
-// InputPlanLT applies the LT predicate on the "input_plan" field.
-func InputPlanLT(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldLT(FieldInputPlan, v))
-}
-
-// InputPlanLTE applies the LTE predicate on the "input_plan" field.
-func InputPlanLTE(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldLTE(FieldInputPlan, v))
-}
-
-// InputPlanContains applies the Contains predicate on the "input_plan" field.
-func InputPlanContains(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldContains(FieldInputPlan, v))
-}
-
-// InputPlanHasPrefix applies the HasPrefix predicate on the "input_plan" field.
-func InputPlanHasPrefix(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldHasPrefix(FieldInputPlan, v))
-}
-
-// InputPlanHasSuffix applies the HasSuffix predicate on the "input_plan" field.
-func InputPlanHasSuffix(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldHasSuffix(FieldInputPlan, v))
-}
-
-// InputPlanEqualFold applies the EqualFold predicate on the "input_plan" field.
-func InputPlanEqualFold(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldEqualFold(FieldInputPlan, v))
-}
-
-// InputPlanContainsFold applies the ContainsFold predicate on the "input_plan" field.
-func InputPlanContainsFold(v string) predicate.ServiceRevision {
-	return predicate.ServiceRevision(sql.FieldContainsFold(FieldInputPlan, v))
 }
 
 // OutputEQ applies the EQ predicate on the "output" field.
