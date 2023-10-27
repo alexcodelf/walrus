@@ -25,12 +25,8 @@ type Deployer interface {
 
 // ApplyOptions holds the options of Deployer's Apply action.
 type ApplyOptions struct {
-	// SkipTLSVerify indicates to skip TLS verification.
-	SkipTLSVerify bool
 }
 
 // DestroyOptions holds the options of Deployer's Destroy action.
 type DestroyOptions struct {
-	// SkipTLSVerify indicates to skip TLS verification.
-	SkipTLSVerify bool
 }
