@@ -17,3 +17,6 @@ func IsSubjectKind(s string) bool {
 }
 
 const SubjectDomainBuiltin = "builtin"
+
+// SubjectUserBot is the name of the bot user.
+const SubjectUserBot = "bot"

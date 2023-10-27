@@ -269,7 +269,7 @@ func createSubjects(ctx context.Context, mc model.ClientSet) error {
 		{
 			Kind:        types.SubjectKindUser,
 			Domain:      types.SubjectDomainBuiltin,
-			Name:        "bot",
+			Name:        types.SubjectUserBot,
 			Description: "The bot user to execute background tasks.",
 			Edges: model.SubjectEdges{
 				Roles: []*model.SubjectRoleRelationship{

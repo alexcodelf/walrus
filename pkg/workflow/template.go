@@ -80,14 +80,18 @@ func NewTemplateManager(mc model.ClientSet) *TemplateManager {
 func (t *TemplateManager) GetWorkflowExecutionWorkflow(
 	ctx context.Context,
 	workflowExecution *model.WorkflowExecution,
-	subjectID object.ID,
 ) (*v1alpha1.Workflow, error) {
 	// Prepare API token for terraform backend.
 	const _1Day = 60 * 60 * 24
 
+	s, err := auths.GetBotSubject(ctx, t.mc)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO using bot subject to create token.
 	at, err := auths.CreateAccessToken(ctx,
-		t.mc, subjectID, types.TokenKindDeployment, workflowExecution.ID.String(), pointer.Int(_1Day))
+		t.mc, s.ID, types.TokenKindDeployment, workflowExecution.ID.String(), pointer.Int(_1Day))
 	if err != nil {
 		return nil, err
 	}

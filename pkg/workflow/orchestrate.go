@@ -36,6 +36,23 @@ func Apply(
 	})
 }
 
+// Resubmit resubmits the workflow execution to the argo workflow server.
+func Resubmit(
+	ctx context.Context,
+	mc model.ClientSet,
+	restCfg *rest.Config,
+	wfe *model.WorkflowExecution,
+) error {
+	client, err := NewArgoWorkflowClient(mc, restCfg)
+	if err != nil {
+		return err
+	}
+
+	return client.Resubmit(ctx, ResubmitOptions{
+		WorkflowExecution: wfe,
+	})
+}
+
 func CreateWorkflowExecution(
 	ctx context.Context,
 	mc model.ClientSet,

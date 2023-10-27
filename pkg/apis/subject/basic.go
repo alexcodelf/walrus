@@ -156,7 +156,8 @@ var (
 )
 
 func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse, int, error) {
-	query := h.modelClient.Subjects().Query()
+	query := h.modelClient.Subjects().Query().
+		Where(subject.NameNEQ(types.SubjectUserBot))
 
 	if req.Kind != "" {
 		query.Where(subject.Kind(req.Kind))

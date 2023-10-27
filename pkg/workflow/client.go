@@ -17,6 +17,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/k8s"
 	"github.com/seal-io/walrus/utils/log"
+	"github.com/seal-io/walrus/utils/strs"
 )
 
 // Client is the interface that defines the operations of workflow engine.
@@ -83,7 +84,7 @@ func NewArgoWorkflowClient(mc model.ClientSet, restCfg *rest.Config) (Client, er
 }
 
 func (s *ArgoWorkflowClient) Submit(ctx context.Context, opts SubmitOptions) error {
-	wf, err := s.tm.GetWorkflowExecutionWorkflow(ctx, opts.WorkflowExecution, opts.SubjectID)
+	wf, err := s.tm.GetWorkflowExecutionWorkflow(ctx, opts.WorkflowExecution)
 	if err != nil {
 		return err
 	}
@@ -103,6 +104,7 @@ func (s *ArgoWorkflowClient) Resume(ctx context.Context, opts ResumeOptions) err
 	subjectID := session.MustGetSubject(ctx)
 
 	fmt.Println(subjectID)
+	// TODO check subject permission.
 
 	workflowExecution, err := s.mc.WorkflowExecutions().Query().
 		Where(workflowexecution.ID(opts.WorkflowStepExecution.WorkflowExecutionID)).
@@ -112,7 +114,7 @@ func (s *ArgoWorkflowClient) Resume(ctx context.Context, opts ResumeOptions) err
 	}
 
 	_, err = s.apiClient.NewWorkflowServiceClient().ResumeWorkflow(s.apiClient.Ctx, &workflow.WorkflowResumeRequest{
-		Name:              workflowExecution.Name,
+		Name:              getWorkflowName(workflowExecution),
 		Namespace:         types.WalrusWorkflowNamespace,
 		NodeFieldSelector: fmt.Sprintf("templateName=suspend-%s", opts.WorkflowStepExecution.ID.String()),
 	})
@@ -123,7 +125,7 @@ func (s *ArgoWorkflowClient) Resume(ctx context.Context, opts ResumeOptions) err
 func (s *ArgoWorkflowClient) Resubmit(ctx context.Context, opts ResubmitOptions) error {
 	_, err := s.apiClient.NewWorkflowServiceClient().
 		ResubmitWorkflow(s.apiClient.Ctx, &workflow.WorkflowResubmitRequest{
-			Name:      opts.WorkflowExecution.Name,
+			Name:      getWorkflowName(opts.WorkflowExecution),
 			Namespace: types.WalrusWorkflowNamespace,
 		})
 
@@ -165,4 +167,9 @@ func NewArgoAPIClient(restCfg *rest.Config) (*ArgoAPIClient, error) {
 		Client: apiClient,
 		Ctx:    ctx,
 	}, nil
+}
+
+// getWorkflowName returns the target workflow name of a workflow execution.
+func getWorkflowName(workflowExecution *model.WorkflowExecution) string {
+	return strs.Join("-", workflowExecution.Name, workflowExecution.ID.String())
 }

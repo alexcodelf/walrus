@@ -1,6 +1,7 @@
 package auths
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,6 +9,8 @@ import (
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/model/subject"
+	"github.com/seal-io/walrus/pkg/dao/types"
 )
 
 func RequestAccount(mc model.ClientSet, withAuthn bool) Account {
@@ -75,4 +78,18 @@ func (a Account) Authorize(c *gin.Context, p runtime.RouteProfile) int {
 	}
 
 	return http.StatusForbidden
+}
+
+func GetBotSubject(ctx context.Context, mc model.ClientSet) (*session.Subject, error) {
+	botSubject, err := mc.Subjects().Query().
+		Where(subject.Name(types.SubjectUserBot)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &session.Subject{
+		ID:   botSubject.ID,
+		Name: botSubject.Name,
+	}, nil
 }

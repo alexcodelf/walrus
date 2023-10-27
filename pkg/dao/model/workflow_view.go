@@ -870,7 +870,6 @@ type WorkflowOutput struct {
 	Project    *ProjectOutput             `json:"project,omitempty"`
 	Stages     []*WorkflowStageOutput     `json:"stages,omitempty"`
 	Executions []*WorkflowExecutionOutput `json:"executions,omitempty"`
-	DisplayName string                     `json:"displayName,omitempty"`
 }
 
 // View returns the output of Workflow entity.
@@ -899,7 +898,6 @@ func ExposeWorkflow(_w *Workflow) *WorkflowOutput {
 		EnvironmentID: _w.EnvironmentID,
 		Type:          _w.Type,
 		Parallelism:   _w.Parallelism,
-		DisplayName : "Workflow",
 	}
 
 	if _w.Edges.Project != nil {

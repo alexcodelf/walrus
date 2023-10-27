@@ -1,10 +1,13 @@
 package workflow
 
 import (
+	"fmt"
+
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/utils/validation"
 )
 
 type (
@@ -38,6 +41,10 @@ type UpdateRequest struct {
 func (r *UpdateRequest) Validate() error {
 	if err := r.WorkflowUpdateInput.Validate(); err != nil {
 		return err
+	}
+
+	if err := validation.IsDNSLabel(r.Name); err != nil {
+		return fmt.Errorf("invalid name: %w", err)
 	}
 
 	return nil
