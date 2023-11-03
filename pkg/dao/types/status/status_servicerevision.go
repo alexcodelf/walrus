@@ -1,8 +1,10 @@
 package status
 
 const (
-	ServiceRevisionStatusReady ConditionType = "Ready"
+	ServiceRevisionStatusRunning ConditionType = "Running"
+	ServiceRevisionStatusReady   ConditionType = "Ready"
 
+	// TODO remove this status.
 	ServiceRevisionSummaryStatusRunning string = "Running"
 	ServiceRevisionSummaryStatusFailed  string = "Failed"
 	ServiceRevisionSummaryStatusSucceed string = "Succeed"
@@ -10,28 +12,20 @@ const (
 
 // serviceRevisionStatusPaths makes the following decision.
 //
-// |  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
-// | ---------------- | ----------------------- | --------------------- | --------------------- |
-// | Ready            | Unknown                 | Running               | Transitioning         |
-// | Ready            | False                   | Failed                | Error                 |
-// | Ready            | True                    | Succeed               |                       |.
+//	|  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
+//	| ---------------- | ----------------------- | --------------------- | --------------------- |
+//	| Running          | Unknown                 | Running               | Transitioning         |
+//	| Running          | False                   | Failed                | Error                 |
+//	| Running          | True                    | Deployed              |                       |
+//	| Ready            | Unknown                 | Preparing             | Transitioning         |
+//	| Ready            | False                   | Failed                | Error                 |
+//	| Ready            | True                    | Ready                 |                       |
 var serviceRevisionStatusPaths = NewWalker(
 	[][]ConditionType{
 		{
+			ServiceRevisionStatusRunning,
 			ServiceRevisionStatusReady,
 		},
-	},
-	func(d Decision[ConditionType]) {
-		d.Make(ServiceRevisionStatusReady,
-			func(st ConditionStatus, reason string) (display string, isError, isTransitioning bool) {
-				switch st {
-				case ConditionStatusUnknown:
-					return ServiceRevisionSummaryStatusRunning, false, true
-				case ConditionStatusFalse:
-					return ServiceRevisionSummaryStatusFailed, true, false
-				}
-				return ServiceRevisionSummaryStatusSucceed, false, false
-			})
 	},
 )
 
