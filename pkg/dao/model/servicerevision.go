@@ -62,6 +62,8 @@ type ServiceRevision struct {
 	PreviousRequiredProviders []types.ProviderRequirement `json:"previous_required_providers,omitempty"`
 	// Record of the revision.
 	Record string `json:"record,omitempty"`
+	// ID of the workflow step execution that this revision belongs to.
+	WorkflowStepExecutionID object.ID `json:"workflow_step_execution_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ServiceRevisionQuery when eager-loading is set.
 	Edges        ServiceRevisionEdges `json:"edges,omitempty"`
@@ -129,7 +131,7 @@ func (*ServiceRevision) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case servicerevision.FieldVariables:
 			values[i] = new(crypto.Map[string, string])
-		case servicerevision.FieldID, servicerevision.FieldProjectID, servicerevision.FieldEnvironmentID, servicerevision.FieldServiceID, servicerevision.FieldTemplateID:
+		case servicerevision.FieldID, servicerevision.FieldProjectID, servicerevision.FieldEnvironmentID, servicerevision.FieldServiceID, servicerevision.FieldTemplateID, servicerevision.FieldWorkflowStepExecutionID:
 			values[i] = new(object.ID)
 		case servicerevision.FieldAttributes:
 			values[i] = new(property.Values)
@@ -263,6 +265,12 @@ func (sr *ServiceRevision) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sr.Record = value.String
 			}
+		case servicerevision.FieldWorkflowStepExecutionID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field workflow_step_execution_id", values[i])
+			} else if value != nil {
+				sr.WorkflowStepExecutionID = *value
+			}
 		default:
 			sr.selectValues.Set(columns[i], values[i])
 		}
@@ -361,6 +369,9 @@ func (sr *ServiceRevision) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("record=")
 	builder.WriteString(sr.Record)
+	builder.WriteString(", ")
+	builder.WriteString("workflow_step_execution_id=")
+	builder.WriteString(fmt.Sprintf("%v", sr.WorkflowStepExecutionID))
 	builder.WriteByte(')')
 	return builder.String()
 }
