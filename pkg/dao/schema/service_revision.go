@@ -79,6 +79,9 @@ func (ServiceRevision) Fields() []ent.Field {
 		field.Text("record").
 			Comment("Record of the revision.").
 			Optional(),
+		object.IDField("workflow_step_execution_id").
+			Comment("ID of the workflow step execution that this revision belongs to.").
+			Optional(),
 	}
 }
 
