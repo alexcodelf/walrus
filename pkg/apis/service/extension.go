@@ -1,6 +1,8 @@
 package service
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"net/http"
@@ -10,12 +12,14 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/seal-io/walrus/pkg/apis/runtime"
+	revisionbus "github.com/seal-io/walrus/pkg/bus/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/service"
 	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
 	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
@@ -24,6 +28,7 @@ import (
 	"github.com/seal-io/walrus/pkg/operator/k8s/intercept"
 	pkgservice "github.com/seal-io/walrus/pkg/service"
 	pkgresource "github.com/seal-io/walrus/pkg/serviceresources"
+	pkgrevision "github.com/seal-io/walrus/pkg/servicerevision"
 	tfparser "github.com/seal-io/walrus/pkg/terraform/parser"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/log"
@@ -471,4 +476,176 @@ func (h Handler) RouteGetGraph(req RouteGetGraphRequest) (*RouteGetGraphResponse
 		Vertices: vertices,
 		Edges:    edges,
 	}, nil
+}
+
+// CollectionRouteWorkflowStepExecutionRequest is the request for workflow service step execution.
+// It will create or update the service and return the revision config file.
+func (h Handler) CollectionRouteWorkflowStepExecution(req CollectionRouteWorkflowStepExecutionRequest) (any, error) {
+	// TODO limit token access to avoid abuse.
+	entity, err := h.modelClient.Services().Query().
+		Where(
+			service.Name(req.Name),
+			service.EnvironmentID(req.Environment.ID),
+		).
+		Only(req.Context)
+	if err != nil && !model.IsNotFound(err) {
+		return nil, err
+	}
+
+	stepExecution, err := h.modelClient.WorkflowStepExecutions().Query().
+		Where(workflowstepexecution.ID(req.WorkflowStepExecutionID)).
+		Only(req.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		planner          pkgrevision.IPlan
+		planOpts         pkgrevision.PlanOptions
+		inputPlanConfigs map[string][]byte
+	)
+
+	err = h.modelClient.WithTx(req.Context, func(tx *model.Tx) (err error) {
+		// If the service does not exist, create it.
+		if entity == nil {
+			entity = req.Model()
+
+			status.ServiceStatusDeployed.Unknown(entity, "")
+			entity.Status.SetSummary(status.WalkService(&entity.Status))
+
+			entity, err = tx.Services().Create().
+				Set(entity).
+				SaveE(req.Context, dao.ServiceDependenciesEdgeSave)
+			if err != nil {
+				return errorx.Wrap(err, "error creating service")
+			}
+		} else {
+			// Update service, mark status from deploying.
+			status.ServiceStatusDeployed.Reset(entity, "Deploying")
+			entity.Status.SetSummary(status.WalkService(&entity.Status))
+
+			entity, err = tx.Services().UpdateOne(entity).
+				Set(req.Model()).
+				SaveE(req.Context, dao.ServiceDependenciesEdgeSave)
+			if err != nil {
+				return errorx.Wrap(err, "error updating service")
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	rm := pkgrevision.NewRevisionManager(h.modelClient)
+	revisionOpts := pkgrevision.CreateOptions{
+		ServiceID:               entity.ID,
+		WorkflowStepExecutionID: stepExecution.ID,
+		JobType:                 req.JobType,
+	}
+
+	revision, err := rm.Create(req.Context, revisionOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	planner = pkgrevision.NewPlan(revision.DeployerType, h.modelClient)
+	planOpts = pkgrevision.PlanOptions{
+		ServiceRevision: revision,
+	}
+
+	if err = pkgrevision.SetPlanOptions(req.Context, h.modelClient, &planOpts); err != nil {
+		return nil, err
+	}
+
+	if revision.InputPlanConfigs != nil {
+		inputPlanConfigs = revision.InputPlanConfigs
+	} else {
+		inputPlanConfigs, err = planner.LoadConfigs(req.Context, planOpts)
+		if err != nil {
+			return nil, err
+		}
+
+		// Save the input plan configs.
+		revision, err = h.modelClient.ServiceRevisions().UpdateOne(revision).
+			SetInputPlanConfigs(inputPlanConfigs).
+			Save(req.Context)
+		if err != nil {
+			return nil, err
+		}
+
+		if err = revisionbus.Notify(req.Context, h.modelClient, revision); err != nil {
+			return nil, err
+		}
+	}
+
+	connectorConfigs, err := planner.LoadConnectorConfigs(planOpts.Connectors)
+	if err != nil {
+		return nil, err
+	}
+
+	configs := make(map[string][]byte, len(inputPlanConfigs)+len(connectorConfigs))
+	for k, v := range inputPlanConfigs {
+		configs[k] = v
+	}
+
+	for k, v := range connectorConfigs {
+		configs[k] = v
+	}
+
+	fileName := "config.tar.gz"
+	req.Context.Header("Content-Disposition", "attachment; filename="+fileName)
+	req.Context.Header("Content-Type", "application/gzip")
+
+	err = createArchive(configs, req.Context.Writer)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+// createArchive creates a tar.gz archive from the given file map.
+func createArchive(files map[string][]byte, w http.ResponseWriter) error {
+	// Create new Writers for gzip and tar
+	// These writers are chained. Writing to the tar writer will
+	// write to the gzip writer which in turn will write to
+	// the "buf" writer.
+	gw := gzip.NewWriter(w)
+	defer gw.Close()
+
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	// Iterate over files and add them to the tar archive.
+	for name, content := range files {
+		err := addToArchive(tw, name, content)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func addToArchive(tw *tar.Writer, filename string, fileContent []byte) error {
+	header := tar.Header{
+		Name: filename,
+		Mode: 0o600,
+		Size: int64(len(fileContent)),
+	}
+
+	// Write file header to the tar archive.
+	err := tw.WriteHeader(&header)
+	if err != nil {
+		return err
+	}
+
+	// Write the file content to the tar archive.
+	if _, err := tw.Write(fileContent); err != nil {
+		log.Fatalf("Error writing file content to tar archive: %v", err)
+	}
+
+	return nil
 }

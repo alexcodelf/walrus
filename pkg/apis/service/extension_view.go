@@ -12,6 +12,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
+	pkgrevision "github.com/seal-io/walrus/pkg/servicerevision"
 )
 
 type AccessEndpoint struct {
@@ -158,3 +159,38 @@ type (
 		Edges    []GraphEdge   `json:"edges"`
 	}
 )
+
+type (
+	// RouteGetWorkflowRequest defines the request of execute service workflow step.
+	CollectionRouteWorkflowStepExecutionRequest struct {
+		_ struct{} `route:"POST=/workflow"`
+
+		model.ServiceCreateInput `path:",inline" json:",inline"`
+
+		JobType                 string    `json:"jobType,omitempty"`
+		WorkflowStepExecutionID object.ID `json:"workflowStepExecutionID"`
+	}
+)
+
+func (r *CollectionRouteWorkflowStepExecutionRequest) Validate() error {
+	err := ValidateCreateInput(r.ServiceCreateInput)
+	if err != nil {
+		return err
+	}
+
+	if r.JobType == "" {
+		r.JobType = pkgrevision.JobTypeApply
+	}
+
+	switch r.JobType {
+	case pkgrevision.JobTypeApply, pkgrevision.JobTypeDestroy:
+	default:
+		return errors.New("invalid job type")
+	}
+
+	if !r.WorkflowStepExecutionID.Valid() {
+		return errors.New("invalid workflow step execution ID")
+	}
+
+	return nil
+}
