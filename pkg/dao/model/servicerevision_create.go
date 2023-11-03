@@ -114,9 +114,9 @@ func (src *ServiceRevisionCreate) SetVariables(c crypto.Map[string, string]) *Se
 	return src
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (src *ServiceRevisionCreate) SetInputPlan(s string) *ServiceRevisionCreate {
-	src.mutation.SetInputPlan(s)
+// SetInputPlanConfigs sets the "input_plan_configs" field.
+func (src *ServiceRevisionCreate) SetInputPlanConfigs(m map[string][]uint8) *ServiceRevisionCreate {
+	src.mutation.SetInputPlanConfigs(m)
 	return src
 }
 
@@ -314,8 +314,8 @@ func (src *ServiceRevisionCreate) check() error {
 	if _, ok := src.mutation.Variables(); !ok {
 		return &ValidationError{Name: "variables", err: errors.New(`model: missing required field "ServiceRevision.variables"`)}
 	}
-	if _, ok := src.mutation.InputPlan(); !ok {
-		return &ValidationError{Name: "input_plan", err: errors.New(`model: missing required field "ServiceRevision.input_plan"`)}
+	if _, ok := src.mutation.InputPlanConfigs(); !ok {
+		return &ValidationError{Name: "input_plan_configs", err: errors.New(`model: missing required field "ServiceRevision.input_plan_configs"`)}
 	}
 	if _, ok := src.mutation.Output(); !ok {
 		return &ValidationError{Name: "output", err: errors.New(`model: missing required field "ServiceRevision.output"`)}
@@ -403,9 +403,9 @@ func (src *ServiceRevisionCreate) createSpec() (*ServiceRevision, *sqlgraph.Crea
 		_spec.SetField(servicerevision.FieldVariables, field.TypeOther, value)
 		_node.Variables = value
 	}
-	if value, ok := src.mutation.InputPlan(); ok {
-		_spec.SetField(servicerevision.FieldInputPlan, field.TypeString, value)
-		_node.InputPlan = value
+	if value, ok := src.mutation.InputPlanConfigs(); ok {
+		_spec.SetField(servicerevision.FieldInputPlanConfigs, field.TypeJSON, value)
+		_node.InputPlanConfigs = value
 	}
 	if value, ok := src.mutation.Output(); ok {
 		_spec.SetField(servicerevision.FieldOutput, field.TypeString, value)
@@ -511,7 +511,7 @@ func (src *ServiceRevisionCreate) Set(obj *ServiceRevision) *ServiceRevisionCrea
 	src.SetTemplateVersion(obj.TemplateVersion)
 	src.SetTemplateID(obj.TemplateID)
 	src.SetVariables(obj.Variables)
-	src.SetInputPlan(obj.InputPlan)
+	src.SetInputPlanConfigs(obj.InputPlanConfigs)
 	src.SetOutput(obj.Output)
 	src.SetDeployerType(obj.DeployerType)
 	src.SetDuration(obj.Duration)
@@ -590,8 +590,8 @@ func (src *ServiceRevisionCreate) SaveE(ctx context.Context, cbs ...func(ctx con
 		if _, set := src.mutation.Field(servicerevision.FieldAttributes); set {
 			obj.Attributes = x.Attributes
 		}
-		if _, set := src.mutation.Field(servicerevision.FieldInputPlan); set {
-			obj.InputPlan = x.InputPlan
+		if _, set := src.mutation.Field(servicerevision.FieldInputPlanConfigs); set {
+			obj.InputPlanConfigs = x.InputPlanConfigs
 		}
 		if _, set := src.mutation.Field(servicerevision.FieldOutput); set {
 			obj.Output = x.Output
@@ -722,8 +722,8 @@ func (srcb *ServiceRevisionCreateBulk) SaveE(ctx context.Context, cbs ...func(ct
 			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldAttributes); set {
 				objs[i].Attributes = x[i].Attributes
 			}
-			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldInputPlan); set {
-				objs[i].InputPlan = x[i].InputPlan
+			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldInputPlanConfigs); set {
+				objs[i].InputPlanConfigs = x[i].InputPlanConfigs
 			}
 			if _, set := srcb.builders[i].mutation.Field(servicerevision.FieldOutput); set {
 				objs[i].Output = x[i].Output
@@ -917,15 +917,15 @@ func (u *ServiceRevisionUpsert) UpdateVariables() *ServiceRevisionUpsert {
 	return u
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (u *ServiceRevisionUpsert) SetInputPlan(v string) *ServiceRevisionUpsert {
-	u.Set(servicerevision.FieldInputPlan, v)
+// SetInputPlanConfigs sets the "input_plan_configs" field.
+func (u *ServiceRevisionUpsert) SetInputPlanConfigs(v map[string][]uint8) *ServiceRevisionUpsert {
+	u.Set(servicerevision.FieldInputPlanConfigs, v)
 	return u
 }
 
-// UpdateInputPlan sets the "input_plan" field to the value that was provided on create.
-func (u *ServiceRevisionUpsert) UpdateInputPlan() *ServiceRevisionUpsert {
-	u.SetExcluded(servicerevision.FieldInputPlan)
+// UpdateInputPlanConfigs sets the "input_plan_configs" field to the value that was provided on create.
+func (u *ServiceRevisionUpsert) UpdateInputPlanConfigs() *ServiceRevisionUpsert {
+	u.SetExcluded(servicerevision.FieldInputPlanConfigs)
 	return u
 }
 
@@ -1137,17 +1137,17 @@ func (u *ServiceRevisionUpsertOne) UpdateVariables() *ServiceRevisionUpsertOne {
 	})
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (u *ServiceRevisionUpsertOne) SetInputPlan(v string) *ServiceRevisionUpsertOne {
+// SetInputPlanConfigs sets the "input_plan_configs" field.
+func (u *ServiceRevisionUpsertOne) SetInputPlanConfigs(v map[string][]uint8) *ServiceRevisionUpsertOne {
 	return u.Update(func(s *ServiceRevisionUpsert) {
-		s.SetInputPlan(v)
+		s.SetInputPlanConfigs(v)
 	})
 }
 
-// UpdateInputPlan sets the "input_plan" field to the value that was provided on create.
-func (u *ServiceRevisionUpsertOne) UpdateInputPlan() *ServiceRevisionUpsertOne {
+// UpdateInputPlanConfigs sets the "input_plan_configs" field to the value that was provided on create.
+func (u *ServiceRevisionUpsertOne) UpdateInputPlanConfigs() *ServiceRevisionUpsertOne {
 	return u.Update(func(s *ServiceRevisionUpsert) {
-		s.UpdateInputPlan()
+		s.UpdateInputPlanConfigs()
 	})
 }
 
@@ -1536,17 +1536,17 @@ func (u *ServiceRevisionUpsertBulk) UpdateVariables() *ServiceRevisionUpsertBulk
 	})
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (u *ServiceRevisionUpsertBulk) SetInputPlan(v string) *ServiceRevisionUpsertBulk {
+// SetInputPlanConfigs sets the "input_plan_configs" field.
+func (u *ServiceRevisionUpsertBulk) SetInputPlanConfigs(v map[string][]uint8) *ServiceRevisionUpsertBulk {
 	return u.Update(func(s *ServiceRevisionUpsert) {
-		s.SetInputPlan(v)
+		s.SetInputPlanConfigs(v)
 	})
 }
 
-// UpdateInputPlan sets the "input_plan" field to the value that was provided on create.
-func (u *ServiceRevisionUpsertBulk) UpdateInputPlan() *ServiceRevisionUpsertBulk {
+// UpdateInputPlanConfigs sets the "input_plan_configs" field to the value that was provided on create.
+func (u *ServiceRevisionUpsertBulk) UpdateInputPlanConfigs() *ServiceRevisionUpsertBulk {
 	return u.Update(func(s *ServiceRevisionUpsert) {
-		s.UpdateInputPlan()
+		s.UpdateInputPlanConfigs()
 	})
 }
 
