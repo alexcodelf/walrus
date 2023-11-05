@@ -13,6 +13,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/service"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
+	"github.com/seal-io/walrus/pkg/settings"
 	"github.com/seal-io/walrus/pkg/workflow/step/types"
 )
 
@@ -28,6 +29,7 @@ token="{{inputs.parameters.token}}"
 jobType="{{inputs.parameters.jobType}}"
 spec='{{inputs.parameters.spec}}'
 serviceName="{{inputs.parameters.serviceName}}"
+commomPath="$serverURL/v1/projects/$projectID/environments/$environmentID"
 
 # if skip tls verify
 tlsVerify="-k"
@@ -35,9 +37,9 @@ if [ "{{workflow.parameters.tlsVerify}}" == "true" ]; then
 	tlsVerify=""
 fi
 
-# if jobType create service.
+# If jobType create service.
 if [ "$jobType" == "create" ]; then
-	response=$(curl -s "$serverURL/v1/projects/$projectID/environments/$environmentID/services" -X "POST" -H "Content-Type: application/json" -H "Authorization: Bearer $token" -d $spec $tlsVerify)
+	response=$(curl -s "$commomPath/services" -X "POST" -H "content-type: application/json" -H "Authorization: Bearer $token" -d $spec $tlsVerify)
 
 	serviceName=$(echo $response | jq -r '.name')
 	if [ "$serviceName" == "null" ]; then
@@ -47,23 +49,17 @@ if [ "$jobType" == "create" ]; then
 	fi
 fi
 
-# if jobType upgrade service.
+# If jobType upgrade service.
 if [ "$jobType" == "upgrade" ]; then
-	response=$(curl -s $serverURL/v1/projects/$projectID/environments/$environmentID/services/$serviceName/upgrade -X "PUT" -H "Content-Type: application/json" -H "Authorization: Bearer $token" -d $spec $tlsVerify)
+	response=$(curl -s $commomPath/services/$serviceName/upgrade -X "PUT" -H "content-type: application/json" -H "Authorization: Bearer $token" -d $spec $tlsVerify)
 fi
 
-# get latest revision id
-revisionResponse=$(curl -s "$serverURL/v1/projects/$projectID/environments/$environmentID/services/$serviceName/revisions?page=1&perPage=1&sort=-createTime" -X GET -H "accept: application/json" -H "Authorization: Bearer $token" $tlsVerify)
-
+# Get latest revision id
+revisionResponse=$(curl -s "$commomPath/services/$serviceName/revisions?page=1&perPage=1&sort=-createTime" -X GET -H "Authorization: Bearer $token" $tlsVerify)
 revisionID=$(echo $revisionResponse | jq -r '.items[0].id')
 
-max_retry=2
-
-while [ $max_retry -gt 0 ]; do
-    curl -o - -s "$serverURL/v1/projects/$projectID/environments/$environmentID/services/$serviceName/revisions/$revisionID/log?jobType=$watchType&watch=true" -X GET -H "accept: application/json, text/plain, */*" -H "Authorization: Bearer $token" $tlsVerify --compressed
-
-	max_retry=$((max_retry-1))
-done
+# Watch service logs until the service finished.
+curl -o - -s "$commomPath/services/$serviceName/revisions/$revisionID/log?jobType=$watchType&watch=true" -X GET -H "Authorization: Bearer $token" $tlsVerify --compressed
 `
 
 // ServiceStepManager is service to generate service configs.
@@ -82,7 +78,7 @@ func (s *ServiceStepManager) GenerateTemplates(
 	ctx context.Context,
 	stepExecution *model.WorkflowStepExecution,
 ) (main *v1alpha1.Template, subs []*v1alpha1.Template, err error) {
-	deployerImage := "badouralix/curl-jq"
+	deployerImage := settings.WorkflowStepServiceImage.ShouldValue(ctx, s.mc)
 
 	environment, ok := stepExecution.Spec["environment"].(map[string]any)
 	if !ok {
@@ -130,7 +126,7 @@ func (s *ServiceStepManager) GenerateTemplates(
 		return nil, nil, err
 	}
 
-	// An service type workflow template contains two steps:
+	// An service type workflow template
 	// Interact with walrus server to create or update service.
 	// Watch service logs until the service finished.
 	main = &v1alpha1.Template{
