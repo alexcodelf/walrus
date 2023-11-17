@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"entgo.io/ent/dialect/sql"
+
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/template"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -15,31 +17,43 @@ func CreateTemplate(ctx context.Context, mc model.ClientSet, entity *model.Templ
 		return nil, errors.New("template is nil")
 	}
 
-	q := mc.Templates().Query().
-		Where(template.Name(entity.Name))
-
-	if entity.CatalogID.Valid() {
-		q.Where(template.CatalogID(entity.CatalogID))
-	}
-
-	find, err := q.Only(ctx)
-	if err != nil && !model.IsNotFound(err) {
-		return nil, err
-	}
-
-	if find != nil {
-		return find, nil
-	}
-
 	status.TemplateStatusInitialized.Unknown(entity, "Initializing template")
 	entity.Status.SetSummary(status.WalkTemplate(&entity.Status))
 
-	entity, err = mc.Templates().Create().
+	var conflictOptions []sql.ConflictOption
+	if entity.ProjectID == "" {
+		conflictOptions = append(
+			conflictOptions,
+			sql.ConflictWhere(sql.P().
+				IsNull(template.FieldProjectID)),
+			sql.ConflictColumns(template.FieldName),
+		)
+	} else {
+		conflictOptions = append(
+			conflictOptions,
+			sql.ConflictWhere(sql.P().
+				NotNull(template.FieldProjectID)),
+			sql.ConflictColumns(
+				template.FieldName,
+				template.FieldProjectID,
+			),
+		)
+	}
+
+	id, err := mc.Templates().Create().
 		Set(entity).
-		Save(ctx)
+		OnConflict(conflictOptions...).
+		Update(func(up *model.TemplateUpsert) {
+			up.UpdateStatus().
+				UpdateDescription().
+				UpdateIcon()
+		}).
+		ID(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	entity.ID = id
 
 	return entity, nil
 }

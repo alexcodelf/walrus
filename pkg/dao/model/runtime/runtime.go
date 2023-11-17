@@ -16,12 +16,14 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/environmentconnectorrelationship"
 	"github.com/seal-io/walrus/pkg/dao/model/perspective"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
+	"github.com/seal-io/walrus/pkg/dao/model/resource"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcecomponent"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcecomponentrelationship"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcedefinition"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcedefinitionmatchingrule"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcerelationship"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/role"
-	"github.com/seal-io/walrus/pkg/dao/model/service"
-	"github.com/seal-io/walrus/pkg/dao/model/servicerelationship"
-	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
-	"github.com/seal-io/walrus/pkg/dao/model/serviceresourcerelationship"
-	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/setting"
 	"github.com/seal-io/walrus/pkg/dao/model/subject"
 	"github.com/seal-io/walrus/pkg/dao/model/subjectrolerelationship"
@@ -29,6 +31,12 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/model/token"
 	"github.com/seal-io/walrus/pkg/dao/model/variable"
+	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/schema"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/crypto"
@@ -42,6 +50,8 @@ func init() {
 	catalogMixin := schema.Catalog{}.Mixin()
 	catalogMixinHooks0 := catalogMixin[0].Hooks()
 	catalog.Hooks[0] = catalogMixinHooks0[0]
+	catalogInters := schema.Catalog{}.Interceptors()
+	catalog.Interceptors[0] = catalogInters[0]
 	catalogMixinFields0 := catalogMixin[0].Fields()
 	_ = catalogMixinFields0
 	catalogFields := schema.Catalog{}.Fields()
@@ -117,12 +127,16 @@ func init() {
 	connectorDescType := connectorFields[2].Descriptor()
 	// connector.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	connector.TypeValidator = connectorDescType.Validators[0].(func(string) error)
+	// connectorDescApplicableEnvironmentType is the schema descriptor for applicable_environment_type field.
+	connectorDescApplicableEnvironmentType := connectorFields[3].Descriptor()
+	// connector.ApplicableEnvironmentTypeValidator is a validator for the "applicable_environment_type" field. It is called by the builders before save.
+	connector.ApplicableEnvironmentTypeValidator = connectorDescApplicableEnvironmentType.Validators[0].(func(string) error)
 	// connectorDescConfigVersion is the schema descriptor for config_version field.
-	connectorDescConfigVersion := connectorFields[3].Descriptor()
+	connectorDescConfigVersion := connectorFields[4].Descriptor()
 	// connector.ConfigVersionValidator is a validator for the "config_version" field. It is called by the builders before save.
 	connector.ConfigVersionValidator = connectorDescConfigVersion.Validators[0].(func(string) error)
 	// connectorDescConfigData is the schema descriptor for config_data field.
-	connectorDescConfigData := connectorFields[4].Descriptor()
+	connectorDescConfigData := connectorFields[5].Descriptor()
 	// connector.DefaultConfigData holds the default value on creation for the config_data field.
 	connector.DefaultConfigData = connectorDescConfigData.Default.(crypto.Properties)
 	costreportHooks := schema.CostReport{}.Hooks()
@@ -242,6 +256,10 @@ func init() {
 	environmentDescProjectID := environmentFields[0].Descriptor()
 	// environment.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
 	environment.ProjectIDValidator = environmentDescProjectID.Validators[0].(func(string) error)
+	// environmentDescType is the schema descriptor for type field.
+	environmentDescType := environmentFields[1].Descriptor()
+	// environment.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	environment.TypeValidator = environmentDescType.Validators[0].(func(string) error)
 	environmentconnectorrelationshipMixin := schema.EnvironmentConnectorRelationship{}.Mixin()
 	environmentconnectorrelationshipMixinHooks0 := environmentconnectorrelationshipMixin[0].Hooks()
 	environmentconnectorrelationship.Hooks[0] = environmentconnectorrelationshipMixinHooks0[0]
@@ -337,6 +355,265 @@ func init() {
 	project.DefaultUpdateTime = projectDescUpdateTime.Default.(func() time.Time)
 	// project.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	project.UpdateDefaultUpdateTime = projectDescUpdateTime.UpdateDefault.(func() time.Time)
+	resourceMixin := schema.Resource{}.Mixin()
+	resourceMixinHooks0 := resourceMixin[0].Hooks()
+	resource.Hooks[0] = resourceMixinHooks0[0]
+	resourceInters := schema.Resource{}.Interceptors()
+	resource.Interceptors[0] = resourceInters[0]
+	resourceMixinFields0 := resourceMixin[0].Fields()
+	_ = resourceMixinFields0
+	resourceFields := schema.Resource{}.Fields()
+	_ = resourceFields
+	// resourceDescName is the schema descriptor for name field.
+	resourceDescName := resourceMixinFields0[1].Descriptor()
+	// resource.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	resource.NameValidator = resourceDescName.Validators[0].(func(string) error)
+	// resourceDescLabels is the schema descriptor for labels field.
+	resourceDescLabels := resourceMixinFields0[3].Descriptor()
+	// resource.DefaultLabels holds the default value on creation for the labels field.
+	resource.DefaultLabels = resourceDescLabels.Default.(map[string]string)
+	// resourceDescAnnotations is the schema descriptor for annotations field.
+	resourceDescAnnotations := resourceMixinFields0[4].Descriptor()
+	// resource.DefaultAnnotations holds the default value on creation for the annotations field.
+	resource.DefaultAnnotations = resourceDescAnnotations.Default.(map[string]string)
+	// resourceDescCreateTime is the schema descriptor for create_time field.
+	resourceDescCreateTime := resourceMixinFields0[5].Descriptor()
+	// resource.DefaultCreateTime holds the default value on creation for the create_time field.
+	resource.DefaultCreateTime = resourceDescCreateTime.Default.(func() time.Time)
+	// resourceDescUpdateTime is the schema descriptor for update_time field.
+	resourceDescUpdateTime := resourceMixinFields0[6].Descriptor()
+	// resource.DefaultUpdateTime holds the default value on creation for the update_time field.
+	resource.DefaultUpdateTime = resourceDescUpdateTime.Default.(func() time.Time)
+	// resource.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	resource.UpdateDefaultUpdateTime = resourceDescUpdateTime.UpdateDefault.(func() time.Time)
+	// resourceDescProjectID is the schema descriptor for project_id field.
+	resourceDescProjectID := resourceFields[0].Descriptor()
+	// resource.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	resource.ProjectIDValidator = resourceDescProjectID.Validators[0].(func(string) error)
+	// resourceDescEnvironmentID is the schema descriptor for environment_id field.
+	resourceDescEnvironmentID := resourceFields[1].Descriptor()
+	// resource.EnvironmentIDValidator is a validator for the "environment_id" field. It is called by the builders before save.
+	resource.EnvironmentIDValidator = resourceDescEnvironmentID.Validators[0].(func(string) error)
+	resourcecomponentMixin := schema.ResourceComponent{}.Mixin()
+	resourcecomponentMixinHooks0 := resourcecomponentMixin[0].Hooks()
+	resourcecomponent.Hooks[0] = resourcecomponentMixinHooks0[0]
+	resourcecomponentInters := schema.ResourceComponent{}.Interceptors()
+	resourcecomponent.Interceptors[0] = resourcecomponentInters[0]
+	resourcecomponentMixinFields1 := resourcecomponentMixin[1].Fields()
+	_ = resourcecomponentMixinFields1
+	resourcecomponentFields := schema.ResourceComponent{}.Fields()
+	_ = resourcecomponentFields
+	// resourcecomponentDescCreateTime is the schema descriptor for create_time field.
+	resourcecomponentDescCreateTime := resourcecomponentMixinFields1[0].Descriptor()
+	// resourcecomponent.DefaultCreateTime holds the default value on creation for the create_time field.
+	resourcecomponent.DefaultCreateTime = resourcecomponentDescCreateTime.Default.(func() time.Time)
+	// resourcecomponentDescUpdateTime is the schema descriptor for update_time field.
+	resourcecomponentDescUpdateTime := resourcecomponentMixinFields1[1].Descriptor()
+	// resourcecomponent.DefaultUpdateTime holds the default value on creation for the update_time field.
+	resourcecomponent.DefaultUpdateTime = resourcecomponentDescUpdateTime.Default.(func() time.Time)
+	// resourcecomponent.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	resourcecomponent.UpdateDefaultUpdateTime = resourcecomponentDescUpdateTime.UpdateDefault.(func() time.Time)
+	// resourcecomponentDescProjectID is the schema descriptor for project_id field.
+	resourcecomponentDescProjectID := resourcecomponentFields[0].Descriptor()
+	// resourcecomponent.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	resourcecomponent.ProjectIDValidator = resourcecomponentDescProjectID.Validators[0].(func(string) error)
+	// resourcecomponentDescEnvironmentID is the schema descriptor for environment_id field.
+	resourcecomponentDescEnvironmentID := resourcecomponentFields[1].Descriptor()
+	// resourcecomponent.EnvironmentIDValidator is a validator for the "environment_id" field. It is called by the builders before save.
+	resourcecomponent.EnvironmentIDValidator = resourcecomponentDescEnvironmentID.Validators[0].(func(string) error)
+	// resourcecomponentDescResourceID is the schema descriptor for resource_id field.
+	resourcecomponentDescResourceID := resourcecomponentFields[2].Descriptor()
+	// resourcecomponent.ResourceIDValidator is a validator for the "resource_id" field. It is called by the builders before save.
+	resourcecomponent.ResourceIDValidator = resourcecomponentDescResourceID.Validators[0].(func(string) error)
+	// resourcecomponentDescConnectorID is the schema descriptor for connector_id field.
+	resourcecomponentDescConnectorID := resourcecomponentFields[3].Descriptor()
+	// resourcecomponent.ConnectorIDValidator is a validator for the "connector_id" field. It is called by the builders before save.
+	resourcecomponent.ConnectorIDValidator = resourcecomponentDescConnectorID.Validators[0].(func(string) error)
+	// resourcecomponentDescMode is the schema descriptor for mode field.
+	resourcecomponentDescMode := resourcecomponentFields[6].Descriptor()
+	// resourcecomponent.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	resourcecomponent.ModeValidator = resourcecomponentDescMode.Validators[0].(func(string) error)
+	// resourcecomponentDescType is the schema descriptor for type field.
+	resourcecomponentDescType := resourcecomponentFields[7].Descriptor()
+	// resourcecomponent.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	resourcecomponent.TypeValidator = resourcecomponentDescType.Validators[0].(func(string) error)
+	// resourcecomponentDescName is the schema descriptor for name field.
+	resourcecomponentDescName := resourcecomponentFields[8].Descriptor()
+	// resourcecomponent.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	resourcecomponent.NameValidator = resourcecomponentDescName.Validators[0].(func(string) error)
+	// resourcecomponentDescDeployerType is the schema descriptor for deployer_type field.
+	resourcecomponentDescDeployerType := resourcecomponentFields[9].Descriptor()
+	// resourcecomponent.DeployerTypeValidator is a validator for the "deployer_type" field. It is called by the builders before save.
+	resourcecomponent.DeployerTypeValidator = resourcecomponentDescDeployerType.Validators[0].(func(string) error)
+	// resourcecomponentDescShape is the schema descriptor for shape field.
+	resourcecomponentDescShape := resourcecomponentFields[10].Descriptor()
+	// resourcecomponent.ShapeValidator is a validator for the "shape" field. It is called by the builders before save.
+	resourcecomponent.ShapeValidator = resourcecomponentDescShape.Validators[0].(func(string) error)
+	resourcecomponentrelationshipMixin := schema.ResourceComponentRelationship{}.Mixin()
+	resourcecomponentrelationshipMixinHooks0 := resourcecomponentrelationshipMixin[0].Hooks()
+	resourcecomponentrelationship.Hooks[0] = resourcecomponentrelationshipMixinHooks0[0]
+	resourcecomponentrelationshipMixinFields1 := resourcecomponentrelationshipMixin[1].Fields()
+	_ = resourcecomponentrelationshipMixinFields1
+	resourcecomponentrelationshipFields := schema.ResourceComponentRelationship{}.Fields()
+	_ = resourcecomponentrelationshipFields
+	// resourcecomponentrelationshipDescCreateTime is the schema descriptor for create_time field.
+	resourcecomponentrelationshipDescCreateTime := resourcecomponentrelationshipMixinFields1[0].Descriptor()
+	// resourcecomponentrelationship.DefaultCreateTime holds the default value on creation for the create_time field.
+	resourcecomponentrelationship.DefaultCreateTime = resourcecomponentrelationshipDescCreateTime.Default.(func() time.Time)
+	// resourcecomponentrelationshipDescResourceComponentID is the schema descriptor for resource_component_id field.
+	resourcecomponentrelationshipDescResourceComponentID := resourcecomponentrelationshipFields[0].Descriptor()
+	// resourcecomponentrelationship.ResourceComponentIDValidator is a validator for the "resource_component_id" field. It is called by the builders before save.
+	resourcecomponentrelationship.ResourceComponentIDValidator = resourcecomponentrelationshipDescResourceComponentID.Validators[0].(func(string) error)
+	// resourcecomponentrelationshipDescDependencyID is the schema descriptor for dependency_id field.
+	resourcecomponentrelationshipDescDependencyID := resourcecomponentrelationshipFields[1].Descriptor()
+	// resourcecomponentrelationship.DependencyIDValidator is a validator for the "dependency_id" field. It is called by the builders before save.
+	resourcecomponentrelationship.DependencyIDValidator = resourcecomponentrelationshipDescDependencyID.Validators[0].(func(string) error)
+	// resourcecomponentrelationshipDescType is the schema descriptor for type field.
+	resourcecomponentrelationshipDescType := resourcecomponentrelationshipFields[2].Descriptor()
+	// resourcecomponentrelationship.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	resourcecomponentrelationship.TypeValidator = resourcecomponentrelationshipDescType.Validators[0].(func(string) error)
+	resourcedefinitionMixin := schema.ResourceDefinition{}.Mixin()
+	resourcedefinitionMixinHooks0 := resourcedefinitionMixin[0].Hooks()
+	resourcedefinition.Hooks[0] = resourcedefinitionMixinHooks0[0]
+	resourcedefinitionMixinFields0 := resourcedefinitionMixin[0].Fields()
+	_ = resourcedefinitionMixinFields0
+	resourcedefinitionFields := schema.ResourceDefinition{}.Fields()
+	_ = resourcedefinitionFields
+	// resourcedefinitionDescName is the schema descriptor for name field.
+	resourcedefinitionDescName := resourcedefinitionMixinFields0[1].Descriptor()
+	// resourcedefinition.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	resourcedefinition.NameValidator = resourcedefinitionDescName.Validators[0].(func(string) error)
+	// resourcedefinitionDescLabels is the schema descriptor for labels field.
+	resourcedefinitionDescLabels := resourcedefinitionMixinFields0[3].Descriptor()
+	// resourcedefinition.DefaultLabels holds the default value on creation for the labels field.
+	resourcedefinition.DefaultLabels = resourcedefinitionDescLabels.Default.(map[string]string)
+	// resourcedefinitionDescAnnotations is the schema descriptor for annotations field.
+	resourcedefinitionDescAnnotations := resourcedefinitionMixinFields0[4].Descriptor()
+	// resourcedefinition.DefaultAnnotations holds the default value on creation for the annotations field.
+	resourcedefinition.DefaultAnnotations = resourcedefinitionDescAnnotations.Default.(map[string]string)
+	// resourcedefinitionDescCreateTime is the schema descriptor for create_time field.
+	resourcedefinitionDescCreateTime := resourcedefinitionMixinFields0[5].Descriptor()
+	// resourcedefinition.DefaultCreateTime holds the default value on creation for the create_time field.
+	resourcedefinition.DefaultCreateTime = resourcedefinitionDescCreateTime.Default.(func() time.Time)
+	// resourcedefinitionDescUpdateTime is the schema descriptor for update_time field.
+	resourcedefinitionDescUpdateTime := resourcedefinitionMixinFields0[6].Descriptor()
+	// resourcedefinition.DefaultUpdateTime holds the default value on creation for the update_time field.
+	resourcedefinition.DefaultUpdateTime = resourcedefinitionDescUpdateTime.Default.(func() time.Time)
+	// resourcedefinition.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	resourcedefinition.UpdateDefaultUpdateTime = resourcedefinitionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// resourcedefinitionDescSchema is the schema descriptor for schema field.
+	resourcedefinitionDescSchema := resourcedefinitionFields[1].Descriptor()
+	// resourcedefinition.DefaultSchema holds the default value on creation for the schema field.
+	resourcedefinition.DefaultSchema = resourcedefinitionDescSchema.Default.(types.Schema)
+	// resourcedefinitionDescUiSchema is the schema descriptor for uiSchema field.
+	resourcedefinitionDescUiSchema := resourcedefinitionFields[2].Descriptor()
+	// resourcedefinition.DefaultUiSchema holds the default value on creation for the uiSchema field.
+	resourcedefinition.DefaultUiSchema = resourcedefinitionDescUiSchema.Default.(types.UISchema)
+	resourcedefinitionmatchingruleMixin := schema.ResourceDefinitionMatchingRule{}.Mixin()
+	resourcedefinitionmatchingruleMixinHooks0 := resourcedefinitionmatchingruleMixin[0].Hooks()
+	resourcedefinitionmatchingrule.Hooks[0] = resourcedefinitionmatchingruleMixinHooks0[0]
+	resourcedefinitionmatchingruleMixinFields1 := resourcedefinitionmatchingruleMixin[1].Fields()
+	_ = resourcedefinitionmatchingruleMixinFields1
+	resourcedefinitionmatchingruleFields := schema.ResourceDefinitionMatchingRule{}.Fields()
+	_ = resourcedefinitionmatchingruleFields
+	// resourcedefinitionmatchingruleDescCreateTime is the schema descriptor for create_time field.
+	resourcedefinitionmatchingruleDescCreateTime := resourcedefinitionmatchingruleMixinFields1[0].Descriptor()
+	// resourcedefinitionmatchingrule.DefaultCreateTime holds the default value on creation for the create_time field.
+	resourcedefinitionmatchingrule.DefaultCreateTime = resourcedefinitionmatchingruleDescCreateTime.Default.(func() time.Time)
+	// resourcedefinitionmatchingruleDescResourceDefinitionID is the schema descriptor for resource_definition_id field.
+	resourcedefinitionmatchingruleDescResourceDefinitionID := resourcedefinitionmatchingruleFields[0].Descriptor()
+	// resourcedefinitionmatchingrule.ResourceDefinitionIDValidator is a validator for the "resource_definition_id" field. It is called by the builders before save.
+	resourcedefinitionmatchingrule.ResourceDefinitionIDValidator = resourcedefinitionmatchingruleDescResourceDefinitionID.Validators[0].(func(string) error)
+	// resourcedefinitionmatchingruleDescTemplateID is the schema descriptor for template_id field.
+	resourcedefinitionmatchingruleDescTemplateID := resourcedefinitionmatchingruleFields[1].Descriptor()
+	// resourcedefinitionmatchingrule.TemplateIDValidator is a validator for the "template_id" field. It is called by the builders before save.
+	resourcedefinitionmatchingrule.TemplateIDValidator = resourcedefinitionmatchingruleDescTemplateID.Validators[0].(func(string) error)
+	// resourcedefinitionmatchingruleDescName is the schema descriptor for name field.
+	resourcedefinitionmatchingruleDescName := resourcedefinitionmatchingruleFields[2].Descriptor()
+	// resourcedefinitionmatchingrule.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	resourcedefinitionmatchingrule.NameValidator = resourcedefinitionmatchingruleDescName.Validators[0].(func(string) error)
+	resourcerelationshipMixin := schema.ResourceRelationship{}.Mixin()
+	resourcerelationshipMixinHooks0 := resourcerelationshipMixin[0].Hooks()
+	resourcerelationship.Hooks[0] = resourcerelationshipMixinHooks0[0]
+	resourcerelationshipMixinFields1 := resourcerelationshipMixin[1].Fields()
+	_ = resourcerelationshipMixinFields1
+	resourcerelationshipFields := schema.ResourceRelationship{}.Fields()
+	_ = resourcerelationshipFields
+	// resourcerelationshipDescCreateTime is the schema descriptor for create_time field.
+	resourcerelationshipDescCreateTime := resourcerelationshipMixinFields1[0].Descriptor()
+	// resourcerelationship.DefaultCreateTime holds the default value on creation for the create_time field.
+	resourcerelationship.DefaultCreateTime = resourcerelationshipDescCreateTime.Default.(func() time.Time)
+	// resourcerelationshipDescResourceID is the schema descriptor for resource_id field.
+	resourcerelationshipDescResourceID := resourcerelationshipFields[0].Descriptor()
+	// resourcerelationship.ResourceIDValidator is a validator for the "resource_id" field. It is called by the builders before save.
+	resourcerelationship.ResourceIDValidator = resourcerelationshipDescResourceID.Validators[0].(func(string) error)
+	// resourcerelationshipDescDependencyID is the schema descriptor for dependency_id field.
+	resourcerelationshipDescDependencyID := resourcerelationshipFields[1].Descriptor()
+	// resourcerelationship.DependencyIDValidator is a validator for the "dependency_id" field. It is called by the builders before save.
+	resourcerelationship.DependencyIDValidator = resourcerelationshipDescDependencyID.Validators[0].(func(string) error)
+	// resourcerelationshipDescPath is the schema descriptor for path field.
+	resourcerelationshipDescPath := resourcerelationshipFields[2].Descriptor()
+	// resourcerelationship.DefaultPath holds the default value on creation for the path field.
+	resourcerelationship.DefaultPath = resourcerelationshipDescPath.Default.([]object.ID)
+	// resourcerelationshipDescType is the schema descriptor for type field.
+	resourcerelationshipDescType := resourcerelationshipFields[3].Descriptor()
+	// resourcerelationship.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	resourcerelationship.TypeValidator = resourcerelationshipDescType.Validators[0].(func(string) error)
+	resourcerevisionMixin := schema.ResourceRevision{}.Mixin()
+	resourcerevisionMixinHooks0 := resourcerevisionMixin[0].Hooks()
+	resourcerevisionHooks := schema.ResourceRevision{}.Hooks()
+	resourcerevision.Hooks[0] = resourcerevisionMixinHooks0[0]
+	resourcerevision.Hooks[1] = resourcerevisionHooks[0]
+	resourcerevisionInters := schema.ResourceRevision{}.Interceptors()
+	resourcerevision.Interceptors[0] = resourcerevisionInters[0]
+	resourcerevisionMixinFields1 := resourcerevisionMixin[1].Fields()
+	_ = resourcerevisionMixinFields1
+	resourcerevisionFields := schema.ResourceRevision{}.Fields()
+	_ = resourcerevisionFields
+	// resourcerevisionDescCreateTime is the schema descriptor for create_time field.
+	resourcerevisionDescCreateTime := resourcerevisionMixinFields1[0].Descriptor()
+	// resourcerevision.DefaultCreateTime holds the default value on creation for the create_time field.
+	resourcerevision.DefaultCreateTime = resourcerevisionDescCreateTime.Default.(func() time.Time)
+	// resourcerevisionDescProjectID is the schema descriptor for project_id field.
+	resourcerevisionDescProjectID := resourcerevisionFields[0].Descriptor()
+	// resourcerevision.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	resourcerevision.ProjectIDValidator = resourcerevisionDescProjectID.Validators[0].(func(string) error)
+	// resourcerevisionDescEnvironmentID is the schema descriptor for environment_id field.
+	resourcerevisionDescEnvironmentID := resourcerevisionFields[1].Descriptor()
+	// resourcerevision.EnvironmentIDValidator is a validator for the "environment_id" field. It is called by the builders before save.
+	resourcerevision.EnvironmentIDValidator = resourcerevisionDescEnvironmentID.Validators[0].(func(string) error)
+	// resourcerevisionDescResourceID is the schema descriptor for resource_id field.
+	resourcerevisionDescResourceID := resourcerevisionFields[2].Descriptor()
+	// resourcerevision.ResourceIDValidator is a validator for the "resource_id" field. It is called by the builders before save.
+	resourcerevision.ResourceIDValidator = resourcerevisionDescResourceID.Validators[0].(func(string) error)
+	// resourcerevisionDescTemplateName is the schema descriptor for template_name field.
+	resourcerevisionDescTemplateName := resourcerevisionFields[3].Descriptor()
+	// resourcerevision.TemplateNameValidator is a validator for the "template_name" field. It is called by the builders before save.
+	resourcerevision.TemplateNameValidator = resourcerevisionDescTemplateName.Validators[0].(func(string) error)
+	// resourcerevisionDescTemplateVersion is the schema descriptor for template_version field.
+	resourcerevisionDescTemplateVersion := resourcerevisionFields[4].Descriptor()
+	// resourcerevision.TemplateVersionValidator is a validator for the "template_version" field. It is called by the builders before save.
+	resourcerevision.TemplateVersionValidator = resourcerevisionDescTemplateVersion.Validators[0].(func(string) error)
+	// resourcerevisionDescTemplateID is the schema descriptor for template_id field.
+	resourcerevisionDescTemplateID := resourcerevisionFields[5].Descriptor()
+	// resourcerevision.TemplateIDValidator is a validator for the "template_id" field. It is called by the builders before save.
+	resourcerevision.TemplateIDValidator = resourcerevisionDescTemplateID.Validators[0].(func(string) error)
+	// resourcerevisionDescVariables is the schema descriptor for variables field.
+	resourcerevisionDescVariables := resourcerevisionFields[7].Descriptor()
+	// resourcerevision.DefaultVariables holds the default value on creation for the variables field.
+	resourcerevision.DefaultVariables = resourcerevisionDescVariables.Default.(crypto.Map[string, string])
+	// resourcerevisionDescDeployerType is the schema descriptor for deployer_type field.
+	resourcerevisionDescDeployerType := resourcerevisionFields[10].Descriptor()
+	// resourcerevision.DefaultDeployerType holds the default value on creation for the deployer_type field.
+	resourcerevision.DefaultDeployerType = resourcerevisionDescDeployerType.Default.(string)
+	// resourcerevisionDescDuration is the schema descriptor for duration field.
+	resourcerevisionDescDuration := resourcerevisionFields[11].Descriptor()
+	// resourcerevision.DefaultDuration holds the default value on creation for the duration field.
+	resourcerevision.DefaultDuration = resourcerevisionDescDuration.Default.(int)
+	// resourcerevisionDescPreviousRequiredProviders is the schema descriptor for previous_required_providers field.
+	resourcerevisionDescPreviousRequiredProviders := resourcerevisionFields[12].Descriptor()
+	// resourcerevision.DefaultPreviousRequiredProviders holds the default value on creation for the previous_required_providers field.
+	resourcerevision.DefaultPreviousRequiredProviders = resourcerevisionDescPreviousRequiredProviders.Default.([]types.ProviderRequirement)
 	roleMixin := schema.Role{}.Mixin()
 	roleHooks := schema.Role{}.Hooks()
 	role.Hooks[0] = roleHooks[0]
@@ -362,221 +639,22 @@ func init() {
 	roleDescPolicies := roleFields[3].Descriptor()
 	// role.DefaultPolicies holds the default value on creation for the policies field.
 	role.DefaultPolicies = roleDescPolicies.Default.(types.RolePolicies)
+	// roleDescApplicableEnvironmentTypes is the schema descriptor for applicable_environment_types field.
+	roleDescApplicableEnvironmentTypes := roleFields[4].Descriptor()
+	// role.DefaultApplicableEnvironmentTypes holds the default value on creation for the applicable_environment_types field.
+	role.DefaultApplicableEnvironmentTypes = roleDescApplicableEnvironmentTypes.Default.([]string)
 	// roleDescSession is the schema descriptor for session field.
-	roleDescSession := roleFields[4].Descriptor()
+	roleDescSession := roleFields[5].Descriptor()
 	// role.DefaultSession holds the default value on creation for the session field.
 	role.DefaultSession = roleDescSession.Default.(bool)
 	// roleDescBuiltin is the schema descriptor for builtin field.
-	roleDescBuiltin := roleFields[5].Descriptor()
+	roleDescBuiltin := roleFields[6].Descriptor()
 	// role.DefaultBuiltin holds the default value on creation for the builtin field.
 	role.DefaultBuiltin = roleDescBuiltin.Default.(bool)
 	// roleDescID is the schema descriptor for id field.
 	roleDescID := roleFields[0].Descriptor()
 	// role.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	role.IDValidator = roleDescID.Validators[0].(func(string) error)
-	serviceMixin := schema.Service{}.Mixin()
-	serviceMixinHooks0 := serviceMixin[0].Hooks()
-	service.Hooks[0] = serviceMixinHooks0[0]
-	serviceInters := schema.Service{}.Interceptors()
-	service.Interceptors[0] = serviceInters[0]
-	serviceMixinFields0 := serviceMixin[0].Fields()
-	_ = serviceMixinFields0
-	serviceFields := schema.Service{}.Fields()
-	_ = serviceFields
-	// serviceDescName is the schema descriptor for name field.
-	serviceDescName := serviceMixinFields0[1].Descriptor()
-	// service.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	service.NameValidator = serviceDescName.Validators[0].(func(string) error)
-	// serviceDescLabels is the schema descriptor for labels field.
-	serviceDescLabels := serviceMixinFields0[3].Descriptor()
-	// service.DefaultLabels holds the default value on creation for the labels field.
-	service.DefaultLabels = serviceDescLabels.Default.(map[string]string)
-	// serviceDescAnnotations is the schema descriptor for annotations field.
-	serviceDescAnnotations := serviceMixinFields0[4].Descriptor()
-	// service.DefaultAnnotations holds the default value on creation for the annotations field.
-	service.DefaultAnnotations = serviceDescAnnotations.Default.(map[string]string)
-	// serviceDescCreateTime is the schema descriptor for create_time field.
-	serviceDescCreateTime := serviceMixinFields0[5].Descriptor()
-	// service.DefaultCreateTime holds the default value on creation for the create_time field.
-	service.DefaultCreateTime = serviceDescCreateTime.Default.(func() time.Time)
-	// serviceDescUpdateTime is the schema descriptor for update_time field.
-	serviceDescUpdateTime := serviceMixinFields0[6].Descriptor()
-	// service.DefaultUpdateTime holds the default value on creation for the update_time field.
-	service.DefaultUpdateTime = serviceDescUpdateTime.Default.(func() time.Time)
-	// service.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
-	service.UpdateDefaultUpdateTime = serviceDescUpdateTime.UpdateDefault.(func() time.Time)
-	// serviceDescProjectID is the schema descriptor for project_id field.
-	serviceDescProjectID := serviceFields[0].Descriptor()
-	// service.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
-	service.ProjectIDValidator = serviceDescProjectID.Validators[0].(func(string) error)
-	// serviceDescEnvironmentID is the schema descriptor for environment_id field.
-	serviceDescEnvironmentID := serviceFields[1].Descriptor()
-	// service.EnvironmentIDValidator is a validator for the "environment_id" field. It is called by the builders before save.
-	service.EnvironmentIDValidator = serviceDescEnvironmentID.Validators[0].(func(string) error)
-	// serviceDescTemplateID is the schema descriptor for template_id field.
-	serviceDescTemplateID := serviceFields[2].Descriptor()
-	// service.TemplateIDValidator is a validator for the "template_id" field. It is called by the builders before save.
-	service.TemplateIDValidator = serviceDescTemplateID.Validators[0].(func(string) error)
-	servicerelationshipMixin := schema.ServiceRelationship{}.Mixin()
-	servicerelationshipMixinHooks0 := servicerelationshipMixin[0].Hooks()
-	servicerelationship.Hooks[0] = servicerelationshipMixinHooks0[0]
-	servicerelationshipMixinFields1 := servicerelationshipMixin[1].Fields()
-	_ = servicerelationshipMixinFields1
-	servicerelationshipFields := schema.ServiceRelationship{}.Fields()
-	_ = servicerelationshipFields
-	// servicerelationshipDescCreateTime is the schema descriptor for create_time field.
-	servicerelationshipDescCreateTime := servicerelationshipMixinFields1[0].Descriptor()
-	// servicerelationship.DefaultCreateTime holds the default value on creation for the create_time field.
-	servicerelationship.DefaultCreateTime = servicerelationshipDescCreateTime.Default.(func() time.Time)
-	// servicerelationshipDescServiceID is the schema descriptor for service_id field.
-	servicerelationshipDescServiceID := servicerelationshipFields[0].Descriptor()
-	// servicerelationship.ServiceIDValidator is a validator for the "service_id" field. It is called by the builders before save.
-	servicerelationship.ServiceIDValidator = servicerelationshipDescServiceID.Validators[0].(func(string) error)
-	// servicerelationshipDescDependencyID is the schema descriptor for dependency_id field.
-	servicerelationshipDescDependencyID := servicerelationshipFields[1].Descriptor()
-	// servicerelationship.DependencyIDValidator is a validator for the "dependency_id" field. It is called by the builders before save.
-	servicerelationship.DependencyIDValidator = servicerelationshipDescDependencyID.Validators[0].(func(string) error)
-	// servicerelationshipDescPath is the schema descriptor for path field.
-	servicerelationshipDescPath := servicerelationshipFields[2].Descriptor()
-	// servicerelationship.DefaultPath holds the default value on creation for the path field.
-	servicerelationship.DefaultPath = servicerelationshipDescPath.Default.([]object.ID)
-	// servicerelationshipDescType is the schema descriptor for type field.
-	servicerelationshipDescType := servicerelationshipFields[3].Descriptor()
-	// servicerelationship.TypeValidator is a validator for the "type" field. It is called by the builders before save.
-	servicerelationship.TypeValidator = servicerelationshipDescType.Validators[0].(func(string) error)
-	serviceresourceMixin := schema.ServiceResource{}.Mixin()
-	serviceresourceMixinHooks0 := serviceresourceMixin[0].Hooks()
-	serviceresource.Hooks[0] = serviceresourceMixinHooks0[0]
-	serviceresourceInters := schema.ServiceResource{}.Interceptors()
-	serviceresource.Interceptors[0] = serviceresourceInters[0]
-	serviceresourceMixinFields1 := serviceresourceMixin[1].Fields()
-	_ = serviceresourceMixinFields1
-	serviceresourceFields := schema.ServiceResource{}.Fields()
-	_ = serviceresourceFields
-	// serviceresourceDescCreateTime is the schema descriptor for create_time field.
-	serviceresourceDescCreateTime := serviceresourceMixinFields1[0].Descriptor()
-	// serviceresource.DefaultCreateTime holds the default value on creation for the create_time field.
-	serviceresource.DefaultCreateTime = serviceresourceDescCreateTime.Default.(func() time.Time)
-	// serviceresourceDescUpdateTime is the schema descriptor for update_time field.
-	serviceresourceDescUpdateTime := serviceresourceMixinFields1[1].Descriptor()
-	// serviceresource.DefaultUpdateTime holds the default value on creation for the update_time field.
-	serviceresource.DefaultUpdateTime = serviceresourceDescUpdateTime.Default.(func() time.Time)
-	// serviceresource.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
-	serviceresource.UpdateDefaultUpdateTime = serviceresourceDescUpdateTime.UpdateDefault.(func() time.Time)
-	// serviceresourceDescProjectID is the schema descriptor for project_id field.
-	serviceresourceDescProjectID := serviceresourceFields[0].Descriptor()
-	// serviceresource.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
-	serviceresource.ProjectIDValidator = serviceresourceDescProjectID.Validators[0].(func(string) error)
-	// serviceresourceDescEnvironmentID is the schema descriptor for environment_id field.
-	serviceresourceDescEnvironmentID := serviceresourceFields[1].Descriptor()
-	// serviceresource.EnvironmentIDValidator is a validator for the "environment_id" field. It is called by the builders before save.
-	serviceresource.EnvironmentIDValidator = serviceresourceDescEnvironmentID.Validators[0].(func(string) error)
-	// serviceresourceDescServiceID is the schema descriptor for service_id field.
-	serviceresourceDescServiceID := serviceresourceFields[2].Descriptor()
-	// serviceresource.ServiceIDValidator is a validator for the "service_id" field. It is called by the builders before save.
-	serviceresource.ServiceIDValidator = serviceresourceDescServiceID.Validators[0].(func(string) error)
-	// serviceresourceDescConnectorID is the schema descriptor for connector_id field.
-	serviceresourceDescConnectorID := serviceresourceFields[3].Descriptor()
-	// serviceresource.ConnectorIDValidator is a validator for the "connector_id" field. It is called by the builders before save.
-	serviceresource.ConnectorIDValidator = serviceresourceDescConnectorID.Validators[0].(func(string) error)
-	// serviceresourceDescMode is the schema descriptor for mode field.
-	serviceresourceDescMode := serviceresourceFields[6].Descriptor()
-	// serviceresource.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
-	serviceresource.ModeValidator = serviceresourceDescMode.Validators[0].(func(string) error)
-	// serviceresourceDescType is the schema descriptor for type field.
-	serviceresourceDescType := serviceresourceFields[7].Descriptor()
-	// serviceresource.TypeValidator is a validator for the "type" field. It is called by the builders before save.
-	serviceresource.TypeValidator = serviceresourceDescType.Validators[0].(func(string) error)
-	// serviceresourceDescName is the schema descriptor for name field.
-	serviceresourceDescName := serviceresourceFields[8].Descriptor()
-	// serviceresource.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	serviceresource.NameValidator = serviceresourceDescName.Validators[0].(func(string) error)
-	// serviceresourceDescDeployerType is the schema descriptor for deployer_type field.
-	serviceresourceDescDeployerType := serviceresourceFields[9].Descriptor()
-	// serviceresource.DeployerTypeValidator is a validator for the "deployer_type" field. It is called by the builders before save.
-	serviceresource.DeployerTypeValidator = serviceresourceDescDeployerType.Validators[0].(func(string) error)
-	// serviceresourceDescShape is the schema descriptor for shape field.
-	serviceresourceDescShape := serviceresourceFields[10].Descriptor()
-	// serviceresource.ShapeValidator is a validator for the "shape" field. It is called by the builders before save.
-	serviceresource.ShapeValidator = serviceresourceDescShape.Validators[0].(func(string) error)
-	serviceresourcerelationshipMixin := schema.ServiceResourceRelationship{}.Mixin()
-	serviceresourcerelationshipMixinHooks0 := serviceresourcerelationshipMixin[0].Hooks()
-	serviceresourcerelationship.Hooks[0] = serviceresourcerelationshipMixinHooks0[0]
-	serviceresourcerelationshipMixinFields1 := serviceresourcerelationshipMixin[1].Fields()
-	_ = serviceresourcerelationshipMixinFields1
-	serviceresourcerelationshipFields := schema.ServiceResourceRelationship{}.Fields()
-	_ = serviceresourcerelationshipFields
-	// serviceresourcerelationshipDescCreateTime is the schema descriptor for create_time field.
-	serviceresourcerelationshipDescCreateTime := serviceresourcerelationshipMixinFields1[0].Descriptor()
-	// serviceresourcerelationship.DefaultCreateTime holds the default value on creation for the create_time field.
-	serviceresourcerelationship.DefaultCreateTime = serviceresourcerelationshipDescCreateTime.Default.(func() time.Time)
-	// serviceresourcerelationshipDescServiceResourceID is the schema descriptor for service_resource_id field.
-	serviceresourcerelationshipDescServiceResourceID := serviceresourcerelationshipFields[0].Descriptor()
-	// serviceresourcerelationship.ServiceResourceIDValidator is a validator for the "service_resource_id" field. It is called by the builders before save.
-	serviceresourcerelationship.ServiceResourceIDValidator = serviceresourcerelationshipDescServiceResourceID.Validators[0].(func(string) error)
-	// serviceresourcerelationshipDescDependencyID is the schema descriptor for dependency_id field.
-	serviceresourcerelationshipDescDependencyID := serviceresourcerelationshipFields[1].Descriptor()
-	// serviceresourcerelationship.DependencyIDValidator is a validator for the "dependency_id" field. It is called by the builders before save.
-	serviceresourcerelationship.DependencyIDValidator = serviceresourcerelationshipDescDependencyID.Validators[0].(func(string) error)
-	// serviceresourcerelationshipDescType is the schema descriptor for type field.
-	serviceresourcerelationshipDescType := serviceresourcerelationshipFields[2].Descriptor()
-	// serviceresourcerelationship.TypeValidator is a validator for the "type" field. It is called by the builders before save.
-	serviceresourcerelationship.TypeValidator = serviceresourcerelationshipDescType.Validators[0].(func(string) error)
-	servicerevisionMixin := schema.ServiceRevision{}.Mixin()
-	servicerevisionMixinHooks0 := servicerevisionMixin[0].Hooks()
-	servicerevisionMixinHooks2 := servicerevisionMixin[2].Hooks()
-	servicerevision.Hooks[0] = servicerevisionMixinHooks0[0]
-	servicerevision.Hooks[1] = servicerevisionMixinHooks2[0]
-	servicerevisionInters := schema.ServiceRevision{}.Interceptors()
-	servicerevision.Interceptors[0] = servicerevisionInters[0]
-	servicerevisionMixinFields1 := servicerevisionMixin[1].Fields()
-	_ = servicerevisionMixinFields1
-	servicerevisionFields := schema.ServiceRevision{}.Fields()
-	_ = servicerevisionFields
-	// servicerevisionDescCreateTime is the schema descriptor for create_time field.
-	servicerevisionDescCreateTime := servicerevisionMixinFields1[0].Descriptor()
-	// servicerevision.DefaultCreateTime holds the default value on creation for the create_time field.
-	servicerevision.DefaultCreateTime = servicerevisionDescCreateTime.Default.(func() time.Time)
-	// servicerevisionDescProjectID is the schema descriptor for project_id field.
-	servicerevisionDescProjectID := servicerevisionFields[0].Descriptor()
-	// servicerevision.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
-	servicerevision.ProjectIDValidator = servicerevisionDescProjectID.Validators[0].(func(string) error)
-	// servicerevisionDescEnvironmentID is the schema descriptor for environment_id field.
-	servicerevisionDescEnvironmentID := servicerevisionFields[1].Descriptor()
-	// servicerevision.EnvironmentIDValidator is a validator for the "environment_id" field. It is called by the builders before save.
-	servicerevision.EnvironmentIDValidator = servicerevisionDescEnvironmentID.Validators[0].(func(string) error)
-	// servicerevisionDescServiceID is the schema descriptor for service_id field.
-	servicerevisionDescServiceID := servicerevisionFields[2].Descriptor()
-	// servicerevision.ServiceIDValidator is a validator for the "service_id" field. It is called by the builders before save.
-	servicerevision.ServiceIDValidator = servicerevisionDescServiceID.Validators[0].(func(string) error)
-	// servicerevisionDescTemplateName is the schema descriptor for template_name field.
-	servicerevisionDescTemplateName := servicerevisionFields[3].Descriptor()
-	// servicerevision.TemplateNameValidator is a validator for the "template_name" field. It is called by the builders before save.
-	servicerevision.TemplateNameValidator = servicerevisionDescTemplateName.Validators[0].(func(string) error)
-	// servicerevisionDescTemplateVersion is the schema descriptor for template_version field.
-	servicerevisionDescTemplateVersion := servicerevisionFields[4].Descriptor()
-	// servicerevision.TemplateVersionValidator is a validator for the "template_version" field. It is called by the builders before save.
-	servicerevision.TemplateVersionValidator = servicerevisionDescTemplateVersion.Validators[0].(func(string) error)
-	// servicerevisionDescVariables is the schema descriptor for variables field.
-	servicerevisionDescVariables := servicerevisionFields[6].Descriptor()
-	// servicerevision.DefaultVariables holds the default value on creation for the variables field.
-	servicerevision.DefaultVariables = servicerevisionDescVariables.Default.(crypto.Map[string, string])
-	// servicerevisionDescDeployerType is the schema descriptor for deployer_type field.
-	servicerevisionDescDeployerType := servicerevisionFields[9].Descriptor()
-	// servicerevision.DefaultDeployerType holds the default value on creation for the deployer_type field.
-	servicerevision.DefaultDeployerType = servicerevisionDescDeployerType.Default.(string)
-	// servicerevisionDescDuration is the schema descriptor for duration field.
-	servicerevisionDescDuration := servicerevisionFields[10].Descriptor()
-	// servicerevision.DefaultDuration holds the default value on creation for the duration field.
-	servicerevision.DefaultDuration = servicerevisionDescDuration.Default.(int)
-	// servicerevisionDescPreviousRequiredProviders is the schema descriptor for previous_required_providers field.
-	servicerevisionDescPreviousRequiredProviders := servicerevisionFields[11].Descriptor()
-	// servicerevision.DefaultPreviousRequiredProviders holds the default value on creation for the previous_required_providers field.
-	servicerevision.DefaultPreviousRequiredProviders = servicerevisionDescPreviousRequiredProviders.Default.([]types.ProviderRequirement)
-	// servicerevisionDescTags is the schema descriptor for tags field.
-	servicerevisionDescTags := servicerevisionFields[12].Descriptor()
-	// servicerevision.DefaultTags holds the default value on creation for the tags field.
-	servicerevision.DefaultTags = servicerevisionDescTags.Default.([]string)
 	settingMixin := schema.Setting{}.Mixin()
 	settingMixinHooks0 := settingMixin[0].Hooks()
 	setting.Hooks[0] = settingMixinHooks0[0]
@@ -671,6 +749,8 @@ func init() {
 	templateMixin := schema.Template{}.Mixin()
 	templateMixinHooks0 := templateMixin[0].Hooks()
 	template.Hooks[0] = templateMixinHooks0[0]
+	templateInters := schema.Template{}.Interceptors()
+	template.Interceptors[0] = templateInters[0]
 	templateMixinFields0 := templateMixin[0].Fields()
 	_ = templateMixinFields0
 	templateFields := schema.Template{}.Fields()
@@ -700,6 +780,8 @@ func init() {
 	templateversionMixin := schema.TemplateVersion{}.Mixin()
 	templateversionMixinHooks0 := templateversionMixin[0].Hooks()
 	templateversion.Hooks[0] = templateversionMixinHooks0[0]
+	templateversionInters := schema.TemplateVersion{}.Interceptors()
+	templateversion.Interceptors[0] = templateversionInters[0]
 	templateversionMixinFields1 := templateversionMixin[1].Fields()
 	_ = templateversionMixinFields1
 	templateversionFields := schema.TemplateVersion{}.Fields()
@@ -733,7 +815,11 @@ func init() {
 	// templateversionDescSchema is the schema descriptor for schema field.
 	templateversionDescSchema := templateversionFields[4].Descriptor()
 	// templateversion.DefaultSchema holds the default value on creation for the schema field.
-	templateversion.DefaultSchema = templateversionDescSchema.Default.(*types.TemplateSchema)
+	templateversion.DefaultSchema = templateversionDescSchema.Default.(types.TemplateVersionSchema)
+	// templateversionDescUiSchema is the schema descriptor for uiSchema field.
+	templateversionDescUiSchema := templateversionFields[5].Descriptor()
+	// templateversion.DefaultUiSchema holds the default value on creation for the uiSchema field.
+	templateversion.DefaultUiSchema = templateversionDescUiSchema.Default.(types.UISchema)
 	tokenMixin := schema.Token{}.Mixin()
 	tokenMixinHooks0 := tokenMixin[0].Hooks()
 	token.Hooks[0] = tokenMixinHooks0[0]
@@ -794,6 +880,368 @@ func init() {
 	variableDescSensitive := variableFields[4].Descriptor()
 	// variable.DefaultSensitive holds the default value on creation for the sensitive field.
 	variable.DefaultSensitive = variableDescSensitive.Default.(bool)
+	workflowMixin := schema.Workflow{}.Mixin()
+	workflowMixinHooks0 := workflowMixin[0].Hooks()
+	workflow.Hooks[0] = workflowMixinHooks0[0]
+	workflowInters := schema.Workflow{}.Interceptors()
+	workflow.Interceptors[0] = workflowInters[0]
+	workflowMixinFields0 := workflowMixin[0].Fields()
+	_ = workflowMixinFields0
+	workflowFields := schema.Workflow{}.Fields()
+	_ = workflowFields
+	// workflowDescName is the schema descriptor for name field.
+	workflowDescName := workflowMixinFields0[1].Descriptor()
+	// workflow.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflow.NameValidator = workflowDescName.Validators[0].(func(string) error)
+	// workflowDescLabels is the schema descriptor for labels field.
+	workflowDescLabels := workflowMixinFields0[3].Descriptor()
+	// workflow.DefaultLabels holds the default value on creation for the labels field.
+	workflow.DefaultLabels = workflowDescLabels.Default.(map[string]string)
+	// workflowDescAnnotations is the schema descriptor for annotations field.
+	workflowDescAnnotations := workflowMixinFields0[4].Descriptor()
+	// workflow.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflow.DefaultAnnotations = workflowDescAnnotations.Default.(map[string]string)
+	// workflowDescCreateTime is the schema descriptor for create_time field.
+	workflowDescCreateTime := workflowMixinFields0[5].Descriptor()
+	// workflow.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflow.DefaultCreateTime = workflowDescCreateTime.Default.(func() time.Time)
+	// workflowDescUpdateTime is the schema descriptor for update_time field.
+	workflowDescUpdateTime := workflowMixinFields0[6].Descriptor()
+	// workflow.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflow.DefaultUpdateTime = workflowDescUpdateTime.Default.(func() time.Time)
+	// workflow.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflow.UpdateDefaultUpdateTime = workflowDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowDescProjectID is the schema descriptor for project_id field.
+	workflowDescProjectID := workflowFields[0].Descriptor()
+	// workflow.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	workflow.ProjectIDValidator = workflowDescProjectID.Validators[0].(func(string) error)
+	// workflowDescType is the schema descriptor for type field.
+	workflowDescType := workflowFields[2].Descriptor()
+	// workflow.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflow.TypeValidator = workflowDescType.Validators[0].(func(string) error)
+	// workflowDescParallelism is the schema descriptor for parallelism field.
+	workflowDescParallelism := workflowFields[3].Descriptor()
+	// workflow.DefaultParallelism holds the default value on creation for the parallelism field.
+	workflow.DefaultParallelism = workflowDescParallelism.Default.(int)
+	// workflow.ParallelismValidator is a validator for the "parallelism" field. It is called by the builders before save.
+	workflow.ParallelismValidator = workflowDescParallelism.Validators[0].(func(int) error)
+	// workflowDescTimeout is the schema descriptor for timeout field.
+	workflowDescTimeout := workflowFields[4].Descriptor()
+	// workflow.DefaultTimeout holds the default value on creation for the timeout field.
+	workflow.DefaultTimeout = workflowDescTimeout.Default.(int)
+	// workflow.TimeoutValidator is a validator for the "timeout" field. It is called by the builders before save.
+	workflow.TimeoutValidator = workflowDescTimeout.Validators[0].(func(int) error)
+	// workflowDescVersion is the schema descriptor for version field.
+	workflowDescVersion := workflowFields[5].Descriptor()
+	// workflow.DefaultVersion holds the default value on creation for the version field.
+	workflow.DefaultVersion = workflowDescVersion.Default.(int)
+	// workflow.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	workflow.VersionValidator = workflowDescVersion.Validators[0].(func(int) error)
+	workflowexecutionMixin := schema.WorkflowExecution{}.Mixin()
+	workflowexecutionMixinHooks0 := workflowexecutionMixin[0].Hooks()
+	workflowexecution.Hooks[0] = workflowexecutionMixinHooks0[0]
+	workflowexecutionInters := schema.WorkflowExecution{}.Interceptors()
+	workflowexecution.Interceptors[0] = workflowexecutionInters[0]
+	workflowexecutionMixinFields0 := workflowexecutionMixin[0].Fields()
+	_ = workflowexecutionMixinFields0
+	workflowexecutionFields := schema.WorkflowExecution{}.Fields()
+	_ = workflowexecutionFields
+	// workflowexecutionDescName is the schema descriptor for name field.
+	workflowexecutionDescName := workflowexecutionMixinFields0[1].Descriptor()
+	// workflowexecution.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowexecution.NameValidator = workflowexecutionDescName.Validators[0].(func(string) error)
+	// workflowexecutionDescLabels is the schema descriptor for labels field.
+	workflowexecutionDescLabels := workflowexecutionMixinFields0[3].Descriptor()
+	// workflowexecution.DefaultLabels holds the default value on creation for the labels field.
+	workflowexecution.DefaultLabels = workflowexecutionDescLabels.Default.(map[string]string)
+	// workflowexecutionDescAnnotations is the schema descriptor for annotations field.
+	workflowexecutionDescAnnotations := workflowexecutionMixinFields0[4].Descriptor()
+	// workflowexecution.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowexecution.DefaultAnnotations = workflowexecutionDescAnnotations.Default.(map[string]string)
+	// workflowexecutionDescCreateTime is the schema descriptor for create_time field.
+	workflowexecutionDescCreateTime := workflowexecutionMixinFields0[5].Descriptor()
+	// workflowexecution.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowexecution.DefaultCreateTime = workflowexecutionDescCreateTime.Default.(func() time.Time)
+	// workflowexecutionDescUpdateTime is the schema descriptor for update_time field.
+	workflowexecutionDescUpdateTime := workflowexecutionMixinFields0[6].Descriptor()
+	// workflowexecution.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowexecution.DefaultUpdateTime = workflowexecutionDescUpdateTime.Default.(func() time.Time)
+	// workflowexecution.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowexecution.UpdateDefaultUpdateTime = workflowexecutionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowexecutionDescProjectID is the schema descriptor for project_id field.
+	workflowexecutionDescProjectID := workflowexecutionFields[0].Descriptor()
+	// workflowexecution.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	workflowexecution.ProjectIDValidator = workflowexecutionDescProjectID.Validators[0].(func(string) error)
+	// workflowexecutionDescVersion is the schema descriptor for version field.
+	workflowexecutionDescVersion := workflowexecutionFields[1].Descriptor()
+	// workflowexecution.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	workflowexecution.VersionValidator = workflowexecutionDescVersion.Validators[0].(func(int) error)
+	// workflowexecutionDescType is the schema descriptor for type field.
+	workflowexecutionDescType := workflowexecutionFields[2].Descriptor()
+	// workflowexecution.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflowexecution.TypeValidator = workflowexecutionDescType.Validators[0].(func(string) error)
+	// workflowexecutionDescWorkflowID is the schema descriptor for workflow_id field.
+	workflowexecutionDescWorkflowID := workflowexecutionFields[3].Descriptor()
+	// workflowexecution.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	workflowexecution.WorkflowIDValidator = workflowexecutionDescWorkflowID.Validators[0].(func(string) error)
+	// workflowexecutionDescTimes is the schema descriptor for times field.
+	workflowexecutionDescTimes := workflowexecutionFields[6].Descriptor()
+	// workflowexecution.DefaultTimes holds the default value on creation for the times field.
+	workflowexecution.DefaultTimes = workflowexecutionDescTimes.Default.(int)
+	// workflowexecution.TimesValidator is a validator for the "times" field. It is called by the builders before save.
+	workflowexecution.TimesValidator = workflowexecutionDescTimes.Validators[0].(func(int) error)
+	// workflowexecutionDescDuration is the schema descriptor for duration field.
+	workflowexecutionDescDuration := workflowexecutionFields[7].Descriptor()
+	// workflowexecution.DefaultDuration holds the default value on creation for the duration field.
+	workflowexecution.DefaultDuration = workflowexecutionDescDuration.Default.(int)
+	// workflowexecution.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	workflowexecution.DurationValidator = workflowexecutionDescDuration.Validators[0].(func(int) error)
+	// workflowexecutionDescParallelism is the schema descriptor for parallelism field.
+	workflowexecutionDescParallelism := workflowexecutionFields[8].Descriptor()
+	// workflowexecution.DefaultParallelism holds the default value on creation for the parallelism field.
+	workflowexecution.DefaultParallelism = workflowexecutionDescParallelism.Default.(int)
+	// workflowexecution.ParallelismValidator is a validator for the "parallelism" field. It is called by the builders before save.
+	workflowexecution.ParallelismValidator = workflowexecutionDescParallelism.Validators[0].(func(int) error)
+	// workflowexecutionDescTimeout is the schema descriptor for timeout field.
+	workflowexecutionDescTimeout := workflowexecutionFields[9].Descriptor()
+	// workflowexecution.DefaultTimeout holds the default value on creation for the timeout field.
+	workflowexecution.DefaultTimeout = workflowexecutionDescTimeout.Default.(int)
+	// workflowexecution.TimeoutValidator is a validator for the "timeout" field. It is called by the builders before save.
+	workflowexecution.TimeoutValidator = workflowexecutionDescTimeout.Validators[0].(func(int) error)
+	// workflowexecutionDescTrigger is the schema descriptor for trigger field.
+	workflowexecutionDescTrigger := workflowexecutionFields[10].Descriptor()
+	// workflowexecution.DefaultTrigger holds the default value on creation for the trigger field.
+	workflowexecution.DefaultTrigger = workflowexecutionDescTrigger.Default.(types.WorkflowExecutionTrigger)
+	workflowstageMixin := schema.WorkflowStage{}.Mixin()
+	workflowstageMixinHooks0 := workflowstageMixin[0].Hooks()
+	workflowstage.Hooks[0] = workflowstageMixinHooks0[0]
+	workflowstageInters := schema.WorkflowStage{}.Interceptors()
+	workflowstage.Interceptors[0] = workflowstageInters[0]
+	workflowstageMixinFields0 := workflowstageMixin[0].Fields()
+	_ = workflowstageMixinFields0
+	workflowstageFields := schema.WorkflowStage{}.Fields()
+	_ = workflowstageFields
+	// workflowstageDescName is the schema descriptor for name field.
+	workflowstageDescName := workflowstageMixinFields0[1].Descriptor()
+	// workflowstage.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowstage.NameValidator = workflowstageDescName.Validators[0].(func(string) error)
+	// workflowstageDescLabels is the schema descriptor for labels field.
+	workflowstageDescLabels := workflowstageMixinFields0[3].Descriptor()
+	// workflowstage.DefaultLabels holds the default value on creation for the labels field.
+	workflowstage.DefaultLabels = workflowstageDescLabels.Default.(map[string]string)
+	// workflowstageDescAnnotations is the schema descriptor for annotations field.
+	workflowstageDescAnnotations := workflowstageMixinFields0[4].Descriptor()
+	// workflowstage.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowstage.DefaultAnnotations = workflowstageDescAnnotations.Default.(map[string]string)
+	// workflowstageDescCreateTime is the schema descriptor for create_time field.
+	workflowstageDescCreateTime := workflowstageMixinFields0[5].Descriptor()
+	// workflowstage.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowstage.DefaultCreateTime = workflowstageDescCreateTime.Default.(func() time.Time)
+	// workflowstageDescUpdateTime is the schema descriptor for update_time field.
+	workflowstageDescUpdateTime := workflowstageMixinFields0[6].Descriptor()
+	// workflowstage.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowstage.DefaultUpdateTime = workflowstageDescUpdateTime.Default.(func() time.Time)
+	// workflowstage.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowstage.UpdateDefaultUpdateTime = workflowstageDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowstageDescProjectID is the schema descriptor for project_id field.
+	workflowstageDescProjectID := workflowstageFields[0].Descriptor()
+	// workflowstage.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	workflowstage.ProjectIDValidator = workflowstageDescProjectID.Validators[0].(func(string) error)
+	// workflowstageDescWorkflowID is the schema descriptor for workflow_id field.
+	workflowstageDescWorkflowID := workflowstageFields[1].Descriptor()
+	// workflowstage.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	workflowstage.WorkflowIDValidator = workflowstageDescWorkflowID.Validators[0].(func(string) error)
+	// workflowstageDescDependencies is the schema descriptor for dependencies field.
+	workflowstageDescDependencies := workflowstageFields[2].Descriptor()
+	// workflowstage.DefaultDependencies holds the default value on creation for the dependencies field.
+	workflowstage.DefaultDependencies = workflowstageDescDependencies.Default.([]object.ID)
+	// workflowstageDescOrder is the schema descriptor for order field.
+	workflowstageDescOrder := workflowstageFields[3].Descriptor()
+	// workflowstage.DefaultOrder holds the default value on creation for the order field.
+	workflowstage.DefaultOrder = workflowstageDescOrder.Default.(int)
+	// workflowstage.OrderValidator is a validator for the "order" field. It is called by the builders before save.
+	workflowstage.OrderValidator = workflowstageDescOrder.Validators[0].(func(int) error)
+	workflowstageexecutionMixin := schema.WorkflowStageExecution{}.Mixin()
+	workflowstageexecutionMixinHooks0 := workflowstageexecutionMixin[0].Hooks()
+	workflowstageexecution.Hooks[0] = workflowstageexecutionMixinHooks0[0]
+	workflowstageexecutionInters := schema.WorkflowStageExecution{}.Interceptors()
+	workflowstageexecution.Interceptors[0] = workflowstageexecutionInters[0]
+	workflowstageexecutionMixinFields0 := workflowstageexecutionMixin[0].Fields()
+	_ = workflowstageexecutionMixinFields0
+	workflowstageexecutionFields := schema.WorkflowStageExecution{}.Fields()
+	_ = workflowstageexecutionFields
+	// workflowstageexecutionDescName is the schema descriptor for name field.
+	workflowstageexecutionDescName := workflowstageexecutionMixinFields0[1].Descriptor()
+	// workflowstageexecution.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowstageexecution.NameValidator = workflowstageexecutionDescName.Validators[0].(func(string) error)
+	// workflowstageexecutionDescLabels is the schema descriptor for labels field.
+	workflowstageexecutionDescLabels := workflowstageexecutionMixinFields0[3].Descriptor()
+	// workflowstageexecution.DefaultLabels holds the default value on creation for the labels field.
+	workflowstageexecution.DefaultLabels = workflowstageexecutionDescLabels.Default.(map[string]string)
+	// workflowstageexecutionDescAnnotations is the schema descriptor for annotations field.
+	workflowstageexecutionDescAnnotations := workflowstageexecutionMixinFields0[4].Descriptor()
+	// workflowstageexecution.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowstageexecution.DefaultAnnotations = workflowstageexecutionDescAnnotations.Default.(map[string]string)
+	// workflowstageexecutionDescCreateTime is the schema descriptor for create_time field.
+	workflowstageexecutionDescCreateTime := workflowstageexecutionMixinFields0[5].Descriptor()
+	// workflowstageexecution.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowstageexecution.DefaultCreateTime = workflowstageexecutionDescCreateTime.Default.(func() time.Time)
+	// workflowstageexecutionDescUpdateTime is the schema descriptor for update_time field.
+	workflowstageexecutionDescUpdateTime := workflowstageexecutionMixinFields0[6].Descriptor()
+	// workflowstageexecution.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowstageexecution.DefaultUpdateTime = workflowstageexecutionDescUpdateTime.Default.(func() time.Time)
+	// workflowstageexecution.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowstageexecution.UpdateDefaultUpdateTime = workflowstageexecutionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowstageexecutionDescProjectID is the schema descriptor for project_id field.
+	workflowstageexecutionDescProjectID := workflowstageexecutionFields[0].Descriptor()
+	// workflowstageexecution.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	workflowstageexecution.ProjectIDValidator = workflowstageexecutionDescProjectID.Validators[0].(func(string) error)
+	// workflowstageexecutionDescWorkflowID is the schema descriptor for workflow_id field.
+	workflowstageexecutionDescWorkflowID := workflowstageexecutionFields[1].Descriptor()
+	// workflowstageexecution.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	workflowstageexecution.WorkflowIDValidator = workflowstageexecutionDescWorkflowID.Validators[0].(func(string) error)
+	// workflowstageexecutionDescDuration is the schema descriptor for duration field.
+	workflowstageexecutionDescDuration := workflowstageexecutionFields[5].Descriptor()
+	// workflowstageexecution.DefaultDuration holds the default value on creation for the duration field.
+	workflowstageexecution.DefaultDuration = workflowstageexecutionDescDuration.Default.(int)
+	// workflowstageexecution.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	workflowstageexecution.DurationValidator = workflowstageexecutionDescDuration.Validators[0].(func(int) error)
+	// workflowstageexecutionDescOrder is the schema descriptor for order field.
+	workflowstageexecutionDescOrder := workflowstageexecutionFields[6].Descriptor()
+	// workflowstageexecution.DefaultOrder holds the default value on creation for the order field.
+	workflowstageexecution.DefaultOrder = workflowstageexecutionDescOrder.Default.(int)
+	// workflowstageexecution.OrderValidator is a validator for the "order" field. It is called by the builders before save.
+	workflowstageexecution.OrderValidator = workflowstageexecutionDescOrder.Validators[0].(func(int) error)
+	workflowstepMixin := schema.WorkflowStep{}.Mixin()
+	workflowstepMixinHooks0 := workflowstepMixin[0].Hooks()
+	workflowstep.Hooks[0] = workflowstepMixinHooks0[0]
+	workflowstepInters := schema.WorkflowStep{}.Interceptors()
+	workflowstep.Interceptors[0] = workflowstepInters[0]
+	workflowstepMixinFields0 := workflowstepMixin[0].Fields()
+	_ = workflowstepMixinFields0
+	workflowstepFields := schema.WorkflowStep{}.Fields()
+	_ = workflowstepFields
+	// workflowstepDescName is the schema descriptor for name field.
+	workflowstepDescName := workflowstepMixinFields0[1].Descriptor()
+	// workflowstep.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowstep.NameValidator = workflowstepDescName.Validators[0].(func(string) error)
+	// workflowstepDescLabels is the schema descriptor for labels field.
+	workflowstepDescLabels := workflowstepMixinFields0[3].Descriptor()
+	// workflowstep.DefaultLabels holds the default value on creation for the labels field.
+	workflowstep.DefaultLabels = workflowstepDescLabels.Default.(map[string]string)
+	// workflowstepDescAnnotations is the schema descriptor for annotations field.
+	workflowstepDescAnnotations := workflowstepMixinFields0[4].Descriptor()
+	// workflowstep.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowstep.DefaultAnnotations = workflowstepDescAnnotations.Default.(map[string]string)
+	// workflowstepDescCreateTime is the schema descriptor for create_time field.
+	workflowstepDescCreateTime := workflowstepMixinFields0[5].Descriptor()
+	// workflowstep.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowstep.DefaultCreateTime = workflowstepDescCreateTime.Default.(func() time.Time)
+	// workflowstepDescUpdateTime is the schema descriptor for update_time field.
+	workflowstepDescUpdateTime := workflowstepMixinFields0[6].Descriptor()
+	// workflowstep.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowstep.DefaultUpdateTime = workflowstepDescUpdateTime.Default.(func() time.Time)
+	// workflowstep.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowstep.UpdateDefaultUpdateTime = workflowstepDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowstepDescType is the schema descriptor for type field.
+	workflowstepDescType := workflowstepFields[0].Descriptor()
+	// workflowstep.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflowstep.TypeValidator = workflowstepDescType.Validators[0].(func(string) error)
+	// workflowstepDescProjectID is the schema descriptor for project_id field.
+	workflowstepDescProjectID := workflowstepFields[1].Descriptor()
+	// workflowstep.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	workflowstep.ProjectIDValidator = workflowstepDescProjectID.Validators[0].(func(string) error)
+	// workflowstepDescWorkflowID is the schema descriptor for workflow_id field.
+	workflowstepDescWorkflowID := workflowstepFields[2].Descriptor()
+	// workflowstep.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	workflowstep.WorkflowIDValidator = workflowstepDescWorkflowID.Validators[0].(func(string) error)
+	// workflowstepDescOrder is the schema descriptor for order field.
+	workflowstepDescOrder := workflowstepFields[7].Descriptor()
+	// workflowstep.DefaultOrder holds the default value on creation for the order field.
+	workflowstep.DefaultOrder = workflowstepDescOrder.Default.(int)
+	// workflowstep.OrderValidator is a validator for the "order" field. It is called by the builders before save.
+	workflowstep.OrderValidator = workflowstepDescOrder.Validators[0].(func(int) error)
+	// workflowstepDescDependencies is the schema descriptor for dependencies field.
+	workflowstepDescDependencies := workflowstepFields[8].Descriptor()
+	// workflowstep.DefaultDependencies holds the default value on creation for the dependencies field.
+	workflowstep.DefaultDependencies = workflowstepDescDependencies.Default.([]object.ID)
+	// workflowstepDescTimeout is the schema descriptor for timeout field.
+	workflowstepDescTimeout := workflowstepFields[10].Descriptor()
+	// workflowstep.DefaultTimeout holds the default value on creation for the timeout field.
+	workflowstep.DefaultTimeout = workflowstepDescTimeout.Default.(int)
+	// workflowstep.TimeoutValidator is a validator for the "timeout" field. It is called by the builders before save.
+	workflowstep.TimeoutValidator = workflowstepDescTimeout.Validators[0].(func(int) error)
+	workflowstepexecutionMixin := schema.WorkflowStepExecution{}.Mixin()
+	workflowstepexecutionMixinHooks0 := workflowstepexecutionMixin[0].Hooks()
+	workflowstepexecution.Hooks[0] = workflowstepexecutionMixinHooks0[0]
+	workflowstepexecutionInters := schema.WorkflowStepExecution{}.Interceptors()
+	workflowstepexecution.Interceptors[0] = workflowstepexecutionInters[0]
+	workflowstepexecutionMixinFields0 := workflowstepexecutionMixin[0].Fields()
+	_ = workflowstepexecutionMixinFields0
+	workflowstepexecutionFields := schema.WorkflowStepExecution{}.Fields()
+	_ = workflowstepexecutionFields
+	// workflowstepexecutionDescName is the schema descriptor for name field.
+	workflowstepexecutionDescName := workflowstepexecutionMixinFields0[1].Descriptor()
+	// workflowstepexecution.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflowstepexecution.NameValidator = workflowstepexecutionDescName.Validators[0].(func(string) error)
+	// workflowstepexecutionDescLabels is the schema descriptor for labels field.
+	workflowstepexecutionDescLabels := workflowstepexecutionMixinFields0[3].Descriptor()
+	// workflowstepexecution.DefaultLabels holds the default value on creation for the labels field.
+	workflowstepexecution.DefaultLabels = workflowstepexecutionDescLabels.Default.(map[string]string)
+	// workflowstepexecutionDescAnnotations is the schema descriptor for annotations field.
+	workflowstepexecutionDescAnnotations := workflowstepexecutionMixinFields0[4].Descriptor()
+	// workflowstepexecution.DefaultAnnotations holds the default value on creation for the annotations field.
+	workflowstepexecution.DefaultAnnotations = workflowstepexecutionDescAnnotations.Default.(map[string]string)
+	// workflowstepexecutionDescCreateTime is the schema descriptor for create_time field.
+	workflowstepexecutionDescCreateTime := workflowstepexecutionMixinFields0[5].Descriptor()
+	// workflowstepexecution.DefaultCreateTime holds the default value on creation for the create_time field.
+	workflowstepexecution.DefaultCreateTime = workflowstepexecutionDescCreateTime.Default.(func() time.Time)
+	// workflowstepexecutionDescUpdateTime is the schema descriptor for update_time field.
+	workflowstepexecutionDescUpdateTime := workflowstepexecutionMixinFields0[6].Descriptor()
+	// workflowstepexecution.DefaultUpdateTime holds the default value on creation for the update_time field.
+	workflowstepexecution.DefaultUpdateTime = workflowstepexecutionDescUpdateTime.Default.(func() time.Time)
+	// workflowstepexecution.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	workflowstepexecution.UpdateDefaultUpdateTime = workflowstepexecutionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// workflowstepexecutionDescProjectID is the schema descriptor for project_id field.
+	workflowstepexecutionDescProjectID := workflowstepexecutionFields[3].Descriptor()
+	// workflowstepexecution.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
+	workflowstepexecution.ProjectIDValidator = workflowstepexecutionDescProjectID.Validators[0].(func(string) error)
+	// workflowstepexecutionDescWorkflowID is the schema descriptor for workflow_id field.
+	workflowstepexecutionDescWorkflowID := workflowstepexecutionFields[4].Descriptor()
+	// workflowstepexecution.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	workflowstepexecution.WorkflowIDValidator = workflowstepexecutionDescWorkflowID.Validators[0].(func(string) error)
+	// workflowstepexecutionDescType is the schema descriptor for type field.
+	workflowstepexecutionDescType := workflowstepexecutionFields[5].Descriptor()
+	// workflowstepexecution.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflowstepexecution.TypeValidator = workflowstepexecutionDescType.Validators[0].(func(string) error)
+	// workflowstepexecutionDescTimes is the schema descriptor for times field.
+	workflowstepexecutionDescTimes := workflowstepexecutionFields[7].Descriptor()
+	// workflowstepexecution.DefaultTimes holds the default value on creation for the times field.
+	workflowstepexecution.DefaultTimes = workflowstepexecutionDescTimes.Default.(int)
+	// workflowstepexecution.TimesValidator is a validator for the "times" field. It is called by the builders before save.
+	workflowstepexecution.TimesValidator = workflowstepexecutionDescTimes.Validators[0].(func(int) error)
+	// workflowstepexecutionDescDuration is the schema descriptor for duration field.
+	workflowstepexecutionDescDuration := workflowstepexecutionFields[9].Descriptor()
+	// workflowstepexecution.DefaultDuration holds the default value on creation for the duration field.
+	workflowstepexecution.DefaultDuration = workflowstepexecutionDescDuration.Default.(int)
+	// workflowstepexecution.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	workflowstepexecution.DurationValidator = workflowstepexecutionDescDuration.Validators[0].(func(int) error)
+	// workflowstepexecutionDescTimeout is the schema descriptor for timeout field.
+	workflowstepexecutionDescTimeout := workflowstepexecutionFields[11].Descriptor()
+	// workflowstepexecution.DefaultTimeout holds the default value on creation for the timeout field.
+	workflowstepexecution.DefaultTimeout = workflowstepexecutionDescTimeout.Default.(int)
+	// workflowstepexecution.TimeoutValidator is a validator for the "timeout" field. It is called by the builders before save.
+	workflowstepexecution.TimeoutValidator = workflowstepexecutionDescTimeout.Validators[0].(func(int) error)
+	// workflowstepexecutionDescOrder is the schema descriptor for order field.
+	workflowstepexecutionDescOrder := workflowstepexecutionFields[12].Descriptor()
+	// workflowstepexecution.DefaultOrder holds the default value on creation for the order field.
+	workflowstepexecution.DefaultOrder = workflowstepexecutionDescOrder.Default.(int)
+	// workflowstepexecution.OrderValidator is a validator for the "order" field. It is called by the builders before save.
+	workflowstepexecution.OrderValidator = workflowstepexecutionDescOrder.Validators[0].(func(int) error)
+	// workflowstepexecutionDescRecord is the schema descriptor for record field.
+	workflowstepexecutionDescRecord := workflowstepexecutionFields[13].Descriptor()
+	// workflowstepexecution.DefaultRecord holds the default value on creation for the record field.
+	workflowstepexecution.DefaultRecord = workflowstepexecutionDescRecord.Default.(string)
 }
 
 const (

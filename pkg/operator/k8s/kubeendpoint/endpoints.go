@@ -21,7 +21,7 @@ func GetServiceEndpoints(
 	ctx context.Context,
 	coreCli *coreclient.CoreV1Client,
 	ns, n string,
-) ([]types.ServiceResourceEndpoint, error) {
+) ([]types.ResourceComponentEndpoint, error) {
 	svc, err := coreCli.Services(ns).
 		Get(ctx, n, meta.GetOptions{ResourceVersion: "0"})
 	if err != nil {
@@ -58,7 +58,7 @@ func GetServiceEndpoints(
 		return nil, nil
 	}
 
-	return []types.ServiceResourceEndpoint{
+	return []types.ResourceComponentEndpoint{
 		{
 			EndpointType: resourceSubKind,
 			Endpoints:    endpoints,
@@ -150,16 +150,21 @@ func GetIngressEndpoints(
 	ctx context.Context,
 	networkCli *networkingclient.NetworkingV1Client,
 	ns, n string,
-) ([]types.ServiceResourceEndpoint, error) {
+) ([]types.ResourceComponentEndpoint, error) {
 	ing, err := networkCli.Ingresses(ns).
 		Get(ctx, n, meta.GetOptions{ResourceVersion: "0"})
 	if err != nil {
 		return nil, err
 	}
 
-	return []types.ServiceResourceEndpoint{
+	eps := ingressEndpoints(*ing)
+	if len(eps) == 0 {
+		return nil, nil
+	}
+
+	return []types.ResourceComponentEndpoint{
 		{
-			Endpoints: ingressEndpoints(*ing),
+			Endpoints: eps,
 		},
 	}, nil
 }

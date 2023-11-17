@@ -32,6 +32,8 @@ type ConnectorCreateInput struct {
 	EnableFinOps bool `path:"-" query:"-" json:"enableFinOps"`
 	// Connector config version.
 	ConfigVersion string `path:"-" query:"-" json:"configVersion"`
+	// Environment type of the connector to apply.
+	ApplicableEnvironmentType string `path:"-" query:"-" json:"applicableEnvironmentType"`
 	// Type of the connector.
 	Type string `path:"-" query:"-" json:"type"`
 	// Category of the connector.
@@ -56,15 +58,16 @@ func (cci *ConnectorCreateInput) Model() *Connector {
 	}
 
 	_c := &Connector{
-		EnableFinOps:        cci.EnableFinOps,
-		ConfigVersion:       cci.ConfigVersion,
-		Type:                cci.Type,
-		Category:            cci.Category,
-		Name:                cci.Name,
-		Description:         cci.Description,
-		Labels:              cci.Labels,
-		ConfigData:          cci.ConfigData,
-		FinOpsCustomPricing: cci.FinOpsCustomPricing,
+		EnableFinOps:              cci.EnableFinOps,
+		ConfigVersion:             cci.ConfigVersion,
+		ApplicableEnvironmentType: cci.ApplicableEnvironmentType,
+		Type:                      cci.Type,
+		Category:                  cci.Category,
+		Name:                      cci.Name,
+		Description:               cci.Description,
+		Labels:                    cci.Labels,
+		ConfigData:                cci.ConfigData,
+		FinOpsCustomPricing:       cci.FinOpsCustomPricing,
 	}
 
 	if cci.Project != nil {
@@ -113,6 +116,8 @@ type ConnectorCreateInputsItem struct {
 	EnableFinOps bool `path:"-" query:"-" json:"enableFinOps"`
 	// Connector config version.
 	ConfigVersion string `path:"-" query:"-" json:"configVersion"`
+	// Environment type of the connector to apply.
+	ApplicableEnvironmentType string `path:"-" query:"-" json:"applicableEnvironmentType"`
 	// Type of the connector.
 	Type string `path:"-" query:"-" json:"type"`
 	// Category of the connector.
@@ -165,15 +170,16 @@ func (cci *ConnectorCreateInputs) Model() []*Connector {
 
 	for i := range cci.Items {
 		_c := &Connector{
-			EnableFinOps:        cci.Items[i].EnableFinOps,
-			ConfigVersion:       cci.Items[i].ConfigVersion,
-			Type:                cci.Items[i].Type,
-			Category:            cci.Items[i].Category,
-			Name:                cci.Items[i].Name,
-			Description:         cci.Items[i].Description,
-			Labels:              cci.Items[i].Labels,
-			ConfigData:          cci.Items[i].ConfigData,
-			FinOpsCustomPricing: cci.Items[i].FinOpsCustomPricing,
+			EnableFinOps:              cci.Items[i].EnableFinOps,
+			ConfigVersion:             cci.Items[i].ConfigVersion,
+			ApplicableEnvironmentType: cci.Items[i].ApplicableEnvironmentType,
+			Type:                      cci.Items[i].Type,
+			Category:                  cci.Items[i].Category,
+			Name:                      cci.Items[i].Name,
+			Description:               cci.Items[i].Description,
+			Labels:                    cci.Items[i].Labels,
+			ConfigData:                cci.Items[i].ConfigData,
+			FinOpsCustomPricing:       cci.Items[i].FinOpsCustomPricing,
 		}
 
 		if cci.Project != nil {
@@ -336,6 +342,7 @@ func (cdi *ConnectorDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet
 
 	ids := make([]object.ID, 0, len(cdi.Items))
 	ors := make([]predicate.Connector, 0, len(cdi.Items))
+	indexers := make(map[any][]int)
 
 	for i := range cdi.Items {
 		if cdi.Items[i] == nil {
@@ -345,9 +352,12 @@ func (cdi *ConnectorDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet
 		if cdi.Items[i].ID != "" {
 			ids = append(ids, cdi.Items[i].ID)
 			ors = append(ors, connector.ID(cdi.Items[i].ID))
+			indexers[cdi.Items[i].ID] = append(indexers[cdi.Items[i].ID], i)
 		} else if cdi.Items[i].Name != "" {
 			ors = append(ors, connector.And(
 				connector.Name(cdi.Items[i].Name)))
+			indexerKey := fmt.Sprint("/", cdi.Items[i].Name)
+			indexers[indexerKey] = append(indexers[indexerKey], i)
 		} else {
 			return errors.New("found item hasn't identify")
 		}
@@ -374,8 +384,15 @@ func (cdi *ConnectorDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet
 	}
 
 	for i := range es {
-		cdi.Items[i].ID = es[i].ID
-		cdi.Items[i].Name = es[i].Name
+		indexer := indexers[es[i].ID]
+		if indexer == nil {
+			indexerKey := fmt.Sprint("/", es[i].Name)
+			indexer = indexers[indexerKey]
+		}
+		for _, j := range indexer {
+			cdi.Items[j].ID = es[i].ID
+			cdi.Items[j].Name = es[i].Name
+		}
 	}
 
 	return nil
@@ -516,6 +533,8 @@ type ConnectorQueryInputs struct {
 	Category string `path:"-" query:"category,omitempty" json:"-"`
 	// Type of the connector.
 	Type string `path:"-" query:"type,omitempty" json:"-"`
+	// Environment type of the connector to apply.
+	ApplicableEnvironmentType string `path:"-" query:"applicableEnvironmentType,omitempty" json:"-"`
 }
 
 // Validate checks the ConnectorQueryInputs entity.
@@ -759,6 +778,7 @@ func (cui *ConnectorUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet
 
 	ids := make([]object.ID, 0, len(cui.Items))
 	ors := make([]predicate.Connector, 0, len(cui.Items))
+	indexers := make(map[any][]int)
 
 	for i := range cui.Items {
 		if cui.Items[i] == nil {
@@ -768,9 +788,12 @@ func (cui *ConnectorUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet
 		if cui.Items[i].ID != "" {
 			ids = append(ids, cui.Items[i].ID)
 			ors = append(ors, connector.ID(cui.Items[i].ID))
+			indexers[cui.Items[i].ID] = append(indexers[cui.Items[i].ID], i)
 		} else if cui.Items[i].Name != "" {
 			ors = append(ors, connector.And(
 				connector.Name(cui.Items[i].Name)))
+			indexerKey := fmt.Sprint("/", cui.Items[i].Name)
+			indexers[indexerKey] = append(indexers[indexerKey], i)
 		} else {
 			return errors.New("found item hasn't identify")
 		}
@@ -797,15 +820,18 @@ func (cui *ConnectorUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet
 	}
 
 	for i := range es {
-		cui.Items[i].ID = es[i].ID
-		cui.Items[i].Name = es[i].Name
+		indexer := indexers[es[i].ID]
+		if indexer == nil {
+			indexerKey := fmt.Sprint("/", es[i].Name)
+			indexer = indexers[indexerKey]
+		}
+		for _, j := range indexer {
+			cui.Items[j].ID = es[i].ID
+			cui.Items[j].Name = es[i].Name
+		}
 	}
 
 	for i := range cui.Items {
-		if cui.Items[i] == nil {
-			continue
-		}
-
 		if err := cui.Items[i].ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
@@ -816,19 +842,20 @@ func (cui *ConnectorUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet
 
 // ConnectorOutput holds the output of the Connector entity.
 type ConnectorOutput struct {
-	ID                  object.ID                  `json:"id,omitempty"`
-	Name                string                     `json:"name,omitempty"`
-	Description         string                     `json:"description,omitempty"`
-	Labels              map[string]string          `json:"labels,omitempty"`
-	CreateTime          *time.Time                 `json:"createTime,omitempty"`
-	UpdateTime          *time.Time                 `json:"updateTime,omitempty"`
-	Status              status.Status              `json:"status,omitempty"`
-	Category            string                     `json:"category,omitempty"`
-	Type                string                     `json:"type,omitempty"`
-	ConfigVersion       string                     `json:"configVersion,omitempty"`
-	ConfigData          crypto.Properties          `json:"configData,omitempty"`
-	EnableFinOps        bool                       `json:"enableFinOps,omitempty"`
-	FinOpsCustomPricing *types.FinOpsCustomPricing `json:"finOpsCustomPricing,omitempty"`
+	ID                        object.ID                  `json:"id,omitempty"`
+	Name                      string                     `json:"name,omitempty"`
+	Description               string                     `json:"description,omitempty"`
+	Labels                    map[string]string          `json:"labels,omitempty"`
+	CreateTime                *time.Time                 `json:"createTime,omitempty"`
+	UpdateTime                *time.Time                 `json:"updateTime,omitempty"`
+	Status                    status.Status              `json:"status,omitempty"`
+	Category                  string                     `json:"category,omitempty"`
+	Type                      string                     `json:"type,omitempty"`
+	ApplicableEnvironmentType string                     `json:"applicableEnvironmentType,omitempty"`
+	ConfigVersion             string                     `json:"configVersion,omitempty"`
+	ConfigData                crypto.Properties          `json:"configData,omitempty"`
+	EnableFinOps              bool                       `json:"enableFinOps,omitempty"`
+	FinOpsCustomPricing       *types.FinOpsCustomPricing `json:"finOpsCustomPricing,omitempty"`
 
 	Project *ProjectOutput `json:"project,omitempty"`
 }
@@ -850,19 +877,20 @@ func ExposeConnector(_c *Connector) *ConnectorOutput {
 	}
 
 	co := &ConnectorOutput{
-		ID:                  _c.ID,
-		Name:                _c.Name,
-		Description:         _c.Description,
-		Labels:              _c.Labels,
-		CreateTime:          _c.CreateTime,
-		UpdateTime:          _c.UpdateTime,
-		Status:              _c.Status,
-		Category:            _c.Category,
-		Type:                _c.Type,
-		ConfigVersion:       _c.ConfigVersion,
-		ConfigData:          _c.ConfigData,
-		EnableFinOps:        _c.EnableFinOps,
-		FinOpsCustomPricing: _c.FinOpsCustomPricing,
+		ID:                        _c.ID,
+		Name:                      _c.Name,
+		Description:               _c.Description,
+		Labels:                    _c.Labels,
+		CreateTime:                _c.CreateTime,
+		UpdateTime:                _c.UpdateTime,
+		Status:                    _c.Status,
+		Category:                  _c.Category,
+		Type:                      _c.Type,
+		ApplicableEnvironmentType: _c.ApplicableEnvironmentType,
+		ConfigVersion:             _c.ConfigVersion,
+		ConfigData:                _c.ConfigData,
+		EnableFinOps:              _c.EnableFinOps,
+		FinOpsCustomPricing:       _c.FinOpsCustomPricing,
 	}
 
 	if _c.Edges.Project != nil {

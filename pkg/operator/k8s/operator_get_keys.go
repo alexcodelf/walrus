@@ -3,19 +3,18 @@ package k8s
 import (
 	"context"
 
-	"k8s.io/utils/pointer"
-
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/operator/k8s/intercept"
 	"github.com/seal-io/walrus/pkg/operator/k8s/kube"
+	"github.com/seal-io/walrus/utils/pointer"
 )
 
 // GetKeys implements operator.Operator.
 func (op Operator) GetKeys(
 	ctx context.Context,
-	res *model.ServiceResource,
-) (*types.ServiceResourceOperationKeys, error) {
+	res *model.ResourceComponent,
+) (*types.ResourceComponentOperationKeys, error) {
 	if res == nil {
 		return nil, nil
 	}
@@ -47,9 +46,9 @@ func (op Operator) GetKeys(
 		states  = kube.GetContainerStates(p)
 	)
 
-	ks := make([]types.ServiceResourceOperationKey, len(states))
+	ks := make([]types.ResourceComponentOperationKey, len(states))
 	for i := 0; i < len(states); i++ {
-		ks[i] = types.ServiceResourceOperationKey{
+		ks[i] = types.ResourceComponentOperationKey{
 			Name:       states[i].Name,
 			Value:      states[i].String(),
 			Loggable:   pointer.Bool(states[i].State > kube.ContainerStateUnknown),
@@ -67,7 +66,7 @@ func (op Operator) GetKeys(
 	//          }
 	//      ]
 	// }.
-	return &types.ServiceResourceOperationKeys{
+	return &types.ResourceComponentOperationKeys{
 		Labels: []string{"Container"},
 		Keys:   ks,
 	}, nil

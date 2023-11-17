@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/go-version"
 
+	"github.com/seal-io/walrus/pkg/vcs/driver/github"
 	"github.com/seal-io/walrus/utils/log"
 )
 
@@ -22,11 +23,19 @@ type Repository struct {
 	Namespace   string `json:"namespace"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Link        string `json:"link"`
-	Reference   string `json:"reference"`
+	// Link is the link of the repository.
+	Link string `json:"link"`
+	// Reference is the reference of the repository. E.G: main, dev, v0.0.1.
+	Reference string `json:"reference"`
+	// Topics of the repository.
+	Topics []string `json:"topics"`
+	// Driver is the driver of the repository. E.G: github.
+	Driver string `json:"driver"`
+	// SubPath is the sub path of the repository.
+	SubPath string `json:"subPath"`
 }
 
-// ParseURLToGit parses a raw URL to a git repository.
+// ParseURLToRepo parses a raw URL to a git repository.
 // Since the return repository only contains the namespace and name,
 // It only used for create template from catalog.
 func ParseURLToRepo(rawURL string) (*Repository, error) {
@@ -35,6 +44,7 @@ func ParseURLToRepo(rawURL string) (*Repository, error) {
 	ref := ""
 	name := ""
 	namespace := ""
+	subPath := ""
 
 	endpoint, err := transport.NewEndpoint(rawURL)
 	if err != nil {
@@ -49,6 +59,18 @@ func ParseURLToRepo(rawURL string) (*Repository, error) {
 		ref = parts[1]
 		path = strings.TrimSuffix(path, "?ref="+ref)
 		rawURL = strings.TrimSuffix(rawURL, "?ref="+ref)
+	}
+
+	// Get sub path from path.
+	if strings.Contains(path, "//") {
+		paths := strings.Split(path, "//")
+		if len(paths) > 2 {
+			return nil, errors.New("git url contains more than one //")
+		}
+		subPath = paths[1]
+
+		path = strings.TrimSuffix(path, "//"+subPath)
+		rawURL = strings.TrimSuffix(rawURL, "//"+subPath)
 	}
 
 	// Trim .git suffix.
@@ -79,11 +101,22 @@ func ParseURLToRepo(rawURL string) (*Repository, error) {
 		namespace = strings.Join(parts[:len(parts)-1], "/")
 	}
 
+	var driver string
+
+	switch endpoint.Host {
+	case "github.com":
+		driver = github.Driver
+	case "gitlab.com":
+		driver = github.Driver
+	}
+
 	return &Repository{
 		Namespace: namespace,
 		Name:      name,
 		Link:      rawURL,
 		Reference: ref,
+		Driver:    driver,
+		SubPath:   subPath,
 	}, nil
 }
 
@@ -124,7 +157,7 @@ func GetGitRepoVersions(r *git.Repository) ([]*version.Version, error) {
 	err = tagRefs.ForEach(func(ref *plumbing.Reference) error {
 		v, verr := version.NewVersion(ref.Name().Short())
 		if verr != nil {
-			logger.Warnf("failed to parse tag %s: %v", ref.Name().Short(), err)
+			logger.Warnf("failed to parse tag %s: %v", ref.Name().Short(), verr)
 		}
 
 		if v != nil {
@@ -142,7 +175,7 @@ func GetGitRepoVersions(r *git.Repository) ([]*version.Version, error) {
 }
 
 // CloneGitRepo clones a git repository to a specific directory.
-func CloneGitRepo(ctx context.Context, link, dir string) (*git.Repository, error) {
+func CloneGitRepo(ctx context.Context, link, dir string, skipTLSVerify bool) (*git.Repository, error) {
 	logger := log.WithName("template")
 
 	src, err := GetGitSource(link)
@@ -150,8 +183,13 @@ func CloneGitRepo(ctx context.Context, link, dir string) (*git.Repository, error
 		return nil, err
 	}
 
+	options := []getter.ClientOption{getter.WithContext(ctx)}
+	if skipTLSVerify {
+		options = append(options, getter.WithInsecure())
+	}
+
 	// Clone git repository.
-	err = getter.Get(dir, src, getter.WithContext(ctx))
+	err = getter.Get(dir, src, options...)
 	if err != nil {
 		logger.Errorf("failed to get %s: %v", link, err)
 

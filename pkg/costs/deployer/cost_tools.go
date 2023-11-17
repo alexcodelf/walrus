@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"path"
 
-	"helm.sh/helm/v3/pkg/repo"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
@@ -15,7 +14,9 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types"
+	"github.com/seal-io/walrus/pkg/k8s/deploy"
 	opk8s "github.com/seal-io/walrus/pkg/operator/k8s"
+	"github.com/seal-io/walrus/pkg/settings"
 	"github.com/seal-io/walrus/utils/log"
 )
 
@@ -28,22 +29,10 @@ const (
 	pathOpencostRefreshPricing = "/refreshPricing"
 )
 
-const (
-	defaultPrometheusChartTgz = "prometheus-19.6.1.tgz"
-	defaultPrometheusRepo     = "https://prometheus-community.github.io/helm-charts"
-)
-
 var pathServiceProxy = fmt.Sprintf("/api/v1/namespaces/%s/services/http:%s:9003/proxy",
 	types.WalrusSystemNamespace, NameOpencost)
 
-type input struct {
-	Name               string
-	Namespace          string
-	ClusterID          string
-	PrometheusEndpoint string
-}
-
-func DeployCostTools(ctx context.Context, conn *model.Connector, replace bool) error {
+func DeployCostTools(ctx context.Context, mc model.ClientSet, conn *model.Connector, replace bool) error {
 	log.WithName("cost").Debugf("deploying cost tools for connector %s", conn.Name)
 
 	apiConfig, kubeconfig, err := opk8s.LoadApiConfig(*conn)
@@ -51,14 +40,17 @@ func DeployCostTools(ctx context.Context, conn *model.Connector, replace bool) e
 		return err
 	}
 
-	d, err := New(kubeconfig)
+	d, err := deploy.New(kubeconfig)
 	if err != nil {
 		return fmt.Errorf("error create deployer: %w", err)
 	}
 
-	clusterName := apiConfig.CurrentContext
+	var (
+		clusterName   = apiConfig.CurrentContext
+		imageRegistry = settings.ImageRegistry.ShouldValue(ctx, mc)
+	)
 
-	yaml, err := opencost(clusterName)
+	yaml, err := opencost(clusterName, imageRegistry)
 	if err != nil {
 		return err
 	}
@@ -67,7 +59,7 @@ func DeployCostTools(ctx context.Context, conn *model.Connector, replace bool) e
 		return err
 	}
 
-	app, err := prometheus()
+	app, err := prometheus(imageRegistry)
 	if err != nil {
 		return err
 	}
@@ -126,12 +118,21 @@ func CostToolsStatus(ctx context.Context, conn *model.Connector) error {
 	return nil
 }
 
-func opencost(clusterName string) ([]byte, error) {
-	data := input{
+func opencost(clusterName, imageRegistry string) ([]byte, error) {
+	image := path.Join(imageRegistry, imageOpencost)
+
+	data := struct {
+		Name               string
+		Namespace          string
+		ClusterID          string
+		PrometheusEndpoint string
+		Image              string
+	}{
 		Name:               NameOpencost,
 		Namespace:          types.WalrusSystemNamespace,
 		ClusterID:          clusterName,
 		PrometheusEndpoint: fmt.Sprintf("http://%s-server.%s.svc:80", NamePrometheus, types.WalrusSystemNamespace),
+		Image:              image,
 	}
 
 	buf := &bytes.Buffer{}
@@ -143,7 +144,10 @@ func opencost(clusterName string) ([]byte, error) {
 }
 
 func opencostScrape() (string, error) {
-	data := input{
+	data := struct {
+		Name      string
+		Namespace string
+	}{
 		Name:      NameOpencost,
 		Namespace: types.WalrusSystemNamespace,
 	}
@@ -185,10 +189,22 @@ func opencostRefreshPricingURL(restCfg *rest.Config) (string, error) {
 	return u.String(), nil
 }
 
-func prometheus() (*ChartApp, error) {
+func prometheus(imageRegistry string) (*deploy.ChartApp, error) {
 	scrape, err := opencostScrape()
 	if err != nil {
 		return nil, err
+	}
+
+	imageConfig := func(repo string) map[string]any {
+		cfg := map[string]any{
+			"registry": imageRegistry,
+		}
+
+		if repo != "" {
+			cfg["repository"] = repo
+		}
+
+		return cfg
 	}
 
 	values := map[string]any{
@@ -198,24 +214,38 @@ func prometheus() (*ChartApp, error) {
 		"alertmanager": map[string]any{
 			"enabled": false,
 		},
+
+		"kube-state-metrics": map[string]any{
+			"image": imageConfig(imageRepositoryKubeState),
+		},
+		"prometheus-node-exporter": map[string]any{
+			"image": imageConfig(imageRepositoryNodeExporter),
+		},
+		"extraScrapeConfigs": scrape,
+
+		// Configmap reload and prometheus only support include registry in repository.
+		"configmapReload": map[string]any{
+			"prometheus": map[string]any{
+				"image": map[string]any{
+					"repository": path.Join(imageRegistry, imageRepositoryReload),
+				},
+			},
+		},
 		"server": map[string]any{
 			"persistentVolume": map[string]any{
 				"enabled": false,
 			},
+			"image": map[string]any{
+				"repository": path.Join(imageRegistry, imageRepositoryServer),
+			},
 		},
-		"extraScrapeConfigs": scrape,
 	}
 
-	entry := &repo.Entry{
-		Name: "prometheus",
-		URL:  defaultPrometheusRepo,
-	}
-
-	return &ChartApp{
-		Name:         NamePrometheus,
-		Namespace:    types.WalrusSystemNamespace,
-		ChartTgzName: defaultPrometheusChartTgz,
-		Values:       values,
-		Entry:        entry,
+	return &deploy.ChartApp{
+		Name:      NamePrometheus,
+		Namespace: types.WalrusSystemNamespace,
+		ChartPath: defaultPrometheusChartPath,
+		ChartURL:  defaultPrometheusChartURL,
+		Values:    values,
 	}, nil
 }

@@ -12,14 +12,17 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
+	dynamicclient "k8s.io/client-go/dynamic"
+	batchclient "k8s.io/client-go/kubernetes/typed/batch/v1"
 	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/utils/pointer"
+	networkingclient "k8s.io/client-go/kubernetes/typed/networking/v1"
 
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/k8s"
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
 	"github.com/seal-io/walrus/utils/log"
+	"github.com/seal-io/walrus/utils/pointer"
 )
 
 // TestOperator tests all actions of Operator if found a valid local kubeconfig.
@@ -35,8 +38,12 @@ func TestOperator(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	op := Operator{
-		Logger:     log.WithName("operator").WithName("k8s"),
-		RestConfig: k8sCfg,
+		Logger:        log.WithName("operator").WithName("k8s"),
+		RestConfig:    k8sCfg,
+		CoreCli:       coreclient.NewForConfigOrDie(k8sCfg),
+		BatchCli:      batchclient.NewForConfigOrDie(k8sCfg),
+		NetworkingCli: networkingclient.NewForConfigOrDie(k8sCfg),
+		DynamicCli:    dynamicclient.NewForConfigOrDie(k8sCfg),
 	}
 
 	t.Run("IsConnected", func(t *testing.T) {
@@ -98,7 +105,7 @@ func TestOperator(t *testing.T) {
 	}()
 
 	// Mock application resource.
-	res := &model.ServiceResource{
+	res := &model.ResourceComponent{
 		Type:         "kubernetes_pod",
 		Name:         p.Namespace + "/" + p.Name,
 		DeployerType: types.DeployerTypeTF,
@@ -110,9 +117,9 @@ func TestOperator(t *testing.T) {
 			t.Errorf("error getting keys: %v", err)
 		}
 
-		assert.Equalf(t, keys, &types.ServiceResourceOperationKeys{
+		assert.Equalf(t, keys, &types.ResourceComponentOperationKeys{
 			Labels: []string{"Container"},
-			Keys: []types.ServiceResourceOperationKey{
+			Keys: []types.ResourceComponentOperationKey{
 				{
 					Name:       "nginx",
 					Value:      p.Namespace + "/" + p.Name + "/run/nginx",

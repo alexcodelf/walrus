@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/drone/go-scm/scm"
@@ -22,8 +23,11 @@ import (
 	"github.com/seal-io/walrus/utils/version"
 )
 
+// WalrusServiceRepositoryTopic indicates the repository stores a service template.
+const WalrusServiceRepositoryTopic = "walrus-service"
+
 // getRepos returns org and a list of repositories from the given catalog.
-func getRepos(ctx context.Context, c *model.Catalog, ua string) ([]*vcs.Repository, error) {
+func getRepos(ctx context.Context, c *model.Catalog, ua string, skipTLSVerify bool) ([]*vcs.Repository, error) {
 	var (
 		client *scm.Client
 		err    error
@@ -36,7 +40,13 @@ func getRepos(ctx context.Context, c *model.Catalog, ua string) ([]*vcs.Reposito
 
 	switch c.Type {
 	case types.GitDriverGithub, types.GitDriverGitlab:
-		client, err = vcs.NewClientFromURL(c.Type, c.Source, options.WithUserAgent(ua))
+		ops := []options.ClientOption{options.WithUserAgent(ua)}
+
+		if skipTLSVerify {
+			ops = append(ops, options.WithInsecureSkipVerify())
+		}
+
+		client, err = vcs.NewClientFromURL(c.Type, c.Source, ops...)
 		if err != nil {
 			return nil, err
 		}
@@ -56,6 +66,7 @@ func getRepos(ctx context.Context, c *model.Catalog, ua string) ([]*vcs.Reposito
 			Name:        repos[i].Name,
 			Description: repos[i].Description,
 			Link:        repos[i].Link,
+			Topics:      repos[i].Topics,
 		}
 	}
 
@@ -87,11 +98,11 @@ func getSyncResult(ctx context.Context, mc model.ClientSet, c *model.Catalog) (*
 	}
 
 	for _, v := range counts {
-		if status.CatalogStatusInitialized.IsTrue(v.Status) || status.CatalogStatusReady.IsTrue(v.Status) {
+		if status.CatalogStatusInitialized.IsTrue(v) || status.CatalogStatusReady.IsTrue(v) {
 			catalogSync.Succeeded += v.Count
 		}
 
-		if status.CatalogStatusInitialized.IsFalse(v.Status) || status.CatalogStatusReady.IsFalse(v.Status) {
+		if status.CatalogStatusInitialized.IsFalse(v) || status.CatalogStatusReady.IsFalse(v) {
 			catalogSync.Failed += v.Count
 		}
 		catalogSync.Total += v.Count
@@ -106,14 +117,20 @@ func SyncTemplates(ctx context.Context, mc model.ClientSet, c *model.Catalog) er
 
 	ua := version.GetUserAgent() + "; uuid=" + settings.InstallationUUID.ShouldValue(ctx, mc)
 
-	repos, err := getRepos(ctx, c, ua)
+	repos, err := getRepos(ctx, c, ua, settings.SkipRemoteTLSVerify.ShouldValueBool(ctx, mc))
 	if err != nil {
 		return err
 	}
 
 	logger.Infof("found %d repositories in %s", len(repos), c.Source)
 
-	wg := gopool.Group()
+	var (
+		total     = len(repos)
+		processed = int32(0)
+		failed    = int32(0)
+
+		wg = gopool.Group()
+	)
 
 	batchSize := 10
 	for i := 0; i < batchSize; i++ {
@@ -126,16 +143,38 @@ func SyncTemplates(ctx context.Context, mc model.ClientSet, c *model.Catalog) er
 
 			for j := s; j < len(repos); j += batchSize {
 				repo := repos[j]
+				repo.Driver = c.Type
 
-				logger.Debugf("syncing template %s of catalog %s",
-					repo.Name, c.ID)
-
-				serr := templates.SyncTemplateFromGitRepo(ctx, mc, c, repo)
-				if serr != nil {
-					berr = multierr.Append(berr,
-						fmt.Errorf("error syncing template %s: %w",
-							repo.Name, serr))
+				t := &model.Template{
+					Name:        repo.Name,
+					Description: repo.Description,
+					Source:      repo.Link,
+					CatalogID:   c.ID,
+					ProjectID:   c.ProjectID,
 				}
+
+				if isServiceTemplateRepo(repo.Topics) {
+					t.Labels = map[string]string{
+						types.LabelWalrusCategory: "service",
+					}
+				}
+
+				logger.Debugf("syncing  \"%s:%s\" of catalog %q", c.Name, repo.Name, c.ID)
+
+				serr := templates.SyncTemplateFromGitRepo(ctx, mc, t, repo)
+				if serr != nil {
+					logger.Debugf("failed sync \"%s:%s\" of catalog %q: %v", c.Name, repo.Name, c.ID, serr)
+					berr = multierr.Append(berr,
+						fmt.Errorf("error syncing \"%s:%s\" of catalog %q: %w",
+							c.Name, repo.Name, c.ID, serr))
+
+					atomic.AddInt32(&failed, 1)
+				} else {
+					atomic.AddInt32(&processed, 1)
+				}
+
+				logger.Debugf("synced catalog %s, total: %d, processed: %d, failed: %d",
+					c.Name, total, processed, failed)
 			}
 
 			return berr
@@ -143,6 +182,16 @@ func SyncTemplates(ctx context.Context, mc model.ClientSet, c *model.Catalog) er
 	}
 
 	return wg.Wait()
+}
+
+func isServiceTemplateRepo(topics []string) bool {
+	for _, t := range topics {
+		if t == WalrusServiceRepositoryTopic {
+			return true
+		}
+	}
+
+	return false
 }
 
 type catalogSyncer struct {
@@ -164,33 +213,46 @@ func (cs catalogSyncer) Do(_ context.Context, busMessage catalog.BusMessage) err
 	gopool.Go(func() {
 		subCtx := context.Background()
 
-		err := SyncTemplates(subCtx, cs.mc, c)
-		if err != nil {
-			status.CatalogStatusInitialized.False(c, err.Error())
-			logger.Errorf("failed to sync catalog %s templates: %v", c.Name, err)
-		} else {
-			status.CatalogStatusReady.Reset(c, "")
-			status.CatalogStatusReady.True(c, "")
-		}
+		serr := SyncTemplates(subCtx, cs.mc, c)
 
-		c.Status.SetSummary(status.WalkCatalog(&c.Status))
-		update := cs.mc.Catalogs().UpdateOne(c).
-			SetStatus(c.Status)
-
-		syncResult, err := getSyncResult(subCtx, cs.mc, c)
-		if err != nil {
-			logger.Errorf("failed to update sync info: %v", err)
-		}
-
-		if syncResult != nil {
-			update.SetSync(syncResult)
-		}
-
-		rerr := update.Exec(subCtx)
-		if rerr != nil {
-			logger.Errorf("failed to update catalog %s status: %v", c.Name, rerr)
+		uerr := UpdateStatusWithSyncErr(
+			subCtx,
+			cs.mc,
+			c,
+			serr,
+		)
+		if uerr != nil {
+			logger.Errorf("failed to update catalog %s status: %v", c.Name, uerr)
 		}
 	})
 
 	return nil
+}
+
+// UpdateStatusWithSyncErr update catalog status with sync error.
+func UpdateStatusWithSyncErr(ctx context.Context, mc model.ClientSet, c *model.Catalog, syncErr error) error {
+	logger := log.WithName("catalog")
+
+	if syncErr != nil {
+		status.CatalogStatusInitialized.False(c, syncErr.Error())
+		logger.Warnf("failed to sync catalog %s templates: %v", c.Name, syncErr)
+	} else {
+		status.CatalogStatusReady.Reset(c, "")
+		status.CatalogStatusReady.True(c, "")
+	}
+
+	c.Status.SetSummary(status.WalkCatalog(&c.Status))
+	update := mc.Catalogs().UpdateOne(c).
+		SetStatus(c.Status)
+
+	syncResult, err := getSyncResult(ctx, mc, c)
+	if err != nil {
+		return fmt.Errorf("failed to update sync info: %w", err)
+	}
+
+	if syncResult != nil {
+		update.SetSync(syncResult)
+	}
+
+	return update.Exec(ctx)
 }

@@ -97,6 +97,11 @@ func Type(v string) predicate.Connector {
 	return predicate.Connector(sql.FieldEQ(FieldType, v))
 }
 
+// ApplicableEnvironmentType applies equality check predicate on the "applicable_environment_type" field. It's identical to ApplicableEnvironmentTypeEQ.
+func ApplicableEnvironmentType(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldEQ(FieldApplicableEnvironmentType, v))
+}
+
 // ConfigVersion applies equality check predicate on the "config_version" field. It's identical to ConfigVersionEQ.
 func ConfigVersion(v string) predicate.Connector {
 	return predicate.Connector(sql.FieldEQ(FieldConfigVersion, v))
@@ -572,6 +577,71 @@ func TypeContainsFold(v string) predicate.Connector {
 	return predicate.Connector(sql.FieldContainsFold(FieldType, v))
 }
 
+// ApplicableEnvironmentTypeEQ applies the EQ predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeEQ(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldEQ(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeNEQ applies the NEQ predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeNEQ(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldNEQ(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeIn applies the In predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeIn(vs ...string) predicate.Connector {
+	return predicate.Connector(sql.FieldIn(FieldApplicableEnvironmentType, vs...))
+}
+
+// ApplicableEnvironmentTypeNotIn applies the NotIn predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeNotIn(vs ...string) predicate.Connector {
+	return predicate.Connector(sql.FieldNotIn(FieldApplicableEnvironmentType, vs...))
+}
+
+// ApplicableEnvironmentTypeGT applies the GT predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeGT(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldGT(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeGTE applies the GTE predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeGTE(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldGTE(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeLT applies the LT predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeLT(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldLT(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeLTE applies the LTE predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeLTE(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldLTE(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeContains applies the Contains predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeContains(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldContains(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeHasPrefix applies the HasPrefix predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeHasPrefix(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldHasPrefix(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeHasSuffix applies the HasSuffix predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeHasSuffix(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldHasSuffix(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeEqualFold applies the EqualFold predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeEqualFold(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldEqualFold(FieldApplicableEnvironmentType, v))
+}
+
+// ApplicableEnvironmentTypeContainsFold applies the ContainsFold predicate on the "applicable_environment_type" field.
+func ApplicableEnvironmentTypeContainsFold(v string) predicate.Connector {
+	return predicate.Connector(sql.FieldContainsFold(FieldApplicableEnvironmentType, v))
+}
+
 // ConfigVersionEQ applies the EQ predicate on the "config_version" field.
 func ConfigVersionEQ(v string) predicate.Connector {
 	return predicate.Connector(sql.FieldEQ(FieldConfigVersion, v))
@@ -765,27 +835,27 @@ func HasEnvironmentsWith(preds ...predicate.EnvironmentConnectorRelationship) pr
 	})
 }
 
-// HasResources applies the HasEdge predicate on the "resources" edge.
-func HasResources() predicate.Connector {
+// HasResourceComponents applies the HasEdge predicate on the "resource_components" edge.
+func HasResourceComponents() predicate.Connector {
 	return predicate.Connector(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ResourcesTable, ResourcesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, ResourceComponentsTable, ResourceComponentsColumn),
 		)
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.ServiceResource
-		step.Edge.Schema = schemaConfig.ServiceResource
+		step.To.Schema = schemaConfig.ResourceComponent
+		step.Edge.Schema = schemaConfig.ResourceComponent
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasResourcesWith applies the HasEdge predicate on the "resources" edge with a given conditions (other predicates).
-func HasResourcesWith(preds ...predicate.ServiceResource) predicate.Connector {
+// HasResourceComponentsWith applies the HasEdge predicate on the "resource_components" edge with a given conditions (other predicates).
+func HasResourceComponentsWith(preds ...predicate.ResourceComponent) predicate.Connector {
 	return predicate.Connector(func(s *sql.Selector) {
-		step := newResourcesStep()
+		step := newResourceComponentsStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.ServiceResource
-		step.Edge.Schema = schemaConfig.ServiceResource
+		step.To.Schema = schemaConfig.ResourceComponent
+		step.Edge.Schema = schemaConfig.ResourceComponent
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -33,18 +33,22 @@ type Tx struct {
 	Perspective *PerspectiveClient
 	// Project is the client for interacting with the Project builders.
 	Project *ProjectClient
+	// Resource is the client for interacting with the Resource builders.
+	Resource *ResourceClient
+	// ResourceComponent is the client for interacting with the ResourceComponent builders.
+	ResourceComponent *ResourceComponentClient
+	// ResourceComponentRelationship is the client for interacting with the ResourceComponentRelationship builders.
+	ResourceComponentRelationship *ResourceComponentRelationshipClient
+	// ResourceDefinition is the client for interacting with the ResourceDefinition builders.
+	ResourceDefinition *ResourceDefinitionClient
+	// ResourceDefinitionMatchingRule is the client for interacting with the ResourceDefinitionMatchingRule builders.
+	ResourceDefinitionMatchingRule *ResourceDefinitionMatchingRuleClient
+	// ResourceRelationship is the client for interacting with the ResourceRelationship builders.
+	ResourceRelationship *ResourceRelationshipClient
+	// ResourceRevision is the client for interacting with the ResourceRevision builders.
+	ResourceRevision *ResourceRevisionClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
-	// Service is the client for interacting with the Service builders.
-	Service *ServiceClient
-	// ServiceRelationship is the client for interacting with the ServiceRelationship builders.
-	ServiceRelationship *ServiceRelationshipClient
-	// ServiceResource is the client for interacting with the ServiceResource builders.
-	ServiceResource *ServiceResourceClient
-	// ServiceResourceRelationship is the client for interacting with the ServiceResourceRelationship builders.
-	ServiceResourceRelationship *ServiceResourceRelationshipClient
-	// ServiceRevision is the client for interacting with the ServiceRevision builders.
-	ServiceRevision *ServiceRevisionClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
 	// Subject is the client for interacting with the Subject builders.
@@ -59,6 +63,18 @@ type Tx struct {
 	Token *TokenClient
 	// Variable is the client for interacting with the Variable builders.
 	Variable *VariableClient
+	// Workflow is the client for interacting with the Workflow builders.
+	Workflow *WorkflowClient
+	// WorkflowExecution is the client for interacting with the WorkflowExecution builders.
+	WorkflowExecution *WorkflowExecutionClient
+	// WorkflowStage is the client for interacting with the WorkflowStage builders.
+	WorkflowStage *WorkflowStageClient
+	// WorkflowStageExecution is the client for interacting with the WorkflowStageExecution builders.
+	WorkflowStageExecution *WorkflowStageExecutionClient
+	// WorkflowStep is the client for interacting with the WorkflowStep builders.
+	WorkflowStep *WorkflowStepClient
+	// WorkflowStepExecution is the client for interacting with the WorkflowStepExecution builders.
+	WorkflowStepExecution *WorkflowStepExecutionClient
 
 	// lazily loaded.
 	client     *Client
@@ -198,12 +214,14 @@ func (tx *Tx) init() {
 	tx.EnvironmentConnectorRelationship = NewEnvironmentConnectorRelationshipClient(tx.config)
 	tx.Perspective = NewPerspectiveClient(tx.config)
 	tx.Project = NewProjectClient(tx.config)
+	tx.Resource = NewResourceClient(tx.config)
+	tx.ResourceComponent = NewResourceComponentClient(tx.config)
+	tx.ResourceComponentRelationship = NewResourceComponentRelationshipClient(tx.config)
+	tx.ResourceDefinition = NewResourceDefinitionClient(tx.config)
+	tx.ResourceDefinitionMatchingRule = NewResourceDefinitionMatchingRuleClient(tx.config)
+	tx.ResourceRelationship = NewResourceRelationshipClient(tx.config)
+	tx.ResourceRevision = NewResourceRevisionClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
-	tx.Service = NewServiceClient(tx.config)
-	tx.ServiceRelationship = NewServiceRelationshipClient(tx.config)
-	tx.ServiceResource = NewServiceResourceClient(tx.config)
-	tx.ServiceResourceRelationship = NewServiceResourceRelationshipClient(tx.config)
-	tx.ServiceRevision = NewServiceRevisionClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
 	tx.Subject = NewSubjectClient(tx.config)
 	tx.SubjectRoleRelationship = NewSubjectRoleRelationshipClient(tx.config)
@@ -211,6 +229,12 @@ func (tx *Tx) init() {
 	tx.TemplateVersion = NewTemplateVersionClient(tx.config)
 	tx.Token = NewTokenClient(tx.config)
 	tx.Variable = NewVariableClient(tx.config)
+	tx.Workflow = NewWorkflowClient(tx.config)
+	tx.WorkflowExecution = NewWorkflowExecutionClient(tx.config)
+	tx.WorkflowStage = NewWorkflowStageClient(tx.config)
+	tx.WorkflowStageExecution = NewWorkflowStageExecutionClient(tx.config)
+	tx.WorkflowStep = NewWorkflowStepClient(tx.config)
+	tx.WorkflowStepExecution = NewWorkflowStepExecutionClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -314,34 +338,44 @@ func (tx *Tx) Projects() *ProjectClient {
 	return tx.Project
 }
 
+// Resources implements the ClientSet.
+func (tx *Tx) Resources() *ResourceClient {
+	return tx.Resource
+}
+
+// ResourceComponents implements the ClientSet.
+func (tx *Tx) ResourceComponents() *ResourceComponentClient {
+	return tx.ResourceComponent
+}
+
+// ResourceComponentRelationships implements the ClientSet.
+func (tx *Tx) ResourceComponentRelationships() *ResourceComponentRelationshipClient {
+	return tx.ResourceComponentRelationship
+}
+
+// ResourceDefinitions implements the ClientSet.
+func (tx *Tx) ResourceDefinitions() *ResourceDefinitionClient {
+	return tx.ResourceDefinition
+}
+
+// ResourceDefinitionMatchingRules implements the ClientSet.
+func (tx *Tx) ResourceDefinitionMatchingRules() *ResourceDefinitionMatchingRuleClient {
+	return tx.ResourceDefinitionMatchingRule
+}
+
+// ResourceRelationships implements the ClientSet.
+func (tx *Tx) ResourceRelationships() *ResourceRelationshipClient {
+	return tx.ResourceRelationship
+}
+
+// ResourceRevisions implements the ClientSet.
+func (tx *Tx) ResourceRevisions() *ResourceRevisionClient {
+	return tx.ResourceRevision
+}
+
 // Roles implements the ClientSet.
 func (tx *Tx) Roles() *RoleClient {
 	return tx.Role
-}
-
-// Services implements the ClientSet.
-func (tx *Tx) Services() *ServiceClient {
-	return tx.Service
-}
-
-// ServiceRelationships implements the ClientSet.
-func (tx *Tx) ServiceRelationships() *ServiceRelationshipClient {
-	return tx.ServiceRelationship
-}
-
-// ServiceResources implements the ClientSet.
-func (tx *Tx) ServiceResources() *ServiceResourceClient {
-	return tx.ServiceResource
-}
-
-// ServiceResourceRelationships implements the ClientSet.
-func (tx *Tx) ServiceResourceRelationships() *ServiceResourceRelationshipClient {
-	return tx.ServiceResourceRelationship
-}
-
-// ServiceRevisions implements the ClientSet.
-func (tx *Tx) ServiceRevisions() *ServiceRevisionClient {
-	return tx.ServiceRevision
 }
 
 // Settings implements the ClientSet.
@@ -379,6 +413,36 @@ func (tx *Tx) Variables() *VariableClient {
 	return tx.Variable
 }
 
+// Workflows implements the ClientSet.
+func (tx *Tx) Workflows() *WorkflowClient {
+	return tx.Workflow
+}
+
+// WorkflowExecutions implements the ClientSet.
+func (tx *Tx) WorkflowExecutions() *WorkflowExecutionClient {
+	return tx.WorkflowExecution
+}
+
+// WorkflowStages implements the ClientSet.
+func (tx *Tx) WorkflowStages() *WorkflowStageClient {
+	return tx.WorkflowStage
+}
+
+// WorkflowStageExecutions implements the ClientSet.
+func (tx *Tx) WorkflowStageExecutions() *WorkflowStageExecutionClient {
+	return tx.WorkflowStageExecution
+}
+
+// WorkflowSteps implements the ClientSet.
+func (tx *Tx) WorkflowSteps() *WorkflowStepClient {
+	return tx.WorkflowStep
+}
+
+// WorkflowStepExecutions implements the ClientSet.
+func (tx *Tx) WorkflowStepExecutions() *WorkflowStepExecutionClient {
+	return tx.WorkflowStepExecution
+}
+
 // Dialect returns the dialect name of the driver.
 func (tx *Tx) Dialect() string {
 	return tx.driver.Dialect()
@@ -394,12 +458,14 @@ func (tx *Tx) Intercept(interceptors ...Interceptor) {
 	tx.EnvironmentConnectorRelationship.Intercept(interceptors...)
 	tx.Perspective.Intercept(interceptors...)
 	tx.Project.Intercept(interceptors...)
+	tx.Resource.Intercept(interceptors...)
+	tx.ResourceComponent.Intercept(interceptors...)
+	tx.ResourceComponentRelationship.Intercept(interceptors...)
+	tx.ResourceDefinition.Intercept(interceptors...)
+	tx.ResourceDefinitionMatchingRule.Intercept(interceptors...)
+	tx.ResourceRelationship.Intercept(interceptors...)
+	tx.ResourceRevision.Intercept(interceptors...)
 	tx.Role.Intercept(interceptors...)
-	tx.Service.Intercept(interceptors...)
-	tx.ServiceRelationship.Intercept(interceptors...)
-	tx.ServiceResource.Intercept(interceptors...)
-	tx.ServiceResourceRelationship.Intercept(interceptors...)
-	tx.ServiceRevision.Intercept(interceptors...)
 	tx.Setting.Intercept(interceptors...)
 	tx.Subject.Intercept(interceptors...)
 	tx.SubjectRoleRelationship.Intercept(interceptors...)
@@ -407,6 +473,12 @@ func (tx *Tx) Intercept(interceptors ...Interceptor) {
 	tx.TemplateVersion.Intercept(interceptors...)
 	tx.Token.Intercept(interceptors...)
 	tx.Variable.Intercept(interceptors...)
+	tx.Workflow.Intercept(interceptors...)
+	tx.WorkflowExecution.Intercept(interceptors...)
+	tx.WorkflowStage.Intercept(interceptors...)
+	tx.WorkflowStageExecution.Intercept(interceptors...)
+	tx.WorkflowStep.Intercept(interceptors...)
+	tx.WorkflowStepExecution.Intercept(interceptors...)
 }
 
 // ExecContext allows calling the underlying ExecContext method of the transaction if it is supported by it.
@@ -443,12 +515,14 @@ func (tx *Tx) Use(hooks ...Hook) {
 	tx.EnvironmentConnectorRelationship.Use(hooks...)
 	tx.Perspective.Use(hooks...)
 	tx.Project.Use(hooks...)
+	tx.Resource.Use(hooks...)
+	tx.ResourceComponent.Use(hooks...)
+	tx.ResourceComponentRelationship.Use(hooks...)
+	tx.ResourceDefinition.Use(hooks...)
+	tx.ResourceDefinitionMatchingRule.Use(hooks...)
+	tx.ResourceRelationship.Use(hooks...)
+	tx.ResourceRevision.Use(hooks...)
 	tx.Role.Use(hooks...)
-	tx.Service.Use(hooks...)
-	tx.ServiceRelationship.Use(hooks...)
-	tx.ServiceResource.Use(hooks...)
-	tx.ServiceResourceRelationship.Use(hooks...)
-	tx.ServiceRevision.Use(hooks...)
 	tx.Setting.Use(hooks...)
 	tx.Subject.Use(hooks...)
 	tx.SubjectRoleRelationship.Use(hooks...)
@@ -456,6 +530,12 @@ func (tx *Tx) Use(hooks ...Hook) {
 	tx.TemplateVersion.Use(hooks...)
 	tx.Token.Use(hooks...)
 	tx.Variable.Use(hooks...)
+	tx.Workflow.Use(hooks...)
+	tx.WorkflowExecution.Use(hooks...)
+	tx.WorkflowStage.Use(hooks...)
+	tx.WorkflowStageExecution.Use(hooks...)
+	tx.WorkflowStep.Use(hooks...)
+	tx.WorkflowStepExecution.Use(hooks...)
 }
 
 // WithDebug enables the debug mode of the client.

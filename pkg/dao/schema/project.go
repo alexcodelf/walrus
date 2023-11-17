@@ -49,27 +49,81 @@ func (Project) Edges() []ent.Edge {
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),
 				entx.SkipOutput()),
-		// Project 1-* Services.
-		edge.To("services", Service.Type).
-			Comment("Services that belong to the project.").
+		// Project 1-* Resources.
+		edge.To("resources", Resource.Type).
+			Comment("Resources that belong to the project.").
 			Annotations(
 				entsql.OnDelete(entsql.NoAction),
 				entx.SkipIO()),
-		// Project 1-* ServiceResources.
-		edge.To("service_resources", ServiceResource.Type).
-			Comment("ServiceResources that belong to the project.").
+		// Project 1-* ResourceComponents.
+		edge.To("resource_components", ResourceComponent.Type).
+			Comment("ResourceComponents that belong to the project.").
 			Annotations(
 				entsql.OnDelete(entsql.NoAction),
 				entx.SkipIO()),
-		// Project 1-* ServiceRevisions.
-		edge.To("service_revisions", ServiceRevision.Type).
-			Comment("ServiceRevisions that belong to the project.").
+		// Project 1-* ResourceRevisions.
+		edge.To("resource_revisions", ResourceRevision.Type).
+			Comment("ResourceRevisions that belong to the project.").
 			Annotations(
 				entsql.OnDelete(entsql.NoAction),
 				entx.SkipIO()),
 		// Project 1-* Variables.
 		edge.To("variables", Variable.Type).
 			Comment("Variables that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* Templates.
+		edge.To("templates", Template.Type).
+			Comment("Templates that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* TemplateVersions.
+		edge.To("template_versions", TemplateVersion.Type).
+			Comment("TemplateVersions that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* Catalogs.
+		edge.To("catalogs", Catalog.Type).
+			Comment("Catalogs that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* Workflows.
+		edge.To("workflows", Workflow.Type).
+			Comment("Workflows that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* WorkflowStages.
+		edge.To("workflow_stages", WorkflowStage.Type).
+			Comment("WorkflowStages that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* WorkflowSteps.
+		edge.To("workflow_steps", WorkflowStep.Type).
+			Comment("WorkflowSteps that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* WorkflowExecutions.
+		edge.To("workflow_executions", WorkflowExecution.Type).
+			Comment("WorkflowExecutions that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* WorkflowStageExecutions.
+		edge.To("workflow_stage_executions", WorkflowStageExecution.Type).
+			Comment("WorkflowStageExecutions that belong to the project.").
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entx.SkipIO()),
+		// Project 1-* WorkflowStepExecutions.
+		edge.To("workflow_step_executions", WorkflowStepExecution.Type).
+			Comment("WorkflowStepExecutions that belong to the project.").
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),
 				entx.SkipIO()),

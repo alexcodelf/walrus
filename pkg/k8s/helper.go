@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
+	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"github.com/seal-io/walrus/utils/json"
 	"github.com/seal-io/walrus/utils/log"
@@ -53,8 +54,8 @@ func loadConfig(loader clientcmd.ClientConfigLoader) (*rest.Config, error) {
 		ClientConfig()
 }
 
-func Wait(ctx context.Context, cfg *rest.Config, callback ...func(context.Context, *kubernetes.Clientset) error) error {
-	cli, err := kubernetes.NewForConfig(cfg)
+func Wait(ctx context.Context, cfg *rest.Config) error {
+	cli, err := coreclient.NewForConfig(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to create client via cfg: %w", err)
 	}
@@ -77,14 +78,6 @@ func Wait(ctx context.Context, cfg *rest.Config, callback ...func(context.Contex
 		}
 
 		return err
-	}
-
-	// Execute callbacks.
-	for i := range callback {
-		err = callback[i](ctx, cli)
-		if err != nil {
-			return fmt.Errorf("failed to execute callback: %w", err)
-		}
 	}
 
 	return nil
@@ -112,4 +105,33 @@ func IsConnected(ctx context.Context, r rest.Interface) error {
 	}
 
 	return nil
+}
+
+// ToClientCmdApiConfig using a rest.Config to generate a clientcmdapi.Config.
+func ToClientCmdApiConfig(restConfig *rest.Config) clientcmdapi.Config {
+	clusters := make(map[string]*clientcmdapi.Cluster)
+	clusters["default-cluster"] = &clientcmdapi.Cluster{
+		Server:                   restConfig.Host,
+		CertificateAuthorityData: restConfig.CAData,
+	}
+	contexts := make(map[string]*clientcmdapi.Context)
+	contexts["default-context"] = &clientcmdapi.Context{
+		Cluster:  "default-cluster",
+		AuthInfo: "default-user",
+	}
+	authinfos := make(map[string]*clientcmdapi.AuthInfo)
+	authinfos["default-user"] = &clientcmdapi.AuthInfo{
+		ClientCertificateData: restConfig.CertData,
+		ClientKeyData:         restConfig.KeyData,
+	}
+	clientConfig := clientcmdapi.Config{
+		Kind:           "Config",
+		APIVersion:     "v1",
+		Clusters:       clusters,
+		Contexts:       contexts,
+		CurrentContext: "default-context",
+		AuthInfos:      authinfos,
+	}
+
+	return clientConfig
 }

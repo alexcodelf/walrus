@@ -9,10 +9,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/seal-io/walrus/pkg/dao/model"
+	"github.com/seal-io/walrus/pkg/dao/model/connector"
 	"github.com/seal-io/walrus/pkg/dao/model/environment"
 	"github.com/seal-io/walrus/pkg/dao/model/environmentconnectorrelationship"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
+	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/strs"
 )
 
@@ -26,6 +28,7 @@ func EnvironmentConnectorsEdgeSave(ctx context.Context, mc model.ClientSet, enti
 	var (
 		newItems       = entity.Edges.Connectors
 		newItemsKeySet = sets.New[string]()
+		newItemIDs     = make([]object.ID, 0, len(newItems))
 	)
 
 	for i := range newItems {
@@ -35,6 +38,24 @@ func EnvironmentConnectorsEdgeSave(ctx context.Context, mc model.ClientSet, enti
 		newItems[i].EnvironmentID = entity.ID
 
 		newItemsKeySet.Insert(strs.Join("/", newItems[i].EnvironmentID, newItems[i].ConnectorID))
+		newItemIDs = append(newItemIDs, newItems[i].ConnectorID)
+	}
+
+	// Validate whether new items have the same use with environment.
+	{
+		cnt, err := mc.Connectors().Query().
+			Select().
+			Where(
+				connector.IDIn(newItemIDs...),
+				connector.ApplicableEnvironmentType(entity.Type)).
+			Count(ctx)
+		if err != nil {
+			return err
+		}
+
+		if cnt != len(newItemIDs) {
+			return errorx.New("invalid connectors: unmatched environment type")
+		}
 	}
 
 	// Add/Update new items.
@@ -81,6 +102,33 @@ func EnvironmentConnectorsEdgeSave(ctx context.Context, mc model.ClientSet, enti
 			return err
 		}
 	}
+
+	return nil
+}
+
+// EnvironmentVariablesEdgeSave saves the edge variables of model.Environment entity.
+func EnvironmentVariablesEdgeSave(ctx context.Context, mc model.ClientSet, entity *model.Environment) error {
+	if entity.Edges.Variables == nil {
+		return nil
+	}
+
+	newItems := entity.Edges.Variables
+	for i := range newItems {
+		if newItems[i] == nil {
+			return errors.New("invalid input: nil variable")
+		}
+		newItems[i].EnvironmentID = entity.ID
+		newItems[i].ProjectID = entity.ProjectID
+	}
+
+	variables, err := mc.Variables().CreateBulk().
+		Set(newItems...).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	entity.Edges.Variables = variables
 
 	return nil
 }

@@ -20,9 +20,9 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/environment"
 	"github.com/seal-io/walrus/pkg/dao/model/environmentconnectorrelationship"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
-	"github.com/seal-io/walrus/pkg/dao/model/service"
-	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
-	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
+	"github.com/seal-io/walrus/pkg/dao/model/resource"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcecomponent"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/variable"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
@@ -103,6 +103,12 @@ func (ec *EnvironmentCreate) SetProjectID(o object.ID) *EnvironmentCreate {
 	return ec
 }
 
+// SetType sets the "type" field.
+func (ec *EnvironmentCreate) SetType(s string) *EnvironmentCreate {
+	ec.mutation.SetType(s)
+	return ec
+}
+
 // SetID sets the "id" field.
 func (ec *EnvironmentCreate) SetID(o object.ID) *EnvironmentCreate {
 	ec.mutation.SetID(o)
@@ -129,49 +135,49 @@ func (ec *EnvironmentCreate) AddConnectors(e ...*EnvironmentConnectorRelationshi
 	return ec.AddConnectorIDs(ids...)
 }
 
-// AddServiceIDs adds the "services" edge to the Service entity by IDs.
-func (ec *EnvironmentCreate) AddServiceIDs(ids ...object.ID) *EnvironmentCreate {
-	ec.mutation.AddServiceIDs(ids...)
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (ec *EnvironmentCreate) AddResourceIDs(ids ...object.ID) *EnvironmentCreate {
+	ec.mutation.AddResourceIDs(ids...)
 	return ec
 }
 
-// AddServices adds the "services" edges to the Service entity.
-func (ec *EnvironmentCreate) AddServices(s ...*Service) *EnvironmentCreate {
-	ids := make([]object.ID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddResources adds the "resources" edges to the Resource entity.
+func (ec *EnvironmentCreate) AddResources(r ...*Resource) *EnvironmentCreate {
+	ids := make([]object.ID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return ec.AddServiceIDs(ids...)
+	return ec.AddResourceIDs(ids...)
 }
 
-// AddServiceRevisionIDs adds the "service_revisions" edge to the ServiceRevision entity by IDs.
-func (ec *EnvironmentCreate) AddServiceRevisionIDs(ids ...object.ID) *EnvironmentCreate {
-	ec.mutation.AddServiceRevisionIDs(ids...)
+// AddResourceRevisionIDs adds the "resource_revisions" edge to the ResourceRevision entity by IDs.
+func (ec *EnvironmentCreate) AddResourceRevisionIDs(ids ...object.ID) *EnvironmentCreate {
+	ec.mutation.AddResourceRevisionIDs(ids...)
 	return ec
 }
 
-// AddServiceRevisions adds the "service_revisions" edges to the ServiceRevision entity.
-func (ec *EnvironmentCreate) AddServiceRevisions(s ...*ServiceRevision) *EnvironmentCreate {
-	ids := make([]object.ID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddResourceRevisions adds the "resource_revisions" edges to the ResourceRevision entity.
+func (ec *EnvironmentCreate) AddResourceRevisions(r ...*ResourceRevision) *EnvironmentCreate {
+	ids := make([]object.ID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return ec.AddServiceRevisionIDs(ids...)
+	return ec.AddResourceRevisionIDs(ids...)
 }
 
-// AddServiceResourceIDs adds the "service_resources" edge to the ServiceResource entity by IDs.
-func (ec *EnvironmentCreate) AddServiceResourceIDs(ids ...object.ID) *EnvironmentCreate {
-	ec.mutation.AddServiceResourceIDs(ids...)
+// AddResourceComponentIDs adds the "resource_components" edge to the ResourceComponent entity by IDs.
+func (ec *EnvironmentCreate) AddResourceComponentIDs(ids ...object.ID) *EnvironmentCreate {
+	ec.mutation.AddResourceComponentIDs(ids...)
 	return ec
 }
 
-// AddServiceResources adds the "service_resources" edges to the ServiceResource entity.
-func (ec *EnvironmentCreate) AddServiceResources(s ...*ServiceResource) *EnvironmentCreate {
-	ids := make([]object.ID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddResourceComponents adds the "resource_components" edges to the ResourceComponent entity.
+func (ec *EnvironmentCreate) AddResourceComponents(r ...*ResourceComponent) *EnvironmentCreate {
+	ids := make([]object.ID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return ec.AddServiceResourceIDs(ids...)
+	return ec.AddResourceComponentIDs(ids...)
 }
 
 // AddVariableIDs adds the "variables" edge to the Variable entity by IDs.
@@ -275,6 +281,14 @@ func (ec *EnvironmentCreate) check() error {
 			return &ValidationError{Name: "project_id", err: fmt.Errorf(`model: validator failed for field "Environment.project_id": %w`, err)}
 		}
 	}
+	if _, ok := ec.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`model: missing required field "Environment.type"`)}
+	}
+	if v, ok := ec.mutation.GetType(); ok {
+		if err := environment.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`model: validator failed for field "Environment.type": %w`, err)}
+		}
+	}
 	if _, ok := ec.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "Environment.project"`)}
 	}
@@ -339,6 +353,10 @@ func (ec *EnvironmentCreate) createSpec() (*Environment, *sqlgraph.CreateSpec) {
 		_spec.SetField(environment.FieldUpdateTime, field.TypeTime, value)
 		_node.UpdateTime = &value
 	}
+	if value, ok := ec.mutation.GetType(); ok {
+		_spec.SetField(environment.FieldType, field.TypeString, value)
+		_node.Type = value
+	}
 	if nodes := ec.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -374,52 +392,52 @@ func (ec *EnvironmentCreate) createSpec() (*Environment, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ec.mutation.ServicesIDs(); len(nodes) > 0 {
+	if nodes := ec.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   environment.ServicesTable,
-			Columns: []string{environment.ServicesColumn},
+			Table:   environment.ResourcesTable,
+			Columns: []string{environment.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(service.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = ec.schemaConfig.Service
+		edge.Schema = ec.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ec.mutation.ServiceRevisionsIDs(); len(nodes) > 0 {
+	if nodes := ec.mutation.ResourceRevisionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   environment.ServiceRevisionsTable,
-			Columns: []string{environment.ServiceRevisionsColumn},
+			Table:   environment.ResourceRevisionsTable,
+			Columns: []string{environment.ResourceRevisionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerevision.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(resourcerevision.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = ec.schemaConfig.ServiceRevision
+		edge.Schema = ec.schemaConfig.ResourceRevision
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ec.mutation.ServiceResourcesIDs(); len(nodes) > 0 {
+	if nodes := ec.mutation.ResourceComponentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   environment.ServiceResourcesTable,
-			Columns: []string{environment.ServiceResourcesColumn},
+			Table:   environment.ResourceComponentsTable,
+			Columns: []string{environment.ResourceComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(serviceresource.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(resourcecomponent.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = ec.schemaConfig.ServiceResource
+		edge.Schema = ec.schemaConfig.ResourceComponent
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -467,6 +485,7 @@ func (ec *EnvironmentCreate) Set(obj *Environment) *EnvironmentCreate {
 	// Required.
 	ec.SetName(obj.Name)
 	ec.SetProjectID(obj.ProjectID)
+	ec.SetType(obj.Type)
 
 	// Optional.
 	if obj.Description != "" {
@@ -539,6 +558,9 @@ func (ec *EnvironmentCreate) SaveE(ctx context.Context, cbs ...func(ctx context.
 		}
 		if _, set := ec.mutation.Field(environment.FieldProjectID); set {
 			obj.ProjectID = x.ProjectID
+		}
+		if _, set := ec.mutation.Field(environment.FieldType); set {
+			obj.Type = x.Type
 		}
 		obj.Edges = x.Edges
 	}
@@ -661,6 +683,9 @@ func (ecb *EnvironmentCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx con
 			}
 			if _, set := ecb.builders[i].mutation.Field(environment.FieldProjectID); set {
 				objs[i].ProjectID = x[i].ProjectID
+			}
+			if _, set := ecb.builders[i].mutation.Field(environment.FieldType); set {
+				objs[i].Type = x[i].Type
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -879,6 +904,9 @@ func (u *EnvironmentUpsertOne) UpdateNewValues() *EnvironmentUpsertOne {
 		}
 		if _, exists := u.create.mutation.ProjectID(); exists {
 			s.SetIgnore(environment.FieldProjectID)
+		}
+		if _, exists := u.create.mutation.GetType(); exists {
+			s.SetIgnore(environment.FieldType)
 		}
 	}))
 	return u
@@ -1177,6 +1205,9 @@ func (u *EnvironmentUpsertBulk) UpdateNewValues() *EnvironmentUpsertBulk {
 			}
 			if _, exists := b.mutation.ProjectID(); exists {
 				s.SetIgnore(environment.FieldProjectID)
+			}
+			if _, exists := b.mutation.GetType(); exists {
+				s.SetIgnore(environment.FieldType)
 			}
 		}
 	}))

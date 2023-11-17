@@ -35,10 +35,18 @@ const (
 	FieldSource = "source"
 	// FieldSchema holds the string denoting the schema field in the database.
 	FieldSchema = "schema"
+	// FieldUiSchema holds the string denoting the uischema field in the database.
+	FieldUiSchema = "ui_schema"
+	// FieldProjectID holds the string denoting the project_id field in the database.
+	FieldProjectID = "project_id"
 	// EdgeTemplate holds the string denoting the template edge name in mutations.
 	EdgeTemplate = "template"
-	// EdgeServices holds the string denoting the services edge name in mutations.
-	EdgeServices = "services"
+	// EdgeResources holds the string denoting the resources edge name in mutations.
+	EdgeResources = "resources"
+	// EdgeResourceDefinitions holds the string denoting the resource_definitions edge name in mutations.
+	EdgeResourceDefinitions = "resource_definitions"
+	// EdgeProject holds the string denoting the project edge name in mutations.
+	EdgeProject = "project"
 	// Table holds the table name of the templateversion in the database.
 	Table = "template_versions"
 	// TemplateTable is the table that holds the template relation/edge.
@@ -48,13 +56,27 @@ const (
 	TemplateInverseTable = "templates"
 	// TemplateColumn is the table column denoting the template relation/edge.
 	TemplateColumn = "template_id"
-	// ServicesTable is the table that holds the services relation/edge.
-	ServicesTable = "services"
-	// ServicesInverseTable is the table name for the Service entity.
-	// It exists in this package in order to avoid circular dependency with the "service" package.
-	ServicesInverseTable = "services"
-	// ServicesColumn is the table column denoting the services relation/edge.
-	ServicesColumn = "template_id"
+	// ResourcesTable is the table that holds the resources relation/edge.
+	ResourcesTable = "resources"
+	// ResourcesInverseTable is the table name for the Resource entity.
+	// It exists in this package in order to avoid circular dependency with the "resource" package.
+	ResourcesInverseTable = "resources"
+	// ResourcesColumn is the table column denoting the resources relation/edge.
+	ResourcesColumn = "template_id"
+	// ResourceDefinitionsTable is the table that holds the resource_definitions relation/edge.
+	ResourceDefinitionsTable = "resource_definition_matching_rules"
+	// ResourceDefinitionsInverseTable is the table name for the ResourceDefinitionMatchingRule entity.
+	// It exists in this package in order to avoid circular dependency with the "resourcedefinitionmatchingrule" package.
+	ResourceDefinitionsInverseTable = "resource_definition_matching_rules"
+	// ResourceDefinitionsColumn is the table column denoting the resource_definitions relation/edge.
+	ResourceDefinitionsColumn = "template_id"
+	// ProjectTable is the table that holds the project relation/edge.
+	ProjectTable = "template_versions"
+	// ProjectInverseTable is the table name for the Project entity.
+	// It exists in this package in order to avoid circular dependency with the "project" package.
+	ProjectInverseTable = "projects"
+	// ProjectColumn is the table column denoting the project relation/edge.
+	ProjectColumn = "project_id"
 )
 
 // Columns holds all SQL columns for templateversion fields.
@@ -67,6 +89,8 @@ var Columns = []string{
 	FieldVersion,
 	FieldSource,
 	FieldSchema,
+	FieldUiSchema,
+	FieldProjectID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -85,7 +109,8 @@ func ValidColumn(column string) bool {
 //
 //	import _ "github.com/seal-io/walrus/pkg/dao/model/runtime"
 var (
-	Hooks [1]ent.Hook
+	Hooks        [1]ent.Hook
+	Interceptors [1]ent.Interceptor
 	// DefaultCreateTime holds the default value on creation for the "create_time" field.
 	DefaultCreateTime func() time.Time
 	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
@@ -101,7 +126,9 @@ var (
 	// SourceValidator is a validator for the "source" field. It is called by the builders before save.
 	SourceValidator func(string) error
 	// DefaultSchema holds the default value on creation for the "schema" field.
-	DefaultSchema *types.TemplateSchema
+	DefaultSchema types.TemplateVersionSchema
+	// DefaultUiSchema holds the default value on creation for the "uiSchema" field.
+	DefaultUiSchema types.UISchema
 )
 
 // OrderOption defines the ordering options for the TemplateVersion queries.
@@ -142,6 +169,11 @@ func BySource(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSource, opts...).ToFunc()
 }
 
+// ByProjectID orders the results by the project_id field.
+func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
+}
+
 // ByTemplateField orders the results by template field.
 func ByTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -149,17 +181,38 @@ func ByTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByServicesCount orders the results by services count.
-func ByServicesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByResourcesCount orders the results by resources count.
+func ByResourcesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newServicesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newResourcesStep(), opts...)
 	}
 }
 
-// ByServices orders the results by services terms.
-func ByServices(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByResources orders the results by resources terms.
+func ByResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newServicesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByResourceDefinitionsCount orders the results by resource_definitions count.
+func ByResourceDefinitionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newResourceDefinitionsStep(), opts...)
+	}
+}
+
+// ByResourceDefinitions orders the results by resource_definitions terms.
+func ByResourceDefinitions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newResourceDefinitionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByProjectField orders the results by project field.
+func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProjectStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newTemplateStep() *sqlgraph.Step {
@@ -169,11 +222,25 @@ func newTemplateStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, TemplateTable, TemplateColumn),
 	)
 }
-func newServicesStep() *sqlgraph.Step {
+func newResourcesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ServicesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ServicesTable, ServicesColumn),
+		sqlgraph.To(ResourcesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ResourcesTable, ResourcesColumn),
+	)
+}
+func newResourceDefinitionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ResourceDefinitionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, ResourceDefinitionsTable, ResourceDefinitionsColumn),
+	)
+}
+func newProjectStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProjectInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
 	)
 }
 

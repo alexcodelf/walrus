@@ -12,12 +12,6 @@ const (
 	GeneralStatusError              string        = "Error"        // Error status of Ready.
 )
 
-const (
-	ServiceRevisionStatusRunning   = "Running"
-	ServiceRevisionStatusSucceeded = "Succeeded"
-	ServiceRevisionStatusFailed    = "Failed"
-)
-
 // Status wrap the summary of conditions and condition details.
 type Status struct {
 	Summary    `json:",inline"`
@@ -104,4 +98,11 @@ type Summary struct {
 	SummaryStatusMessage string `json:"summaryStatusMessage,omitempty"`
 	Error                bool   `json:"error,omitempty"`
 	Transitioning        bool   `json:"transitioning,omitempty"`
+}
+
+// Count is the count of status.
+type Count struct {
+	Error         int `json:"error"`
+	Ready         int `json:"ready"`
+	Transitioning int `json:"transitioning"`
 }

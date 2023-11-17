@@ -16,12 +16,15 @@ import (
 	"github.com/seal-io/walrus/pkg/apis/measure"
 	"github.com/seal-io/walrus/pkg/apis/perspective"
 	"github.com/seal-io/walrus/pkg/apis/project"
+	"github.com/seal-io/walrus/pkg/apis/proxy"
+	"github.com/seal-io/walrus/pkg/apis/resourcedefinition"
 	"github.com/seal-io/walrus/pkg/apis/role"
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/apis/setting"
 	"github.com/seal-io/walrus/pkg/apis/subject"
 	"github.com/seal-io/walrus/pkg/apis/template"
 	"github.com/seal-io/walrus/pkg/apis/templatecompletion"
+	"github.com/seal-io/walrus/pkg/apis/templateversion"
 	"github.com/seal-io/walrus/pkg/apis/ui"
 	"github.com/seal-io/walrus/pkg/apis/variable"
 	"github.com/seal-io/walrus/pkg/auths"
@@ -90,11 +93,13 @@ func (s *Server) Setup(ctx context.Context, opts SetupOptions) (http.Handler, er
 		r.Routes(cost.Handle(opts.ModelClient))
 		r.Routes(dashboard.Handle(opts.ModelClient))
 		r.Routes(perspective.Handle(opts.ModelClient))
-		r.Routes(project.Handle(opts.ModelClient, opts.K8sConfig, opts.TlsCertified))
+		r.Routes(project.Handle(opts.ModelClient, opts.K8sConfig))
+		r.Routes(resourcedefinition.Handle(opts.ModelClient))
 		r.Routes(role.Handle(opts.ModelClient))
 		r.Routes(setting.Handle(opts.ModelClient))
 		r.Routes(subject.Handle(opts.ModelClient))
 		r.Routes(template.Handle(opts.ModelClient))
+		r.Routes(templateversion.Handle(opts.ModelClient))
 		r.Routes(templatecompletion.Handle(opts.ModelClient))
 		r.Routes(variable.Handle(opts.ModelClient))
 	}
@@ -112,6 +117,13 @@ func (s *Server) Setup(ctx context.Context, opts SetupOptions) (http.Handler, er
 		r.Get("/readyz", measure.Readyz())
 		r.Get("/livez", measure.Livez())
 		r.Get("/metrics", measure.Metrics())
+	}
+
+	proxyApis := apis.Group("/proxy").
+		Use(throttler, account.Filter)
+	{
+		r := proxyApis
+		r.Get("/*path", proxy.Proxy(opts.ModelClient))
 	}
 
 	debugApis := apis.Group("/debug")

@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
 	"github.com/seal-io/walrus/pkg/dao/entx"
@@ -35,6 +36,10 @@ func (Environment) Fields() []ent.Field {
 			Comment("ID of the project to belong.").
 			NotEmpty().
 			Immutable(),
+		field.String("type").
+			Comment("Type of the environment.").
+			NotEmpty().
+			Immutable(),
 	}
 }
 
@@ -54,23 +59,23 @@ func (Environment) Edges() []ent.Edge {
 		edge.To("connectors", Connector.Type).
 			Comment("Connectors that configure to the environment.").
 			Through("environment_connector_relationships", EnvironmentConnectorRelationship.Type),
-		// Environment 1-* Services.
-		edge.To("services", Service.Type).
-			Comment("Services that belong to the environment.").
-			StructTag(`json:"services,omitempty,cli-ignore"`).
+		// Environment 1-* Resources.
+		edge.To("resources", Resource.Type).
+			Comment("Resources that belong to the environment.").
+			StructTag(`json:"resources,omitempty,cli-ignore"`).
 			Annotations(
 				entsql.OnDelete(entsql.Restrict),
 				entx.SkipInput(entx.WithUpdate(), entx.WithQuery()),
 				entx.SkipOutput()),
-		// Environment 1-* ServiceRevisions.
-		edge.To("service_revisions", ServiceRevision.Type).
-			Comment("ServicesRevisions that belong to the environment.").
+		// Environment 1-* ResourceRevisions.
+		edge.To("resource_revisions", ResourceRevision.Type).
+			Comment("ResourceRevisions that belong to the environment.").
 			Annotations(
 				entsql.OnDelete(entsql.NoAction),
 				entx.SkipIO()),
-		// Environment 1-* ServiceResources.
-		edge.To("service_resources", ServiceResource.Type).
-			Comment("ServiceResources that belong to the environment.").
+		// Environment 1-* ResourceComponents.
+		edge.To("resource_components", ResourceComponent.Type).
+			Comment("ResourceComponents that belong to the environment.").
 			Annotations(
 				entsql.OnDelete(entsql.NoAction),
 				entx.SkipIO()),
@@ -79,7 +84,8 @@ func (Environment) Edges() []ent.Edge {
 			Comment("Variables that belong to the environment.").
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),
-				entx.SkipIO()),
+				entx.SkipInput(entx.WithUpdate(), entx.WithQuery()),
+				entx.SkipOutput()),
 	}
 }
 

@@ -37,14 +37,32 @@ const (
 	EdgeConnectors = "connectors"
 	// EdgeSubjectRoles holds the string denoting the subject_roles edge name in mutations.
 	EdgeSubjectRoles = "subject_roles"
-	// EdgeServices holds the string denoting the services edge name in mutations.
-	EdgeServices = "services"
-	// EdgeServiceResources holds the string denoting the service_resources edge name in mutations.
-	EdgeServiceResources = "service_resources"
-	// EdgeServiceRevisions holds the string denoting the service_revisions edge name in mutations.
-	EdgeServiceRevisions = "service_revisions"
+	// EdgeResources holds the string denoting the resources edge name in mutations.
+	EdgeResources = "resources"
+	// EdgeResourceComponents holds the string denoting the resource_components edge name in mutations.
+	EdgeResourceComponents = "resource_components"
+	// EdgeResourceRevisions holds the string denoting the resource_revisions edge name in mutations.
+	EdgeResourceRevisions = "resource_revisions"
 	// EdgeVariables holds the string denoting the variables edge name in mutations.
 	EdgeVariables = "variables"
+	// EdgeTemplates holds the string denoting the templates edge name in mutations.
+	EdgeTemplates = "templates"
+	// EdgeTemplateVersions holds the string denoting the template_versions edge name in mutations.
+	EdgeTemplateVersions = "template_versions"
+	// EdgeCatalogs holds the string denoting the catalogs edge name in mutations.
+	EdgeCatalogs = "catalogs"
+	// EdgeWorkflows holds the string denoting the workflows edge name in mutations.
+	EdgeWorkflows = "workflows"
+	// EdgeWorkflowStages holds the string denoting the workflow_stages edge name in mutations.
+	EdgeWorkflowStages = "workflow_stages"
+	// EdgeWorkflowSteps holds the string denoting the workflow_steps edge name in mutations.
+	EdgeWorkflowSteps = "workflow_steps"
+	// EdgeWorkflowExecutions holds the string denoting the workflow_executions edge name in mutations.
+	EdgeWorkflowExecutions = "workflow_executions"
+	// EdgeWorkflowStageExecutions holds the string denoting the workflow_stage_executions edge name in mutations.
+	EdgeWorkflowStageExecutions = "workflow_stage_executions"
+	// EdgeWorkflowStepExecutions holds the string denoting the workflow_step_executions edge name in mutations.
+	EdgeWorkflowStepExecutions = "workflow_step_executions"
 	// Table holds the table name of the project in the database.
 	Table = "projects"
 	// EnvironmentsTable is the table that holds the environments relation/edge.
@@ -68,27 +86,27 @@ const (
 	SubjectRolesInverseTable = "subject_role_relationships"
 	// SubjectRolesColumn is the table column denoting the subject_roles relation/edge.
 	SubjectRolesColumn = "project_id"
-	// ServicesTable is the table that holds the services relation/edge.
-	ServicesTable = "services"
-	// ServicesInverseTable is the table name for the Service entity.
-	// It exists in this package in order to avoid circular dependency with the "service" package.
-	ServicesInverseTable = "services"
-	// ServicesColumn is the table column denoting the services relation/edge.
-	ServicesColumn = "project_id"
-	// ServiceResourcesTable is the table that holds the service_resources relation/edge.
-	ServiceResourcesTable = "service_resources"
-	// ServiceResourcesInverseTable is the table name for the ServiceResource entity.
-	// It exists in this package in order to avoid circular dependency with the "serviceresource" package.
-	ServiceResourcesInverseTable = "service_resources"
-	// ServiceResourcesColumn is the table column denoting the service_resources relation/edge.
-	ServiceResourcesColumn = "project_id"
-	// ServiceRevisionsTable is the table that holds the service_revisions relation/edge.
-	ServiceRevisionsTable = "service_revisions"
-	// ServiceRevisionsInverseTable is the table name for the ServiceRevision entity.
-	// It exists in this package in order to avoid circular dependency with the "servicerevision" package.
-	ServiceRevisionsInverseTable = "service_revisions"
-	// ServiceRevisionsColumn is the table column denoting the service_revisions relation/edge.
-	ServiceRevisionsColumn = "project_id"
+	// ResourcesTable is the table that holds the resources relation/edge.
+	ResourcesTable = "resources"
+	// ResourcesInverseTable is the table name for the Resource entity.
+	// It exists in this package in order to avoid circular dependency with the "resource" package.
+	ResourcesInverseTable = "resources"
+	// ResourcesColumn is the table column denoting the resources relation/edge.
+	ResourcesColumn = "project_id"
+	// ResourceComponentsTable is the table that holds the resource_components relation/edge.
+	ResourceComponentsTable = "resource_components"
+	// ResourceComponentsInverseTable is the table name for the ResourceComponent entity.
+	// It exists in this package in order to avoid circular dependency with the "resourcecomponent" package.
+	ResourceComponentsInverseTable = "resource_components"
+	// ResourceComponentsColumn is the table column denoting the resource_components relation/edge.
+	ResourceComponentsColumn = "project_id"
+	// ResourceRevisionsTable is the table that holds the resource_revisions relation/edge.
+	ResourceRevisionsTable = "resource_revisions"
+	// ResourceRevisionsInverseTable is the table name for the ResourceRevision entity.
+	// It exists in this package in order to avoid circular dependency with the "resourcerevision" package.
+	ResourceRevisionsInverseTable = "resource_revisions"
+	// ResourceRevisionsColumn is the table column denoting the resource_revisions relation/edge.
+	ResourceRevisionsColumn = "project_id"
 	// VariablesTable is the table that holds the variables relation/edge.
 	VariablesTable = "variables"
 	// VariablesInverseTable is the table name for the Variable entity.
@@ -96,6 +114,69 @@ const (
 	VariablesInverseTable = "variables"
 	// VariablesColumn is the table column denoting the variables relation/edge.
 	VariablesColumn = "project_id"
+	// TemplatesTable is the table that holds the templates relation/edge.
+	TemplatesTable = "templates"
+	// TemplatesInverseTable is the table name for the Template entity.
+	// It exists in this package in order to avoid circular dependency with the "template" package.
+	TemplatesInverseTable = "templates"
+	// TemplatesColumn is the table column denoting the templates relation/edge.
+	TemplatesColumn = "project_id"
+	// TemplateVersionsTable is the table that holds the template_versions relation/edge.
+	TemplateVersionsTable = "template_versions"
+	// TemplateVersionsInverseTable is the table name for the TemplateVersion entity.
+	// It exists in this package in order to avoid circular dependency with the "templateversion" package.
+	TemplateVersionsInverseTable = "template_versions"
+	// TemplateVersionsColumn is the table column denoting the template_versions relation/edge.
+	TemplateVersionsColumn = "project_id"
+	// CatalogsTable is the table that holds the catalogs relation/edge.
+	CatalogsTable = "catalogs"
+	// CatalogsInverseTable is the table name for the Catalog entity.
+	// It exists in this package in order to avoid circular dependency with the "catalog" package.
+	CatalogsInverseTable = "catalogs"
+	// CatalogsColumn is the table column denoting the catalogs relation/edge.
+	CatalogsColumn = "project_id"
+	// WorkflowsTable is the table that holds the workflows relation/edge.
+	WorkflowsTable = "workflows"
+	// WorkflowsInverseTable is the table name for the Workflow entity.
+	// It exists in this package in order to avoid circular dependency with the "workflow" package.
+	WorkflowsInverseTable = "workflows"
+	// WorkflowsColumn is the table column denoting the workflows relation/edge.
+	WorkflowsColumn = "project_id"
+	// WorkflowStagesTable is the table that holds the workflow_stages relation/edge.
+	WorkflowStagesTable = "workflow_stages"
+	// WorkflowStagesInverseTable is the table name for the WorkflowStage entity.
+	// It exists in this package in order to avoid circular dependency with the "workflowstage" package.
+	WorkflowStagesInverseTable = "workflow_stages"
+	// WorkflowStagesColumn is the table column denoting the workflow_stages relation/edge.
+	WorkflowStagesColumn = "project_id"
+	// WorkflowStepsTable is the table that holds the workflow_steps relation/edge.
+	WorkflowStepsTable = "workflow_steps"
+	// WorkflowStepsInverseTable is the table name for the WorkflowStep entity.
+	// It exists in this package in order to avoid circular dependency with the "workflowstep" package.
+	WorkflowStepsInverseTable = "workflow_steps"
+	// WorkflowStepsColumn is the table column denoting the workflow_steps relation/edge.
+	WorkflowStepsColumn = "project_id"
+	// WorkflowExecutionsTable is the table that holds the workflow_executions relation/edge.
+	WorkflowExecutionsTable = "workflow_executions"
+	// WorkflowExecutionsInverseTable is the table name for the WorkflowExecution entity.
+	// It exists in this package in order to avoid circular dependency with the "workflowexecution" package.
+	WorkflowExecutionsInverseTable = "workflow_executions"
+	// WorkflowExecutionsColumn is the table column denoting the workflow_executions relation/edge.
+	WorkflowExecutionsColumn = "project_id"
+	// WorkflowStageExecutionsTable is the table that holds the workflow_stage_executions relation/edge.
+	WorkflowStageExecutionsTable = "workflow_stage_executions"
+	// WorkflowStageExecutionsInverseTable is the table name for the WorkflowStageExecution entity.
+	// It exists in this package in order to avoid circular dependency with the "workflowstageexecution" package.
+	WorkflowStageExecutionsInverseTable = "workflow_stage_executions"
+	// WorkflowStageExecutionsColumn is the table column denoting the workflow_stage_executions relation/edge.
+	WorkflowStageExecutionsColumn = "project_id"
+	// WorkflowStepExecutionsTable is the table that holds the workflow_step_executions relation/edge.
+	WorkflowStepExecutionsTable = "workflow_step_executions"
+	// WorkflowStepExecutionsInverseTable is the table name for the WorkflowStepExecution entity.
+	// It exists in this package in order to avoid circular dependency with the "workflowstepexecution" package.
+	WorkflowStepExecutionsInverseTable = "workflow_step_executions"
+	// WorkflowStepExecutionsColumn is the table column denoting the workflow_step_executions relation/edge.
+	WorkflowStepExecutionsColumn = "project_id"
 )
 
 // Columns holds all SQL columns for project fields.
@@ -211,45 +292,45 @@ func BySubjectRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByServicesCount orders the results by services count.
-func ByServicesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByResourcesCount orders the results by resources count.
+func ByResourcesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newServicesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newResourcesStep(), opts...)
 	}
 }
 
-// ByServices orders the results by services terms.
-func ByServices(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByResources orders the results by resources terms.
+func ByResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newServicesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
-// ByServiceResourcesCount orders the results by service_resources count.
-func ByServiceResourcesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByResourceComponentsCount orders the results by resource_components count.
+func ByResourceComponentsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newServiceResourcesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newResourceComponentsStep(), opts...)
 	}
 }
 
-// ByServiceResources orders the results by service_resources terms.
-func ByServiceResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByResourceComponents orders the results by resource_components terms.
+func ByResourceComponents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newServiceResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newResourceComponentsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
-// ByServiceRevisionsCount orders the results by service_revisions count.
-func ByServiceRevisionsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByResourceRevisionsCount orders the results by resource_revisions count.
+func ByResourceRevisionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newServiceRevisionsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newResourceRevisionsStep(), opts...)
 	}
 }
 
-// ByServiceRevisions orders the results by service_revisions terms.
-func ByServiceRevisions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByResourceRevisions orders the results by resource_revisions terms.
+func ByResourceRevisions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newServiceRevisionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newResourceRevisionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -264,6 +345,132 @@ func ByVariablesCount(opts ...sql.OrderTermOption) OrderOption {
 func ByVariables(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newVariablesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByTemplatesCount orders the results by templates count.
+func ByTemplatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTemplatesStep(), opts...)
+	}
+}
+
+// ByTemplates orders the results by templates terms.
+func ByTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTemplatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByTemplateVersionsCount orders the results by template_versions count.
+func ByTemplateVersionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTemplateVersionsStep(), opts...)
+	}
+}
+
+// ByTemplateVersions orders the results by template_versions terms.
+func ByTemplateVersions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTemplateVersionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCatalogsCount orders the results by catalogs count.
+func ByCatalogsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCatalogsStep(), opts...)
+	}
+}
+
+// ByCatalogs orders the results by catalogs terms.
+func ByCatalogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCatalogsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByWorkflowsCount orders the results by workflows count.
+func ByWorkflowsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowsStep(), opts...)
+	}
+}
+
+// ByWorkflows orders the results by workflows terms.
+func ByWorkflows(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByWorkflowStagesCount orders the results by workflow_stages count.
+func ByWorkflowStagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowStagesStep(), opts...)
+	}
+}
+
+// ByWorkflowStages orders the results by workflow_stages terms.
+func ByWorkflowStages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowStagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByWorkflowStepsCount orders the results by workflow_steps count.
+func ByWorkflowStepsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowStepsStep(), opts...)
+	}
+}
+
+// ByWorkflowSteps orders the results by workflow_steps terms.
+func ByWorkflowSteps(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowStepsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByWorkflowExecutionsCount orders the results by workflow_executions count.
+func ByWorkflowExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowExecutionsStep(), opts...)
+	}
+}
+
+// ByWorkflowExecutions orders the results by workflow_executions terms.
+func ByWorkflowExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByWorkflowStageExecutionsCount orders the results by workflow_stage_executions count.
+func ByWorkflowStageExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowStageExecutionsStep(), opts...)
+	}
+}
+
+// ByWorkflowStageExecutions orders the results by workflow_stage_executions terms.
+func ByWorkflowStageExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowStageExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByWorkflowStepExecutionsCount orders the results by workflow_step_executions count.
+func ByWorkflowStepExecutionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowStepExecutionsStep(), opts...)
+	}
+}
+
+// ByWorkflowStepExecutions orders the results by workflow_step_executions terms.
+func ByWorkflowStepExecutions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowStepExecutionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newEnvironmentsStep() *sqlgraph.Step {
@@ -287,25 +494,25 @@ func newSubjectRolesStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, SubjectRolesTable, SubjectRolesColumn),
 	)
 }
-func newServicesStep() *sqlgraph.Step {
+func newResourcesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ServicesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ServicesTable, ServicesColumn),
+		sqlgraph.To(ResourcesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ResourcesTable, ResourcesColumn),
 	)
 }
-func newServiceResourcesStep() *sqlgraph.Step {
+func newResourceComponentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ServiceResourcesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ServiceResourcesTable, ServiceResourcesColumn),
+		sqlgraph.To(ResourceComponentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ResourceComponentsTable, ResourceComponentsColumn),
 	)
 }
-func newServiceRevisionsStep() *sqlgraph.Step {
+func newResourceRevisionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ServiceRevisionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ServiceRevisionsTable, ServiceRevisionsColumn),
+		sqlgraph.To(ResourceRevisionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ResourceRevisionsTable, ResourceRevisionsColumn),
 	)
 }
 func newVariablesStep() *sqlgraph.Step {
@@ -313,6 +520,69 @@ func newVariablesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(VariablesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, VariablesTable, VariablesColumn),
+	)
+}
+func newTemplatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TemplatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TemplatesTable, TemplatesColumn),
+	)
+}
+func newTemplateVersionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TemplateVersionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TemplateVersionsTable, TemplateVersionsColumn),
+	)
+}
+func newCatalogsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CatalogsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CatalogsTable, CatalogsColumn),
+	)
+}
+func newWorkflowsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowsTable, WorkflowsColumn),
+	)
+}
+func newWorkflowStagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowStagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowStagesTable, WorkflowStagesColumn),
+	)
+}
+func newWorkflowStepsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowStepsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowStepsTable, WorkflowStepsColumn),
+	)
+}
+func newWorkflowExecutionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowExecutionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowExecutionsTable, WorkflowExecutionsColumn),
+	)
+}
+func newWorkflowStageExecutionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowStageExecutionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowStageExecutionsTable, WorkflowStageExecutionsColumn),
+	)
+}
+func newWorkflowStepExecutionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowStepExecutionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowStepExecutionsTable, WorkflowStepExecutionsColumn),
 	)
 }
 

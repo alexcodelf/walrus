@@ -17,14 +17,23 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/connector"
 	"github.com/seal-io/walrus/pkg/dao/model/environment"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
-	"github.com/seal-io/walrus/pkg/dao/model/service"
-	"github.com/seal-io/walrus/pkg/dao/model/serviceresource"
-	"github.com/seal-io/walrus/pkg/dao/model/servicerevision"
+	"github.com/seal-io/walrus/pkg/dao/model/resource"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcecomponent"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcerevision"
 	"github.com/seal-io/walrus/pkg/dao/model/subjectrolerelationship"
+	"github.com/seal-io/walrus/pkg/dao/model/template"
+	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/model/variable"
+	"github.com/seal-io/walrus/pkg/dao/model/workflow"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstage"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstageexecution"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstep"
+	"github.com/seal-io/walrus/pkg/dao/model/workflowstepexecution"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
@@ -149,49 +158,49 @@ func (pc *ProjectCreate) AddSubjectRoles(s ...*SubjectRoleRelationship) *Project
 	return pc.AddSubjectRoleIDs(ids...)
 }
 
-// AddServiceIDs adds the "services" edge to the Service entity by IDs.
-func (pc *ProjectCreate) AddServiceIDs(ids ...object.ID) *ProjectCreate {
-	pc.mutation.AddServiceIDs(ids...)
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (pc *ProjectCreate) AddResourceIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddResourceIDs(ids...)
 	return pc
 }
 
-// AddServices adds the "services" edges to the Service entity.
-func (pc *ProjectCreate) AddServices(s ...*Service) *ProjectCreate {
-	ids := make([]object.ID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddResources adds the "resources" edges to the Resource entity.
+func (pc *ProjectCreate) AddResources(r ...*Resource) *ProjectCreate {
+	ids := make([]object.ID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return pc.AddServiceIDs(ids...)
+	return pc.AddResourceIDs(ids...)
 }
 
-// AddServiceResourceIDs adds the "service_resources" edge to the ServiceResource entity by IDs.
-func (pc *ProjectCreate) AddServiceResourceIDs(ids ...object.ID) *ProjectCreate {
-	pc.mutation.AddServiceResourceIDs(ids...)
+// AddResourceComponentIDs adds the "resource_components" edge to the ResourceComponent entity by IDs.
+func (pc *ProjectCreate) AddResourceComponentIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddResourceComponentIDs(ids...)
 	return pc
 }
 
-// AddServiceResources adds the "service_resources" edges to the ServiceResource entity.
-func (pc *ProjectCreate) AddServiceResources(s ...*ServiceResource) *ProjectCreate {
-	ids := make([]object.ID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddResourceComponents adds the "resource_components" edges to the ResourceComponent entity.
+func (pc *ProjectCreate) AddResourceComponents(r ...*ResourceComponent) *ProjectCreate {
+	ids := make([]object.ID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return pc.AddServiceResourceIDs(ids...)
+	return pc.AddResourceComponentIDs(ids...)
 }
 
-// AddServiceRevisionIDs adds the "service_revisions" edge to the ServiceRevision entity by IDs.
-func (pc *ProjectCreate) AddServiceRevisionIDs(ids ...object.ID) *ProjectCreate {
-	pc.mutation.AddServiceRevisionIDs(ids...)
+// AddResourceRevisionIDs adds the "resource_revisions" edge to the ResourceRevision entity by IDs.
+func (pc *ProjectCreate) AddResourceRevisionIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddResourceRevisionIDs(ids...)
 	return pc
 }
 
-// AddServiceRevisions adds the "service_revisions" edges to the ServiceRevision entity.
-func (pc *ProjectCreate) AddServiceRevisions(s ...*ServiceRevision) *ProjectCreate {
-	ids := make([]object.ID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddResourceRevisions adds the "resource_revisions" edges to the ResourceRevision entity.
+func (pc *ProjectCreate) AddResourceRevisions(r ...*ResourceRevision) *ProjectCreate {
+	ids := make([]object.ID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return pc.AddServiceRevisionIDs(ids...)
+	return pc.AddResourceRevisionIDs(ids...)
 }
 
 // AddVariableIDs adds the "variables" edge to the Variable entity by IDs.
@@ -207,6 +216,141 @@ func (pc *ProjectCreate) AddVariables(v ...*Variable) *ProjectCreate {
 		ids[i] = v[i].ID
 	}
 	return pc.AddVariableIDs(ids...)
+}
+
+// AddTemplateIDs adds the "templates" edge to the Template entity by IDs.
+func (pc *ProjectCreate) AddTemplateIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddTemplateIDs(ids...)
+	return pc
+}
+
+// AddTemplates adds the "templates" edges to the Template entity.
+func (pc *ProjectCreate) AddTemplates(t ...*Template) *ProjectCreate {
+	ids := make([]object.ID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return pc.AddTemplateIDs(ids...)
+}
+
+// AddTemplateVersionIDs adds the "template_versions" edge to the TemplateVersion entity by IDs.
+func (pc *ProjectCreate) AddTemplateVersionIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddTemplateVersionIDs(ids...)
+	return pc
+}
+
+// AddTemplateVersions adds the "template_versions" edges to the TemplateVersion entity.
+func (pc *ProjectCreate) AddTemplateVersions(t ...*TemplateVersion) *ProjectCreate {
+	ids := make([]object.ID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return pc.AddTemplateVersionIDs(ids...)
+}
+
+// AddCatalogIDs adds the "catalogs" edge to the Catalog entity by IDs.
+func (pc *ProjectCreate) AddCatalogIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddCatalogIDs(ids...)
+	return pc
+}
+
+// AddCatalogs adds the "catalogs" edges to the Catalog entity.
+func (pc *ProjectCreate) AddCatalogs(c ...*Catalog) *ProjectCreate {
+	ids := make([]object.ID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return pc.AddCatalogIDs(ids...)
+}
+
+// AddWorkflowIDs adds the "workflows" edge to the Workflow entity by IDs.
+func (pc *ProjectCreate) AddWorkflowIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddWorkflowIDs(ids...)
+	return pc
+}
+
+// AddWorkflows adds the "workflows" edges to the Workflow entity.
+func (pc *ProjectCreate) AddWorkflows(w ...*Workflow) *ProjectCreate {
+	ids := make([]object.ID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return pc.AddWorkflowIDs(ids...)
+}
+
+// AddWorkflowStageIDs adds the "workflow_stages" edge to the WorkflowStage entity by IDs.
+func (pc *ProjectCreate) AddWorkflowStageIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddWorkflowStageIDs(ids...)
+	return pc
+}
+
+// AddWorkflowStages adds the "workflow_stages" edges to the WorkflowStage entity.
+func (pc *ProjectCreate) AddWorkflowStages(w ...*WorkflowStage) *ProjectCreate {
+	ids := make([]object.ID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return pc.AddWorkflowStageIDs(ids...)
+}
+
+// AddWorkflowStepIDs adds the "workflow_steps" edge to the WorkflowStep entity by IDs.
+func (pc *ProjectCreate) AddWorkflowStepIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddWorkflowStepIDs(ids...)
+	return pc
+}
+
+// AddWorkflowSteps adds the "workflow_steps" edges to the WorkflowStep entity.
+func (pc *ProjectCreate) AddWorkflowSteps(w ...*WorkflowStep) *ProjectCreate {
+	ids := make([]object.ID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return pc.AddWorkflowStepIDs(ids...)
+}
+
+// AddWorkflowExecutionIDs adds the "workflow_executions" edge to the WorkflowExecution entity by IDs.
+func (pc *ProjectCreate) AddWorkflowExecutionIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddWorkflowExecutionIDs(ids...)
+	return pc
+}
+
+// AddWorkflowExecutions adds the "workflow_executions" edges to the WorkflowExecution entity.
+func (pc *ProjectCreate) AddWorkflowExecutions(w ...*WorkflowExecution) *ProjectCreate {
+	ids := make([]object.ID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return pc.AddWorkflowExecutionIDs(ids...)
+}
+
+// AddWorkflowStageExecutionIDs adds the "workflow_stage_executions" edge to the WorkflowStageExecution entity by IDs.
+func (pc *ProjectCreate) AddWorkflowStageExecutionIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddWorkflowStageExecutionIDs(ids...)
+	return pc
+}
+
+// AddWorkflowStageExecutions adds the "workflow_stage_executions" edges to the WorkflowStageExecution entity.
+func (pc *ProjectCreate) AddWorkflowStageExecutions(w ...*WorkflowStageExecution) *ProjectCreate {
+	ids := make([]object.ID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return pc.AddWorkflowStageExecutionIDs(ids...)
+}
+
+// AddWorkflowStepExecutionIDs adds the "workflow_step_executions" edge to the WorkflowStepExecution entity by IDs.
+func (pc *ProjectCreate) AddWorkflowStepExecutionIDs(ids ...object.ID) *ProjectCreate {
+	pc.mutation.AddWorkflowStepExecutionIDs(ids...)
+	return pc
+}
+
+// AddWorkflowStepExecutions adds the "workflow_step_executions" edges to the WorkflowStepExecution entity.
+func (pc *ProjectCreate) AddWorkflowStepExecutions(w ...*WorkflowStepExecution) *ProjectCreate {
+	ids := make([]object.ID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return pc.AddWorkflowStepExecutionIDs(ids...)
 }
 
 // Mutation returns the ProjectMutation object of the builder.
@@ -399,52 +543,52 @@ func (pc *ProjectCreate) createSpec() (*Project, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pc.mutation.ServicesIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   project.ServicesTable,
-			Columns: []string{project.ServicesColumn},
+			Table:   project.ResourcesTable,
+			Columns: []string{project.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(service.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = pc.schemaConfig.Service
+		edge.Schema = pc.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pc.mutation.ServiceResourcesIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.ResourceComponentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   project.ServiceResourcesTable,
-			Columns: []string{project.ServiceResourcesColumn},
+			Table:   project.ResourceComponentsTable,
+			Columns: []string{project.ResourceComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(serviceresource.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(resourcecomponent.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = pc.schemaConfig.ServiceResource
+		edge.Schema = pc.schemaConfig.ResourceComponent
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pc.mutation.ServiceRevisionsIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.ResourceRevisionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   project.ServiceRevisionsTable,
-			Columns: []string{project.ServiceRevisionsColumn},
+			Table:   project.ResourceRevisionsTable,
+			Columns: []string{project.ResourceRevisionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerevision.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(resourcerevision.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = pc.schemaConfig.ServiceRevision
+		edge.Schema = pc.schemaConfig.ResourceRevision
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -462,6 +606,159 @@ func (pc *ProjectCreate) createSpec() (*Project, *sqlgraph.CreateSpec) {
 			},
 		}
 		edge.Schema = pc.schemaConfig.Variable
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.TemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.TemplatesTable,
+			Columns: []string{project.TemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.Template
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.TemplateVersionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.TemplateVersionsTable,
+			Columns: []string{project.TemplateVersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(templateversion.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.TemplateVersion
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.CatalogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.CatalogsTable,
+			Columns: []string{project.CatalogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(catalog.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.Catalog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.WorkflowsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.WorkflowsTable,
+			Columns: []string{project.WorkflowsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.Workflow
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.WorkflowStagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.WorkflowStagesTable,
+			Columns: []string{project.WorkflowStagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowstage.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.WorkflowStage
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.WorkflowStepsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.WorkflowStepsTable,
+			Columns: []string{project.WorkflowStepsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowstep.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.WorkflowStep
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.WorkflowExecutionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.WorkflowExecutionsTable,
+			Columns: []string{project.WorkflowExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowexecution.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.WorkflowExecution
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.WorkflowStageExecutionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.WorkflowStageExecutionsTable,
+			Columns: []string{project.WorkflowStageExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowstageexecution.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.WorkflowStageExecution
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.WorkflowStepExecutionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   project.WorkflowStepExecutionsTable,
+			Columns: []string{project.WorkflowStepExecutionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowstepexecution.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = pc.schemaConfig.WorkflowStepExecution
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}

@@ -19,8 +19,8 @@ type ModuleConfig struct {
 	Name string
 	// Source is the module source.
 	Source string
-	// Schema is the variable schema.
-	Schema *types.TemplateSchema
+	// SchemaData is the data module schema.
+	SchemaData types.TemplateVersionSchemaData
 	// Attributes is the attributes of the module.
 	Attributes map[string]any
 	// Outputs is the module outputs.
@@ -73,8 +73,8 @@ type (
 	VariableOptions struct {
 		// VariablePrefix is the prefix of the variable name.
 		VariablePrefix string
-		// SecretServicePrefix is the prefix of the secret service name.
-		ServicePrefix string
+		// ResourcePrefix is the prefix of the Walrus resource variable name.
+		ResourcePrefix string
 		// Variables is map with name in key and sensitive flag in value.
 		Variables map[string]bool
 		// DependencyOutputs is the map of the variable name and value.
@@ -85,9 +85,9 @@ type (
 	OutputOptions []Output
 	// Output indicate the output name and module.
 	Output struct {
-		ServiceName string
-		Name        string
-		Sensitive   bool
-		Value       []byte
+		ResourceName string
+		Name         string
+		Sensitive    bool
+		Value        []byte
 	}
 )

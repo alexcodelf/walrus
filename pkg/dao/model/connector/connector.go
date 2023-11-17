@@ -41,6 +41,8 @@ const (
 	FieldCategory = "category"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
+	// FieldApplicableEnvironmentType holds the string denoting the applicable_environment_type field in the database.
+	FieldApplicableEnvironmentType = "applicable_environment_type"
 	// FieldConfigVersion holds the string denoting the config_version field in the database.
 	FieldConfigVersion = "config_version"
 	// FieldConfigData holds the string denoting the config_data field in the database.
@@ -53,8 +55,8 @@ const (
 	EdgeProject = "project"
 	// EdgeEnvironments holds the string denoting the environments edge name in mutations.
 	EdgeEnvironments = "environments"
-	// EdgeResources holds the string denoting the resources edge name in mutations.
-	EdgeResources = "resources"
+	// EdgeResourceComponents holds the string denoting the resource_components edge name in mutations.
+	EdgeResourceComponents = "resource_components"
 	// EdgeCostReports holds the string denoting the cost_reports edge name in mutations.
 	EdgeCostReports = "cost_reports"
 	// Table holds the table name of the connector in the database.
@@ -73,13 +75,13 @@ const (
 	EnvironmentsInverseTable = "environment_connector_relationships"
 	// EnvironmentsColumn is the table column denoting the environments relation/edge.
 	EnvironmentsColumn = "connector_id"
-	// ResourcesTable is the table that holds the resources relation/edge.
-	ResourcesTable = "service_resources"
-	// ResourcesInverseTable is the table name for the ServiceResource entity.
-	// It exists in this package in order to avoid circular dependency with the "serviceresource" package.
-	ResourcesInverseTable = "service_resources"
-	// ResourcesColumn is the table column denoting the resources relation/edge.
-	ResourcesColumn = "connector_id"
+	// ResourceComponentsTable is the table that holds the resource_components relation/edge.
+	ResourceComponentsTable = "resource_components"
+	// ResourceComponentsInverseTable is the table name for the ResourceComponent entity.
+	// It exists in this package in order to avoid circular dependency with the "resourcecomponent" package.
+	ResourceComponentsInverseTable = "resource_components"
+	// ResourceComponentsColumn is the table column denoting the resource_components relation/edge.
+	ResourceComponentsColumn = "connector_id"
 	// CostReportsTable is the table that holds the cost_reports relation/edge.
 	CostReportsTable = "cost_reports"
 	// CostReportsInverseTable is the table name for the CostReport entity.
@@ -102,6 +104,7 @@ var Columns = []string{
 	FieldProjectID,
 	FieldCategory,
 	FieldType,
+	FieldApplicableEnvironmentType,
 	FieldConfigVersion,
 	FieldConfigData,
 	FieldEnableFinOps,
@@ -142,6 +145,8 @@ var (
 	CategoryValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
+	// ApplicableEnvironmentTypeValidator is a validator for the "applicable_environment_type" field. It is called by the builders before save.
+	ApplicableEnvironmentTypeValidator func(string) error
 	// ConfigVersionValidator is a validator for the "config_version" field. It is called by the builders before save.
 	ConfigVersionValidator func(string) error
 	// DefaultConfigData holds the default value on creation for the "config_data" field.
@@ -191,6 +196,11 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
+// ByApplicableEnvironmentType orders the results by the applicable_environment_type field.
+func ByApplicableEnvironmentType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldApplicableEnvironmentType, opts...).ToFunc()
+}
+
 // ByConfigVersion orders the results by the config_version field.
 func ByConfigVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldConfigVersion, opts...).ToFunc()
@@ -227,17 +237,17 @@ func ByEnvironments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByResourcesCount orders the results by resources count.
-func ByResourcesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByResourceComponentsCount orders the results by resource_components count.
+func ByResourceComponentsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newResourcesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newResourceComponentsStep(), opts...)
 	}
 }
 
-// ByResources orders the results by resources terms.
-func ByResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByResourceComponents orders the results by resource_components terms.
+func ByResourceComponents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newResourceComponentsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -268,11 +278,11 @@ func newEnvironmentsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, true, EnvironmentsTable, EnvironmentsColumn),
 	)
 }
-func newResourcesStep() *sqlgraph.Step {
+func newResourceComponentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ResourcesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ResourcesTable, ResourcesColumn),
+		sqlgraph.To(ResourceComponentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ResourceComponentsTable, ResourceComponentsColumn),
 	)
 }
 func newCostReportsStep() *sqlgraph.Step {

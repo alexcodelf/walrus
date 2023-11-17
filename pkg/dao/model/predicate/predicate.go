@@ -33,23 +33,29 @@ type Perspective func(*sql.Selector)
 // Project is the predicate function for project builders.
 type Project func(*sql.Selector)
 
+// Resource is the predicate function for resource builders.
+type Resource func(*sql.Selector)
+
+// ResourceComponent is the predicate function for resourcecomponent builders.
+type ResourceComponent func(*sql.Selector)
+
+// ResourceComponentRelationship is the predicate function for resourcecomponentrelationship builders.
+type ResourceComponentRelationship func(*sql.Selector)
+
+// ResourceDefinition is the predicate function for resourcedefinition builders.
+type ResourceDefinition func(*sql.Selector)
+
+// ResourceDefinitionMatchingRule is the predicate function for resourcedefinitionmatchingrule builders.
+type ResourceDefinitionMatchingRule func(*sql.Selector)
+
+// ResourceRelationship is the predicate function for resourcerelationship builders.
+type ResourceRelationship func(*sql.Selector)
+
+// ResourceRevision is the predicate function for resourcerevision builders.
+type ResourceRevision func(*sql.Selector)
+
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
-
-// Service is the predicate function for service builders.
-type Service func(*sql.Selector)
-
-// ServiceRelationship is the predicate function for servicerelationship builders.
-type ServiceRelationship func(*sql.Selector)
-
-// ServiceResource is the predicate function for serviceresource builders.
-type ServiceResource func(*sql.Selector)
-
-// ServiceResourceRelationship is the predicate function for serviceresourcerelationship builders.
-type ServiceResourceRelationship func(*sql.Selector)
-
-// ServiceRevision is the predicate function for servicerevision builders.
-type ServiceRevision func(*sql.Selector)
 
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)
@@ -71,3 +77,21 @@ type Token func(*sql.Selector)
 
 // Variable is the predicate function for variable builders.
 type Variable func(*sql.Selector)
+
+// Workflow is the predicate function for workflow builders.
+type Workflow func(*sql.Selector)
+
+// WorkflowExecution is the predicate function for workflowexecution builders.
+type WorkflowExecution func(*sql.Selector)
+
+// WorkflowStage is the predicate function for workflowstage builders.
+type WorkflowStage func(*sql.Selector)
+
+// WorkflowStageExecution is the predicate function for workflowstageexecution builders.
+type WorkflowStageExecution func(*sql.Selector)
+
+// WorkflowStep is the predicate function for workflowstep builders.
+type WorkflowStep func(*sql.Selector)
+
+// WorkflowStepExecution is the predicate function for workflowstepexecution builders.
+type WorkflowStepExecution func(*sql.Selector)

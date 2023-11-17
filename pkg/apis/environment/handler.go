@@ -3,24 +3,22 @@ package environment
 import (
 	"k8s.io/client-go/rest"
 
+	"github.com/seal-io/walrus/pkg/apis/resource"
 	"github.com/seal-io/walrus/pkg/apis/runtime"
-	"github.com/seal-io/walrus/pkg/apis/service"
 	"github.com/seal-io/walrus/pkg/apis/variable"
 	"github.com/seal-io/walrus/pkg/dao/model"
 )
 
-func Handle(mc model.ClientSet, kc *rest.Config, tc bool) Handler {
+func Handle(mc model.ClientSet, kc *rest.Config) Handler {
 	return Handler{
-		modelClient:  mc,
-		kubeConfig:   kc,
-		tlsCertified: tc,
+		modelClient: mc,
+		kubeConfig:  kc,
 	}
 }
 
 type Handler struct {
-	modelClient  model.ClientSet
-	kubeConfig   *rest.Config
-	tlsCertified bool
+	modelClient model.ClientSet
+	kubeConfig  *rest.Config
 }
 
 func (Handler) Kind() string {
@@ -30,6 +28,6 @@ func (Handler) Kind() string {
 func (h Handler) SubResourceHandlers() []runtime.IResourceHandler {
 	return []runtime.IResourceHandler{
 		variable.Handle(h.modelClient),
-		service.Handle(h.modelClient, h.kubeConfig, h.tlsCertified),
+		resource.Handle(h.modelClient, h.kubeConfig),
 	}
 }

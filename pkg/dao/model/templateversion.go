@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/template"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/types"
@@ -37,8 +38,12 @@ type TemplateVersion struct {
 	Version string `json:"version,omitempty"`
 	// Source of the template.
 	Source string `json:"source,omitempty"`
-	// Schema of the template.
-	Schema *types.TemplateSchema `json:"schema,omitempty"`
+	// Generated schema and data of the template.
+	Schema types.TemplateVersionSchema `json:"schema,omitempty"`
+	// ui schema of the template.
+	UiSchema types.UISchema `json:"uiSchema,omitempty"`
+	// ID of the project to belong, empty means for all projects.
+	ProjectID object.ID `json:"project_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TemplateVersionQuery when eager-loading is set.
 	Edges        TemplateVersionEdges `json:"edges,omitempty"`
@@ -49,11 +54,15 @@ type TemplateVersion struct {
 type TemplateVersionEdges struct {
 	// Template to which the template version belongs.
 	Template *Template `json:"template,omitempty"`
-	// Services that belong to the template version.
-	Services []*Service `json:"services,omitempty"`
+	// Resources that belong to the template version.
+	Resources []*Resource `json:"resources,omitempty"`
+	// ResourceDefinitions holds the value of the resource_definitions edge.
+	ResourceDefinitions []*ResourceDefinitionMatchingRule `json:"resource_definitions,omitempty"`
+	// Project to which the template version belongs.
+	Project *Project `json:"project,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -69,13 +78,35 @@ func (e TemplateVersionEdges) TemplateOrErr() (*Template, error) {
 	return nil, &NotLoadedError{edge: "template"}
 }
 
-// ServicesOrErr returns the Services value or an error if the edge
+// ResourcesOrErr returns the Resources value or an error if the edge
 // was not loaded in eager-loading.
-func (e TemplateVersionEdges) ServicesOrErr() ([]*Service, error) {
+func (e TemplateVersionEdges) ResourcesOrErr() ([]*Resource, error) {
 	if e.loadedTypes[1] {
-		return e.Services, nil
+		return e.Resources, nil
 	}
-	return nil, &NotLoadedError{edge: "services"}
+	return nil, &NotLoadedError{edge: "resources"}
+}
+
+// ResourceDefinitionsOrErr returns the ResourceDefinitions value or an error if the edge
+// was not loaded in eager-loading.
+func (e TemplateVersionEdges) ResourceDefinitionsOrErr() ([]*ResourceDefinitionMatchingRule, error) {
+	if e.loadedTypes[2] {
+		return e.ResourceDefinitions, nil
+	}
+	return nil, &NotLoadedError{edge: "resource_definitions"}
+}
+
+// ProjectOrErr returns the Project value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TemplateVersionEdges) ProjectOrErr() (*Project, error) {
+	if e.loadedTypes[3] {
+		if e.Project == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: project.Label}
+		}
+		return e.Project, nil
+	}
+	return nil, &NotLoadedError{edge: "project"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -83,9 +114,9 @@ func (*TemplateVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case templateversion.FieldSchema:
+		case templateversion.FieldSchema, templateversion.FieldUiSchema:
 			values[i] = new([]byte)
-		case templateversion.FieldID, templateversion.FieldTemplateID:
+		case templateversion.FieldID, templateversion.FieldTemplateID, templateversion.FieldProjectID:
 			values[i] = new(object.ID)
 		case templateversion.FieldName, templateversion.FieldVersion, templateversion.FieldSource:
 			values[i] = new(sql.NullString)
@@ -158,6 +189,20 @@ func (tv *TemplateVersion) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field schema: %w", err)
 				}
 			}
+		case templateversion.FieldUiSchema:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field uiSchema", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &tv.UiSchema); err != nil {
+					return fmt.Errorf("unmarshal field uiSchema: %w", err)
+				}
+			}
+		case templateversion.FieldProjectID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field project_id", values[i])
+			} else if value != nil {
+				tv.ProjectID = *value
+			}
 		default:
 			tv.selectValues.Set(columns[i], values[i])
 		}
@@ -176,9 +221,19 @@ func (tv *TemplateVersion) QueryTemplate() *TemplateQuery {
 	return NewTemplateVersionClient(tv.config).QueryTemplate(tv)
 }
 
-// QueryServices queries the "services" edge of the TemplateVersion entity.
-func (tv *TemplateVersion) QueryServices() *ServiceQuery {
-	return NewTemplateVersionClient(tv.config).QueryServices(tv)
+// QueryResources queries the "resources" edge of the TemplateVersion entity.
+func (tv *TemplateVersion) QueryResources() *ResourceQuery {
+	return NewTemplateVersionClient(tv.config).QueryResources(tv)
+}
+
+// QueryResourceDefinitions queries the "resource_definitions" edge of the TemplateVersion entity.
+func (tv *TemplateVersion) QueryResourceDefinitions() *ResourceDefinitionMatchingRuleQuery {
+	return NewTemplateVersionClient(tv.config).QueryResourceDefinitions(tv)
+}
+
+// QueryProject queries the "project" edge of the TemplateVersion entity.
+func (tv *TemplateVersion) QueryProject() *ProjectQuery {
+	return NewTemplateVersionClient(tv.config).QueryProject(tv)
 }
 
 // Update returns a builder for updating this TemplateVersion.
@@ -228,6 +283,12 @@ func (tv *TemplateVersion) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("schema=")
 	builder.WriteString(fmt.Sprintf("%v", tv.Schema))
+	builder.WriteString(", ")
+	builder.WriteString("uiSchema=")
+	builder.WriteString(fmt.Sprintf("%v", tv.UiSchema))
+	builder.WriteString(", ")
+	builder.WriteString("project_id=")
+	builder.WriteString(fmt.Sprintf("%v", tv.ProjectID))
 	builder.WriteByte(')')
 	return builder.String()
 }

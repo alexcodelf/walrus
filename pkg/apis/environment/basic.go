@@ -1,6 +1,9 @@
 package environment
 
 import (
+	"net/http"
+
+	"github.com/seal-io/walrus/pkg/auths/session"
 	envbus "github.com/seal-io/walrus/pkg/bus/environment"
 	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
@@ -8,56 +11,23 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/environment"
 	"github.com/seal-io/walrus/pkg/dao/model/environmentconnectorrelationship"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
-	pkgservice "github.com/seal-io/walrus/pkg/service"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/log"
 )
 
 func (h Handler) Create(req CreateRequest) (CreateResponse, error) {
-	entity := req.Model()
-
-	err := h.modelClient.WithTx(req.Context, func(tx *model.Tx) (err error) {
-		entity, err = tx.Environments().Create().
-			Set(entity).
-			SaveE(req.Context, dao.EnvironmentConnectorsEdgeSave)
-		if err != nil {
-			return err
-		}
-
-		// TODO(thxCode): move the following codes into DAO.
-
-		serviceInputs := make(model.Services, 0, len(req.Services))
-
-		for _, s := range req.Services {
-			svc := s.Model()
-			svc.ProjectID = entity.ProjectID
-			svc.EnvironmentID = entity.ID
-			serviceInputs = append(serviceInputs, svc)
-		}
-
-		if err = pkgservice.SetSubjectID(req.Context, serviceInputs...); err != nil {
-			return err
-		}
-
-		services, err := pkgservice.CreateScheduledServices(req.Context, tx, serviceInputs)
-		if err != nil {
-			return err
-		}
-
-		entity.Edges.Services = services
-
-		return envbus.NotifyIDs(req.Context, tx, envbus.EventCreate, entity.ID)
-	})
-	if err != nil {
-		return nil, errorx.Wrap(err, "failed to create environment")
-	}
-
-	return model.ExposeEnvironment(entity), nil
+	return createEnvironment(req.Context, h.modelClient, req.Model())
 }
 
 func (h Handler) Get(req GetRequest) (GetResponse, error) {
-	entity, err := h.modelClient.Environments().Query().
-		Where(environment.ID(req.ID)).
+	query := h.modelClient.Environments().Query().
+		Where(environment.ID(req.ID))
+
+	if req.IncludeSummary {
+		query.WithResources()
+	}
+
+	entity, err := query.
 		WithProject(func(pq *model.ProjectQuery) {
 			pq.Select(project.FieldName)
 		}).
@@ -80,7 +50,7 @@ func (h Handler) Get(req GetRequest) (GetResponse, error) {
 		return nil, err
 	}
 
-	return model.ExposeEnvironment(entity), nil
+	return exposeEnvironment(entity), nil
 }
 
 func (h Handler) Update(req UpdateRequest) error {
@@ -136,6 +106,10 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 	query := h.modelClient.Environments().Query().
 		Where(environment.ProjectID(req.Project.ID))
 
+	if req.IncludeSummary {
+		query.WithResources()
+	}
+
 	if queries, ok := req.Querying(queryFields); ok {
 		query.Where(queries)
 	}
@@ -181,11 +155,30 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 		return nil, 0, err
 	}
 
-	return model.ExposeEnvironments(entities), cnt, nil
+	return exposeEnvironments(entities), cnt, nil
 }
 
 func (h Handler) CollectionDelete(req CollectionDeleteRequest) error {
 	ids := req.IDs()
+
+	// Validate whether the subject has permission to delete environments.
+	sj := session.MustGetSubject(req.Context)
+	if !sj.IsAdmin() {
+		for i := range ids {
+			ress := []session.ActionResource{
+				{Name: "projects", Refer: req.Project.ID.String()},
+				{Name: "environments", Refer: ids[i].String()},
+			}
+
+			if sj.Enforce(http.MethodDelete, ress, "") {
+				continue
+			}
+
+			return errorx.HttpErrorf(http.StatusForbidden,
+				"cannot delete environment %s that type not in: %v",
+				ids[i], sj.ApplicableEnvironmentTypes)
+		}
+	}
 
 	return h.modelClient.WithTx(req.Context, func(tx *model.Tx) error {
 		entities, err := dao.GetEnvironmentsByIDs(req.Context, tx, ids...)

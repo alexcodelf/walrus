@@ -17,6 +17,8 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
+	"github.com/seal-io/walrus/pkg/settings"
+	"github.com/seal-io/walrus/pkg/templates/loader"
 	"github.com/seal-io/walrus/pkg/vcs"
 	"github.com/seal-io/walrus/pkg/vcs/driver/gitlab"
 	"github.com/seal-io/walrus/utils/log"
@@ -30,7 +32,7 @@ func CreateTemplateVersionsFromRepo(
 	mc model.ClientSet,
 	entity *model.Template,
 	versions []*version.Version,
-	versionSchema map[*version.Version]*types.TemplateSchema,
+	versionSchema map[*version.Version]types.TemplateVersionSchema,
 ) error {
 	logger := log.WithName("template")
 
@@ -76,10 +78,10 @@ func CreateTemplateVersionsFromRepo(
 		templateVersionCreates = append(templateVersionCreates, create)
 	}
 
-	logger.Debugf("create %s versions number: %v", entity.Name, len(templateVersionCreates))
+	logger.Debugf("create %d versions for template: %s", len(templateVersionCreates), entity.Name)
 
-	err = mc.TemplateVersions().CreateBulk(templateVersionCreates...).
-		Exec(ctx)
+	_, err = mc.TemplateVersions().CreateBulk(templateVersionCreates...).
+		Save(ctx)
 	if err != nil {
 		return err
 	}
@@ -102,6 +104,7 @@ func CreateTemplateVersionsFromRepo(
 func syncTemplateFromRef(
 	ctx context.Context,
 	mc model.ClientSet,
+	entity *model.Template,
 	repo *vcs.Repository,
 ) (err error) {
 	logger := log.WithName("template")
@@ -110,18 +113,18 @@ func syncTemplateFromRef(
 	defer os.RemoveAll(tempDir)
 
 	// Clone git repository.
-	r, err := vcs.CloneGitRepo(ctx, repo.Link, tempDir)
+	r, err := vcs.CloneGitRepo(ctx, repo.Link, tempDir, settings.SkipRemoteTLSVerify.ShouldValueBool(ctx, mc))
 	if err != nil {
 		return err
 	}
 
-	iconFile, err := getGitRepoIcon(r)
+	iconFile, err := getGitRepoIcon(r, repo.SubPath)
 	if err != nil {
 		logger.Errorf("failed to get icon url: %v", err)
 		return err
 	}
 
-	icon, err := GetRepoFileRaw(repo, iconFile, nil)
+	icon, err := GetRepoFileRaw(repo, iconFile)
 	if err != nil {
 		return err
 	}
@@ -136,18 +139,31 @@ func syncTemplateFromRef(
 		return err
 	}
 
-	schema, err := loadTerraformTemplateSchema(w.Filesystem.Root())
+	rootDir := w.Filesystem.Root()
+
+	if repo.SubPath != "" {
+		rootDir = filepath.Join(rootDir, repo.SubPath)
+	}
+
+	// Load schema.
+	schema, err := loader.LoadSchemaPreferFile(rootDir, entity.Name)
 	if err != nil {
 		return err
 	}
 
+	satisfy, err := isConstraintSatisfied(schema)
+	if err != nil {
+		return err
+	}
+
+	if !satisfy {
+		return fmt.Errorf("%s:%s does not satisfy server version constraint", entity.Name, repo.Reference)
+	}
+
 	// Create template.
-	entity, err := CreateTemplate(ctx, mc, &model.Template{
-		Name:        repo.Name,
-		Source:      repo.Link,
-		Description: repo.Description,
-		Icon:        icon,
-	})
+	entity.Icon = icon
+
+	entity, err = CreateTemplate(ctx, mc, entity)
 	if err != nil {
 		return err
 	}
@@ -170,6 +186,30 @@ func syncTemplateFromRef(
 		ref = v.Original()
 	}
 
+	var conflictOptions []sql.ConflictOption
+	if entity.ProjectID == "" {
+		conflictOptions = append(
+			conflictOptions,
+			sql.ConflictWhere(sql.P().
+				IsNull(templateversion.FieldProjectID)),
+			sql.ConflictColumns(
+				templateversion.FieldName,
+				templateversion.FieldVersion,
+			),
+		)
+	} else {
+		conflictOptions = append(
+			conflictOptions,
+			sql.ConflictWhere(sql.P().
+				NotNull(templateversion.FieldProjectID)),
+			sql.ConflictColumns(
+				templateversion.FieldName,
+				templateversion.FieldVersion,
+				templateversion.FieldProjectID,
+			),
+		)
+	}
+
 	// Create or update a template version.
 	return mc.TemplateVersions().Create().
 		Set(&model.TemplateVersion{
@@ -177,15 +217,11 @@ func syncTemplateFromRef(
 			Name:       entity.Name,
 			Version:    ref,
 			Source:     source + "?ref=" + repo.Reference,
-			Schema:     schema,
+			Schema:     *schema,
+			ProjectID:  entity.ProjectID,
 		}).
-		OnConflictColumns(
-			templateversion.FieldName,
-			templateversion.FieldVersion,
-		).
-		Update(func(up *model.TemplateVersionUpsert) {
-			up.UpdateSchema()
-		}).
+		OnConflict(conflictOptions...).
+		UpdateNewValues().
 		Exec(ctx)
 }
 
@@ -212,7 +248,7 @@ func updateTemplateStatus(ctx context.Context, mc model.ClientSet, entity *model
 func SyncTemplateFromGitRepo(
 	ctx context.Context,
 	mc model.ClientSet,
-	c *model.Catalog,
+	entity *model.Template,
 	repo *vcs.Repository,
 ) (err error) {
 	logger := log.WithName("template")
@@ -226,19 +262,19 @@ func SyncTemplateFromGitRepo(
 	}
 
 	// Clone git repository.
-	r, err := vcs.CloneGitRepo(ctx, u.String(), tempDir)
+	r, err := vcs.CloneGitRepo(ctx, u.String(), tempDir, settings.SkipRemoteTLSVerify.ShouldValueBool(ctx, mc))
 	if err != nil {
 		return err
 	}
 
 	// Get icon image name.
-	iconFile, err := getGitRepoIcon(r)
+	iconFile, err := getGitRepoIcon(r, repo.SubPath)
 	if err != nil {
 		logger.Errorf("failed to get icon url: %v", err)
 		return err
 	}
 
-	icon, err := GetRepoFileRaw(repo, iconFile, c)
+	icon, err := GetRepoFileRaw(repo, iconFile)
 	if err != nil {
 		return err
 	}
@@ -248,7 +284,7 @@ func SyncTemplateFromGitRepo(
 		return err
 	}
 
-	versions, versionSchema, err := getValidVersions(r, versions)
+	versions, versionSchema, err := getValidVersions(entity, r, versions, repo.SubPath)
 	if err != nil {
 		return err
 	}
@@ -258,7 +294,10 @@ func SyncTemplateFromGitRepo(
 
 		// If template exists, update template status.
 		t, err := mc.Templates().Query().
-			Where(template.Name(repo.Name)).
+			Where(
+				template.Name(entity.Name),
+				template.ProjectID(entity.ProjectID),
+			).
 			Only(ctx)
 		if err != nil {
 			if !model.IsNotFound(err) {
@@ -273,19 +312,12 @@ func SyncTemplateFromGitRepo(
 		t.Status.SetSummary(status.WalkTemplate(&t.Status))
 
 		return mc.Templates().UpdateOne(t).
-			SetStatus(c.Status).
+			SetStatus(t.Status).
 			Exec(ctx)
 	}
 
-	entity := &model.Template{
-		Name:        repo.Name,
-		Source:      repo.Link,
-		Description: repo.Description,
-		Icon:        icon,
-	}
-	if c != nil {
-		entity.CatalogID = c.ID
-	}
+	entity.Icon = icon
+
 	// Create template.
 	entity, err = CreateTemplate(ctx, mc, entity)
 	if err != nil {
@@ -295,7 +327,7 @@ func SyncTemplateFromGitRepo(
 	defer func() {
 		rerr := updateTemplateStatus(ctx, mc, entity, err)
 		if rerr != nil {
-			logger.Errorf("failed to update template status: %v", rerr)
+			logger.Errorf("failed to update template %s status: %v", entity.Name, rerr)
 		}
 	}()
 
@@ -307,7 +339,7 @@ func SyncTemplateFromGitRepo(
 func GetTemplateVersions(
 	entity *model.Template,
 	newVersions []*version.Version,
-	versionSchema map[*version.Version]*types.TemplateSchema,
+	versionSchema map[*version.Version]types.TemplateVersionSchema,
 ) (model.TemplateVersions, error) {
 	var (
 		logger = log.WithName("catalog")
@@ -329,17 +361,13 @@ func GetTemplateVersions(
 			continue
 		}
 
-		if !isValidSchema(schema) {
-			logger.Warnf("schema is invalid template: %s, version: %s", entity.Name, tag)
-			continue
-		}
-
 		tvs = append(tvs, &model.TemplateVersion{
 			TemplateID: entity.ID,
 			Name:       entity.Name,
 			Version:    tag,
 			Source:     source + "?ref=" + tag,
 			Schema:     schema,
+			ProjectID:  entity.ProjectID,
 		})
 	}
 
@@ -347,7 +375,7 @@ func GetTemplateVersions(
 }
 
 // getGitRepoIcon retrieves template icon from a git repository and return icon URL.
-func getGitRepoIcon(repoLocal *git.Repository) (string, error) {
+func getGitRepoIcon(repoLocal *git.Repository, subPath string) (string, error) {
 	var (
 		err error
 		// Valid icon files.
@@ -366,6 +394,9 @@ func getGitRepoIcon(repoLocal *git.Repository) (string, error) {
 
 	// Get icon URL.
 	for _, icon := range icons {
+		if subPath != "" {
+			icon = filepath.Join(subPath, icon)
+		}
 		// If icon exists, get icon rawURL.
 		if _, err := w.Filesystem.Stat(icon); err == nil {
 			return icon, nil
@@ -376,7 +407,7 @@ func getGitRepoIcon(repoLocal *git.Repository) (string, error) {
 }
 
 // GetRepoFileRaw returns raw URL of a file in a git repository.
-func GetRepoFileRaw(repo *vcs.Repository, file string, c *model.Catalog) (string, error) {
+func GetRepoFileRaw(repo *vcs.Repository, file string) (string, error) {
 	if file == "" {
 		return "", nil
 	}
@@ -403,62 +434,9 @@ func GetRepoFileRaw(repo *vcs.Repository, file string, c *model.Catalog) (string
 		return fmt.Sprintf("https://%s/%s/%s/-/raw/%s/%s", gitlabRawHost, repo.Namespace, repo.Name, ref, file), nil
 	}
 
-	if c != nil && c.Type == gitlab.Driver {
-		return fmt.Sprintf("https://%s/%s/%s/-/raw/%s/%s", endpoint.Host, repo.Namespace, repo.Name, ref, file), nil
+	if repo.Driver == gitlab.Driver {
+		return fmt.Sprintf("%s/-/raw/%s/%s", endpoint.String(), ref, file), nil
 	}
 
 	return "", nil
-}
-
-// getValidVersions get valid terraform module versions.
-func getValidVersions(
-	r *git.Repository,
-	versions []*version.Version,
-) ([]*version.Version, map[*version.Version]*types.TemplateSchema, error) {
-	logger := log.WithName("template")
-
-	w, err := r.Worktree()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	validVersions := make([]*version.Version, 0, len(versions))
-	versionSchema := make(map[*version.Version]*types.TemplateSchema, 0)
-
-	for i := range versions {
-		v := versions[i]
-		tag := v.Original()
-
-		resetRef, err := vcs.GetRepoRef(r, tag)
-		if err != nil {
-			logger.Warnf("failed to get tag reference: %v", err)
-			continue
-		}
-
-		err = w.Reset(&git.ResetOptions{
-			Commit: resetRef.Hash(),
-			Mode:   git.HardReset,
-		})
-		if err != nil {
-			logger.Warnf("failed to reset to tag %s: %v", tag, err)
-			continue
-		}
-
-		dir := w.Filesystem.Root()
-
-		schema, err := loadTerraformTemplateSchema(dir)
-		if err != nil {
-			logger.Warnf("failed to load terraform template schema: %v", err)
-			continue
-		}
-
-		if !isValidSchema(schema) {
-			continue
-		}
-
-		validVersions = append(validVersions, v)
-		versionSchema[v] = schema
-	}
-
-	return validVersions, versionSchema, nil
 }

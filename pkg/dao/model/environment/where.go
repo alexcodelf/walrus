@@ -86,6 +86,11 @@ func ProjectID(v object.ID) predicate.Environment {
 	return predicate.Environment(sql.FieldEQ(FieldProjectID, v))
 }
 
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldEQ(FieldType, v))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Environment {
 	return predicate.Environment(sql.FieldEQ(FieldName, v))
@@ -396,6 +401,71 @@ func ProjectIDContainsFold(v object.ID) predicate.Environment {
 	return predicate.Environment(sql.FieldContainsFold(FieldProjectID, vc))
 }
 
+// TypeEQ applies the EQ predicate on the "type" field.
+func TypeEQ(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldEQ(FieldType, v))
+}
+
+// TypeNEQ applies the NEQ predicate on the "type" field.
+func TypeNEQ(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldNEQ(FieldType, v))
+}
+
+// TypeIn applies the In predicate on the "type" field.
+func TypeIn(vs ...string) predicate.Environment {
+	return predicate.Environment(sql.FieldIn(FieldType, vs...))
+}
+
+// TypeNotIn applies the NotIn predicate on the "type" field.
+func TypeNotIn(vs ...string) predicate.Environment {
+	return predicate.Environment(sql.FieldNotIn(FieldType, vs...))
+}
+
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldGT(FieldType, v))
+}
+
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldGTE(FieldType, v))
+}
+
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldLT(FieldType, v))
+}
+
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldLTE(FieldType, v))
+}
+
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldContains(FieldType, v))
+}
+
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldHasPrefix(FieldType, v))
+}
+
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldHasSuffix(FieldType, v))
+}
+
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldEqualFold(FieldType, v))
+}
+
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.Environment {
+	return predicate.Environment(sql.FieldContainsFold(FieldType, v))
+}
+
 // HasProject applies the HasEdge predicate on the "project" edge.
 func HasProject() predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
@@ -454,27 +524,27 @@ func HasConnectorsWith(preds ...predicate.EnvironmentConnectorRelationship) pred
 	})
 }
 
-// HasServices applies the HasEdge predicate on the "services" edge.
-func HasServices() predicate.Environment {
+// HasResources applies the HasEdge predicate on the "resources" edge.
+func HasResources() predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ServicesTable, ServicesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, ResourcesTable, ResourcesColumn),
 		)
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Service
-		step.Edge.Schema = schemaConfig.Service
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.Resource
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasServicesWith applies the HasEdge predicate on the "services" edge with a given conditions (other predicates).
-func HasServicesWith(preds ...predicate.Service) predicate.Environment {
+// HasResourcesWith applies the HasEdge predicate on the "resources" edge with a given conditions (other predicates).
+func HasResourcesWith(preds ...predicate.Resource) predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
-		step := newServicesStep()
+		step := newResourcesStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Service
-		step.Edge.Schema = schemaConfig.Service
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.Resource
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -483,27 +553,27 @@ func HasServicesWith(preds ...predicate.Service) predicate.Environment {
 	})
 }
 
-// HasServiceRevisions applies the HasEdge predicate on the "service_revisions" edge.
-func HasServiceRevisions() predicate.Environment {
+// HasResourceRevisions applies the HasEdge predicate on the "resource_revisions" edge.
+func HasResourceRevisions() predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ServiceRevisionsTable, ServiceRevisionsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, ResourceRevisionsTable, ResourceRevisionsColumn),
 		)
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.ServiceRevision
-		step.Edge.Schema = schemaConfig.ServiceRevision
+		step.To.Schema = schemaConfig.ResourceRevision
+		step.Edge.Schema = schemaConfig.ResourceRevision
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasServiceRevisionsWith applies the HasEdge predicate on the "service_revisions" edge with a given conditions (other predicates).
-func HasServiceRevisionsWith(preds ...predicate.ServiceRevision) predicate.Environment {
+// HasResourceRevisionsWith applies the HasEdge predicate on the "resource_revisions" edge with a given conditions (other predicates).
+func HasResourceRevisionsWith(preds ...predicate.ResourceRevision) predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
-		step := newServiceRevisionsStep()
+		step := newResourceRevisionsStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.ServiceRevision
-		step.Edge.Schema = schemaConfig.ServiceRevision
+		step.To.Schema = schemaConfig.ResourceRevision
+		step.Edge.Schema = schemaConfig.ResourceRevision
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -512,27 +582,27 @@ func HasServiceRevisionsWith(preds ...predicate.ServiceRevision) predicate.Envir
 	})
 }
 
-// HasServiceResources applies the HasEdge predicate on the "service_resources" edge.
-func HasServiceResources() predicate.Environment {
+// HasResourceComponents applies the HasEdge predicate on the "resource_components" edge.
+func HasResourceComponents() predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ServiceResourcesTable, ServiceResourcesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, ResourceComponentsTable, ResourceComponentsColumn),
 		)
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.ServiceResource
-		step.Edge.Schema = schemaConfig.ServiceResource
+		step.To.Schema = schemaConfig.ResourceComponent
+		step.Edge.Schema = schemaConfig.ResourceComponent
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasServiceResourcesWith applies the HasEdge predicate on the "service_resources" edge with a given conditions (other predicates).
-func HasServiceResourcesWith(preds ...predicate.ServiceResource) predicate.Environment {
+// HasResourceComponentsWith applies the HasEdge predicate on the "resource_components" edge with a given conditions (other predicates).
+func HasResourceComponentsWith(preds ...predicate.ResourceComponent) predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
-		step := newServiceResourcesStep()
+		step := newResourceComponentsStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.ServiceResource
-		step.Edge.Schema = schemaConfig.ServiceResource
+		step.To.Schema = schemaConfig.ResourceComponent
+		step.Edge.Schema = schemaConfig.ResourceComponent
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

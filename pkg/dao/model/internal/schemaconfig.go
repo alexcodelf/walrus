@@ -18,12 +18,14 @@ type SchemaConfig struct {
 	EnvironmentConnectorRelationship string // EnvironmentConnectorRelationship table.
 	Perspective                      string // Perspective table.
 	Project                          string // Project table.
+	Resource                         string // Resource table.
+	ResourceComponent                string // ResourceComponent table.
+	ResourceComponentRelationship    string // ResourceComponentRelationship table.
+	ResourceDefinition               string // ResourceDefinition table.
+	ResourceDefinitionMatchingRule   string // ResourceDefinitionMatchingRule table.
+	ResourceRelationship             string // ResourceRelationship table.
+	ResourceRevision                 string // ResourceRevision table.
 	Role                             string // Role table.
-	Service                          string // Service table.
-	ServiceRelationship              string // ServiceRelationship table.
-	ServiceResource                  string // ServiceResource table.
-	ServiceResourceRelationship      string // ServiceResourceRelationship table.
-	ServiceRevision                  string // ServiceRevision table.
 	Setting                          string // Setting table.
 	Subject                          string // Subject table.
 	SubjectRoleRelationship          string // SubjectRoleRelationship table.
@@ -31,6 +33,12 @@ type SchemaConfig struct {
 	TemplateVersion                  string // TemplateVersion table.
 	Token                            string // Token table.
 	Variable                         string // Variable table.
+	Workflow                         string // Workflow table.
+	WorkflowExecution                string // WorkflowExecution table.
+	WorkflowStage                    string // WorkflowStage table.
+	WorkflowStageExecution           string // WorkflowStageExecution table.
+	WorkflowStep                     string // WorkflowStep table.
+	WorkflowStepExecution            string // WorkflowStepExecution table.
 }
 
 type schemaCtxKey struct{}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
@@ -22,6 +23,9 @@ import (
 // please tags with `path:",inline" json:",inline"` if embedding.
 type CatalogCreateInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to create Catalog entity CAN under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Source of the catalog.
 	Source string `path:"-" query:"-" json:"source"`
@@ -50,6 +54,10 @@ func (cci *CatalogCreateInput) Model() *Catalog {
 		Labels:      cci.Labels,
 	}
 
+	if cci.Project != nil {
+		_c.ProjectID = cci.Project.ID
+	}
+
 	return _c
 }
 
@@ -70,6 +78,17 @@ func (cci *CatalogCreateInput) ValidateWith(ctx context.Context, cs ClientSet, c
 
 	if cache == nil {
 		cache = map[string]any{}
+	}
+
+	// Validate when creating under the Project route.
+	if cci.Project != nil {
+		if err := cci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				cci.Project = nil
+			}
+		}
 	}
 
 	return nil
@@ -107,6 +126,9 @@ func (cci *CatalogCreateInputsItem) ValidateWith(ctx context.Context, cs ClientS
 type CatalogCreateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to create Catalog entity CAN under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*CatalogCreateInputsItem `path:"-" query:"-" json:"items"`
 }
@@ -127,6 +149,10 @@ func (cci *CatalogCreateInputs) Model() []*Catalog {
 			Name:        cci.Items[i].Name,
 			Description: cci.Items[i].Description,
 			Labels:      cci.Items[i].Labels,
+		}
+
+		if cci.Project != nil {
+			_c.ProjectID = cci.Project.ID
 		}
 
 		_cs[i] = _c
@@ -156,6 +182,17 @@ func (cci *CatalogCreateInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 
 	if cache == nil {
 		cache = map[string]any{}
+	}
+
+	// Validate when creating under the Project route.
+	if cci.Project != nil {
+		if err := cci.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				cci.Project = nil
+			}
+		}
 	}
 
 	for i := range cci.Items {
@@ -189,6 +226,9 @@ type CatalogDeleteInputsItem struct {
 // please tags with `path:",inline" json:",inline"` if embedding.
 type CatalogDeleteInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to delete Catalog entity CAN under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*CatalogDeleteInputsItem `path:"-" query:"-" json:"items"`
@@ -249,8 +289,29 @@ func (cdi *CatalogDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 
 	q := cs.Catalogs().Query()
 
+	// Validate when deleting under the Project route.
+	if cdi.Project != nil {
+		if err := cdi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				cdi.Project = nil
+				q.Where(
+					catalog.ProjectIDIsNil())
+			}
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				catalog.ProjectID(cdi.Project.ID))
+		}
+	} else {
+		q.Where(
+			catalog.ProjectIDIsNil())
+	}
+
 	ids := make([]object.ID, 0, len(cdi.Items))
 	ors := make([]predicate.Catalog, 0, len(cdi.Items))
+	indexers := make(map[any][]int)
 
 	for i := range cdi.Items {
 		if cdi.Items[i] == nil {
@@ -260,9 +321,12 @@ func (cdi *CatalogDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 		if cdi.Items[i].ID != "" {
 			ids = append(ids, cdi.Items[i].ID)
 			ors = append(ors, catalog.ID(cdi.Items[i].ID))
+			indexers[cdi.Items[i].ID] = append(indexers[cdi.Items[i].ID], i)
 		} else if cdi.Items[i].Name != "" {
 			ors = append(ors, catalog.And(
 				catalog.Name(cdi.Items[i].Name)))
+			indexerKey := fmt.Sprint("/", cdi.Items[i].Name)
+			indexers[indexerKey] = append(indexers[indexerKey], i)
 		} else {
 			return errors.New("found item hasn't identify")
 		}
@@ -289,8 +353,15 @@ func (cdi *CatalogDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 	}
 
 	for i := range es {
-		cdi.Items[i].ID = es[i].ID
-		cdi.Items[i].Name = es[i].Name
+		indexer := indexers[es[i].ID]
+		if indexer == nil {
+			indexerKey := fmt.Sprint("/", es[i].Name)
+			indexer = indexers[indexerKey]
+		}
+		for _, j := range indexer {
+			cdi.Items[j].ID = es[i].ID
+			cdi.Items[j].Name = es[i].Name
+		}
 	}
 
 	return nil
@@ -300,6 +371,9 @@ func (cdi *CatalogDeleteInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 // please tags with `path:",inline"` if embedding.
 type CatalogQueryInput struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to query Catalog entity CAN under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"project,omitempty"`
 
 	// Refer holds the route path reference of the Catalog entity.
 	Refer *object.Refer `path:"catalog,default=" query:"-" json:"-"`
@@ -346,6 +420,26 @@ func (cqi *CatalogQueryInput) ValidateWith(ctx context.Context, cs ClientSet, ca
 	}
 
 	q := cs.Catalogs().Query()
+
+	// Validate when querying under the Project route.
+	if cqi.Project != nil {
+		if err := cqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				cqi.Project = nil
+				q.Where(
+					catalog.ProjectIDIsNil())
+			}
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				catalog.ProjectID(cqi.Project.ID))
+		}
+	} else {
+		q.Where(
+			catalog.ProjectIDIsNil())
+	}
 
 	if cqi.Refer != nil {
 		if cqi.Refer.IsID() {
@@ -400,6 +494,9 @@ func (cqi *CatalogQueryInput) ValidateWith(ctx context.Context, cs ClientSet, ca
 // please tags with `path:",inline" query:",inline"` if embedding.
 type CatalogQueryInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
+
+	// Project indicates to query Catalog entity CAN under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
 }
 
 // Validate checks the CatalogQueryInputs entity.
@@ -419,6 +516,17 @@ func (cqi *CatalogQueryInputs) ValidateWith(ctx context.Context, cs ClientSet, c
 
 	if cache == nil {
 		cache = map[string]any{}
+	}
+
+	// Validate when querying under the Project route.
+	if cqi.Project != nil {
+		if err := cqi.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				cqi.Project = nil
+			}
+		}
 	}
 
 	return nil
@@ -505,6 +613,9 @@ func (cui *CatalogUpdateInputsItem) ValidateWith(ctx context.Context, cs ClientS
 type CatalogUpdateInputs struct {
 	inputConfig `path:"-" query:"-" json:"-"`
 
+	// Project indicates to update Catalog entity CAN under the Project route.
+	Project *ProjectQueryInput `path:",inline" query:"-" json:"-"`
+
 	// Items holds the entities to create, which MUST not be empty.
 	Items []*CatalogUpdateInputsItem `path:"-" query:"-" json:"items"`
 }
@@ -571,8 +682,29 @@ func (cui *CatalogUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 
 	q := cs.Catalogs().Query()
 
+	// Validate when updating under the Project route.
+	if cui.Project != nil {
+		if err := cui.Project.ValidateWith(ctx, cs, cache); err != nil {
+			if !IsBlankResourceReferError(err) {
+				return err
+			} else {
+				cui.Project = nil
+				q.Where(
+					catalog.ProjectIDIsNil())
+			}
+		} else {
+			ctx = valueContext(ctx, intercept.WithProjectInterceptor)
+			q.Where(
+				catalog.ProjectID(cui.Project.ID))
+		}
+	} else {
+		q.Where(
+			catalog.ProjectIDIsNil())
+	}
+
 	ids := make([]object.ID, 0, len(cui.Items))
 	ors := make([]predicate.Catalog, 0, len(cui.Items))
+	indexers := make(map[any][]int)
 
 	for i := range cui.Items {
 		if cui.Items[i] == nil {
@@ -582,9 +714,12 @@ func (cui *CatalogUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 		if cui.Items[i].ID != "" {
 			ids = append(ids, cui.Items[i].ID)
 			ors = append(ors, catalog.ID(cui.Items[i].ID))
+			indexers[cui.Items[i].ID] = append(indexers[cui.Items[i].ID], i)
 		} else if cui.Items[i].Name != "" {
 			ors = append(ors, catalog.And(
 				catalog.Name(cui.Items[i].Name)))
+			indexerKey := fmt.Sprint("/", cui.Items[i].Name)
+			indexers[indexerKey] = append(indexers[indexerKey], i)
 		} else {
 			return errors.New("found item hasn't identify")
 		}
@@ -611,15 +746,18 @@ func (cui *CatalogUpdateInputs) ValidateWith(ctx context.Context, cs ClientSet, 
 	}
 
 	for i := range es {
-		cui.Items[i].ID = es[i].ID
-		cui.Items[i].Name = es[i].Name
+		indexer := indexers[es[i].ID]
+		if indexer == nil {
+			indexerKey := fmt.Sprint("/", es[i].Name)
+			indexer = indexers[indexerKey]
+		}
+		for _, j := range indexer {
+			cui.Items[j].ID = es[i].ID
+			cui.Items[j].Name = es[i].Name
+		}
 	}
 
 	for i := range cui.Items {
-		if cui.Items[i] == nil {
-			continue
-		}
-
 		if err := cui.Items[i].ValidateWith(ctx, cs, cache); err != nil {
 			return err
 		}
@@ -640,6 +778,8 @@ type CatalogOutput struct {
 	Type        string             `json:"type,omitempty"`
 	Source      string             `json:"source,omitempty"`
 	Sync        *types.CatalogSync `json:"sync,omitempty"`
+
+	Project *ProjectOutput `json:"project,omitempty"`
 }
 
 // View returns the output of Catalog entity.
@@ -671,6 +811,13 @@ func ExposeCatalog(_c *Catalog) *CatalogOutput {
 		Sync:        _c.Sync,
 	}
 
+	if _c.Edges.Project != nil {
+		co.Project = ExposeProject(_c.Edges.Project)
+	} else if _c.ProjectID != "" {
+		co.Project = &ProjectOutput{
+			ID: _c.ProjectID,
+		}
+	}
 	return co
 }
 

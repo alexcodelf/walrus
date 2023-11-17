@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	// VertexKindService indicates the vertex kind of service, it contains resource groups.
-	VertexKindService = "Service"
-	// VertexKindServiceResourceGroup indicates the group resource that generates same type resources.
-	VertexKindServiceResourceGroup = "ServiceResourceGroup"
-	// VertexKindServiceResource indicates the vertex kind of service resource.
-	VertexKindServiceResource = "ServiceResource"
+	// VertexKindResource indicates the vertex kind of service, it contains resource groups.
+	VertexKindResource = "Resource"
+	// VertexKindResourceComponentGroup indicates the group resource that generates same type resources.
+	VertexKindResourceComponentGroup = "ResourceComponentGroup"
+	// VertexKindResourceComponent indicates the vertex kind of service resource.
+	VertexKindResourceComponent = "ResourceComponent"
 
 	// EdgeTypeComposition indicates vertex is composed of another vertex.
 	EdgeTypeComposition = "Composition"
@@ -40,6 +40,8 @@ type GraphVertex struct {
 	Name string `json:"name,omitempty"`
 	// Description indicates the detail of the vertex.
 	Description string `json:"description,omitempty"`
+	// Icon indicates the icon of the vertex.
+	Icon string `json:"icon,omitempty"`
 	// Labels indicates the labels of the vertex.
 	Labels map[string]string `json:"labels,omitempty"`
 	// CreateTime indicates the time to create the vertex.

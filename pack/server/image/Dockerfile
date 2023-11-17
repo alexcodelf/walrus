@@ -152,6 +152,15 @@ COPY --from=sealio/casdoor:v1.344.0-seal.1 \
     /casdoor \
     /usr/bin/
 
+# finops tools
+ENV IMAGE_OPENCOST="sealio/mirrored-kubecost-cost-model:v1.105.2" \
+    CHARTS_DIR="/var/lib/walrus/manifests/charts"
+RUN mkdir -p ${CHARTS_DIR}
+ADD https://github.com/prometheus-community/helm-charts/releases/download/prometheus-24.0.0/prometheus-24.0.0.tgz ${CHARTS_DIR}/prometheus.tgz
+
+# argo workflows tools
+ADD https://github.com/argoproj/argo-helm/releases/download/argo-workflows-0.36.1/argo-workflows-0.36.1.tgz ${CHARTS_DIR}/argo-workflows.tgz
+
 # walrus cli
 RUN set -eux; \
     mkdir -p /var/lib/walrus/cli
@@ -159,10 +168,8 @@ COPY /build/cli* /var/lib/walrus/cli/
 
 
 ARG SERVE_UI_INDEX="file:///var/lib/walrus/ui"
-ARG SERVE_TEMPLATE_REFER="release"
 ENV SERVER_SETTING_SERVE_URL="" \
-    SERVER_SETTING_SERVE_UI_INDEX="${SERVE_UI_INDEX}" \
-    SERVER_SETTING_SERVE_TEMPLATE_REFER="${SERVE_TEMPLATE_REFER}"
+    SERVER_SETTING_SERVE_UI_INDEX="${SERVE_UI_INDEX}"
 EXPOSE 80 443
 VOLUME /var/run/walrus
 COPY /image/ /

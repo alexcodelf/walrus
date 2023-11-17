@@ -15,6 +15,7 @@ import (
 	"github.com/seal-io/walrus/pkg/operator/aws/resourcestatus"
 	opawstypes "github.com/seal-io/walrus/pkg/operator/aws/types"
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
+	"github.com/seal-io/walrus/utils/hash"
 )
 
 const OperatorType = "AWS"
@@ -29,14 +30,16 @@ func New(ctx context.Context, opts optypes.CreateOptions) (optypes.Operator, err
 	}
 
 	return Operator{
-		name: name,
-		cred: cred,
+		name:       name,
+		cred:       cred,
+		identifier: hash.SumStrings("aws:", cred.AccessKey, cred.AccessSecret),
 	}, nil
 }
 
 type Operator struct {
-	name string
-	cred *optypes.Credential
+	name       string
+	cred       *optypes.Credential
+	identifier string
 }
 
 func (o Operator) Type() optypes.Type {
@@ -68,7 +71,11 @@ func (o Operator) Burst() int {
 	return 100
 }
 
-func (o Operator) GetStatus(ctx context.Context, resource *model.ServiceResource) (*status.Status, error) {
+func (o Operator) ID() string {
+	return o.identifier
+}
+
+func (o Operator) GetStatus(ctx context.Context, resource *model.ResourceComponent) (*status.Status, error) {
 	st := &status.Status{}
 	if !resourcestatus.IsSupported(resource.Type) {
 		return st, nil
@@ -86,8 +93,8 @@ func (o Operator) GetStatus(ctx context.Context, resource *model.ServiceResource
 
 func (o Operator) GetKeys(
 	ctx context.Context,
-	resource *model.ServiceResource,
-) (*types.ServiceResourceOperationKeys, error) {
+	resource *model.ResourceComponent,
+) (*types.ResourceComponentOperationKeys, error) {
 	var (
 		subCtx = context.WithValue(ctx, optypes.CredentialKey, o.cred)
 		k      = key.Encode(resource.Type, resource.Name)
@@ -103,7 +110,7 @@ func (o Operator) GetKeys(
 		return nil, err
 	}
 
-	ks := []types.ServiceResourceOperationKey{
+	ks := []types.ResourceComponentOperationKey{
 		{
 			Name:       resource.Name,
 			Value:      k,
@@ -122,7 +129,7 @@ func (o Operator) GetKeys(
 	//          }
 	//      ]
 	// }.
-	return &types.ServiceResourceOperationKeys{
+	return &types.ResourceComponentOperationKeys{
 		Labels: []string{"Resource"},
 		Keys:   ks,
 	}, nil
@@ -140,18 +147,18 @@ func (o Operator) Log(ctx context.Context, s string, options optypes.LogOptions)
 
 func (o Operator) GetEndpoints(
 	ctx context.Context,
-	resource *model.ServiceResource,
-) ([]types.ServiceResourceEndpoint, error) {
+	resource *model.ResourceComponent,
+) ([]types.ResourceComponentEndpoint, error) {
 	return nil, nil
 }
 
 func (o Operator) GetComponents(
 	ctx context.Context,
-	resource *model.ServiceResource,
-) ([]*model.ServiceResource, error) {
+	resource *model.ResourceComponent,
+) ([]*model.ResourceComponent, error) {
 	return nil, nil
 }
 
-func (o Operator) Label(ctx context.Context, resource *model.ServiceResource, m map[string]string) error {
+func (o Operator) Label(ctx context.Context, resource *model.ResourceComponent, m map[string]string) error {
 	return nil
 }

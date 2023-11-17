@@ -24,20 +24,43 @@ type Operator interface {
 	// Burst returns the maximum number of operations that can be called at once.
 	Burst() int
 
-	// GetKeys returns keys from the given resource.
-	GetKeys(context.Context, *model.ServiceResource) (*types.ServiceResourceOperationKeys, error)
+	// ID returns an operation identifier of the operator.
+	//
+	// The result is not a unique notation of in the traditional sense,
+	// which means we can't use it to identify the only operator,
+	// but rather a generalization of the characteristics of the operator.
+	//
+	// If two operators have the same ID,
+	// we can group them together for some operations.
+	//
+	// ID returns a blank string if no that kind of identifier.
+	ID() string
 
-	// GetStatus gets status of the given resource,
-	// must returns GeneralStatusError if raises error.
-	GetStatus(context.Context, *model.ServiceResource) (*status.Status, error)
+	// GetKeys returns keys from the given resource.
+	//
+	// The given model.ResourceComponent item must specify the following fields:
+	// ID, DeployerType, Type and Name.
+	GetKeys(context.Context, *model.ResourceComponent) (*types.ResourceComponentOperationKeys, error)
+
+	// GetStatus gets status of the given resource.
+	//
+	// The given model.ResourceComponent item must specify the following fields:
+	// ID, DeployerType, Type and Name.
+	GetStatus(context.Context, *model.ResourceComponent) (*status.Status, error)
 
 	// GetEndpoints gets endpoints of the given resource.
-	GetEndpoints(context.Context, *model.ServiceResource) ([]types.ServiceResourceEndpoint, error)
+	//
+	// The given model.ResourceComponent item must specify the following fields:
+	// ID, DeployerType, Type and Name.
+	GetEndpoints(context.Context, *model.ResourceComponent) ([]types.ResourceComponentEndpoint, error)
 
 	// GetComponents gets components of the given resource,
 	// returns list must not be `nil` unless unexpected input or raising error,
 	// it can be used to clean stale items safety if got an empty list.
-	GetComponents(context.Context, *model.ServiceResource) ([]*model.ServiceResource, error)
+	//
+	// The given model.ResourceComponent item must specify the following fields:
+	// ID, DeployerType, Type, Name, ProjectID, EnvironmentID, ResourceID and ConnectorID.
+	GetComponents(context.Context, *model.ResourceComponent) ([]*model.ResourceComponent, error)
 
 	// Log gets logs from the given key.
 	Log(context.Context, string, LogOptions) error
@@ -46,7 +69,10 @@ type Operator interface {
 	Exec(context.Context, string, ExecOptions) error
 
 	// Label apply labels to the resource.
-	Label(context.Context, *model.ServiceResource, map[string]string) error
+	//
+	// The given model.ResourceComponent item must specify the following fields:
+	// ID, DeployerType, Type and Name.
+	Label(context.Context, *model.ResourceComponent, map[string]string) error
 }
 
 // LogOptions holds the options of Operator's Log action.

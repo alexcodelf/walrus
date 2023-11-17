@@ -5,10 +5,13 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"flag"
 	"fmt"
 	stdlog "log"
 	"net"
+	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	entsql "entgo.io/ent/dialect/sql"
@@ -19,8 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
-	klogv2 "k8s.io/klog/v2"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/klog/v2"
 
 	"github.com/seal-io/walrus/pkg/apis"
 	"github.com/seal-io/walrus/pkg/cache"
@@ -37,6 +40,7 @@ import (
 	"github.com/seal-io/walrus/utils/files"
 	"github.com/seal-io/walrus/utils/gopool"
 	"github.com/seal-io/walrus/utils/log"
+	"github.com/seal-io/walrus/utils/runtimex"
 	"github.com/seal-io/walrus/utils/strs"
 	"github.com/seal-io/walrus/utils/version"
 )
@@ -56,11 +60,13 @@ type Server struct {
 	ConnBurst          int
 	GopoolWorkerFactor int
 
-	KubeConfig         string
-	KubeConnTimeout    time.Duration
-	KubeConnQPS        float64
-	KubeConnBurst      int
-	KubeLeaderElection bool
+	KubeConfig             string
+	KubeConnTimeout        time.Duration
+	KubeConnQPS            float64
+	KubeConnBurst          int
+	KubeLeaderElection     bool
+	KubeLeaderLease        time.Duration
+	KubeLeaderRenewTimeout time.Duration
 
 	DataSourceAddress        string
 	DataSourceConnMaxOpen    int
@@ -81,22 +87,24 @@ type Server struct {
 
 func New() *Server {
 	return &Server{
-		BindAddress:           "0.0.0.0",
-		BindWithDualStack:     true,
-		EnableTls:             true,
-		TlsCertDir:            apis.TlsCertDirByK8sSecrets,
-		ConnQPS:               10,
-		ConnBurst:             20,
-		KubeConnTimeout:       5 * time.Minute,
-		KubeConnQPS:           16,
-		KubeConnBurst:         64,
-		KubeLeaderElection:    true,
-		DataSourceConnMaxOpen: 15,
-		DataSourceConnMaxIdle: 5,
-		DataSourceConnMaxLife: 10 * time.Minute,
-		EnableAuthn:           true,
-		AuthnSessionMaxIdle:   30 * time.Minute,
-		GopoolWorkerFactor:    100,
+		BindAddress:            "0.0.0.0",
+		BindWithDualStack:      true,
+		EnableTls:              true,
+		TlsCertDir:             apis.TlsCertDirByK8sSecrets,
+		ConnQPS:                10,
+		ConnBurst:              20,
+		KubeConnTimeout:        5 * time.Minute,
+		KubeConnQPS:            16,
+		KubeConnBurst:          64,
+		KubeLeaderElection:     true,
+		KubeLeaderLease:        15 * time.Second,
+		KubeLeaderRenewTimeout: 10 * time.Second,
+		DataSourceConnMaxOpen:  15,
+		DataSourceConnMaxIdle:  5,
+		DataSourceConnMaxLife:  10 * time.Minute,
+		EnableAuthn:            true,
+		AuthnSessionMaxIdle:    30 * time.Minute,
+		GopoolWorkerFactor:     100,
 	}
 }
 
@@ -253,6 +261,45 @@ func (r *Server) Flags(cmd *cli.Command) {
 			Destination: &r.KubeLeaderElection,
 			Value:       r.KubeLeaderElection,
 		},
+		&cli.DurationFlag{
+			Name: "kube-leader-lease",
+			Usage: "The duration to keep the leadership. " +
+				"If --kube-leader-election=false, this flag will be ignored. " +
+				"When the network environment is not ideal or do not want to cause frequent access to the cluster, " +
+				"please increase the value appropriately.",
+			Destination: &r.KubeLeaderLease,
+			Value:       r.KubeLeaderLease,
+			Action: func(c *cli.Context, d time.Duration) error {
+				// From k8s.io/client-go/tools/leaderelection.NewLeaderElector.
+				if d < 1 {
+					return errors.New("--kube-leader-lease: must be greater than zero")
+				}
+				if d <= c.Duration("kube-leader-renew-timeout") {
+					return errors.New("--kube-leader-lease: must be greater than --kube-leader-renew-timeout")
+				}
+				return nil
+			},
+		},
+		&cli.DurationFlag{
+			Name: "kube-leader-renew-timeout",
+			Usage: "The duration to renew the leadership before give up, " +
+				"must be less than the duration of --kube-leader-lease." +
+				"If --kube-leader-election=false, this flag will be ignored. " +
+				"When the network environment is not ideal, please increase the value appropriately.",
+			Destination: &r.KubeLeaderRenewTimeout,
+			Value:       r.KubeLeaderRenewTimeout,
+			Action: func(c *cli.Context, d time.Duration) error {
+				// From k8s.io/client-go/tools/leaderelection.NewLeaderElector.
+				if d < 1 {
+					return errors.New("--kube-leader-renew-timeout: must be greater than zero")
+				}
+				jitter := time.Duration(leaderelection.JitterFactor * float64(2*time.Second))
+				if d <= jitter {
+					return fmt.Errorf("--kube-leader-renew-timeout: must be greater than %v", jitter)
+				}
+				return nil
+			},
+		},
 		&cli.StringFlag{
 			Name: "data-source-address",
 			Usage: "The addresses for connecting data source, e.g. " +
@@ -383,13 +430,40 @@ func (r *Server) Flags(cmd *cli.Command) {
 }
 
 func (r *Server) Before(cmd *cli.Command) {
+	pb := cmd.Before
+	cmd.Before = func(c *cli.Context) error {
+		l := log.GetLogger()
+
+		// Sink the output of standard logger to util logger.
+		stdlog.SetOutput(l)
+
+		// Turn on the logrus logger
+		// and sink the output to util logger.
+		logrus.SetLevel(logrus.TraceLevel)
+		logrus.SetFormatter(log.AsLogrusFormatter(l))
+
+		// Turn on klog logger according to the verbosity,
+		// and sink the output to util logger.
+		{
+			var flags flag.FlagSet
+
+			klog.InitFlags(&flags)
+			_ = flags.Set("v", strconv.FormatUint(log.GetVerbosity(), 10))
+			_ = flags.Set("skip_headers", "true")
+		}
+		klog.SetLogger(log.AsLogr(l))
+
+		if pb != nil {
+			return pb(c)
+		}
+
+		// Init set GOMAXPROCS.
+		runtimex.Init()
+
+		return nil
+	}
+
 	r.Logger.Before(cmd)
-	// Compatible with other loggers.
-	logger := log.GetLogger()
-	stdlog.SetOutput(logger)
-	logrus.SetOutput(logger)
-	klog.SetOutput(logger)
-	klogv2.SetLogger(log.AsLogr(logger))
 }
 
 func (r *Server) Action(cmd *cli.Command) {
@@ -515,12 +589,12 @@ func (r *Server) Run(c context.Context) error {
 	modelClient := getModelClient(databaseDrvDialect, databaseDrv)
 
 	initOpts := initOptions{
-		K8sConfig:      k8sCfg,
-		K8sCacheReady:  make(chan struct{}),
-		ModelClient:    modelClient,
-		SkipTLSVerify:  len(r.TlsAutoCertDomains) != 0,
-		DatabaseDriver: databaseDrv,
-		CacheDriver:    cacheDrv,
+		K8sConfig:         k8sCfg,
+		K8sCtrlMgrIsReady: &atomic.Bool{},
+		ModelClient:       modelClient,
+		SkipTLSVerify:     len(r.TlsAutoCertDomains) != 0,
+		DatabaseDriver:    databaseDrv,
+		CacheDriver:       cacheDrv,
 	}
 	if err = r.init(ctx, initOpts); err != nil {
 		log.Errorf("error initializing: %v", err)
@@ -546,10 +620,9 @@ func (r *Server) Run(c context.Context) error {
 
 	// Start k8s controllers.
 	startK8sCtrlsOpts := startK8sCtrlsOptions{
-		K8sConfig:      k8sCfg,
-		K8sCacheReady:  initOpts.K8sCacheReady,
-		ModelClient:    modelClient,
-		LeaderElection: r.KubeLeaderElection,
+		MgrIsReady:  initOpts.K8sCtrlMgrIsReady,
+		RestConfig:  k8sCfg,
+		ModelClient: modelClient,
 	}
 
 	g.Go(func() error {
@@ -581,17 +654,17 @@ func (r *Server) Run(c context.Context) error {
 	})
 
 	// Start cron spec syncer.
-	startCronSpecSyncerOpts := cron.StartSyncerOptions{
+	startCronSpecSyncerOpts := cron.StartCorrecterOptions{
 		ModelClient: modelClient,
 		Interval:    5 * time.Minute,
 	}
 
 	g.Go(func() error {
-		log.Info("starting cron spec syncer")
+		log.Info("starting cron expression correcter")
 
-		err := cron.SetupSyncer(ctx, startCronSpecSyncerOpts)
+		err := cron.StartCorrecter(ctx, startCronSpecSyncerOpts)
 		if err != nil {
-			log.Errorf("error starting cron spec syncer: %v", err)
+			log.Errorf("error starting cron expression correcter: %v", err)
 		}
 
 		return err

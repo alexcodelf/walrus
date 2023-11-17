@@ -110,7 +110,7 @@ func TestAccumulateDistribute(t *testing.T) {
 	)
 
 	conns, err := testData(ctx, client, startTime, endTime)
-	assert.Nil(t, err, "error create cost test data: %w", err)
+	assert.Nil(t, err, "error create cost test data: %v", err)
 
 	filterFirstConn := types.CostFilters{
 		{
@@ -706,7 +706,8 @@ func testAc(name string, startTime time.Time, totalCost float64, conn *model.Con
 func newTestConn(ctx context.Context, client *model.Client, nameSuffix string) (*model.Connector, error) {
 	conn, err := client.Connector.Create().
 		SetName("connector" + nameSuffix).
-		SetType(types.ConnectorTypeK8s).
+		SetApplicableEnvironmentType(types.EnvironmentDevelopment).
+		SetType(types.ConnectorTypeKubernetes).
 		SetCategory(types.ConnectorCategoryKubernetes).
 		SetConfigVersion("test").
 		SetEnableFinOps(true).

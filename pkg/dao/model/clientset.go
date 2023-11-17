@@ -33,23 +33,29 @@ type ClientSet interface {
 	// Projects returns the client for interacting with the Project builders.
 	Projects() *ProjectClient
 
+	// Resources returns the client for interacting with the Resource builders.
+	Resources() *ResourceClient
+
+	// ResourceComponents returns the client for interacting with the ResourceComponent builders.
+	ResourceComponents() *ResourceComponentClient
+
+	// ResourceComponentRelationships returns the client for interacting with the ResourceComponentRelationship builders.
+	ResourceComponentRelationships() *ResourceComponentRelationshipClient
+
+	// ResourceDefinitions returns the client for interacting with the ResourceDefinition builders.
+	ResourceDefinitions() *ResourceDefinitionClient
+
+	// ResourceDefinitionMatchingRules returns the client for interacting with the ResourceDefinitionMatchingRule builders.
+	ResourceDefinitionMatchingRules() *ResourceDefinitionMatchingRuleClient
+
+	// ResourceRelationships returns the client for interacting with the ResourceRelationship builders.
+	ResourceRelationships() *ResourceRelationshipClient
+
+	// ResourceRevisions returns the client for interacting with the ResourceRevision builders.
+	ResourceRevisions() *ResourceRevisionClient
+
 	// Roles returns the client for interacting with the Role builders.
 	Roles() *RoleClient
-
-	// Services returns the client for interacting with the Service builders.
-	Services() *ServiceClient
-
-	// ServiceRelationships returns the client for interacting with the ServiceRelationship builders.
-	ServiceRelationships() *ServiceRelationshipClient
-
-	// ServiceResources returns the client for interacting with the ServiceResource builders.
-	ServiceResources() *ServiceResourceClient
-
-	// ServiceResourceRelationships returns the client for interacting with the ServiceResourceRelationship builders.
-	ServiceResourceRelationships() *ServiceResourceRelationshipClient
-
-	// ServiceRevisions returns the client for interacting with the ServiceRevision builders.
-	ServiceRevisions() *ServiceRevisionClient
 
 	// Settings returns the client for interacting with the Setting builders.
 	Settings() *SettingClient
@@ -71,6 +77,24 @@ type ClientSet interface {
 
 	// Variables returns the client for interacting with the Variable builders.
 	Variables() *VariableClient
+
+	// Workflows returns the client for interacting with the Workflow builders.
+	Workflows() *WorkflowClient
+
+	// WorkflowExecutions returns the client for interacting with the WorkflowExecution builders.
+	WorkflowExecutions() *WorkflowExecutionClient
+
+	// WorkflowStages returns the client for interacting with the WorkflowStage builders.
+	WorkflowStages() *WorkflowStageClient
+
+	// WorkflowStageExecutions returns the client for interacting with the WorkflowStageExecution builders.
+	WorkflowStageExecutions() *WorkflowStageExecutionClient
+
+	// WorkflowSteps returns the client for interacting with the WorkflowStep builders.
+	WorkflowSteps() *WorkflowStepClient
+
+	// WorkflowStepExecutions returns the client for interacting with the WorkflowStepExecution builders.
+	WorkflowStepExecutions() *WorkflowStepExecutionClient
 
 	// Dialect returns the dialect name of the driver.
 	Dialect() string
@@ -137,40 +161,52 @@ type ProjectClientGetter interface {
 	Projects() *ProjectClient
 }
 
+// ResourceClientGetter is an interface that allows getting ResourceClient.
+type ResourceClientGetter interface {
+	// Resources returns the client for interacting with the Resource builders.
+	Resources() *ResourceClient
+}
+
+// ResourceComponentClientGetter is an interface that allows getting ResourceComponentClient.
+type ResourceComponentClientGetter interface {
+	// ResourceComponents returns the client for interacting with the ResourceComponent builders.
+	ResourceComponents() *ResourceComponentClient
+}
+
+// ResourceComponentRelationshipClientGetter is an interface that allows getting ResourceComponentRelationshipClient.
+type ResourceComponentRelationshipClientGetter interface {
+	// ResourceComponentRelationships returns the client for interacting with the ResourceComponentRelationship builders.
+	ResourceComponentRelationships() *ResourceComponentRelationshipClient
+}
+
+// ResourceDefinitionClientGetter is an interface that allows getting ResourceDefinitionClient.
+type ResourceDefinitionClientGetter interface {
+	// ResourceDefinitions returns the client for interacting with the ResourceDefinition builders.
+	ResourceDefinitions() *ResourceDefinitionClient
+}
+
+// ResourceDefinitionMatchingRuleClientGetter is an interface that allows getting ResourceDefinitionMatchingRuleClient.
+type ResourceDefinitionMatchingRuleClientGetter interface {
+	// ResourceDefinitionMatchingRules returns the client for interacting with the ResourceDefinitionMatchingRule builders.
+	ResourceDefinitionMatchingRules() *ResourceDefinitionMatchingRuleClient
+}
+
+// ResourceRelationshipClientGetter is an interface that allows getting ResourceRelationshipClient.
+type ResourceRelationshipClientGetter interface {
+	// ResourceRelationships returns the client for interacting with the ResourceRelationship builders.
+	ResourceRelationships() *ResourceRelationshipClient
+}
+
+// ResourceRevisionClientGetter is an interface that allows getting ResourceRevisionClient.
+type ResourceRevisionClientGetter interface {
+	// ResourceRevisions returns the client for interacting with the ResourceRevision builders.
+	ResourceRevisions() *ResourceRevisionClient
+}
+
 // RoleClientGetter is an interface that allows getting RoleClient.
 type RoleClientGetter interface {
 	// Roles returns the client for interacting with the Role builders.
 	Roles() *RoleClient
-}
-
-// ServiceClientGetter is an interface that allows getting ServiceClient.
-type ServiceClientGetter interface {
-	// Services returns the client for interacting with the Service builders.
-	Services() *ServiceClient
-}
-
-// ServiceRelationshipClientGetter is an interface that allows getting ServiceRelationshipClient.
-type ServiceRelationshipClientGetter interface {
-	// ServiceRelationships returns the client for interacting with the ServiceRelationship builders.
-	ServiceRelationships() *ServiceRelationshipClient
-}
-
-// ServiceResourceClientGetter is an interface that allows getting ServiceResourceClient.
-type ServiceResourceClientGetter interface {
-	// ServiceResources returns the client for interacting with the ServiceResource builders.
-	ServiceResources() *ServiceResourceClient
-}
-
-// ServiceResourceRelationshipClientGetter is an interface that allows getting ServiceResourceRelationshipClient.
-type ServiceResourceRelationshipClientGetter interface {
-	// ServiceResourceRelationships returns the client for interacting with the ServiceResourceRelationship builders.
-	ServiceResourceRelationships() *ServiceResourceRelationshipClient
-}
-
-// ServiceRevisionClientGetter is an interface that allows getting ServiceRevisionClient.
-type ServiceRevisionClientGetter interface {
-	// ServiceRevisions returns the client for interacting with the ServiceRevision builders.
-	ServiceRevisions() *ServiceRevisionClient
 }
 
 // SettingClientGetter is an interface that allows getting SettingClient.
@@ -213,4 +249,40 @@ type TokenClientGetter interface {
 type VariableClientGetter interface {
 	// Variables returns the client for interacting with the Variable builders.
 	Variables() *VariableClient
+}
+
+// WorkflowClientGetter is an interface that allows getting WorkflowClient.
+type WorkflowClientGetter interface {
+	// Workflows returns the client for interacting with the Workflow builders.
+	Workflows() *WorkflowClient
+}
+
+// WorkflowExecutionClientGetter is an interface that allows getting WorkflowExecutionClient.
+type WorkflowExecutionClientGetter interface {
+	// WorkflowExecutions returns the client for interacting with the WorkflowExecution builders.
+	WorkflowExecutions() *WorkflowExecutionClient
+}
+
+// WorkflowStageClientGetter is an interface that allows getting WorkflowStageClient.
+type WorkflowStageClientGetter interface {
+	// WorkflowStages returns the client for interacting with the WorkflowStage builders.
+	WorkflowStages() *WorkflowStageClient
+}
+
+// WorkflowStageExecutionClientGetter is an interface that allows getting WorkflowStageExecutionClient.
+type WorkflowStageExecutionClientGetter interface {
+	// WorkflowStageExecutions returns the client for interacting with the WorkflowStageExecution builders.
+	WorkflowStageExecutions() *WorkflowStageExecutionClient
+}
+
+// WorkflowStepClientGetter is an interface that allows getting WorkflowStepClient.
+type WorkflowStepClientGetter interface {
+	// WorkflowSteps returns the client for interacting with the WorkflowStep builders.
+	WorkflowSteps() *WorkflowStepClient
+}
+
+// WorkflowStepExecutionClientGetter is an interface that allows getting WorkflowStepExecutionClient.
+type WorkflowStepExecutionClientGetter interface {
+	// WorkflowStepExecutions returns the client for interacting with the WorkflowStepExecution builders.
+	WorkflowStepExecutions() *WorkflowStepExecutionClient
 }

@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema/index"
 
 	"github.com/seal-io/walrus/pkg/dao/entx"
+	"github.com/seal-io/walrus/pkg/dao/schema/intercept"
 	"github.com/seal-io/walrus/pkg/dao/schema/mixin"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
@@ -26,8 +27,14 @@ func (TemplateVersion) Mixin() []ent.Mixin {
 
 func (TemplateVersion) Indexes() []ent.Index {
 	return []ent.Index{
+		index.Fields("name", "version", "project_id").
+			Unique().
+			Annotations(
+				entsql.IndexWhere("project_id IS NOT NULL")),
 		index.Fields("name", "version").
-			Unique(),
+			Unique().
+			Annotations(
+				entsql.IndexWhere("project_id IS NULL")),
 	}
 }
 
@@ -54,9 +61,18 @@ func (TemplateVersion) Fields() []ent.Field {
 			Comment("Source of the template.").
 			NotEmpty().
 			Immutable(),
-		field.JSON("schema", &types.TemplateSchema{}).
-			Comment("Schema of the template.").
-			Default(&types.TemplateSchema{}),
+		field.JSON("schema", types.TemplateVersionSchema{}).
+			Comment("Generated schema and data of the template.").
+			Default(types.TemplateVersionSchema{}),
+		field.JSON("uiSchema", types.UISchema{}).
+			Comment("ui schema of the template.").
+			Default(types.UISchema{}).
+			Annotations(
+				entx.Input(entx.WithUpdate())),
+		object.IDField("project_id").
+			Comment("ID of the project to belong, empty means for all projects.").
+			Immutable().
+			Optional(),
 	}
 }
 
@@ -72,11 +88,33 @@ func (TemplateVersion) Edges() []ent.Edge {
 			Immutable().
 			Annotations(
 				entx.SkipInput()),
-		// TemplateVersion 1-* Services.
-		edge.To("services", Service.Type).
-			Comment("Services that belong to the template version.").
+		// TemplateVersion 1-* Resources.
+		edge.To("resources", Resource.Type).
+			Comment("Resources that belong to the template version.").
 			Annotations(
 				entsql.OnDelete(entsql.Restrict),
 				entx.SkipIO()),
+		// TemplateVersion *-* ResourceDefinitions.
+		edge.From("resource_definitions", ResourceDefinition.Type).
+			Ref("matching_rules").
+			Comment("Resource definitions that use the template version.").
+			Through("resource_definition_matching_rules", ResourceDefinitionMatchingRule.Type).
+			Annotations(
+				entx.SkipIO()),
+		// Project 1-* TemplateVersions.
+		edge.From("project", Project.Type).
+			Ref("template_versions").
+			Field("project_id").
+			Comment("Project to which the template version belongs.").
+			Unique().
+			Immutable().
+			Annotations(
+				entx.ValidateContext(intercept.WithProjectInterceptor)),
+	}
+}
+
+func (TemplateVersion) Interceptors() []ent.Interceptor {
+	return []ent.Interceptor{
+		intercept.ByProjectOptional("project_id"),
 	}
 }
