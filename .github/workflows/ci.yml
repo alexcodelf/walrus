@@ -98,7 +98,7 @@ jobs:
       - skip
     if: needs.skip.outputs.should != 'true'
     permissions:
-      contents: read
+      contents: write
       actions: read
       id-token: write
     timeout-minutes: 20
@@ -191,3 +191,13 @@ jobs:
           DOCKERHUB_USERNAME: "${{ secrets.CI_DOCKERHUB_USERNAME }}"
           DOCKERHUB_PASSWORD: "${{ secrets.CI_DOCKERHUB_PASSWORD }}"
         continue-on-error: true
+      - name: Rename Release Assets
+        run: |
+          cd .dist/package/${{ matrix.target }}/${{ matrix.task }}/build
+          for file in cli*; do mv "$file" "$(echo "$file" | sed 's/^cli/walrus-cli/')"; done
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            .dist/package/${{ matrix.target }}/${{ matrix.task }}/build/walrus-cli*
