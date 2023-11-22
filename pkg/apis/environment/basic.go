@@ -11,12 +11,13 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/environment"
 	"github.com/seal-io/walrus/pkg/dao/model/environmentconnectorrelationship"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
+	"github.com/seal-io/walrus/pkg/dao/model/resource"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/log"
 )
 
 func (h Handler) Create(req CreateRequest) (CreateResponse, error) {
-	return createEnvironment(req.Context, h.modelClient, req.Model())
+	return createEnvironment(req.Context, h.modelClient, req.Model(), false)
 }
 
 func (h Handler) Get(req GetRequest) (GetResponse, error) {
@@ -138,6 +139,13 @@ func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse,
 		Select(environment.FieldProjectID).
 		// Must extract connectors.
 		Select(environment.FieldID).
+		WithResources(func(rq *model.ResourceQuery) {
+			rq.Select(
+				resource.FieldID,
+				resource.FieldStatus,
+				resource.FieldEnvironmentID,
+			)
+		}).
 		WithConnectors(func(rq *model.EnvironmentConnectorRelationshipQuery) {
 			// Includes connectors.
 			rq.Order(model.Desc(environmentconnectorrelationship.FieldCreateTime)).

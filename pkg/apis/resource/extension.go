@@ -34,6 +34,15 @@ import (
 func (h Handler) RouteUpgrade(req RouteUpgradeRequest) error {
 	entity := req.Model()
 
+	if req.Draft {
+		_, err := h.modelClient.Resources().
+			UpdateOne(entity).
+			Set(entity).
+			Save(req.Context)
+
+		return err
+	}
+
 	// Update service, mark status from deploying.
 	status.ResourceStatusDeployed.Reset(entity, "Upgrading")
 	entity.Status.SetSummary(status.WalkResource(&entity.Status))
@@ -86,19 +95,23 @@ func (h Handler) RouteRollback(req RouteRollbackRequest) error {
 		return err
 	}
 
-	tv, err := h.modelClient.TemplateVersions().Query().
-		Where(
-			templateversion.Version(rev.TemplateVersion),
-			templateversion.TemplateID(rev.TemplateID)).
-		Only(req.Context)
-	if err != nil {
-		return err
+	entity := rev.Edges.Resource
+	entity.Attributes = rev.Attributes
+
+	if entity.TemplateID != nil {
+		// Find previous template version when the resource is using template not definition.
+		tv, err := h.modelClient.TemplateVersions().Query().
+			Where(
+				templateversion.Version(rev.TemplateVersion),
+				templateversion.TemplateID(rev.TemplateID)).
+			Only(req.Context)
+		if err != nil {
+			return err
+		}
+
+		entity.TemplateID = &tv.ID
 	}
 
-	entity := rev.Edges.Resource
-
-	entity.Attributes = rev.Attributes
-	entity.TemplateID = &tv.ID
 	status.ResourceStatusDeployed.Reset(entity, "Rolling back")
 	entity.Status.SetSummary(status.WalkResource(&entity.Status))
 
@@ -123,6 +136,63 @@ func (h Handler) RouteRollback(req RouteRollbackRequest) error {
 		h.modelClient,
 		entity,
 		applyOpts)
+}
+
+func (h Handler) RouteStart(req RouteStartRequest) error {
+	entity := req.resource
+
+	status.ResourceStatusUnDeployed.Remove(entity)
+	status.ResourceStatusStopped.Remove(entity)
+	status.ResourceStatusDeployed.Reset(entity, "Deploying")
+	entity.Status.SetSummary(status.WalkResource(&entity.Status))
+
+	err := h.modelClient.WithTx(req.Context, func(tx *model.Tx) (err error) {
+		entity, err = tx.Resources().UpdateOne(entity).
+			Set(entity).
+			SaveE(req.Context, dao.ResourceDependenciesEdgeSave)
+
+		return err
+	})
+	if err != nil {
+		return errorx.Wrap(err, "error updating resource")
+	}
+
+	dp, err := h.getDeployer(req.Context)
+	if err != nil {
+		return err
+	}
+
+	applyOpts := pkgresource.Options{
+		Deployer: dp,
+	}
+
+	ready, err := pkgresource.CheckDependencyStatus(req.Context, h.modelClient, entity)
+	if err != nil {
+		return errorx.Wrap(err, "error checking dependency status")
+	}
+
+	if ready {
+		return pkgresource.Apply(
+			req.Context,
+			h.modelClient,
+			entity,
+			applyOpts)
+	}
+
+	return nil
+}
+
+func (h Handler) RouteStop(req RouteStopRequest) error {
+	dp, err := h.getDeployer(req.Context)
+	if err != nil {
+		return err
+	}
+
+	opts := pkgresource.Options{
+		Deployer: dp,
+	}
+
+	return pkgresource.Stop(req.Context, req.Client, req.Model(), opts)
 }
 
 func (h Handler) RouteGetAccessEndpoints(req RouteGetAccessEndpointsRequest) (RouteGetAccessEndpointsResponse, error) {
@@ -247,10 +317,11 @@ func (h Handler) getEndpointsFromOutput(ctx context.Context, id object.ID) ([]Ac
 				Name:      v.Name,
 			})
 		case v.Schema.Type == openapi3.TypeArray:
-			if v.Schema.Items == nil || v.Schema.Items.Value == nil ||
-				v.Schema.Items.Value.Type != openapi3.TypeString {
-				// For list and set: all elements are the same type.
-				return nil, invalidTypeErr
+			if v.Schema.Items != nil && v.Schema.Items.Value != nil {
+				if v.Schema.Items.Value.Type != openapi3.TypeObject &&
+					v.Schema.Items.Value.Type != openapi3.TypeString {
+					return nil, invalidTypeErr
+				}
 			}
 
 			eps, _, err := property.GetSlice[string](v.Value)
@@ -260,6 +331,10 @@ func (h Handler) getEndpointsFromOutput(ctx context.Context, id object.ID) ([]Ac
 
 			if err := validation.IsValidEndpoints(eps); err != nil {
 				return nil, err
+			}
+
+			if len(eps) == 0 {
+				continue
 			}
 
 			endpoints = append(endpoints, AccessEndpoint{

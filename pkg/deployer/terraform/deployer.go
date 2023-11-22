@@ -24,7 +24,6 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/resource"
-	"github.com/seal-io/walrus/pkg/dao/model/resourcecomponent"
 	"github.com/seal-io/walrus/pkg/dao/model/resourcedefinition"
 	"github.com/seal-io/walrus/pkg/dao/model/resourcedefinitionmatchingrule"
 	"github.com/seal-io/walrus/pkg/dao/model/resourcerevision"
@@ -148,19 +147,6 @@ func (d Deployer) Destroy(ctx context.Context, resource *model.Resource, opts de
 		// Report to resource revision.
 		_ = d.updateRevisionStatus(ctx, revision)
 	}()
-
-	// If no resource exists, skip job and set revision status succeed.
-	exist, err := d.modelClient.ResourceComponents().Query().
-		Where(resourcecomponent.ResourceID(resource.ID)).
-		Exist(ctx)
-	if err != nil {
-		return err
-	}
-
-	if !exist {
-		status.ResourceRevisionStatusReady.True(revision, "")
-		return d.updateRevisionStatus(ctx, revision)
-	}
 
 	return d.createK8sJob(ctx, createK8sJobOptions{
 		Type:             JobTypeDestroy,
@@ -940,18 +926,17 @@ func getModuleConfig(
 		}
 
 		for k, v := range sps {
-			valueExpression := openapi.GetOriginalValueExpression(v.Value.Extensions)
-
+			origin := openapi.GetExtOriginal(v.Value.Extensions)
 			co := config.Output{
 				Sensitive:    v.Value.WriteOnly,
 				Name:         k,
 				ResourceName: opts.Context.Resource.Name,
-				Value:        valueExpression,
+				Value:        origin.ValueExpression,
 			}
 
 			if !v.Value.WriteOnly {
 				// Update sensitive while output is from sensitive data, like secret.
-				if sensitiveVariables.Len() != 0 && sensitiveVariableRegex.Match(valueExpression) {
+				if sensitiveVariables.Len() != 0 && sensitiveVariableRegex.Match(origin.ValueExpression) {
 					co.Sensitive = true
 				}
 			}

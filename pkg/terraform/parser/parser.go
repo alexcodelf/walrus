@@ -213,7 +213,10 @@ func ParseStateOutput(revision *model.ResourceRevision) ([]types.OutputValue, er
 
 	sn := revision.Edges.Resource.Name
 
-	var outputs []types.OutputValue
+	var (
+		outputs []types.OutputValue
+		count   = 1
+	)
 
 	for n, o := range revisionState.Outputs {
 		if strings.Index(n, sn) == 0 {
@@ -222,16 +225,21 @@ func ParseStateOutput(revision *model.ResourceRevision) ([]types.OutputValue, er
 				val = []byte(`"<sensitive>"`)
 			}
 
+			s := translator.SchemaOfType(
+				o.Type,
+				translator.Options{
+					Name:      n,
+					Sensitive: o.Sensitive,
+					Order:     count,
+				})
+
 			outputs = append(outputs, types.OutputValue{
-				Name:  strings.TrimPrefix(n, sn+"_"), // Name format is serviceName_outputName.
-				Value: val,
-				Schema: translator.SchemaOfType(
-					o.Type,
-					n,
-					nil,
-					"",
-					o.Sensitive),
+				Name:   strings.TrimPrefix(n, sn+"_"), // Name format is serviceName_outputName.
+				Value:  val,
+				Schema: s,
 			})
+
+			count++
 		}
 	}
 
