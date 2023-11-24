@@ -202,18 +202,18 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: |
           cp hack/mirror/full_image_list.txt .dist/package/${{ matrix.target }}/${{ matrix.task }}/build/full_image_list.txt
-      - name: Release CLI To OSS
-        uses: TencentCloud/cos-action@b0aa648235fb35a1bdd6a77f529eb0ac4c2f1c25
-        if: ${{ github.event_name != 'pull_request' }}
-        with:
-          secret_id: ${{ secrets.CI_TECENTCOS_SECRET_ID }}
-          secret_key: ${{ secrets.CI_TECENTCOS_SECRET_KEY }}
-          cos_bucket: ${{ secrets.COS_BUCKET }}
-          cos_region: ${{ secrets.COS_REGION }}
-          local_path: .dist/package/${{ matrix.target }}/${{ matrix.task }}/build/cli
-          remote_path: releases/${{ steps.metadata.outputs.version == 'main' && 'latest' || steps.metadata.outputs.version }}
-          accelerate: true
-          clean: false
+      # - name: Release CLI To OSS
+      #   uses: TencentCloud/cos-action@b0aa648235fb35a1bdd6a77f529eb0ac4c2f1c25
+      #   if: ${{ github.event_name != 'pull_request' }}
+      #   with:
+      #     secret_id: ${{ secrets.CI_TECENTCOS_SECRET_ID }}
+      #     secret_key: ${{ secrets.CI_TECENTCOS_SECRET_KEY }}
+      #     cos_bucket: ${{ secrets.COS_BUCKET }}
+      #     cos_region: ${{ secrets.COS_REGION }}
+      #     local_path: .dist/package/${{ matrix.target }}/${{ matrix.task }}/build/cli
+      #     remote_path: releases/${{ steps.metadata.outputs.version == 'main' && 'latest' || steps.metadata.outputs.version }}
+      #     accelerate: true
+      #     clean: false
       - name: Release Assets To Repository Asset
         uses: softprops/action-gh-release@v1
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
