@@ -15,9 +15,9 @@ import (
 	pkgcatalog "github.com/seal-io/walrus/pkg/catalog"
 	"github.com/seal-io/walrus/pkg/cron"
 	"github.com/seal-io/walrus/pkg/dao/model"
-	"github.com/seal-io/walrus/pkg/deployer/terraform"
 	pkgenv "github.com/seal-io/walrus/pkg/environment"
 	"github.com/seal-io/walrus/pkg/resourcedefinitions"
+	pkgrun "github.com/seal-io/walrus/pkg/resourcerun"
 	"github.com/seal-io/walrus/pkg/templates"
 )
 
@@ -34,8 +34,8 @@ func Setup(ctx context.Context, opts SetupOptions) (err error) {
 	}
 
 	// ResourceRun.
-	err = resourcerun.AddSubscriber("terraform-sync-resource-run-status",
-		terraform.SyncResourceRunStatus)
+	err = resourcerun.AddSubscriber("sync-resource-run-status",
+		pkgrun.SyncResourceRunStatus)
 	if err != nil {
 		return
 	}

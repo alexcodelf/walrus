@@ -1,9 +1,10 @@
-package terraform
+package resourcerun
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
@@ -17,11 +18,21 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/crypto"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
+	"github.com/seal-io/walrus/pkg/templates/openapi"
+	"github.com/seal-io/walrus/pkg/terraform/config"
 	"github.com/seal-io/walrus/pkg/terraform/parser"
 	"github.com/seal-io/walrus/utils/json"
 )
 
-type RunOpts struct {
+const (
+	// _variablePrefix the prefix of the variable name.
+	_variablePrefix = "_walrus_var_"
+
+	// _resourcePrefix the prefix of the resource output name.
+	_resourcePrefix = "_walrus_res_"
+)
+
+type ParseOpts struct {
 	ResourceRun *model.ResourceRun
 
 	ResourceName string
@@ -30,13 +41,27 @@ type RunOpts struct {
 	EnvironmentID object.ID
 }
 
+var (
+	// _variableReg the regexp to match the variable.
+	_variableReg = regexp.MustCompile(`\${var\.([a-zA-Z0-9_-]+)}`)
+	// _resourceReg the regexp to match the resource output.
+	_resourceReg = regexp.MustCompile(`\${res\.([^.}]+)\.([^.}]+)}`)
+	// _interpolationReg is the regular expression for matching non-reference or non-variable expressions.
+	// Reference: https://developer.hashicorp.com/terraform/language/expressions/strings#escape-sequences-1
+	// To handle escape sequences, ${xxx} is converted to $${xxx}.
+	// If there are more than two consecutive $ symbols, like $${xxx}, they are further converted to $$${xxx}.
+	// During Terraform processing, $${} is ultimately transformed back to ${},
+	// this interpolation is used to ensuring a WYSIWYG user experience.
+	_interpolationReg = regexp.MustCompile(`\$\{((var\.)?([^.}]+)(?:\.([^.}]+))?)[^\}]*\}`)
+)
+
 // ParseModuleAttributes parse module variables and dependencies.
 func ParseModuleAttributes(
 	ctx context.Context,
 	mc model.ClientSet,
 	attributes map[string]any,
 	onlyValidated bool,
-	opts RunOpts,
+	opts ParseOpts,
 ) (attrs map[string]any, variables model.Variables, outputs map[string]parser.OutputState, err error) {
 	var (
 		templateVariables         []string
@@ -271,7 +296,7 @@ func getVariables(
 
 	missingSet := requiredSet.
 		Difference(foundSet).
-		Difference(sets.NewString(WalrusContextVariableName))
+		Difference(sets.NewString(openapi.WalrusContextVariableName))
 	if missingSet.Len() > 0 {
 		return nil, fmt.Errorf("missing variables: %s", missingSet.List())
 	}
@@ -308,11 +333,11 @@ func getResourceDependencyOutputsByID(
 		dependencyResourceIDs = append(dependencyResourceIDs, d.DependencyID)
 	}
 
-	return getServiceDependencyOutputs(ctx, client, dependencyResourceIDs, dependOutputs)
+	return getResourceDependencyOutputs(ctx, client, dependencyResourceIDs, dependOutputs)
 }
 
-// getServiceDependencyOutputs gets the dependency outputs of the resource.
-func getServiceDependencyOutputs(
+// getResourceDependencyOutputs gets the dependency outputs of the resource.
+func getResourceDependencyOutputs(
 	ctx context.Context,
 	client model.ClientSet,
 	dependencyResourceIDs []object.ID,
@@ -379,4 +404,24 @@ func getServiceDependencyOutputs(
 	}
 
 	return outputs, nil
+}
+
+func getVarConfigOptions(
+	variables model.Variables,
+	resourceOutputs map[string]parser.OutputState,
+) config.CreateOptions {
+	varsConfigOpts := config.CreateOptions{
+		Attributes: map[string]any{},
+	}
+
+	for _, v := range variables {
+		varsConfigOpts.Attributes[_variablePrefix+v.Name] = v.Value
+	}
+
+	// Setup resource outputs.
+	for n, v := range resourceOutputs {
+		varsConfigOpts.Attributes[_resourcePrefix+n] = v.Value
+	}
+
+	return varsConfigOpts
 }
