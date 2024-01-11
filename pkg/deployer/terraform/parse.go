@@ -12,7 +12,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/resource"
 	"github.com/seal-io/walrus/pkg/dao/model/resourcerelationship"
-	"github.com/seal-io/walrus/pkg/dao/model/resourcerevision"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcerun"
 	"github.com/seal-io/walrus/pkg/dao/model/variable"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/crypto"
@@ -21,8 +21,8 @@ import (
 	"github.com/seal-io/walrus/utils/json"
 )
 
-type RevisionOpts struct {
-	ResourceRevision *model.ResourceRevision
+type RunOpts struct {
+	ResourceRun *model.ResourceRun
 
 	ResourceName string
 
@@ -36,7 +36,7 @@ func ParseModuleAttributes(
 	mc model.ClientSet,
 	attributes map[string]any,
 	onlyValidated bool,
-	opts RevisionOpts,
+	opts RunOpts,
 ) (attrs map[string]any, variables model.Variables, outputs map[string]parser.OutputState, err error) {
 	var (
 		templateVariables         []string
@@ -50,9 +50,9 @@ func ParseModuleAttributes(
 		return
 	}
 
-	// If resource revision has variables that inherit from cloned revision, use them directly.
-	if opts.ResourceRevision != nil && len(opts.ResourceRevision.Variables) > 0 {
-		for k, v := range opts.ResourceRevision.Variables {
+	// If resource run has variables that inherit from cloned run, use them directly.
+	if opts.ResourceRun != nil && len(opts.ResourceRun.Variables) > 0 {
+		for k, v := range opts.ResourceRun.Variables {
 			variables = append(variables, &model.Variable{
 				Name:  k,
 				Value: crypto.String(v),
@@ -71,7 +71,7 @@ func ParseModuleAttributes(
 		outputs, err = getResourceDependencyOutputsByID(
 			ctx,
 			mc,
-			opts.ResourceRevision.ResourceID,
+			opts.ResourceRun.ResourceID,
 			dependOutputMap)
 		if err != nil {
 			return nil, nil, nil, err
@@ -318,31 +318,31 @@ func getServiceDependencyOutputs(
 	dependencyResourceIDs []object.ID,
 	dependOutputs map[string]string,
 ) (map[string]parser.OutputState, error) {
-	dependencyRevisions, err := client.ResourceRevisions().Query().
+	dependencyRuns, err := client.ResourceRuns().Query().
 		Select(
-			resourcerevision.FieldID,
-			resourcerevision.FieldAttributes,
-			resourcerevision.FieldOutput,
-			resourcerevision.FieldResourceID,
-			resourcerevision.FieldProjectID,
+			resourcerun.FieldID,
+			resourcerun.FieldAttributes,
+			resourcerun.FieldOutput,
+			resourcerun.FieldResourceID,
+			resourcerun.FieldProjectID,
 		).
 		Where(func(s *sql.Selector) {
 			sq := s.Clone().
 				AppendSelectExprAs(
 					sql.RowNumber().
-						PartitionBy(resourcerevision.FieldResourceID).
-						OrderBy(sql.Desc(resourcerevision.FieldCreateTime)),
+						PartitionBy(resourcerun.FieldResourceID).
+						OrderBy(sql.Desc(resourcerun.FieldCreateTime)),
 					"row_number",
 				).
 				Where(s.P()).
 				From(s.Table()).
-				As(resourcerevision.Table)
+				As(resourcerun.Table)
 
-			// Query the latest revision of the resource.
+			// Query the latest run of the resource.
 			s.Where(sql.EQ(s.C("row_number"), 1)).
 				From(sq)
 		}).
-		Where(resourcerevision.ResourceIDIn(dependencyResourceIDs...)).
+		Where(resourcerun.ResourceIDIn(dependencyResourceIDs...)).
 		WithResource(func(rq *model.ResourceQuery) {
 			rq.Select(
 				resource.FieldTemplateID,
@@ -356,9 +356,9 @@ func getServiceDependencyOutputs(
 
 	outputs := make(map[string]parser.OutputState)
 
-	var p parser.ResourceRevisionParser
+	var p parser.ResourceRunParser
 
-	for _, r := range dependencyRevisions {
+	for _, r := range dependencyRuns {
 		osm, err := p.GetOutputsMap(r)
 		if err != nil {
 			return nil, err

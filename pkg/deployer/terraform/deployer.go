@@ -15,7 +15,7 @@ import (
 	apiconfig "github.com/seal-io/walrus/pkg/apis/config"
 	"github.com/seal-io/walrus/pkg/auths"
 	"github.com/seal-io/walrus/pkg/auths/session"
-	revisionbus "github.com/seal-io/walrus/pkg/bus/resourcerevision"
+	busrun "github.com/seal-io/walrus/pkg/bus/resourcerun"
 	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/connector"
@@ -26,7 +26,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/resource"
 	"github.com/seal-io/walrus/pkg/dao/model/resourcedefinition"
 	"github.com/seal-io/walrus/pkg/dao/model/resourcedefinitionmatchingrule"
-	"github.com/seal-io/walrus/pkg/dao/model/resourcerevision"
+	"github.com/seal-io/walrus/pkg/dao/model/resourcerun"
 	"github.com/seal-io/walrus/pkg/dao/model/subject"
 	"github.com/seal-io/walrus/pkg/dao/model/template"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
@@ -57,7 +57,7 @@ const DeployerType = types.DeployerTypeTF
 const (
 	// _backendAPI the API path to terraform deploy backend.
 	// Terraform will get and update deployment states from this API.
-	_backendAPI = "/v1/projects/%s/environments/%s/resources/%s/revisions/%s/terraform-states"
+	_backendAPI = "/v1/projects/%s/environments/%s/resources/%s/runs/%s/terraform-states"
 
 	// _variablePrefix the prefix of the variable name.
 	_variablePrefix = "_walrus_var_"
@@ -102,7 +102,7 @@ func (d Deployer) Type() deptypes.Type {
 	return DeployerType
 }
 
-// Apply creates a new resource revision by the given resource,
+// Apply creates a new resource run by the given resource,
 // and drives the Kubernetes Job to create components of the resource.
 func (d Deployer) Apply(
 	ctx context.Context,
@@ -110,7 +110,7 @@ func (d Deployer) Apply(
 	resource *model.Resource,
 	opts deptypes.ApplyOptions,
 ) (err error) {
-	revision, err := d.createRevision(ctx, mc, createRevisionOptions{
+	run, err := d.createRun(ctx, mc, createRunOptions{
 		ResourceID:    resource.ID,
 		ChangeComment: resource.ChangeComment,
 		JobType:       JobTypeApply,
@@ -125,19 +125,19 @@ func (d Deployer) Apply(
 		}
 
 		// Update a failure status.
-		status.ResourceRevisionStatusReady.False(revision, err.Error())
+		status.ResourceRunStatusReady.False(run, err.Error())
 
-		// Report to resource revision.
-		_ = d.updateRevisionStatus(ctx, mc, revision)
+		// Report to resource run.
+		_ = d.updateRunStatus(ctx, mc, run)
 	}()
 
 	return d.createK8sJob(ctx, mc, createK8sJobOptions{
-		Type:             JobTypeApply,
-		ResourceRevision: revision,
+		Type:        JobTypeApply,
+		ResourceRun: run,
 	})
 }
 
-// Destroy creates a new resource revision by the given resource,
+// Destroy creates a new resource run by the given resource,
 // and drives the Kubernetes Job to clean the components of the resource.
 func (d Deployer) Destroy(
 	ctx context.Context,
@@ -145,7 +145,7 @@ func (d Deployer) Destroy(
 	resource *model.Resource,
 	opts deptypes.DestroyOptions,
 ) (err error) {
-	revision, err := d.createRevision(ctx, mc, createRevisionOptions{
+	run, err := d.createRun(ctx, mc, createRunOptions{
 		ResourceID: resource.ID,
 		JobType:    JobTypeDestroy,
 	})
@@ -159,45 +159,45 @@ func (d Deployer) Destroy(
 		}
 
 		// Update a failure status.
-		status.ResourceRevisionStatusReady.False(revision, err.Error())
+		status.ResourceRunStatusReady.False(run, err.Error())
 
-		// Report to resource revision.
-		_ = d.updateRevisionStatus(ctx, mc, revision)
+		// Report to resource run.
+		_ = d.updateRunStatus(ctx, mc, run)
 	}()
 
 	return d.createK8sJob(ctx, mc, createK8sJobOptions{
-		Type:             JobTypeDestroy,
-		ResourceRevision: revision,
+		Type:        JobTypeDestroy,
+		ResourceRun: run,
 	})
 }
 
 type createK8sJobOptions struct {
 	// Type indicates the type of the job.
 	Type string
-	// ResourceRevision indicates the resource revision to create the deployment job.
-	ResourceRevision *model.ResourceRevision
+	// ResourceRun indicates the resource run to create the deployment job.
+	ResourceRun *model.ResourceRun
 }
 
 // createK8sJob creates a k8s job to deploy, destroy or rollback the resource.
 func (d Deployer) createK8sJob(ctx context.Context, mc model.ClientSet, opts createK8sJobOptions) error {
-	revision := opts.ResourceRevision
+	run := opts.ResourceRun
 
-	connectors, err := d.getConnectors(ctx, mc, revision.EnvironmentID)
+	connectors, err := d.getConnectors(ctx, mc, run.EnvironmentID)
 	if err != nil {
 		return err
 	}
 
-	proj, err := mc.Projects().Get(ctx, revision.ProjectID)
+	proj, err := mc.Projects().Get(ctx, run.ProjectID)
 	if err != nil {
 		return err
 	}
 
-	env, err := dao.GetEnvironmentByID(ctx, mc, revision.EnvironmentID)
+	env, err := dao.GetEnvironmentByID(ctx, mc, run.EnvironmentID)
 	if err != nil {
 		return err
 	}
 
-	res, err := mc.Resources().Get(ctx, revision.ResourceID)
+	res, err := mc.Resources().Get(ctx, run.ResourceID)
 	if err != nil {
 		return err
 	}
@@ -220,9 +220,9 @@ func (d Deployer) createK8sJob(ctx context.Context, mc model.ClientSet, opts cre
 
 	// Prepare tfConfig for deployment.
 	secretOpts := createK8sSecretsOptions{
-		ResourceRevision: opts.ResourceRevision,
-		Connectors:       connectors,
-		SubjectID:        subjectID,
+		ResourceRun: opts.ResourceRun,
+		Connectors:  connectors,
+		SubjectID:   subjectID,
 		// Walrus Context.
 		Context: *NewContext().
 			SetProject(proj.ID, proj.Name).
@@ -247,11 +247,11 @@ func (d Deployer) createK8sJob(ctx context.Context, mc model.ClientSet, opts cre
 
 	// Create deployment job.
 	jobOpts := JobCreateOptions{
-		Type:               opts.Type,
-		ResourceRevisionID: opts.ResourceRevision.ID.String(),
-		Image:              jobImage,
-		Env:                jobEnv,
-		DockerMode:         localEnvironmentMode == "docker",
+		Type:          opts.Type,
+		ResourceRunID: opts.ResourceRun.ID.String(),
+		Image:         jobImage,
+		Env:           jobEnv,
+		DockerMode:    localEnvironmentMode == "docker",
 	}
 
 	return CreateJob(ctx, d.clientSet, jobOpts)
@@ -308,18 +308,18 @@ func (d Deployer) getEnv(ctx context.Context, mc model.ClientSet) (env []corev1.
 	return env
 }
 
-func (d Deployer) updateRevisionStatus(ctx context.Context, mc model.ClientSet, ar *model.ResourceRevision) error {
-	// Report to resource revision.
-	ar.Status.SetSummary(status.WalkResourceRevision(&ar.Status))
+func (d Deployer) updateRunStatus(ctx context.Context, mc model.ClientSet, ar *model.ResourceRun) error {
+	// Report to resource run.
+	ar.Status.SetSummary(status.WalkResourceRun(&ar.Status))
 
-	ar, err := mc.ResourceRevisions().UpdateOne(ar).
+	ar, err := mc.ResourceRuns().UpdateOne(ar).
 		SetStatus(ar.Status).
 		Save(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err = revisionbus.Notify(ctx, mc, ar); err != nil {
+	if err = busrun.Notify(ctx, mc, ar); err != nil {
 		d.logger.Error(err)
 		return err
 	}
@@ -328,9 +328,9 @@ func (d Deployer) updateRevisionStatus(ctx context.Context, mc model.ClientSet, 
 }
 
 type createK8sSecretsOptions struct {
-	ResourceRevision *model.ResourceRevision
-	Connectors       model.Connectors
-	SubjectID        object.ID
+	ResourceRun *model.ResourceRun
+	Connectors  model.Connectors
+	SubjectID   object.ID
 	// Walrus Context.
 	Context Context
 }
@@ -339,7 +339,7 @@ type createK8sSecretsOptions struct {
 func (d Deployer) createK8sSecrets(ctx context.Context, mc model.ClientSet, opts createK8sSecretsOptions) error {
 	secretData := make(map[string][]byte)
 	// SecretName terraform tfConfig name.
-	secretName := _jobSecretPrefix + string(opts.ResourceRevision.ID)
+	secretName := _jobSecretPrefix + string(opts.ResourceRun.ID)
 
 	// Prepare terraform config files bytes for deployment.
 	terraformData, err := d.loadConfigsBytes(ctx, mc, opts)
@@ -369,36 +369,36 @@ func (d Deployer) createK8sSecrets(ctx context.Context, mc model.ClientSet, opts
 	return nil
 }
 
-type createRevisionOptions struct {
-	// ResourceID indicates the ID of resource which is for create the revision.
+type createRunOptions struct {
+	// ResourceID indicates the ID of resource which is for create the run.
 	ResourceID object.ID
-	// ChangeComment indicates the optional message of the revision.
+	// ChangeComment indicates the optional message of the run.
 	ChangeComment string
 	// JobType indicates the type of the job.
 	JobType string
 }
 
-// createRevision creates a new resource revision.
-// Get the latest revision, and check it if it is running.
-// If not running, then apply the latest revision.
-// If running, then wait for the latest revision to be applied.
-func (d Deployer) createRevision(
+// createRun creates a new resource run.
+// Get the latest run, and check it if it is running.
+// If not running, then apply the latest run.
+// If running, then wait for the latest run to be applied.
+func (d Deployer) createRun(
 	ctx context.Context,
 	mc model.ClientSet,
-	opts createRevisionOptions,
-) (*model.ResourceRevision, error) {
-	// Validate if there is a running revision.
-	prevEntity, err := mc.ResourceRevisions().Query().
-		Where(resourcerevision.And(
-			resourcerevision.ResourceID(opts.ResourceID),
-			resourcerevision.DeployerType(DeployerType))).
-		Order(model.Desc(resourcerevision.FieldCreateTime)).
+	opts createRunOptions,
+) (*model.ResourceRun, error) {
+	// Validate if there is a running run.
+	prevEntity, err := mc.ResourceRuns().Query().
+		Where(resourcerun.And(
+			resourcerun.ResourceID(opts.ResourceID),
+			resourcerun.DeployerType(DeployerType))).
+		Order(model.Desc(resourcerun.FieldCreateTime)).
 		First(ctx)
 	if err != nil && !model.IsNotFound(err) {
 		return nil, err
 	}
 
-	if prevEntity != nil && status.ResourceRevisionStatusReady.IsUnknown(prevEntity) {
+	if prevEntity != nil && status.ResourceRunStatusReady.IsUnknown(prevEntity) {
 		return nil, errors.New("deployment is running")
 	}
 
@@ -530,7 +530,7 @@ func (d Deployer) createRevision(
 		return nil, err
 	}
 
-	entity := &model.ResourceRevision{
+	entity := &model.ResourceRun{
 		ProjectID:       res.ProjectID,
 		EnvironmentID:   res.EnvironmentID,
 		ResourceID:      res.ID,
@@ -543,10 +543,10 @@ func (d Deployer) createRevision(
 		ChangeComment:   opts.ChangeComment,
 	}
 
-	status.ResourceRevisionStatusReady.Unknown(entity, "")
-	entity.Status.SetSummary(status.WalkResourceRevision(&entity.Status))
+	status.ResourceRunStatusReady.Unknown(entity, "")
+	entity.Status.SetSummary(status.WalkResourceRun(&entity.Status))
 
-	// Inherit the output of previous revision to create a new one.
+	// Inherit the output of previous run to create a new one.
 	if prevEntity != nil {
 		entity.Output = prevEntity.Output
 	}
@@ -560,7 +560,7 @@ func (d Deployer) createRevision(
 		}
 		entity.PreviousRequiredProviders = requiredProviders
 	case opts.JobType == JobTypeDestroy && entity.Output != "":
-		if status.ResourceRevisionStatusReady.IsFalse(prevEntity) {
+		if status.ResourceRunStatusReady.IsFalse(prevEntity) {
 			// Get required providers from the previous output after first deployment.
 			requiredProviders, err := d.getRequiredProviders(ctx, mc, opts.ResourceID, entity.Output)
 			if err != nil {
@@ -568,9 +568,9 @@ func (d Deployer) createRevision(
 			}
 			entity.PreviousRequiredProviders = requiredProviders
 		} else {
-			// Copy required providers from the previous revision.
+			// Copy required providers from the previous run.
 			entity.PreviousRequiredProviders = prevEntity.PreviousRequiredProviders
-			// Reuse other fields from the previous revision.
+			// Reuse other fields from the previous run.
 			entity.TemplateID = prevEntity.TemplateID
 			entity.TemplateName = prevEntity.TemplateName
 			entity.TemplateVersion = prevEntity.TemplateVersion
@@ -579,8 +579,8 @@ func (d Deployer) createRevision(
 		}
 	}
 
-	// Create revision.
-	entity, err = mc.ResourceRevisions().Create().
+	// Create run.
+	entity, err = mc.ResourceRuns().Create().
 		Set(entity).
 		Save(ctx)
 	if err != nil {
@@ -629,14 +629,14 @@ func (d Deployer) loadConfigsBytes(
 ) (map[string][]byte, error) {
 	logger := log.WithName("deployer").WithName("tf")
 	// Prepare terraform tfConfig.
-	//  get module configs from resource revision.
+	//  get module configs from resource run.
 	moduleConfig, providerRequirements, err := d.getModuleConfig(ctx, mc, opts)
 	if err != nil {
 		return nil, err
 	}
 	// Merge current and previous required providers.
 	providerRequirements = append(providerRequirements,
-		opts.ResourceRevision.PreviousRequiredProviders...)
+		opts.ResourceRun.PreviousRequiredProviders...)
 
 	requiredProviders := make(map[string]*tfconfig.ProviderRequirement, 0)
 	for _, p := range providerRequirements {
@@ -647,11 +647,11 @@ func (d Deployer) loadConfigsBytes(
 		}
 	}
 
-	revisionOpts := RevisionOpts{
-		ResourceRevision: opts.ResourceRevision,
-		ResourceName:     opts.Context.Resource.Name,
-		ProjectID:        opts.Context.Project.ID,
-		EnvironmentID:    opts.Context.Environment.ID,
+	runOpts := RunOpts{
+		ResourceRun:   opts.ResourceRun,
+		ResourceName:  opts.Context.Resource.Name,
+		ProjectID:     opts.Context.Project.ID,
+		EnvironmentID: opts.Context.Environment.ID,
 	}
 	// Parse module attributes.
 	attrs, variables, dependencyOutputs, err := ParseModuleAttributes(
@@ -659,7 +659,7 @@ func (d Deployer) loadConfigsBytes(
 		mc,
 		moduleConfig.Attributes,
 		false,
-		revisionOpts,
+		runOpts,
 	)
 	if err != nil {
 		return nil, err
@@ -687,13 +687,13 @@ func (d Deployer) loadConfigsBytes(
 			opts.Context.Project.ID,
 			opts.Context.Environment.ID,
 			opts.Context.Resource.ID,
-			opts.ResourceRevision.ID))
+			opts.ResourceRun.ID))
 
 	// Prepare API token for terraform backend.
 	const _1Day = 60 * 60 * 24
 
 	at, err := auths.CreateAccessToken(ctx,
-		mc, opts.SubjectID, types.TokenKindDeployment, string(opts.ResourceRevision.ID), pointer.Int(_1Day))
+		mc, opts.SubjectID, types.TokenKindDeployment, string(opts.ResourceRun.ID), pointer.Int(_1Day))
 	if err != nil {
 		return nil, err
 	}
@@ -740,26 +740,26 @@ func (d Deployer) loadConfigsBytes(
 		}
 	}
 
-	// Save input plan to resource revision.
-	opts.ResourceRevision.InputPlan = string(secretMaps[config.FileMain])
-	// If resource revision does not inherit variables from cloned revision,
-	// then save the parsed variables to resource revision.
-	if len(opts.ResourceRevision.Variables) == 0 {
+	// Save input plan to resource run.
+	opts.ResourceRun.InputPlan = string(secretMaps[config.FileMain])
+	// If resource run does not inherit variables from cloned run,
+	// then save the parsed variables to resource run.
+	if len(opts.ResourceRun.Variables) == 0 {
 		variableMap := make(crypto.Map[string, string], len(variables))
 		for _, s := range variables {
 			variableMap[s.Name] = string(s.Value)
 		}
-		opts.ResourceRevision.Variables = variableMap
+		opts.ResourceRun.Variables = variableMap
 	}
 
-	revision, err := mc.ResourceRevisions().UpdateOne(opts.ResourceRevision).
-		Set(opts.ResourceRevision).
+	run, err := mc.ResourceRuns().UpdateOne(opts.ResourceRun).
+		Set(opts.ResourceRun).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = revisionbus.Notify(ctx, mc, revision); err != nil {
+	if err = busrun.Notify(ctx, mc, run); err != nil {
 		return nil, err
 	}
 
@@ -790,7 +790,7 @@ func (d Deployer) getProviderSecretData(connectors model.Connectors) (map[string
 }
 
 // getModuleConfig returns module configs and required connectors to
-// get terraform module config block from resource revision.
+// get terraform module config block from resource run.
 func (d Deployer) getModuleConfig(
 	ctx context.Context,
 	mc model.ClientSet,
@@ -802,8 +802,8 @@ func (d Deployer) getModuleConfig(
 	)
 
 	predicates = append(predicates, templateversion.And(
-		templateversion.Version(opts.ResourceRevision.TemplateVersion),
-		templateversion.TemplateID(opts.ResourceRevision.TemplateID),
+		templateversion.Version(opts.ResourceRun.TemplateVersion),
+		templateversion.TemplateID(opts.ResourceRun.TemplateID),
 	))
 
 	templateVersion, err := mc.TemplateVersions().
@@ -827,7 +827,7 @@ func (d Deployer) getModuleConfig(
 		requiredProviders = append(requiredProviders, templateVersion.Schema.RequiredProviders...)
 	}
 
-	moduleConfig, err := getModuleConfig(opts.ResourceRevision, templateVersion, opts)
+	moduleConfig, err := getModuleConfig(opts.ResourceRun, templateVersion, opts)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -864,8 +864,8 @@ func (d Deployer) getConnectors(
 	return cs, nil
 }
 
-// getPreviousRequiredProviders get previous succeed revision required providers.
-// NB(alex): the previous revision may be failed, the failed revision may not contain required providers of states.
+// getPreviousRequiredProviders get previous succeed run required providers.
+// NB(alex): the previous run may be failed, the failed run may not contain required providers of states.
 func (d Deployer) getPreviousRequiredProviders(
 	ctx context.Context,
 	mc model.ClientSet,
@@ -873,9 +873,9 @@ func (d Deployer) getPreviousRequiredProviders(
 ) ([]types.ProviderRequirement, error) {
 	prevRequiredProviders := make([]types.ProviderRequirement, 0)
 
-	entity, err := mc.ResourceRevisions().Query().
-		Where(resourcerevision.ResourceID(resourceID)).
-		Order(model.Desc(resourcerevision.FieldCreateTime)).
+	entity, err := mc.ResourceRuns().Query().
+		Where(resourcerun.ResourceID(resourceID)).
+		Order(model.Desc(resourcerun.FieldCreateTime)).
 		First(ctx)
 	if err != nil && !model.IsNotFound(err) {
 		return nil, err
@@ -923,7 +923,7 @@ func getVarConfigOptions(
 }
 
 func getModuleConfig(
-	revision *model.ResourceRevision,
+	run *model.ResourceRun,
 	template *model.TemplateVersion,
 	opts createK8sSecretsOptions,
 ) (*config.ModuleConfig, error) {
@@ -952,7 +952,7 @@ func getModuleConfig(
 	)
 
 	if variablesSchema != nil {
-		attrs, err := translator.ToGoTypeValues(revision.Attributes, *variablesSchema)
+		attrs, err := translator.ToGoTypeValues(run.Attributes, *variablesSchema)
 		if err != nil {
 			return nil, err
 		}

@@ -386,11 +386,11 @@ func getStatefulSet(o *unstructured.Unstructured) (*typestatus.Status, error) {
 		return &GeneralStatusReadyTransitioning, nil
 	}
 
-	// If .status.currentRevision != .status.updateRevision, then not ready.
-	statusCurrentRevision, _, _ := unstructured.NestedString(status, "currentRevision")
-	statusUpdateRevision, _, _ := unstructured.NestedString(status, "updateRevision")
+	// If .status.currentRun != .status.updateRun, then not ready.
+	statusCurrentRun, _, _ := unstructured.NestedString(status, "currentRun")
+	statusUpdateRun, _, _ := unstructured.NestedString(status, "updateRun")
 
-	if statusCurrentRevision != statusUpdateRevision {
+	if statusCurrentRun != statusUpdateRun {
 		return &GeneralStatusReadyTransitioning, nil
 	}
 

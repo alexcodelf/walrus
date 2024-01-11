@@ -247,8 +247,8 @@ func GetRepoRef(r *git.Repository, name string) (*plumbing.Reference, error) {
 		return ref, nil
 	}
 
-	if revision, err := r.ResolveRevision(plumbing.Revision(name)); err == nil {
-		return plumbing.NewHashReference(plumbing.ReferenceName(name), *revision), nil
+	if run, err := r.ResolveRevision(plumbing.Revision(name)); err == nil {
+		return plumbing.NewHashReference(plumbing.ReferenceName(name), *run), nil
 	}
 
 	return nil, fmt.Errorf("failed to get reference: %s", name)
