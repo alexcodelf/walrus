@@ -32,6 +32,12 @@ func (ResourceRun) Mixin() []ent.Mixin {
 
 func (ResourceRun) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("type").
+			Comment("Type of the run.").
+			NotEmpty(),
+		field.Bool("preview").
+			Comment("Whether the run is preview.").
+			Default(false),
 		object.IDField("project_id").
 			Comment("ID of the project to belong.").
 			NotEmpty().
@@ -61,8 +67,8 @@ func (ResourceRun) Fields() []ent.Field {
 		crypto.MapField[string, string]("variables").
 			Comment("Variables of the run.").
 			Default(crypto.Map[string, string]{}),
-		field.String("input_plan").
-			Comment("Input plan of the Run.").
+		field.JSON("input_configs", map[string]types.ConfigData{}).
+			Comment("Input configs of the run.").
 			Sensitive(),
 		field.String("output").
 			Comment("Output of the Run.").
@@ -78,6 +84,12 @@ func (ResourceRun) Fields() []ent.Field {
 			Default([]types.ProviderRequirement{}),
 		field.Text("record").
 			Comment("Record of the run.").
+			Optional(),
+		field.JSON("change_count", types.ResourceChangeCount{}).
+			Comment("Change counts of the run.").
+			Optional(),
+		field.JSON("component_changes", []*types.ResourceComponentChange{}).
+			Comment("Change of the run.").
 			Optional(),
 		field.String("change_comment").
 			Comment("Change comment of the run.").

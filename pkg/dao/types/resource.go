@@ -22,6 +22,8 @@ type (
 	ResourceEndpoints []ResourceEndpoint
 )
 
+type ConfigData = []byte
+
 // ResourceEndpointsFromMap converts a map to ResourceEndpoints.
 func ResourceEndpointsFromMap(m map[string]string) ResourceEndpoints {
 	eps := make(ResourceEndpoints, 0, len(m))
