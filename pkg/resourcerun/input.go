@@ -12,9 +12,6 @@ import (
 	pkgenv "github.com/seal-io/walrus/pkg/environment"
 )
 
-// ConfigData is the config file data.
-type ConfigData = []byte
-
 // InputLoader is the interface to construct input configs and dependency connectors for the run.
 type InputLoader interface {
 	InputConfigLoader
@@ -24,16 +21,16 @@ type InputLoader interface {
 // InputConfigLoader is the interface to construct input configs for the run.
 type InputConfigLoader interface {
 	// LoadMain loads the main config file of the config options.
-	LoadMain(context.Context, model.ClientSet, *ConfigLoaderOptions) (ConfigData, error)
+	LoadMain(context.Context, model.ClientSet, *ConfigLoaderOptions) (types.ConfigData, error)
 	// LoadAll loads the configs files of the config options.
-	LoadAll(context.Context, model.ClientSet, *ConfigLoaderOptions) (map[string]ConfigData, error)
+	LoadAll(context.Context, model.ClientSet, *ConfigLoaderOptions) (map[string]types.ConfigData, error)
 }
 
 // InputProviderLoader is the interface to construct dependency connectors files for the run.
 type InputProviderLoader interface {
 	// LoadProviders loads the providers of the run required,
 	// Some connectors may be required to deploy the service.
-	LoadProviders(model.Connectors) (map[string]ConfigData, error)
+	LoadProviders(model.Connectors) (map[string]types.ConfigData, error)
 }
 
 // ConfigLoaderOptions are the options for load a run config files.

@@ -235,7 +235,7 @@ func (m Manager) Create(ctx context.Context, mc model.ClientSet, opts CreateOpti
 			entity.TemplateName = prevEntity.TemplateName
 			entity.TemplateVersion = prevEntity.TemplateVersion
 			entity.Attributes = prevEntity.Attributes
-			entity.InputPlan = prevEntity.InputPlan
+			entity.InputConfigs = prevEntity.InputConfigs
 		}
 	}
 
@@ -348,10 +348,10 @@ func (m Manager) LoadInputConfigs(
 	ctx context.Context,
 	mc model.ClientSet,
 	opts *ConfigLoaderOptions,
-) (map[string]ConfigData, error) {
+) (map[string]types.ConfigData, error) {
 	return m.InputLoader.LoadAll(ctx, mc, opts)
 }
 
-func (m Manager) LoadProviderConfigs(conns model.Connectors) (map[string]ConfigData, error) {
+func (m Manager) LoadProviderConfigs(conns model.Connectors) (map[string]types.ConfigData, error) {
 	return m.InputLoader.LoadProviders(conns)
 }

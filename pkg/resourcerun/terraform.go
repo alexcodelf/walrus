@@ -43,7 +43,7 @@ func (c TerraformInput) LoadMain(
 	ctx context.Context,
 	mc model.ClientSet,
 	opts *ConfigLoaderOptions,
-) (ConfigData, error) {
+) (types.ConfigData, error) {
 	planConfig, err := c.LoadAll(ctx, mc, opts)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (c TerraformInput) LoadAll(
 	ctx context.Context,
 	mc model.ClientSet,
 	opts *ConfigLoaderOptions,
-) (map[string]ConfigData, error) {
+) (map[string]types.ConfigData, error) {
 	// Prepare terraform tfConfig.
 	//  get module configs from resource run.
 	moduleConfig, providerRequirements, err := c.getModuleConfig(ctx, mc, opts)
@@ -142,17 +142,17 @@ func (c TerraformInput) LoadAll(
 		config.FileVars: getVarConfigOptions(variables, dependencyOutputs),
 	}
 
-	configFiles := make(map[string][]byte, len(tfCreateOpts))
+	inputConfigs := make(map[string][]byte, len(tfCreateOpts))
 
 	for k, v := range tfCreateOpts {
-		configFiles[k], err = config.CreateConfigToBytes(v)
+		inputConfigs[k], err = config.CreateConfigToBytes(v)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// Save input plan to resource run.
-	opts.ResourceRun.InputPlan = string(configFiles[config.FileMain])
+	opts.ResourceRun.InputConfigs = inputConfigs
 	// If resource run does not inherit variables from cloned run,
 	// then save the parsed variables to resource run.
 	if len(opts.ResourceRun.Variables) == 0 {
@@ -174,11 +174,11 @@ func (c TerraformInput) LoadAll(
 		return nil, err
 	}
 
-	return configFiles, nil
+	return inputConfigs, nil
 }
 
-func (c TerraformInput) LoadProviders(connectors model.Connectors) (map[string]ConfigData, error) {
-	secretData := make(map[string]ConfigData)
+func (c TerraformInput) LoadProviders(connectors model.Connectors) (map[string]types.ConfigData, error) {
+	secretData := make(map[string]types.ConfigData)
 
 	for _, c := range connectors {
 		if c.Type != types.ConnectorTypeKubernetes {
