@@ -34,6 +34,10 @@ type ResourceRun struct {
 	CreateTime *time.Time `json:"create_time,omitempty"`
 	// Status holds the value of the "status" field.
 	Status status.Status `json:"status,omitempty"`
+	// Type of the run.
+	Type string `json:"type,omitempty"`
+	// Whether the run is preview.
+	Preview bool `json:"preview,omitempty"`
 	// ID of the project to belong.
 	ProjectID object.ID `json:"project_id,omitempty"`
 	// ID of the environment to which the run belongs.
@@ -50,8 +54,8 @@ type ResourceRun struct {
 	Attributes property.Values `json:"attributes,omitempty"`
 	// Variables of the run.
 	Variables crypto.Map[string, string] `json:"variables,omitempty"`
-	// Input plan of the Run.
-	InputPlan string `json:"-"`
+	// Input configs of the run.
+	InputConfigs map[string][]uint8 `json:"-"`
 	// Output of the Run.
 	Output string `json:"-"`
 	// Type of deployer.
@@ -62,6 +66,10 @@ type ResourceRun struct {
 	PreviousRequiredProviders []types.ProviderRequirement `json:"previous_required_providers,omitempty"`
 	// Record of the run.
 	Record string `json:"record,omitempty"`
+	// Change counts of the run.
+	ChangeCount types.ResourceChangeCount `json:"change_count,omitempty"`
+	// Change of the run.
+	ComponentChanges []*types.ResourceComponentChange `json:"component_changes,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `json:"change_comment,omitempty"`
 	// User who created the run.
@@ -129,7 +137,7 @@ func (*ResourceRun) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resourcerun.FieldStatus, resourcerun.FieldPreviousRequiredProviders:
+		case resourcerun.FieldStatus, resourcerun.FieldInputConfigs, resourcerun.FieldPreviousRequiredProviders, resourcerun.FieldChangeCount, resourcerun.FieldComponentChanges:
 			values[i] = new([]byte)
 		case resourcerun.FieldVariables:
 			values[i] = new(crypto.Map[string, string])
@@ -137,9 +145,11 @@ func (*ResourceRun) scanValues(columns []string) ([]any, error) {
 			values[i] = new(object.ID)
 		case resourcerun.FieldAttributes:
 			values[i] = new(property.Values)
+		case resourcerun.FieldPreview:
+			values[i] = new(sql.NullBool)
 		case resourcerun.FieldDuration:
 			values[i] = new(sql.NullInt64)
-		case resourcerun.FieldTemplateName, resourcerun.FieldTemplateVersion, resourcerun.FieldInputPlan, resourcerun.FieldOutput, resourcerun.FieldDeployerType, resourcerun.FieldRecord, resourcerun.FieldChangeComment, resourcerun.FieldCreatedBy:
+		case resourcerun.FieldType, resourcerun.FieldTemplateName, resourcerun.FieldTemplateVersion, resourcerun.FieldOutput, resourcerun.FieldDeployerType, resourcerun.FieldRecord, resourcerun.FieldChangeComment, resourcerun.FieldCreatedBy:
 			values[i] = new(sql.NullString)
 		case resourcerun.FieldCreateTime:
 			values[i] = new(sql.NullTime)
@@ -178,6 +188,18 @@ func (rr *ResourceRun) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &rr.Status); err != nil {
 					return fmt.Errorf("unmarshal field status: %w", err)
 				}
+			}
+		case resourcerun.FieldType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[i])
+			} else if value.Valid {
+				rr.Type = value.String
+			}
+		case resourcerun.FieldPreview:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field preview", values[i])
+			} else if value.Valid {
+				rr.Preview = value.Bool
 			}
 		case resourcerun.FieldProjectID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -227,11 +249,13 @@ func (rr *ResourceRun) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				rr.Variables = *value
 			}
-		case resourcerun.FieldInputPlan:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field input_plan", values[i])
-			} else if value.Valid {
-				rr.InputPlan = value.String
+		case resourcerun.FieldInputConfigs:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field input_configs", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &rr.InputConfigs); err != nil {
+					return fmt.Errorf("unmarshal field input_configs: %w", err)
+				}
 			}
 		case resourcerun.FieldOutput:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -264,6 +288,22 @@ func (rr *ResourceRun) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field record", values[i])
 			} else if value.Valid {
 				rr.Record = value.String
+			}
+		case resourcerun.FieldChangeCount:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field change_count", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &rr.ChangeCount); err != nil {
+					return fmt.Errorf("unmarshal field change_count: %w", err)
+				}
+			}
+		case resourcerun.FieldComponentChanges:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field component_changes", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &rr.ComponentChanges); err != nil {
+					return fmt.Errorf("unmarshal field component_changes: %w", err)
+				}
 			}
 		case resourcerun.FieldChangeComment:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -336,6 +376,12 @@ func (rr *ResourceRun) String() string {
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", rr.Status))
 	builder.WriteString(", ")
+	builder.WriteString("type=")
+	builder.WriteString(rr.Type)
+	builder.WriteString(", ")
+	builder.WriteString("preview=")
+	builder.WriteString(fmt.Sprintf("%v", rr.Preview))
+	builder.WriteString(", ")
 	builder.WriteString("project_id=")
 	builder.WriteString(fmt.Sprintf("%v", rr.ProjectID))
 	builder.WriteString(", ")
@@ -360,7 +406,7 @@ func (rr *ResourceRun) String() string {
 	builder.WriteString("variables=")
 	builder.WriteString(fmt.Sprintf("%v", rr.Variables))
 	builder.WriteString(", ")
-	builder.WriteString("input_plan=<sensitive>")
+	builder.WriteString("input_configs=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("output=<sensitive>")
 	builder.WriteString(", ")
@@ -375,6 +421,12 @@ func (rr *ResourceRun) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("record=")
 	builder.WriteString(rr.Record)
+	builder.WriteString(", ")
+	builder.WriteString("change_count=")
+	builder.WriteString(fmt.Sprintf("%v", rr.ChangeCount))
+	builder.WriteString(", ")
+	builder.WriteString("component_changes=")
+	builder.WriteString(fmt.Sprintf("%v", rr.ComponentChanges))
 	builder.WriteString(", ")
 	builder.WriteString("change_comment=")
 	builder.WriteString(rr.ChangeComment)

@@ -66,6 +66,26 @@ func (rrc *ResourceRunCreate) SetNillableStatus(s *status.Status) *ResourceRunCr
 	return rrc
 }
 
+// SetType sets the "type" field.
+func (rrc *ResourceRunCreate) SetType(s string) *ResourceRunCreate {
+	rrc.mutation.SetType(s)
+	return rrc
+}
+
+// SetPreview sets the "preview" field.
+func (rrc *ResourceRunCreate) SetPreview(b bool) *ResourceRunCreate {
+	rrc.mutation.SetPreview(b)
+	return rrc
+}
+
+// SetNillablePreview sets the "preview" field if the given value is not nil.
+func (rrc *ResourceRunCreate) SetNillablePreview(b *bool) *ResourceRunCreate {
+	if b != nil {
+		rrc.SetPreview(*b)
+	}
+	return rrc
+}
+
 // SetProjectID sets the "project_id" field.
 func (rrc *ResourceRunCreate) SetProjectID(o object.ID) *ResourceRunCreate {
 	rrc.mutation.SetProjectID(o)
@@ -114,9 +134,9 @@ func (rrc *ResourceRunCreate) SetVariables(c crypto.Map[string, string]) *Resour
 	return rrc
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (rrc *ResourceRunCreate) SetInputPlan(s string) *ResourceRunCreate {
-	rrc.mutation.SetInputPlan(s)
+// SetInputConfigs sets the "input_configs" field.
+func (rrc *ResourceRunCreate) SetInputConfigs(m map[string][]uint8) *ResourceRunCreate {
+	rrc.mutation.SetInputConfigs(m)
 	return rrc
 }
 
@@ -171,6 +191,26 @@ func (rrc *ResourceRunCreate) SetNillableRecord(s *string) *ResourceRunCreate {
 	if s != nil {
 		rrc.SetRecord(*s)
 	}
+	return rrc
+}
+
+// SetChangeCount sets the "change_count" field.
+func (rrc *ResourceRunCreate) SetChangeCount(tcc types.ResourceChangeCount) *ResourceRunCreate {
+	rrc.mutation.SetChangeCount(tcc)
+	return rrc
+}
+
+// SetNillableChangeCount sets the "change_count" field if the given value is not nil.
+func (rrc *ResourceRunCreate) SetNillableChangeCount(tcc *types.ResourceChangeCount) *ResourceRunCreate {
+	if tcc != nil {
+		rrc.SetChangeCount(*tcc)
+	}
+	return rrc
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (rrc *ResourceRunCreate) SetComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunCreate {
+	rrc.mutation.SetComponentChanges(tcc)
 	return rrc
 }
 
@@ -259,6 +299,10 @@ func (rrc *ResourceRunCreate) defaults() error {
 		v := resourcerun.DefaultCreateTime()
 		rrc.mutation.SetCreateTime(v)
 	}
+	if _, ok := rrc.mutation.Preview(); !ok {
+		v := resourcerun.DefaultPreview
+		rrc.mutation.SetPreview(v)
+	}
 	if _, ok := rrc.mutation.Variables(); !ok {
 		v := resourcerun.DefaultVariables
 		rrc.mutation.SetVariables(v)
@@ -282,6 +326,17 @@ func (rrc *ResourceRunCreate) defaults() error {
 func (rrc *ResourceRunCreate) check() error {
 	if _, ok := rrc.mutation.CreateTime(); !ok {
 		return &ValidationError{Name: "create_time", err: errors.New(`model: missing required field "ResourceRun.create_time"`)}
+	}
+	if _, ok := rrc.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`model: missing required field "ResourceRun.type"`)}
+	}
+	if v, ok := rrc.mutation.GetType(); ok {
+		if err := resourcerun.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`model: validator failed for field "ResourceRun.type": %w`, err)}
+		}
+	}
+	if _, ok := rrc.mutation.Preview(); !ok {
+		return &ValidationError{Name: "preview", err: errors.New(`model: missing required field "ResourceRun.preview"`)}
 	}
 	if _, ok := rrc.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project_id", err: errors.New(`model: missing required field "ResourceRun.project_id"`)}
@@ -334,8 +389,8 @@ func (rrc *ResourceRunCreate) check() error {
 	if _, ok := rrc.mutation.Variables(); !ok {
 		return &ValidationError{Name: "variables", err: errors.New(`model: missing required field "ResourceRun.variables"`)}
 	}
-	if _, ok := rrc.mutation.InputPlan(); !ok {
-		return &ValidationError{Name: "input_plan", err: errors.New(`model: missing required field "ResourceRun.input_plan"`)}
+	if _, ok := rrc.mutation.InputConfigs(); !ok {
+		return &ValidationError{Name: "input_configs", err: errors.New(`model: missing required field "ResourceRun.input_configs"`)}
 	}
 	if _, ok := rrc.mutation.Output(); !ok {
 		return &ValidationError{Name: "output", err: errors.New(`model: missing required field "ResourceRun.output"`)}
@@ -406,6 +461,14 @@ func (rrc *ResourceRunCreate) createSpec() (*ResourceRun, *sqlgraph.CreateSpec) 
 		_spec.SetField(resourcerun.FieldStatus, field.TypeJSON, value)
 		_node.Status = value
 	}
+	if value, ok := rrc.mutation.GetType(); ok {
+		_spec.SetField(resourcerun.FieldType, field.TypeString, value)
+		_node.Type = value
+	}
+	if value, ok := rrc.mutation.Preview(); ok {
+		_spec.SetField(resourcerun.FieldPreview, field.TypeBool, value)
+		_node.Preview = value
+	}
 	if value, ok := rrc.mutation.TemplateName(); ok {
 		_spec.SetField(resourcerun.FieldTemplateName, field.TypeString, value)
 		_node.TemplateName = value
@@ -426,9 +489,9 @@ func (rrc *ResourceRunCreate) createSpec() (*ResourceRun, *sqlgraph.CreateSpec) 
 		_spec.SetField(resourcerun.FieldVariables, field.TypeOther, value)
 		_node.Variables = value
 	}
-	if value, ok := rrc.mutation.InputPlan(); ok {
-		_spec.SetField(resourcerun.FieldInputPlan, field.TypeString, value)
-		_node.InputPlan = value
+	if value, ok := rrc.mutation.InputConfigs(); ok {
+		_spec.SetField(resourcerun.FieldInputConfigs, field.TypeJSON, value)
+		_node.InputConfigs = value
 	}
 	if value, ok := rrc.mutation.Output(); ok {
 		_spec.SetField(resourcerun.FieldOutput, field.TypeString, value)
@@ -449,6 +512,14 @@ func (rrc *ResourceRunCreate) createSpec() (*ResourceRun, *sqlgraph.CreateSpec) 
 	if value, ok := rrc.mutation.Record(); ok {
 		_spec.SetField(resourcerun.FieldRecord, field.TypeString, value)
 		_node.Record = value
+	}
+	if value, ok := rrc.mutation.ChangeCount(); ok {
+		_spec.SetField(resourcerun.FieldChangeCount, field.TypeJSON, value)
+		_node.ChangeCount = value
+	}
+	if value, ok := rrc.mutation.ComponentChanges(); ok {
+		_spec.SetField(resourcerun.FieldComponentChanges, field.TypeJSON, value)
+		_node.ComponentChanges = value
 	}
 	if value, ok := rrc.mutation.ChangeComment(); ok {
 		_spec.SetField(resourcerun.FieldChangeComment, field.TypeString, value)
@@ -535,6 +606,8 @@ func (rrc *ResourceRunCreate) createSpec() (*ResourceRun, *sqlgraph.CreateSpec) 
 //	}
 func (rrc *ResourceRunCreate) Set(obj *ResourceRun) *ResourceRunCreate {
 	// Required.
+	rrc.SetType(obj.Type)
+	rrc.SetPreview(obj.Preview)
 	rrc.SetProjectID(obj.ProjectID)
 	rrc.SetEnvironmentID(obj.EnvironmentID)
 	rrc.SetResourceID(obj.ResourceID)
@@ -542,7 +615,7 @@ func (rrc *ResourceRunCreate) Set(obj *ResourceRun) *ResourceRunCreate {
 	rrc.SetTemplateVersion(obj.TemplateVersion)
 	rrc.SetTemplateID(obj.TemplateID)
 	rrc.SetVariables(obj.Variables)
-	rrc.SetInputPlan(obj.InputPlan)
+	rrc.SetInputConfigs(obj.InputConfigs)
 	rrc.SetOutput(obj.Output)
 	rrc.SetDeployerType(obj.DeployerType)
 	rrc.SetDuration(obj.Duration)
@@ -561,6 +634,12 @@ func (rrc *ResourceRunCreate) Set(obj *ResourceRun) *ResourceRunCreate {
 	}
 	if obj.Record != "" {
 		rrc.SetRecord(obj.Record)
+	}
+	if !reflect.ValueOf(obj.ChangeCount).IsZero() {
+		rrc.SetChangeCount(obj.ChangeCount)
+	}
+	if !reflect.ValueOf(obj.ComponentChanges).IsZero() {
+		rrc.SetComponentChanges(obj.ComponentChanges)
 	}
 	if obj.ChangeComment != "" {
 		rrc.SetChangeComment(obj.ChangeComment)
@@ -604,6 +683,9 @@ func (rrc *ResourceRunCreate) SaveE(ctx context.Context, cbs ...func(ctx context
 		if _, set := rrc.mutation.Field(resourcerun.FieldStatus); set {
 			obj.Status = x.Status
 		}
+		if _, set := rrc.mutation.Field(resourcerun.FieldType); set {
+			obj.Type = x.Type
+		}
 		if _, set := rrc.mutation.Field(resourcerun.FieldProjectID); set {
 			obj.ProjectID = x.ProjectID
 		}
@@ -625,14 +707,20 @@ func (rrc *ResourceRunCreate) SaveE(ctx context.Context, cbs ...func(ctx context
 		if _, set := rrc.mutation.Field(resourcerun.FieldAttributes); set {
 			obj.Attributes = x.Attributes
 		}
-		if _, set := rrc.mutation.Field(resourcerun.FieldInputPlan); set {
-			obj.InputPlan = x.InputPlan
+		if _, set := rrc.mutation.Field(resourcerun.FieldInputConfigs); set {
+			obj.InputConfigs = x.InputConfigs
 		}
 		if _, set := rrc.mutation.Field(resourcerun.FieldOutput); set {
 			obj.Output = x.Output
 		}
 		if _, set := rrc.mutation.Field(resourcerun.FieldRecord); set {
 			obj.Record = x.Record
+		}
+		if _, set := rrc.mutation.Field(resourcerun.FieldChangeCount); set {
+			obj.ChangeCount = x.ChangeCount
+		}
+		if _, set := rrc.mutation.Field(resourcerun.FieldComponentChanges); set {
+			obj.ComponentChanges = x.ComponentChanges
 		}
 		if _, set := rrc.mutation.Field(resourcerun.FieldChangeComment); set {
 			obj.ChangeComment = x.ChangeComment
@@ -742,6 +830,9 @@ func (rrcb *ResourceRunCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx co
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldStatus); set {
 				objs[i].Status = x[i].Status
 			}
+			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldType); set {
+				objs[i].Type = x[i].Type
+			}
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldProjectID); set {
 				objs[i].ProjectID = x[i].ProjectID
 			}
@@ -763,14 +854,20 @@ func (rrcb *ResourceRunCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx co
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldAttributes); set {
 				objs[i].Attributes = x[i].Attributes
 			}
-			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldInputPlan); set {
-				objs[i].InputPlan = x[i].InputPlan
+			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldInputConfigs); set {
+				objs[i].InputConfigs = x[i].InputConfigs
 			}
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldOutput); set {
 				objs[i].Output = x[i].Output
 			}
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldRecord); set {
 				objs[i].Record = x[i].Record
+			}
+			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldChangeCount); set {
+				objs[i].ChangeCount = x[i].ChangeCount
+			}
+			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldComponentChanges); set {
+				objs[i].ComponentChanges = x[i].ComponentChanges
 			}
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldChangeComment); set {
 				objs[i].ChangeComment = x[i].ChangeComment
@@ -922,6 +1019,30 @@ func (u *ResourceRunUpsert) ClearStatus() *ResourceRunUpsert {
 	return u
 }
 
+// SetType sets the "type" field.
+func (u *ResourceRunUpsert) SetType(v string) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldType, v)
+	return u
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateType() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldType)
+	return u
+}
+
+// SetPreview sets the "preview" field.
+func (u *ResourceRunUpsert) SetPreview(v bool) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldPreview, v)
+	return u
+}
+
+// UpdatePreview sets the "preview" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdatePreview() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldPreview)
+	return u
+}
+
 // SetTemplateVersion sets the "template_version" field.
 func (u *ResourceRunUpsert) SetTemplateVersion(v string) *ResourceRunUpsert {
 	u.Set(resourcerun.FieldTemplateVersion, v)
@@ -964,15 +1085,15 @@ func (u *ResourceRunUpsert) UpdateVariables() *ResourceRunUpsert {
 	return u
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (u *ResourceRunUpsert) SetInputPlan(v string) *ResourceRunUpsert {
-	u.Set(resourcerun.FieldInputPlan, v)
+// SetInputConfigs sets the "input_configs" field.
+func (u *ResourceRunUpsert) SetInputConfigs(v map[string][]uint8) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldInputConfigs, v)
 	return u
 }
 
-// UpdateInputPlan sets the "input_plan" field to the value that was provided on create.
-func (u *ResourceRunUpsert) UpdateInputPlan() *ResourceRunUpsert {
-	u.SetExcluded(resourcerun.FieldInputPlan)
+// UpdateInputConfigs sets the "input_configs" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateInputConfigs() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldInputConfigs)
 	return u
 }
 
@@ -1045,6 +1166,42 @@ func (u *ResourceRunUpsert) UpdateRecord() *ResourceRunUpsert {
 // ClearRecord clears the value of the "record" field.
 func (u *ResourceRunUpsert) ClearRecord() *ResourceRunUpsert {
 	u.SetNull(resourcerun.FieldRecord)
+	return u
+}
+
+// SetChangeCount sets the "change_count" field.
+func (u *ResourceRunUpsert) SetChangeCount(v types.ResourceChangeCount) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldChangeCount, v)
+	return u
+}
+
+// UpdateChangeCount sets the "change_count" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateChangeCount() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldChangeCount)
+	return u
+}
+
+// ClearChangeCount clears the value of the "change_count" field.
+func (u *ResourceRunUpsert) ClearChangeCount() *ResourceRunUpsert {
+	u.SetNull(resourcerun.FieldChangeCount)
+	return u
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (u *ResourceRunUpsert) SetComponentChanges(v []*types.ResourceComponentChange) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldComponentChanges, v)
+	return u
+}
+
+// UpdateComponentChanges sets the "component_changes" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateComponentChanges() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldComponentChanges)
+	return u
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (u *ResourceRunUpsert) ClearComponentChanges() *ResourceRunUpsert {
+	u.SetNull(resourcerun.FieldComponentChanges)
 	return u
 }
 
@@ -1165,6 +1322,34 @@ func (u *ResourceRunUpsertOne) ClearStatus() *ResourceRunUpsertOne {
 	})
 }
 
+// SetType sets the "type" field.
+func (u *ResourceRunUpsertOne) SetType(v string) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateType() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateType()
+	})
+}
+
+// SetPreview sets the "preview" field.
+func (u *ResourceRunUpsertOne) SetPreview(v bool) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetPreview(v)
+	})
+}
+
+// UpdatePreview sets the "preview" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdatePreview() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdatePreview()
+	})
+}
+
 // SetTemplateVersion sets the "template_version" field.
 func (u *ResourceRunUpsertOne) SetTemplateVersion(v string) *ResourceRunUpsertOne {
 	return u.Update(func(s *ResourceRunUpsert) {
@@ -1214,17 +1399,17 @@ func (u *ResourceRunUpsertOne) UpdateVariables() *ResourceRunUpsertOne {
 	})
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (u *ResourceRunUpsertOne) SetInputPlan(v string) *ResourceRunUpsertOne {
+// SetInputConfigs sets the "input_configs" field.
+func (u *ResourceRunUpsertOne) SetInputConfigs(v map[string][]uint8) *ResourceRunUpsertOne {
 	return u.Update(func(s *ResourceRunUpsert) {
-		s.SetInputPlan(v)
+		s.SetInputConfigs(v)
 	})
 }
 
-// UpdateInputPlan sets the "input_plan" field to the value that was provided on create.
-func (u *ResourceRunUpsertOne) UpdateInputPlan() *ResourceRunUpsertOne {
+// UpdateInputConfigs sets the "input_configs" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateInputConfigs() *ResourceRunUpsertOne {
 	return u.Update(func(s *ResourceRunUpsert) {
-		s.UpdateInputPlan()
+		s.UpdateInputConfigs()
 	})
 }
 
@@ -1309,6 +1494,48 @@ func (u *ResourceRunUpsertOne) UpdateRecord() *ResourceRunUpsertOne {
 func (u *ResourceRunUpsertOne) ClearRecord() *ResourceRunUpsertOne {
 	return u.Update(func(s *ResourceRunUpsert) {
 		s.ClearRecord()
+	})
+}
+
+// SetChangeCount sets the "change_count" field.
+func (u *ResourceRunUpsertOne) SetChangeCount(v types.ResourceChangeCount) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetChangeCount(v)
+	})
+}
+
+// UpdateChangeCount sets the "change_count" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateChangeCount() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateChangeCount()
+	})
+}
+
+// ClearChangeCount clears the value of the "change_count" field.
+func (u *ResourceRunUpsertOne) ClearChangeCount() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearChangeCount()
+	})
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (u *ResourceRunUpsertOne) SetComponentChanges(v []*types.ResourceComponentChange) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetComponentChanges(v)
+	})
+}
+
+// UpdateComponentChanges sets the "component_changes" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateComponentChanges() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateComponentChanges()
+	})
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (u *ResourceRunUpsertOne) ClearComponentChanges() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearComponentChanges()
 	})
 }
 
@@ -1599,6 +1826,34 @@ func (u *ResourceRunUpsertBulk) ClearStatus() *ResourceRunUpsertBulk {
 	})
 }
 
+// SetType sets the "type" field.
+func (u *ResourceRunUpsertBulk) SetType(v string) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateType() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateType()
+	})
+}
+
+// SetPreview sets the "preview" field.
+func (u *ResourceRunUpsertBulk) SetPreview(v bool) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetPreview(v)
+	})
+}
+
+// UpdatePreview sets the "preview" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdatePreview() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdatePreview()
+	})
+}
+
 // SetTemplateVersion sets the "template_version" field.
 func (u *ResourceRunUpsertBulk) SetTemplateVersion(v string) *ResourceRunUpsertBulk {
 	return u.Update(func(s *ResourceRunUpsert) {
@@ -1648,17 +1903,17 @@ func (u *ResourceRunUpsertBulk) UpdateVariables() *ResourceRunUpsertBulk {
 	})
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (u *ResourceRunUpsertBulk) SetInputPlan(v string) *ResourceRunUpsertBulk {
+// SetInputConfigs sets the "input_configs" field.
+func (u *ResourceRunUpsertBulk) SetInputConfigs(v map[string][]uint8) *ResourceRunUpsertBulk {
 	return u.Update(func(s *ResourceRunUpsert) {
-		s.SetInputPlan(v)
+		s.SetInputConfigs(v)
 	})
 }
 
-// UpdateInputPlan sets the "input_plan" field to the value that was provided on create.
-func (u *ResourceRunUpsertBulk) UpdateInputPlan() *ResourceRunUpsertBulk {
+// UpdateInputConfigs sets the "input_configs" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateInputConfigs() *ResourceRunUpsertBulk {
 	return u.Update(func(s *ResourceRunUpsert) {
-		s.UpdateInputPlan()
+		s.UpdateInputConfigs()
 	})
 }
 
@@ -1743,6 +1998,48 @@ func (u *ResourceRunUpsertBulk) UpdateRecord() *ResourceRunUpsertBulk {
 func (u *ResourceRunUpsertBulk) ClearRecord() *ResourceRunUpsertBulk {
 	return u.Update(func(s *ResourceRunUpsert) {
 		s.ClearRecord()
+	})
+}
+
+// SetChangeCount sets the "change_count" field.
+func (u *ResourceRunUpsertBulk) SetChangeCount(v types.ResourceChangeCount) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetChangeCount(v)
+	})
+}
+
+// UpdateChangeCount sets the "change_count" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateChangeCount() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateChangeCount()
+	})
+}
+
+// ClearChangeCount clears the value of the "change_count" field.
+func (u *ResourceRunUpsertBulk) ClearChangeCount() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearChangeCount()
+	})
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (u *ResourceRunUpsertBulk) SetComponentChanges(v []*types.ResourceComponentChange) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetComponentChanges(v)
+	})
+}
+
+// UpdateComponentChanges sets the "component_changes" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateComponentChanges() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateComponentChanges()
+	})
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (u *ResourceRunUpsertBulk) ClearComponentChanges() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearComponentChanges()
 	})
 }
 

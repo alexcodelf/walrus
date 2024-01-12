@@ -68,6 +68,16 @@ func CreateTime(v time.Time) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldEQ(FieldCreateTime, v))
 }
 
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldType, v))
+}
+
+// Preview applies equality check predicate on the "preview" field. It's identical to PreviewEQ.
+func Preview(v bool) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldPreview, v))
+}
+
 // ProjectID applies equality check predicate on the "project_id" field. It's identical to ProjectIDEQ.
 func ProjectID(v object.ID) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldEQ(FieldProjectID, v))
@@ -106,11 +116,6 @@ func Attributes(v property.Values) predicate.ResourceRun {
 // Variables applies equality check predicate on the "variables" field. It's identical to VariablesEQ.
 func Variables(v crypto.Map[string, string]) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldEQ(FieldVariables, v))
-}
-
-// InputPlan applies equality check predicate on the "input_plan" field. It's identical to InputPlanEQ.
-func InputPlan(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldEQ(FieldInputPlan, v))
 }
 
 // Output applies equality check predicate on the "output" field. It's identical to OutputEQ.
@@ -191,6 +196,81 @@ func StatusIsNil() predicate.ResourceRun {
 // StatusNotNil applies the NotNil predicate on the "status" field.
 func StatusNotNil() predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldNotNull(FieldStatus))
+}
+
+// TypeEQ applies the EQ predicate on the "type" field.
+func TypeEQ(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldType, v))
+}
+
+// TypeNEQ applies the NEQ predicate on the "type" field.
+func TypeNEQ(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNEQ(FieldType, v))
+}
+
+// TypeIn applies the In predicate on the "type" field.
+func TypeIn(vs ...string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldIn(FieldType, vs...))
+}
+
+// TypeNotIn applies the NotIn predicate on the "type" field.
+func TypeNotIn(vs ...string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNotIn(FieldType, vs...))
+}
+
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldGT(FieldType, v))
+}
+
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldGTE(FieldType, v))
+}
+
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldLT(FieldType, v))
+}
+
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldLTE(FieldType, v))
+}
+
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldContains(FieldType, v))
+}
+
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldHasPrefix(FieldType, v))
+}
+
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldHasSuffix(FieldType, v))
+}
+
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEqualFold(FieldType, v))
+}
+
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldContainsFold(FieldType, v))
+}
+
+// PreviewEQ applies the EQ predicate on the "preview" field.
+func PreviewEQ(v bool) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldPreview, v))
+}
+
+// PreviewNEQ applies the NEQ predicate on the "preview" field.
+func PreviewNEQ(v bool) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNEQ(FieldPreview, v))
 }
 
 // ProjectIDEQ applies the EQ predicate on the "project_id" field.
@@ -693,71 +773,6 @@ func VariablesLTE(v crypto.Map[string, string]) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldLTE(FieldVariables, v))
 }
 
-// InputPlanEQ applies the EQ predicate on the "input_plan" field.
-func InputPlanEQ(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldEQ(FieldInputPlan, v))
-}
-
-// InputPlanNEQ applies the NEQ predicate on the "input_plan" field.
-func InputPlanNEQ(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldNEQ(FieldInputPlan, v))
-}
-
-// InputPlanIn applies the In predicate on the "input_plan" field.
-func InputPlanIn(vs ...string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldIn(FieldInputPlan, vs...))
-}
-
-// InputPlanNotIn applies the NotIn predicate on the "input_plan" field.
-func InputPlanNotIn(vs ...string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldNotIn(FieldInputPlan, vs...))
-}
-
-// InputPlanGT applies the GT predicate on the "input_plan" field.
-func InputPlanGT(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldGT(FieldInputPlan, v))
-}
-
-// InputPlanGTE applies the GTE predicate on the "input_plan" field.
-func InputPlanGTE(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldGTE(FieldInputPlan, v))
-}
-
-// InputPlanLT applies the LT predicate on the "input_plan" field.
-func InputPlanLT(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldLT(FieldInputPlan, v))
-}
-
-// InputPlanLTE applies the LTE predicate on the "input_plan" field.
-func InputPlanLTE(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldLTE(FieldInputPlan, v))
-}
-
-// InputPlanContains applies the Contains predicate on the "input_plan" field.
-func InputPlanContains(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldContains(FieldInputPlan, v))
-}
-
-// InputPlanHasPrefix applies the HasPrefix predicate on the "input_plan" field.
-func InputPlanHasPrefix(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldHasPrefix(FieldInputPlan, v))
-}
-
-// InputPlanHasSuffix applies the HasSuffix predicate on the "input_plan" field.
-func InputPlanHasSuffix(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldHasSuffix(FieldInputPlan, v))
-}
-
-// InputPlanEqualFold applies the EqualFold predicate on the "input_plan" field.
-func InputPlanEqualFold(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldEqualFold(FieldInputPlan, v))
-}
-
-// InputPlanContainsFold applies the ContainsFold predicate on the "input_plan" field.
-func InputPlanContainsFold(v string) predicate.ResourceRun {
-	return predicate.ResourceRun(sql.FieldContainsFold(FieldInputPlan, v))
-}
-
 // OutputEQ applies the EQ predicate on the "output" field.
 func OutputEQ(v string) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldEQ(FieldOutput, v))
@@ -1001,6 +1016,26 @@ func RecordEqualFold(v string) predicate.ResourceRun {
 // RecordContainsFold applies the ContainsFold predicate on the "record" field.
 func RecordContainsFold(v string) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldContainsFold(FieldRecord, v))
+}
+
+// ChangeCountIsNil applies the IsNil predicate on the "change_count" field.
+func ChangeCountIsNil() predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldIsNull(FieldChangeCount))
+}
+
+// ChangeCountNotNil applies the NotNil predicate on the "change_count" field.
+func ChangeCountNotNil() predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNotNull(FieldChangeCount))
+}
+
+// ComponentChangesIsNil applies the IsNil predicate on the "component_changes" field.
+func ComponentChangesIsNil() predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldIsNull(FieldComponentChanges))
+}
+
+// ComponentChangesNotNil applies the NotNil predicate on the "component_changes" field.
+func ComponentChangesNotNil() predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNotNull(FieldComponentChanges))
 }
 
 // ChangeCommentEQ applies the EQ predicate on the "change_comment" field.

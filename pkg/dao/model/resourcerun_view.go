@@ -35,14 +35,18 @@ type ResourceRunCreateInput struct {
 
 	// Output of the Run.
 	Output string `path:"-" query:"-" json:"output"`
-	// Input plan of the Run.
-	InputPlan string `path:"-" query:"-" json:"inputPlan"`
+	// Input configs of the run.
+	InputConfigs map[string][]uint8 `path:"-" query:"-" json:"inputConfigs"`
 	// ID of the template.
 	TemplateID object.ID `path:"-" query:"-" json:"templateID"`
 	// Version of the template.
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion"`
 	// Name of the template.
 	TemplateName string `path:"-" query:"-" json:"templateName"`
+	// Type of the run.
+	Type string `path:"-" query:"-" json:"type"`
+	// Whether the run is preview.
+	Preview bool `path:"-" query:"-" json:"preview,omitempty"`
 	// Attributes to configure the template.
 	Attributes property.Values `path:"-" query:"-" json:"attributes,omitempty"`
 	// Variables of the run.
@@ -55,6 +59,10 @@ type ResourceRunCreateInput struct {
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
+	// Change counts of the run.
+	ChangeCount types.ResourceChangeCount `path:"-" query:"-" json:"changeCount,omitempty"`
+	// Change of the run.
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
 }
@@ -68,16 +76,20 @@ func (rrci *ResourceRunCreateInput) Model() *ResourceRun {
 
 	_rr := &ResourceRun{
 		Output:                    rrci.Output,
-		InputPlan:                 rrci.InputPlan,
+		InputConfigs:              rrci.InputConfigs,
 		TemplateID:                rrci.TemplateID,
 		TemplateVersion:           rrci.TemplateVersion,
 		TemplateName:              rrci.TemplateName,
+		Type:                      rrci.Type,
+		Preview:                   rrci.Preview,
 		Attributes:                rrci.Attributes,
 		Variables:                 rrci.Variables,
 		DeployerType:              rrci.DeployerType,
 		Duration:                  rrci.Duration,
 		PreviousRequiredProviders: rrci.PreviousRequiredProviders,
 		Record:                    rrci.Record,
+		ChangeCount:               rrci.ChangeCount,
+		ComponentChanges:          rrci.ComponentChanges,
 		ChangeComment:             rrci.ChangeComment,
 	}
 
@@ -139,14 +151,18 @@ func (rrci *ResourceRunCreateInput) ValidateWith(ctx context.Context, cs ClientS
 type ResourceRunCreateInputsItem struct {
 	// Output of the Run.
 	Output string `path:"-" query:"-" json:"output"`
-	// Input plan of the Run.
-	InputPlan string `path:"-" query:"-" json:"inputPlan"`
+	// Input configs of the run.
+	InputConfigs map[string][]uint8 `path:"-" query:"-" json:"inputConfigs"`
 	// ID of the template.
 	TemplateID object.ID `path:"-" query:"-" json:"templateID"`
 	// Version of the template.
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion"`
 	// Name of the template.
 	TemplateName string `path:"-" query:"-" json:"templateName"`
+	// Type of the run.
+	Type string `path:"-" query:"-" json:"type"`
+	// Whether the run is preview.
+	Preview bool `path:"-" query:"-" json:"preview,omitempty"`
 	// Attributes to configure the template.
 	Attributes property.Values `path:"-" query:"-" json:"attributes,omitempty"`
 	// Variables of the run.
@@ -159,6 +175,10 @@ type ResourceRunCreateInputsItem struct {
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
+	// Change counts of the run.
+	ChangeCount types.ResourceChangeCount `path:"-" query:"-" json:"changeCount,omitempty"`
+	// Change of the run.
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
 }
@@ -204,16 +224,20 @@ func (rrci *ResourceRunCreateInputs) Model() []*ResourceRun {
 	for i := range rrci.Items {
 		_rr := &ResourceRun{
 			Output:                    rrci.Items[i].Output,
-			InputPlan:                 rrci.Items[i].InputPlan,
+			InputConfigs:              rrci.Items[i].InputConfigs,
 			TemplateID:                rrci.Items[i].TemplateID,
 			TemplateVersion:           rrci.Items[i].TemplateVersion,
 			TemplateName:              rrci.Items[i].TemplateName,
+			Type:                      rrci.Items[i].Type,
+			Preview:                   rrci.Items[i].Preview,
 			Attributes:                rrci.Items[i].Attributes,
 			Variables:                 rrci.Items[i].Variables,
 			DeployerType:              rrci.Items[i].DeployerType,
 			Duration:                  rrci.Items[i].Duration,
 			PreviousRequiredProviders: rrci.Items[i].PreviousRequiredProviders,
 			Record:                    rrci.Items[i].Record,
+			ChangeCount:               rrci.Items[i].ChangeCount,
+			ComponentChanges:          rrci.Items[i].ComponentChanges,
 			ChangeComment:             rrci.Items[i].ChangeComment,
 		}
 
@@ -755,14 +779,18 @@ func (rrqi *ResourceRunQueryInputs) ValidateWith(ctx context.Context, cs ClientS
 type ResourceRunUpdateInput struct {
 	ResourceRunQueryInput `path:",inline" query:"-" json:"-"`
 
+	// Type of the run.
+	Type string `path:"-" query:"-" json:"type,omitempty"`
+	// Whether the run is preview.
+	Preview bool `path:"-" query:"-" json:"preview,omitempty"`
 	// Version of the template.
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion,omitempty"`
 	// Attributes to configure the template.
 	Attributes property.Values `path:"-" query:"-" json:"attributes,omitempty"`
 	// Variables of the run.
 	Variables crypto.Map[string, string] `path:"-" query:"-" json:"variables,omitempty"`
-	// Input plan of the Run.
-	InputPlan string `path:"-" query:"-" json:"inputPlan,omitempty"`
+	// Input configs of the run.
+	InputConfigs map[string][]uint8 `path:"-" query:"-" json:"inputConfigs,omitempty"`
 	// Output of the Run.
 	Output string `path:"-" query:"-" json:"output,omitempty"`
 	// Type of deployer.
@@ -773,6 +801,10 @@ type ResourceRunUpdateInput struct {
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
+	// Change counts of the run.
+	ChangeCount types.ResourceChangeCount `path:"-" query:"-" json:"changeCount,omitempty"`
+	// Change of the run.
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
 }
@@ -786,15 +818,19 @@ func (rrui *ResourceRunUpdateInput) Model() *ResourceRun {
 
 	_rr := &ResourceRun{
 		ID:                        rrui.ID,
+		Type:                      rrui.Type,
+		Preview:                   rrui.Preview,
 		TemplateVersion:           rrui.TemplateVersion,
 		Attributes:                rrui.Attributes,
 		Variables:                 rrui.Variables,
-		InputPlan:                 rrui.InputPlan,
+		InputConfigs:              rrui.InputConfigs,
 		Output:                    rrui.Output,
 		DeployerType:              rrui.DeployerType,
 		Duration:                  rrui.Duration,
 		PreviousRequiredProviders: rrui.PreviousRequiredProviders,
 		Record:                    rrui.Record,
+		ChangeCount:               rrui.ChangeCount,
+		ComponentChanges:          rrui.ComponentChanges,
 		ChangeComment:             rrui.ChangeComment,
 	}
 
@@ -828,14 +864,18 @@ type ResourceRunUpdateInputsItem struct {
 	// ID of the ResourceRun entity.
 	ID object.ID `path:"-" query:"-" json:"id"`
 
+	// Type of the run.
+	Type string `path:"-" query:"-" json:"type"`
+	// Whether the run is preview.
+	Preview bool `path:"-" query:"-" json:"preview"`
 	// Version of the template.
 	TemplateVersion string `path:"-" query:"-" json:"templateVersion"`
 	// Attributes to configure the template.
 	Attributes property.Values `path:"-" query:"-" json:"attributes,omitempty"`
 	// Variables of the run.
 	Variables crypto.Map[string, string] `path:"-" query:"-" json:"variables"`
-	// Input plan of the Run.
-	InputPlan string `path:"-" query:"-" json:"inputPlan"`
+	// Input configs of the run.
+	InputConfigs map[string][]uint8 `path:"-" query:"-" json:"inputConfigs"`
 	// Output of the Run.
 	Output string `path:"-" query:"-" json:"output"`
 	// Type of deployer.
@@ -846,6 +886,10 @@ type ResourceRunUpdateInputsItem struct {
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
+	// Change counts of the run.
+	ChangeCount types.ResourceChangeCount `path:"-" query:"-" json:"changeCount,omitempty"`
+	// Change of the run.
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
 }
@@ -891,15 +935,19 @@ func (rrui *ResourceRunUpdateInputs) Model() []*ResourceRun {
 	for i := range rrui.Items {
 		_rr := &ResourceRun{
 			ID:                        rrui.Items[i].ID,
+			Type:                      rrui.Items[i].Type,
+			Preview:                   rrui.Items[i].Preview,
 			TemplateVersion:           rrui.Items[i].TemplateVersion,
 			Attributes:                rrui.Items[i].Attributes,
 			Variables:                 rrui.Items[i].Variables,
-			InputPlan:                 rrui.Items[i].InputPlan,
+			InputConfigs:              rrui.Items[i].InputConfigs,
 			Output:                    rrui.Items[i].Output,
 			DeployerType:              rrui.Items[i].DeployerType,
 			Duration:                  rrui.Items[i].Duration,
 			PreviousRequiredProviders: rrui.Items[i].PreviousRequiredProviders,
 			Record:                    rrui.Items[i].Record,
+			ChangeCount:               rrui.Items[i].ChangeCount,
+			ComponentChanges:          rrui.Items[i].ComponentChanges,
 			ChangeComment:             rrui.Items[i].ChangeComment,
 		}
 
@@ -1018,20 +1066,24 @@ func (rrui *ResourceRunUpdateInputs) ValidateWith(ctx context.Context, cs Client
 
 // ResourceRunOutput holds the output of the ResourceRun entity.
 type ResourceRunOutput struct {
-	ID                        object.ID                   `json:"id,omitempty"`
-	CreateTime                *time.Time                  `json:"createTime,omitempty"`
-	Status                    status.Status               `json:"status,omitempty"`
-	TemplateName              string                      `json:"templateName,omitempty"`
-	TemplateVersion           string                      `json:"templateVersion,omitempty"`
-	TemplateID                object.ID                   `json:"templateID,omitempty"`
-	Attributes                property.Values             `json:"attributes,omitempty"`
-	Variables                 crypto.Map[string, string]  `json:"variables,omitempty"`
-	DeployerType              string                      `json:"deployerType,omitempty"`
-	Duration                  int                         `json:"duration,omitempty"`
-	PreviousRequiredProviders []types.ProviderRequirement `json:"previousRequiredProviders,omitempty"`
-	Record                    string                      `json:"record,omitempty"`
-	ChangeComment             string                      `json:"changeComment,omitempty"`
-	CreatedBy                 string                      `json:"createdBy,omitempty"`
+	ID                        object.ID                        `json:"id,omitempty"`
+	CreateTime                *time.Time                       `json:"createTime,omitempty"`
+	Status                    status.Status                    `json:"status,omitempty"`
+	Type                      string                           `json:"type,omitempty"`
+	Preview                   bool                             `json:"preview,omitempty"`
+	TemplateName              string                           `json:"templateName,omitempty"`
+	TemplateVersion           string                           `json:"templateVersion,omitempty"`
+	TemplateID                object.ID                        `json:"templateID,omitempty"`
+	Attributes                property.Values                  `json:"attributes,omitempty"`
+	Variables                 crypto.Map[string, string]       `json:"variables,omitempty"`
+	DeployerType              string                           `json:"deployerType,omitempty"`
+	Duration                  int                              `json:"duration,omitempty"`
+	PreviousRequiredProviders []types.ProviderRequirement      `json:"previousRequiredProviders,omitempty"`
+	Record                    string                           `json:"record,omitempty"`
+	ChangeCount               types.ResourceChangeCount        `json:"changeCount,omitempty"`
+	ComponentChanges          []*types.ResourceComponentChange `json:"componentChanges,omitempty"`
+	ChangeComment             string                           `json:"changeComment,omitempty"`
+	CreatedBy                 string                           `json:"createdBy,omitempty"`
 
 	Project     *ProjectOutput     `json:"project,omitempty"`
 	Environment *EnvironmentOutput `json:"environment,omitempty"`
@@ -1058,6 +1110,8 @@ func ExposeResourceRun(_rr *ResourceRun) *ResourceRunOutput {
 		ID:                        _rr.ID,
 		CreateTime:                _rr.CreateTime,
 		Status:                    _rr.Status,
+		Type:                      _rr.Type,
+		Preview:                   _rr.Preview,
 		TemplateName:              _rr.TemplateName,
 		TemplateVersion:           _rr.TemplateVersion,
 		TemplateID:                _rr.TemplateID,
@@ -1067,6 +1121,8 @@ func ExposeResourceRun(_rr *ResourceRun) *ResourceRunOutput {
 		Duration:                  _rr.Duration,
 		PreviousRequiredProviders: _rr.PreviousRequiredProviders,
 		Record:                    _rr.Record,
+		ChangeCount:               _rr.ChangeCount,
+		ComponentChanges:          _rr.ComponentChanges,
 		ChangeComment:             _rr.ChangeComment,
 		CreatedBy:                 _rr.CreatedBy,
 	}

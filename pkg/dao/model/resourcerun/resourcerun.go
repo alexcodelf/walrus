@@ -26,6 +26,10 @@ const (
 	FieldCreateTime = "create_time"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
+	// FieldPreview holds the string denoting the preview field in the database.
+	FieldPreview = "preview"
 	// FieldProjectID holds the string denoting the project_id field in the database.
 	FieldProjectID = "project_id"
 	// FieldEnvironmentID holds the string denoting the environment_id field in the database.
@@ -42,8 +46,8 @@ const (
 	FieldAttributes = "attributes"
 	// FieldVariables holds the string denoting the variables field in the database.
 	FieldVariables = "variables"
-	// FieldInputPlan holds the string denoting the input_plan field in the database.
-	FieldInputPlan = "input_plan"
+	// FieldInputConfigs holds the string denoting the input_configs field in the database.
+	FieldInputConfigs = "input_configs"
 	// FieldOutput holds the string denoting the output field in the database.
 	FieldOutput = "output"
 	// FieldDeployerType holds the string denoting the deployer_type field in the database.
@@ -54,6 +58,10 @@ const (
 	FieldPreviousRequiredProviders = "previous_required_providers"
 	// FieldRecord holds the string denoting the record field in the database.
 	FieldRecord = "record"
+	// FieldChangeCount holds the string denoting the change_count field in the database.
+	FieldChangeCount = "change_count"
+	// FieldComponentChanges holds the string denoting the component_changes field in the database.
+	FieldComponentChanges = "component_changes"
 	// FieldChangeComment holds the string denoting the change_comment field in the database.
 	FieldChangeComment = "change_comment"
 	// FieldCreatedBy holds the string denoting the created_by field in the database.
@@ -94,6 +102,8 @@ var Columns = []string{
 	FieldID,
 	FieldCreateTime,
 	FieldStatus,
+	FieldType,
+	FieldPreview,
 	FieldProjectID,
 	FieldEnvironmentID,
 	FieldResourceID,
@@ -102,12 +112,14 @@ var Columns = []string{
 	FieldTemplateID,
 	FieldAttributes,
 	FieldVariables,
-	FieldInputPlan,
+	FieldInputConfigs,
 	FieldOutput,
 	FieldDeployerType,
 	FieldDuration,
 	FieldPreviousRequiredProviders,
 	FieldRecord,
+	FieldChangeCount,
+	FieldComponentChanges,
 	FieldChangeComment,
 	FieldCreatedBy,
 }
@@ -132,6 +144,10 @@ var (
 	Interceptors [1]ent.Interceptor
 	// DefaultCreateTime holds the default value on creation for the "create_time" field.
 	DefaultCreateTime func() time.Time
+	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	TypeValidator func(string) error
+	// DefaultPreview holds the default value on creation for the "preview" field.
+	DefaultPreview bool
 	// ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
 	ProjectIDValidator func(string) error
 	// EnvironmentIDValidator is a validator for the "environment_id" field. It is called by the builders before save.
@@ -165,6 +181,16 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByCreateTime orders the results by the create_time field.
 func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
+}
+
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByPreview orders the results by the preview field.
+func ByPreview(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPreview, opts...).ToFunc()
 }
 
 // ByProjectID orders the results by the project_id field.
@@ -205,11 +231,6 @@ func ByAttributes(opts ...sql.OrderTermOption) OrderOption {
 // ByVariables orders the results by the variables field.
 func ByVariables(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVariables, opts...).ToFunc()
-}
-
-// ByInputPlan orders the results by the input_plan field.
-func ByInputPlan(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldInputPlan, opts...).ToFunc()
 }
 
 // ByOutput orders the results by the output field.

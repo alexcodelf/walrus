@@ -62,6 +62,26 @@ func (rru *ResourceRunUpdate) ClearStatus() *ResourceRunUpdate {
 	return rru
 }
 
+// SetType sets the "type" field.
+func (rru *ResourceRunUpdate) SetType(s string) *ResourceRunUpdate {
+	rru.mutation.SetType(s)
+	return rru
+}
+
+// SetPreview sets the "preview" field.
+func (rru *ResourceRunUpdate) SetPreview(b bool) *ResourceRunUpdate {
+	rru.mutation.SetPreview(b)
+	return rru
+}
+
+// SetNillablePreview sets the "preview" field if the given value is not nil.
+func (rru *ResourceRunUpdate) SetNillablePreview(b *bool) *ResourceRunUpdate {
+	if b != nil {
+		rru.SetPreview(*b)
+	}
+	return rru
+}
+
 // SetTemplateVersion sets the "template_version" field.
 func (rru *ResourceRunUpdate) SetTemplateVersion(s string) *ResourceRunUpdate {
 	rru.mutation.SetTemplateVersion(s)
@@ -86,9 +106,9 @@ func (rru *ResourceRunUpdate) SetVariables(c crypto.Map[string, string]) *Resour
 	return rru
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (rru *ResourceRunUpdate) SetInputPlan(s string) *ResourceRunUpdate {
-	rru.mutation.SetInputPlan(s)
+// SetInputConfigs sets the "input_configs" field.
+func (rru *ResourceRunUpdate) SetInputConfigs(m map[string][]uint8) *ResourceRunUpdate {
+	rru.mutation.SetInputConfigs(m)
 	return rru
 }
 
@@ -165,6 +185,44 @@ func (rru *ResourceRunUpdate) ClearRecord() *ResourceRunUpdate {
 	return rru
 }
 
+// SetChangeCount sets the "change_count" field.
+func (rru *ResourceRunUpdate) SetChangeCount(tcc types.ResourceChangeCount) *ResourceRunUpdate {
+	rru.mutation.SetChangeCount(tcc)
+	return rru
+}
+
+// SetNillableChangeCount sets the "change_count" field if the given value is not nil.
+func (rru *ResourceRunUpdate) SetNillableChangeCount(tcc *types.ResourceChangeCount) *ResourceRunUpdate {
+	if tcc != nil {
+		rru.SetChangeCount(*tcc)
+	}
+	return rru
+}
+
+// ClearChangeCount clears the value of the "change_count" field.
+func (rru *ResourceRunUpdate) ClearChangeCount() *ResourceRunUpdate {
+	rru.mutation.ClearChangeCount()
+	return rru
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (rru *ResourceRunUpdate) SetComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunUpdate {
+	rru.mutation.SetComponentChanges(tcc)
+	return rru
+}
+
+// AppendComponentChanges appends tcc to the "component_changes" field.
+func (rru *ResourceRunUpdate) AppendComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunUpdate {
+	rru.mutation.AppendComponentChanges(tcc)
+	return rru
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (rru *ResourceRunUpdate) ClearComponentChanges() *ResourceRunUpdate {
+	rru.mutation.ClearComponentChanges()
+	return rru
+}
+
 // SetChangeComment sets the "change_comment" field.
 func (rru *ResourceRunUpdate) SetChangeComment(s string) *ResourceRunUpdate {
 	rru.mutation.SetChangeComment(s)
@@ -225,6 +283,11 @@ func (rru *ResourceRunUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (rru *ResourceRunUpdate) check() error {
+	if v, ok := rru.mutation.GetType(); ok {
+		if err := resourcerun.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`model: validator failed for field "ResourceRun.type": %w`, err)}
+		}
+	}
 	if v, ok := rru.mutation.TemplateVersion(); ok {
 		if err := resourcerun.TemplateVersionValidator(v); err != nil {
 			return &ValidationError{Name: "template_version", err: fmt.Errorf(`model: validator failed for field "ResourceRun.template_version": %w`, err)}
@@ -278,6 +341,8 @@ func (rru *ResourceRunUpdate) Set(obj *ResourceRun) *ResourceRunUpdate {
 	if !reflect.ValueOf(obj.Status).IsZero() {
 		rru.SetStatus(obj.Status)
 	}
+	rru.SetType(obj.Type)
+	rru.SetPreview(obj.Preview)
 	rru.SetTemplateVersion(obj.TemplateVersion)
 	if !reflect.ValueOf(obj.Attributes).IsZero() {
 		rru.SetAttributes(obj.Attributes)
@@ -285,7 +350,7 @@ func (rru *ResourceRunUpdate) Set(obj *ResourceRun) *ResourceRunUpdate {
 		rru.ClearAttributes()
 	}
 	rru.SetVariables(obj.Variables)
-	rru.SetInputPlan(obj.InputPlan)
+	rru.SetInputConfigs(obj.InputConfigs)
 	rru.SetOutput(obj.Output)
 	rru.SetDeployerType(obj.DeployerType)
 	rru.SetDuration(obj.Duration)
@@ -294,6 +359,16 @@ func (rru *ResourceRunUpdate) Set(obj *ResourceRun) *ResourceRunUpdate {
 		rru.SetRecord(obj.Record)
 	} else {
 		rru.ClearRecord()
+	}
+	if !reflect.ValueOf(obj.ChangeCount).IsZero() {
+		rru.SetChangeCount(obj.ChangeCount)
+	} else {
+		rru.ClearChangeCount()
+	}
+	if !reflect.ValueOf(obj.ComponentChanges).IsZero() {
+		rru.SetComponentChanges(obj.ComponentChanges)
+	} else {
+		rru.ClearComponentChanges()
 	}
 	if obj.ChangeComment != "" {
 		rru.SetChangeComment(obj.ChangeComment)
@@ -334,6 +409,12 @@ func (rru *ResourceRunUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if rru.mutation.StatusCleared() {
 		_spec.ClearField(resourcerun.FieldStatus, field.TypeJSON)
 	}
+	if value, ok := rru.mutation.GetType(); ok {
+		_spec.SetField(resourcerun.FieldType, field.TypeString, value)
+	}
+	if value, ok := rru.mutation.Preview(); ok {
+		_spec.SetField(resourcerun.FieldPreview, field.TypeBool, value)
+	}
 	if value, ok := rru.mutation.TemplateVersion(); ok {
 		_spec.SetField(resourcerun.FieldTemplateVersion, field.TypeString, value)
 	}
@@ -346,8 +427,8 @@ func (rru *ResourceRunUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := rru.mutation.Variables(); ok {
 		_spec.SetField(resourcerun.FieldVariables, field.TypeOther, value)
 	}
-	if value, ok := rru.mutation.InputPlan(); ok {
-		_spec.SetField(resourcerun.FieldInputPlan, field.TypeString, value)
+	if value, ok := rru.mutation.InputConfigs(); ok {
+		_spec.SetField(resourcerun.FieldInputConfigs, field.TypeJSON, value)
 	}
 	if value, ok := rru.mutation.Output(); ok {
 		_spec.SetField(resourcerun.FieldOutput, field.TypeString, value)
@@ -374,6 +455,23 @@ func (rru *ResourceRunUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if rru.mutation.RecordCleared() {
 		_spec.ClearField(resourcerun.FieldRecord, field.TypeString)
+	}
+	if value, ok := rru.mutation.ChangeCount(); ok {
+		_spec.SetField(resourcerun.FieldChangeCount, field.TypeJSON, value)
+	}
+	if rru.mutation.ChangeCountCleared() {
+		_spec.ClearField(resourcerun.FieldChangeCount, field.TypeJSON)
+	}
+	if value, ok := rru.mutation.ComponentChanges(); ok {
+		_spec.SetField(resourcerun.FieldComponentChanges, field.TypeJSON, value)
+	}
+	if value, ok := rru.mutation.AppendedComponentChanges(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, resourcerun.FieldComponentChanges, value)
+		})
+	}
+	if rru.mutation.ComponentChangesCleared() {
+		_spec.ClearField(resourcerun.FieldComponentChanges, field.TypeJSON)
 	}
 	if value, ok := rru.mutation.ChangeComment(); ok {
 		_spec.SetField(resourcerun.FieldChangeComment, field.TypeString, value)
@@ -429,6 +527,26 @@ func (rruo *ResourceRunUpdateOne) ClearStatus() *ResourceRunUpdateOne {
 	return rruo
 }
 
+// SetType sets the "type" field.
+func (rruo *ResourceRunUpdateOne) SetType(s string) *ResourceRunUpdateOne {
+	rruo.mutation.SetType(s)
+	return rruo
+}
+
+// SetPreview sets the "preview" field.
+func (rruo *ResourceRunUpdateOne) SetPreview(b bool) *ResourceRunUpdateOne {
+	rruo.mutation.SetPreview(b)
+	return rruo
+}
+
+// SetNillablePreview sets the "preview" field if the given value is not nil.
+func (rruo *ResourceRunUpdateOne) SetNillablePreview(b *bool) *ResourceRunUpdateOne {
+	if b != nil {
+		rruo.SetPreview(*b)
+	}
+	return rruo
+}
+
 // SetTemplateVersion sets the "template_version" field.
 func (rruo *ResourceRunUpdateOne) SetTemplateVersion(s string) *ResourceRunUpdateOne {
 	rruo.mutation.SetTemplateVersion(s)
@@ -453,9 +571,9 @@ func (rruo *ResourceRunUpdateOne) SetVariables(c crypto.Map[string, string]) *Re
 	return rruo
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (rruo *ResourceRunUpdateOne) SetInputPlan(s string) *ResourceRunUpdateOne {
-	rruo.mutation.SetInputPlan(s)
+// SetInputConfigs sets the "input_configs" field.
+func (rruo *ResourceRunUpdateOne) SetInputConfigs(m map[string][]uint8) *ResourceRunUpdateOne {
+	rruo.mutation.SetInputConfigs(m)
 	return rruo
 }
 
@@ -532,6 +650,44 @@ func (rruo *ResourceRunUpdateOne) ClearRecord() *ResourceRunUpdateOne {
 	return rruo
 }
 
+// SetChangeCount sets the "change_count" field.
+func (rruo *ResourceRunUpdateOne) SetChangeCount(tcc types.ResourceChangeCount) *ResourceRunUpdateOne {
+	rruo.mutation.SetChangeCount(tcc)
+	return rruo
+}
+
+// SetNillableChangeCount sets the "change_count" field if the given value is not nil.
+func (rruo *ResourceRunUpdateOne) SetNillableChangeCount(tcc *types.ResourceChangeCount) *ResourceRunUpdateOne {
+	if tcc != nil {
+		rruo.SetChangeCount(*tcc)
+	}
+	return rruo
+}
+
+// ClearChangeCount clears the value of the "change_count" field.
+func (rruo *ResourceRunUpdateOne) ClearChangeCount() *ResourceRunUpdateOne {
+	rruo.mutation.ClearChangeCount()
+	return rruo
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (rruo *ResourceRunUpdateOne) SetComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunUpdateOne {
+	rruo.mutation.SetComponentChanges(tcc)
+	return rruo
+}
+
+// AppendComponentChanges appends tcc to the "component_changes" field.
+func (rruo *ResourceRunUpdateOne) AppendComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunUpdateOne {
+	rruo.mutation.AppendComponentChanges(tcc)
+	return rruo
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (rruo *ResourceRunUpdateOne) ClearComponentChanges() *ResourceRunUpdateOne {
+	rruo.mutation.ClearComponentChanges()
+	return rruo
+}
+
 // SetChangeComment sets the "change_comment" field.
 func (rruo *ResourceRunUpdateOne) SetChangeComment(s string) *ResourceRunUpdateOne {
 	rruo.mutation.SetChangeComment(s)
@@ -605,6 +761,11 @@ func (rruo *ResourceRunUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (rruo *ResourceRunUpdateOne) check() error {
+	if v, ok := rruo.mutation.GetType(); ok {
+		if err := resourcerun.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`model: validator failed for field "ResourceRun.type": %w`, err)}
+		}
+	}
 	if v, ok := rruo.mutation.TemplateVersion(); ok {
 		if err := resourcerun.TemplateVersionValidator(v); err != nil {
 			return &ValidationError{Name: "template_version", err: fmt.Errorf(`model: validator failed for field "ResourceRun.template_version": %w`, err)}
@@ -670,6 +831,12 @@ func (rruo *ResourceRunUpdateOne) Set(obj *ResourceRun) *ResourceRunUpdateOne {
 					rruo.SetStatus(obj.Status)
 				}
 			}
+			if db.Type != obj.Type {
+				rruo.SetType(obj.Type)
+			}
+			if db.Preview != obj.Preview {
+				rruo.SetPreview(obj.Preview)
+			}
 			if db.TemplateVersion != obj.TemplateVersion {
 				rruo.SetTemplateVersion(obj.TemplateVersion)
 			}
@@ -683,8 +850,8 @@ func (rruo *ResourceRunUpdateOne) Set(obj *ResourceRun) *ResourceRunUpdateOne {
 			if !reflect.DeepEqual(db.Variables, obj.Variables) {
 				rruo.SetVariables(obj.Variables)
 			}
-			if db.InputPlan != obj.InputPlan {
-				rruo.SetInputPlan(obj.InputPlan)
+			if !reflect.DeepEqual(db.InputConfigs, obj.InputConfigs) {
+				rruo.SetInputConfigs(obj.InputConfigs)
 			}
 			if db.Output != obj.Output {
 				rruo.SetOutput(obj.Output)
@@ -704,6 +871,20 @@ func (rruo *ResourceRunUpdateOne) Set(obj *ResourceRun) *ResourceRunUpdateOne {
 				}
 			} else {
 				rruo.ClearRecord()
+			}
+			if !reflect.ValueOf(obj.ChangeCount).IsZero() {
+				if !reflect.DeepEqual(db.ChangeCount, obj.ChangeCount) {
+					rruo.SetChangeCount(obj.ChangeCount)
+				}
+			} else {
+				rruo.ClearChangeCount()
+			}
+			if !reflect.ValueOf(obj.ComponentChanges).IsZero() {
+				if !reflect.DeepEqual(db.ComponentChanges, obj.ComponentChanges) {
+					rruo.SetComponentChanges(obj.ComponentChanges)
+				}
+			} else {
+				rruo.ClearComponentChanges()
 			}
 			if obj.ChangeComment != "" {
 				if db.ChangeComment != obj.ChangeComment {
@@ -765,6 +946,12 @@ func (rruo *ResourceRunUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx con
 		if _, set := rruo.mutation.Field(resourcerun.FieldStatus); set {
 			obj.Status = x.Status
 		}
+		if _, set := rruo.mutation.Field(resourcerun.FieldType); set {
+			obj.Type = x.Type
+		}
+		if _, set := rruo.mutation.Field(resourcerun.FieldPreview); set {
+			obj.Preview = x.Preview
+		}
 		if _, set := rruo.mutation.Field(resourcerun.FieldTemplateVersion); set {
 			obj.TemplateVersion = x.TemplateVersion
 		}
@@ -774,8 +961,8 @@ func (rruo *ResourceRunUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx con
 		if _, set := rruo.mutation.Field(resourcerun.FieldVariables); set {
 			obj.Variables = x.Variables
 		}
-		if _, set := rruo.mutation.Field(resourcerun.FieldInputPlan); set {
-			obj.InputPlan = x.InputPlan
+		if _, set := rruo.mutation.Field(resourcerun.FieldInputConfigs); set {
+			obj.InputConfigs = x.InputConfigs
 		}
 		if _, set := rruo.mutation.Field(resourcerun.FieldOutput); set {
 			obj.Output = x.Output
@@ -791,6 +978,12 @@ func (rruo *ResourceRunUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx con
 		}
 		if _, set := rruo.mutation.Field(resourcerun.FieldRecord); set {
 			obj.Record = x.Record
+		}
+		if _, set := rruo.mutation.Field(resourcerun.FieldChangeCount); set {
+			obj.ChangeCount = x.ChangeCount
+		}
+		if _, set := rruo.mutation.Field(resourcerun.FieldComponentChanges); set {
+			obj.ComponentChanges = x.ComponentChanges
 		}
 		if _, set := rruo.mutation.Field(resourcerun.FieldChangeComment); set {
 			obj.ChangeComment = x.ChangeComment
@@ -874,6 +1067,12 @@ func (rruo *ResourceRunUpdateOne) sqlSave(ctx context.Context) (_node *ResourceR
 	if rruo.mutation.StatusCleared() {
 		_spec.ClearField(resourcerun.FieldStatus, field.TypeJSON)
 	}
+	if value, ok := rruo.mutation.GetType(); ok {
+		_spec.SetField(resourcerun.FieldType, field.TypeString, value)
+	}
+	if value, ok := rruo.mutation.Preview(); ok {
+		_spec.SetField(resourcerun.FieldPreview, field.TypeBool, value)
+	}
 	if value, ok := rruo.mutation.TemplateVersion(); ok {
 		_spec.SetField(resourcerun.FieldTemplateVersion, field.TypeString, value)
 	}
@@ -886,8 +1085,8 @@ func (rruo *ResourceRunUpdateOne) sqlSave(ctx context.Context) (_node *ResourceR
 	if value, ok := rruo.mutation.Variables(); ok {
 		_spec.SetField(resourcerun.FieldVariables, field.TypeOther, value)
 	}
-	if value, ok := rruo.mutation.InputPlan(); ok {
-		_spec.SetField(resourcerun.FieldInputPlan, field.TypeString, value)
+	if value, ok := rruo.mutation.InputConfigs(); ok {
+		_spec.SetField(resourcerun.FieldInputConfigs, field.TypeJSON, value)
 	}
 	if value, ok := rruo.mutation.Output(); ok {
 		_spec.SetField(resourcerun.FieldOutput, field.TypeString, value)
@@ -914,6 +1113,23 @@ func (rruo *ResourceRunUpdateOne) sqlSave(ctx context.Context) (_node *ResourceR
 	}
 	if rruo.mutation.RecordCleared() {
 		_spec.ClearField(resourcerun.FieldRecord, field.TypeString)
+	}
+	if value, ok := rruo.mutation.ChangeCount(); ok {
+		_spec.SetField(resourcerun.FieldChangeCount, field.TypeJSON, value)
+	}
+	if rruo.mutation.ChangeCountCleared() {
+		_spec.ClearField(resourcerun.FieldChangeCount, field.TypeJSON)
+	}
+	if value, ok := rruo.mutation.ComponentChanges(); ok {
+		_spec.SetField(resourcerun.FieldComponentChanges, field.TypeJSON, value)
+	}
+	if value, ok := rruo.mutation.AppendedComponentChanges(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, resourcerun.FieldComponentChanges, value)
+		})
+	}
+	if rruo.mutation.ComponentChangesCleared() {
+		_spec.ClearField(resourcerun.FieldComponentChanges, field.TypeJSON)
 	}
 	if value, ok := rruo.mutation.ChangeComment(); ok {
 		_spec.SetField(resourcerun.FieldChangeComment, field.TypeString, value)

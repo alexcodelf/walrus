@@ -17183,12 +17183,14 @@ type ResourceRunMutation struct {
 	id                                *object.ID
 	create_time                       *time.Time
 	status                            *status.Status
+	_type                             *string
+	preview                           *bool
 	template_name                     *string
 	template_version                  *string
 	template_id                       *object.ID
 	attributes                        *property.Values
 	variables                         *crypto.Map[string, string]
-	input_plan                        *string
+	input_configs                     *map[string][]uint8
 	output                            *string
 	deployer_type                     *string
 	duration                          *int
@@ -17196,6 +17198,9 @@ type ResourceRunMutation struct {
 	previous_required_providers       *[]types.ProviderRequirement
 	appendprevious_required_providers []types.ProviderRequirement
 	record                            *string
+	change_count                      *types.ResourceChangeCount
+	component_changes                 *[]*types.ResourceComponentChange
+	appendcomponent_changes           []*types.ResourceComponentChange
 	change_comment                    *string
 	created_by                        *string
 	clearedFields                     map[string]struct{}
@@ -17397,6 +17402,78 @@ func (m *ResourceRunMutation) StatusCleared() bool {
 func (m *ResourceRunMutation) ResetStatus() {
 	m.status = nil
 	delete(m.clearedFields, resourcerun.FieldStatus)
+}
+
+// SetType sets the "type" field.
+func (m *ResourceRunMutation) SetType(s string) {
+	m._type = &s
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *ResourceRunMutation) GetType() (r string, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the ResourceRun entity.
+// If the ResourceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceRunMutation) OldType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *ResourceRunMutation) ResetType() {
+	m._type = nil
+}
+
+// SetPreview sets the "preview" field.
+func (m *ResourceRunMutation) SetPreview(b bool) {
+	m.preview = &b
+}
+
+// Preview returns the value of the "preview" field in the mutation.
+func (m *ResourceRunMutation) Preview() (r bool, exists bool) {
+	v := m.preview
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPreview returns the old "preview" field's value of the ResourceRun entity.
+// If the ResourceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceRunMutation) OldPreview(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPreview is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPreview requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPreview: %w", err)
+	}
+	return oldValue.Preview, nil
+}
+
+// ResetPreview resets all changes to the "preview" field.
+func (m *ResourceRunMutation) ResetPreview() {
+	m.preview = nil
 }
 
 // SetProjectID sets the "project_id" field.
@@ -17700,40 +17777,40 @@ func (m *ResourceRunMutation) ResetVariables() {
 	m.variables = nil
 }
 
-// SetInputPlan sets the "input_plan" field.
-func (m *ResourceRunMutation) SetInputPlan(s string) {
-	m.input_plan = &s
+// SetInputConfigs sets the "input_configs" field.
+func (m *ResourceRunMutation) SetInputConfigs(value map[string][]uint8) {
+	m.input_configs = &value
 }
 
-// InputPlan returns the value of the "input_plan" field in the mutation.
-func (m *ResourceRunMutation) InputPlan() (r string, exists bool) {
-	v := m.input_plan
+// InputConfigs returns the value of the "input_configs" field in the mutation.
+func (m *ResourceRunMutation) InputConfigs() (r map[string][]uint8, exists bool) {
+	v := m.input_configs
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldInputPlan returns the old "input_plan" field's value of the ResourceRun entity.
+// OldInputConfigs returns the old "input_configs" field's value of the ResourceRun entity.
 // If the ResourceRun object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResourceRunMutation) OldInputPlan(ctx context.Context) (v string, err error) {
+func (m *ResourceRunMutation) OldInputConfigs(ctx context.Context) (v map[string][]uint8, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldInputPlan is only allowed on UpdateOne operations")
+		return v, errors.New("OldInputConfigs is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldInputPlan requires an ID field in the mutation")
+		return v, errors.New("OldInputConfigs requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldInputPlan: %w", err)
+		return v, fmt.Errorf("querying old value for OldInputConfigs: %w", err)
 	}
-	return oldValue.InputPlan, nil
+	return oldValue.InputConfigs, nil
 }
 
-// ResetInputPlan resets all changes to the "input_plan" field.
-func (m *ResourceRunMutation) ResetInputPlan() {
-	m.input_plan = nil
+// ResetInputConfigs resets all changes to the "input_configs" field.
+func (m *ResourceRunMutation) ResetInputConfigs() {
+	m.input_configs = nil
 }
 
 // SetOutput sets the "output" field.
@@ -17964,6 +18041,120 @@ func (m *ResourceRunMutation) ResetRecord() {
 	delete(m.clearedFields, resourcerun.FieldRecord)
 }
 
+// SetChangeCount sets the "change_count" field.
+func (m *ResourceRunMutation) SetChangeCount(tcc types.ResourceChangeCount) {
+	m.change_count = &tcc
+}
+
+// ChangeCount returns the value of the "change_count" field in the mutation.
+func (m *ResourceRunMutation) ChangeCount() (r types.ResourceChangeCount, exists bool) {
+	v := m.change_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeCount returns the old "change_count" field's value of the ResourceRun entity.
+// If the ResourceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceRunMutation) OldChangeCount(ctx context.Context) (v types.ResourceChangeCount, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeCount: %w", err)
+	}
+	return oldValue.ChangeCount, nil
+}
+
+// ClearChangeCount clears the value of the "change_count" field.
+func (m *ResourceRunMutation) ClearChangeCount() {
+	m.change_count = nil
+	m.clearedFields[resourcerun.FieldChangeCount] = struct{}{}
+}
+
+// ChangeCountCleared returns if the "change_count" field was cleared in this mutation.
+func (m *ResourceRunMutation) ChangeCountCleared() bool {
+	_, ok := m.clearedFields[resourcerun.FieldChangeCount]
+	return ok
+}
+
+// ResetChangeCount resets all changes to the "change_count" field.
+func (m *ResourceRunMutation) ResetChangeCount() {
+	m.change_count = nil
+	delete(m.clearedFields, resourcerun.FieldChangeCount)
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (m *ResourceRunMutation) SetComponentChanges(tcc []*types.ResourceComponentChange) {
+	m.component_changes = &tcc
+	m.appendcomponent_changes = nil
+}
+
+// ComponentChanges returns the value of the "component_changes" field in the mutation.
+func (m *ResourceRunMutation) ComponentChanges() (r []*types.ResourceComponentChange, exists bool) {
+	v := m.component_changes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldComponentChanges returns the old "component_changes" field's value of the ResourceRun entity.
+// If the ResourceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceRunMutation) OldComponentChanges(ctx context.Context) (v []*types.ResourceComponentChange, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldComponentChanges is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldComponentChanges requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldComponentChanges: %w", err)
+	}
+	return oldValue.ComponentChanges, nil
+}
+
+// AppendComponentChanges adds tcc to the "component_changes" field.
+func (m *ResourceRunMutation) AppendComponentChanges(tcc []*types.ResourceComponentChange) {
+	m.appendcomponent_changes = append(m.appendcomponent_changes, tcc...)
+}
+
+// AppendedComponentChanges returns the list of values that were appended to the "component_changes" field in this mutation.
+func (m *ResourceRunMutation) AppendedComponentChanges() ([]*types.ResourceComponentChange, bool) {
+	if len(m.appendcomponent_changes) == 0 {
+		return nil, false
+	}
+	return m.appendcomponent_changes, true
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (m *ResourceRunMutation) ClearComponentChanges() {
+	m.component_changes = nil
+	m.appendcomponent_changes = nil
+	m.clearedFields[resourcerun.FieldComponentChanges] = struct{}{}
+}
+
+// ComponentChangesCleared returns if the "component_changes" field was cleared in this mutation.
+func (m *ResourceRunMutation) ComponentChangesCleared() bool {
+	_, ok := m.clearedFields[resourcerun.FieldComponentChanges]
+	return ok
+}
+
+// ResetComponentChanges resets all changes to the "component_changes" field.
+func (m *ResourceRunMutation) ResetComponentChanges() {
+	m.component_changes = nil
+	m.appendcomponent_changes = nil
+	delete(m.clearedFields, resourcerun.FieldComponentChanges)
+}
+
 // SetChangeComment sets the "change_comment" field.
 func (m *ResourceRunMutation) SetChangeComment(s string) {
 	m.change_comment = &s
@@ -18161,12 +18352,18 @@ func (m *ResourceRunMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ResourceRunMutation) Fields() []string {
-	fields := make([]string, 0, 18)
+	fields := make([]string, 0, 22)
 	if m.create_time != nil {
 		fields = append(fields, resourcerun.FieldCreateTime)
 	}
 	if m.status != nil {
 		fields = append(fields, resourcerun.FieldStatus)
+	}
+	if m._type != nil {
+		fields = append(fields, resourcerun.FieldType)
+	}
+	if m.preview != nil {
+		fields = append(fields, resourcerun.FieldPreview)
 	}
 	if m.project != nil {
 		fields = append(fields, resourcerun.FieldProjectID)
@@ -18192,8 +18389,8 @@ func (m *ResourceRunMutation) Fields() []string {
 	if m.variables != nil {
 		fields = append(fields, resourcerun.FieldVariables)
 	}
-	if m.input_plan != nil {
-		fields = append(fields, resourcerun.FieldInputPlan)
+	if m.input_configs != nil {
+		fields = append(fields, resourcerun.FieldInputConfigs)
 	}
 	if m.output != nil {
 		fields = append(fields, resourcerun.FieldOutput)
@@ -18209,6 +18406,12 @@ func (m *ResourceRunMutation) Fields() []string {
 	}
 	if m.record != nil {
 		fields = append(fields, resourcerun.FieldRecord)
+	}
+	if m.change_count != nil {
+		fields = append(fields, resourcerun.FieldChangeCount)
+	}
+	if m.component_changes != nil {
+		fields = append(fields, resourcerun.FieldComponentChanges)
 	}
 	if m.change_comment != nil {
 		fields = append(fields, resourcerun.FieldChangeComment)
@@ -18228,6 +18431,10 @@ func (m *ResourceRunMutation) Field(name string) (ent.Value, bool) {
 		return m.CreateTime()
 	case resourcerun.FieldStatus:
 		return m.Status()
+	case resourcerun.FieldType:
+		return m.GetType()
+	case resourcerun.FieldPreview:
+		return m.Preview()
 	case resourcerun.FieldProjectID:
 		return m.ProjectID()
 	case resourcerun.FieldEnvironmentID:
@@ -18244,8 +18451,8 @@ func (m *ResourceRunMutation) Field(name string) (ent.Value, bool) {
 		return m.Attributes()
 	case resourcerun.FieldVariables:
 		return m.Variables()
-	case resourcerun.FieldInputPlan:
-		return m.InputPlan()
+	case resourcerun.FieldInputConfigs:
+		return m.InputConfigs()
 	case resourcerun.FieldOutput:
 		return m.Output()
 	case resourcerun.FieldDeployerType:
@@ -18256,6 +18463,10 @@ func (m *ResourceRunMutation) Field(name string) (ent.Value, bool) {
 		return m.PreviousRequiredProviders()
 	case resourcerun.FieldRecord:
 		return m.Record()
+	case resourcerun.FieldChangeCount:
+		return m.ChangeCount()
+	case resourcerun.FieldComponentChanges:
+		return m.ComponentChanges()
 	case resourcerun.FieldChangeComment:
 		return m.ChangeComment()
 	case resourcerun.FieldCreatedBy:
@@ -18273,6 +18484,10 @@ func (m *ResourceRunMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldCreateTime(ctx)
 	case resourcerun.FieldStatus:
 		return m.OldStatus(ctx)
+	case resourcerun.FieldType:
+		return m.OldType(ctx)
+	case resourcerun.FieldPreview:
+		return m.OldPreview(ctx)
 	case resourcerun.FieldProjectID:
 		return m.OldProjectID(ctx)
 	case resourcerun.FieldEnvironmentID:
@@ -18289,8 +18504,8 @@ func (m *ResourceRunMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldAttributes(ctx)
 	case resourcerun.FieldVariables:
 		return m.OldVariables(ctx)
-	case resourcerun.FieldInputPlan:
-		return m.OldInputPlan(ctx)
+	case resourcerun.FieldInputConfigs:
+		return m.OldInputConfigs(ctx)
 	case resourcerun.FieldOutput:
 		return m.OldOutput(ctx)
 	case resourcerun.FieldDeployerType:
@@ -18301,6 +18516,10 @@ func (m *ResourceRunMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldPreviousRequiredProviders(ctx)
 	case resourcerun.FieldRecord:
 		return m.OldRecord(ctx)
+	case resourcerun.FieldChangeCount:
+		return m.OldChangeCount(ctx)
+	case resourcerun.FieldComponentChanges:
+		return m.OldComponentChanges(ctx)
 	case resourcerun.FieldChangeComment:
 		return m.OldChangeComment(ctx)
 	case resourcerun.FieldCreatedBy:
@@ -18327,6 +18546,20 @@ func (m *ResourceRunMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case resourcerun.FieldType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case resourcerun.FieldPreview:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPreview(v)
 		return nil
 	case resourcerun.FieldProjectID:
 		v, ok := value.(object.ID)
@@ -18384,12 +18617,12 @@ func (m *ResourceRunMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetVariables(v)
 		return nil
-	case resourcerun.FieldInputPlan:
-		v, ok := value.(string)
+	case resourcerun.FieldInputConfigs:
+		v, ok := value.(map[string][]uint8)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetInputPlan(v)
+		m.SetInputConfigs(v)
 		return nil
 	case resourcerun.FieldOutput:
 		v, ok := value.(string)
@@ -18425,6 +18658,20 @@ func (m *ResourceRunMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRecord(v)
+		return nil
+	case resourcerun.FieldChangeCount:
+		v, ok := value.(types.ResourceChangeCount)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeCount(v)
+		return nil
+	case resourcerun.FieldComponentChanges:
+		v, ok := value.([]*types.ResourceComponentChange)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetComponentChanges(v)
 		return nil
 	case resourcerun.FieldChangeComment:
 		v, ok := value.(string)
@@ -18494,6 +18741,12 @@ func (m *ResourceRunMutation) ClearedFields() []string {
 	if m.FieldCleared(resourcerun.FieldRecord) {
 		fields = append(fields, resourcerun.FieldRecord)
 	}
+	if m.FieldCleared(resourcerun.FieldChangeCount) {
+		fields = append(fields, resourcerun.FieldChangeCount)
+	}
+	if m.FieldCleared(resourcerun.FieldComponentChanges) {
+		fields = append(fields, resourcerun.FieldComponentChanges)
+	}
 	if m.FieldCleared(resourcerun.FieldChangeComment) {
 		fields = append(fields, resourcerun.FieldChangeComment)
 	}
@@ -18520,6 +18773,12 @@ func (m *ResourceRunMutation) ClearField(name string) error {
 	case resourcerun.FieldRecord:
 		m.ClearRecord()
 		return nil
+	case resourcerun.FieldChangeCount:
+		m.ClearChangeCount()
+		return nil
+	case resourcerun.FieldComponentChanges:
+		m.ClearComponentChanges()
+		return nil
 	case resourcerun.FieldChangeComment:
 		m.ClearChangeComment()
 		return nil
@@ -18536,6 +18795,12 @@ func (m *ResourceRunMutation) ResetField(name string) error {
 		return nil
 	case resourcerun.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case resourcerun.FieldType:
+		m.ResetType()
+		return nil
+	case resourcerun.FieldPreview:
+		m.ResetPreview()
 		return nil
 	case resourcerun.FieldProjectID:
 		m.ResetProjectID()
@@ -18561,8 +18826,8 @@ func (m *ResourceRunMutation) ResetField(name string) error {
 	case resourcerun.FieldVariables:
 		m.ResetVariables()
 		return nil
-	case resourcerun.FieldInputPlan:
-		m.ResetInputPlan()
+	case resourcerun.FieldInputConfigs:
+		m.ResetInputConfigs()
 		return nil
 	case resourcerun.FieldOutput:
 		m.ResetOutput()
@@ -18578,6 +18843,12 @@ func (m *ResourceRunMutation) ResetField(name string) error {
 		return nil
 	case resourcerun.FieldRecord:
 		m.ResetRecord()
+		return nil
+	case resourcerun.FieldChangeCount:
+		m.ResetChangeCount()
+		return nil
+	case resourcerun.FieldComponentChanges:
+		m.ResetComponentChanges()
 		return nil
 	case resourcerun.FieldChangeComment:
 		m.ResetChangeComment()

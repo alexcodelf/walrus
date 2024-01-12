@@ -578,44 +578,52 @@ func init() {
 	resourcerunDescCreateTime := resourcerunMixinFields1[0].Descriptor()
 	// resourcerun.DefaultCreateTime holds the default value on creation for the create_time field.
 	resourcerun.DefaultCreateTime = resourcerunDescCreateTime.Default.(func() time.Time)
+	// resourcerunDescType is the schema descriptor for type field.
+	resourcerunDescType := resourcerunFields[0].Descriptor()
+	// resourcerun.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	resourcerun.TypeValidator = resourcerunDescType.Validators[0].(func(string) error)
+	// resourcerunDescPreview is the schema descriptor for preview field.
+	resourcerunDescPreview := resourcerunFields[1].Descriptor()
+	// resourcerun.DefaultPreview holds the default value on creation for the preview field.
+	resourcerun.DefaultPreview = resourcerunDescPreview.Default.(bool)
 	// resourcerunDescProjectID is the schema descriptor for project_id field.
-	resourcerunDescProjectID := resourcerunFields[0].Descriptor()
+	resourcerunDescProjectID := resourcerunFields[2].Descriptor()
 	// resourcerun.ProjectIDValidator is a validator for the "project_id" field. It is called by the builders before save.
 	resourcerun.ProjectIDValidator = resourcerunDescProjectID.Validators[0].(func(string) error)
 	// resourcerunDescEnvironmentID is the schema descriptor for environment_id field.
-	resourcerunDescEnvironmentID := resourcerunFields[1].Descriptor()
+	resourcerunDescEnvironmentID := resourcerunFields[3].Descriptor()
 	// resourcerun.EnvironmentIDValidator is a validator for the "environment_id" field. It is called by the builders before save.
 	resourcerun.EnvironmentIDValidator = resourcerunDescEnvironmentID.Validators[0].(func(string) error)
 	// resourcerunDescResourceID is the schema descriptor for resource_id field.
-	resourcerunDescResourceID := resourcerunFields[2].Descriptor()
+	resourcerunDescResourceID := resourcerunFields[4].Descriptor()
 	// resourcerun.ResourceIDValidator is a validator for the "resource_id" field. It is called by the builders before save.
 	resourcerun.ResourceIDValidator = resourcerunDescResourceID.Validators[0].(func(string) error)
 	// resourcerunDescTemplateName is the schema descriptor for template_name field.
-	resourcerunDescTemplateName := resourcerunFields[3].Descriptor()
+	resourcerunDescTemplateName := resourcerunFields[5].Descriptor()
 	// resourcerun.TemplateNameValidator is a validator for the "template_name" field. It is called by the builders before save.
 	resourcerun.TemplateNameValidator = resourcerunDescTemplateName.Validators[0].(func(string) error)
 	// resourcerunDescTemplateVersion is the schema descriptor for template_version field.
-	resourcerunDescTemplateVersion := resourcerunFields[4].Descriptor()
+	resourcerunDescTemplateVersion := resourcerunFields[6].Descriptor()
 	// resourcerun.TemplateVersionValidator is a validator for the "template_version" field. It is called by the builders before save.
 	resourcerun.TemplateVersionValidator = resourcerunDescTemplateVersion.Validators[0].(func(string) error)
 	// resourcerunDescTemplateID is the schema descriptor for template_id field.
-	resourcerunDescTemplateID := resourcerunFields[5].Descriptor()
+	resourcerunDescTemplateID := resourcerunFields[7].Descriptor()
 	// resourcerun.TemplateIDValidator is a validator for the "template_id" field. It is called by the builders before save.
 	resourcerun.TemplateIDValidator = resourcerunDescTemplateID.Validators[0].(func(string) error)
 	// resourcerunDescVariables is the schema descriptor for variables field.
-	resourcerunDescVariables := resourcerunFields[7].Descriptor()
+	resourcerunDescVariables := resourcerunFields[9].Descriptor()
 	// resourcerun.DefaultVariables holds the default value on creation for the variables field.
 	resourcerun.DefaultVariables = resourcerunDescVariables.Default.(crypto.Map[string, string])
 	// resourcerunDescDeployerType is the schema descriptor for deployer_type field.
-	resourcerunDescDeployerType := resourcerunFields[10].Descriptor()
+	resourcerunDescDeployerType := resourcerunFields[12].Descriptor()
 	// resourcerun.DefaultDeployerType holds the default value on creation for the deployer_type field.
 	resourcerun.DefaultDeployerType = resourcerunDescDeployerType.Default.(string)
 	// resourcerunDescDuration is the schema descriptor for duration field.
-	resourcerunDescDuration := resourcerunFields[11].Descriptor()
+	resourcerunDescDuration := resourcerunFields[13].Descriptor()
 	// resourcerun.DefaultDuration holds the default value on creation for the duration field.
 	resourcerun.DefaultDuration = resourcerunDescDuration.Default.(int)
 	// resourcerunDescPreviousRequiredProviders is the schema descriptor for previous_required_providers field.
-	resourcerunDescPreviousRequiredProviders := resourcerunFields[12].Descriptor()
+	resourcerunDescPreviousRequiredProviders := resourcerunFields[14].Descriptor()
 	// resourcerun.DefaultPreviousRequiredProviders holds the default value on creation for the previous_required_providers field.
 	resourcerun.DefaultPreviousRequiredProviders = resourcerunDescPreviousRequiredProviders.Default.([]types.ProviderRequirement)
 	roleMixin := schema.Role{}.Mixin()
