@@ -27,14 +27,22 @@ func (Template) Mixin() []ent.Mixin {
 
 func (Template) Indexes() []ent.Index {
 	return []ent.Index{
+		index.Fields("project_id", "catalog_id", "name").
+			Unique().
+			Annotations(
+				entsql.IndexWhere("project_id IS NOT NULL AND catalog_id IS NOT NULL")),
 		index.Fields("project_id", "name").
 			Unique().
 			Annotations(
-				entsql.IndexWhere("project_id IS NOT NULL")),
+				entsql.IndexWhere("project_id IS NOT NULL AND catalog_id IS NULL")),
+		index.Fields("catalog_id", "name").
+			Unique().
+			Annotations(
+				entsql.IndexWhere("project_id IS NULL AND catalog_id IS NOT NULL")),
 		index.Fields("name").
 			Unique().
 			Annotations(
-				entsql.IndexWhere("project_id IS NULL")),
+				entsql.IndexWhere("project_id IS NULL AND catalog_id IS NULL")),
 	}
 }
 

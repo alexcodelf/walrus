@@ -27,19 +27,35 @@ func (TemplateVersion) Mixin() []ent.Mixin {
 
 func (TemplateVersion) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("name", "version", "project_id").
+		index.Fields("project_id", "catalog_id", "name", "version").
 			Unique().
 			Annotations(
-				entsql.IndexWhere("project_id IS NOT NULL")),
+				entsql.IndexWhere("project_id IS NOT NULL AND catalog_id IS NOT NULL")),
+		index.Fields("project_id", "name", "version").
+			Unique().
+			Annotations(
+				entsql.IndexWhere("project_id IS NOT NULL AND catalog_id IS NULL")),
+		index.Fields("catalog_id", "name", "version").
+			Unique().
+			Annotations(
+				entsql.IndexWhere("project_id IS NULL AND catalog_id IS NOT NULL")),
 		index.Fields("name", "version").
 			Unique().
 			Annotations(
-				entsql.IndexWhere("project_id IS NULL")),
+				entsql.IndexWhere("project_id IS NULL AND catalog_id IS NULL")),
 	}
 }
 
 func (TemplateVersion) Fields() []ent.Field {
 	return []ent.Field{
+		object.IDField("project_id").
+			Comment("ID of the project to belong, empty means for all projects.").
+			Immutable().
+			Optional(),
+		object.IDField("catalog_id").
+			Comment("ID of the catalog to belong, empty means no catalog").
+			Immutable().
+			Optional(),
 		object.IDField("template_id").
 			Comment("ID of the template.").
 			NotEmpty().
@@ -74,10 +90,6 @@ func (TemplateVersion) Fields() []ent.Field {
 			Optional().
 			Annotations(
 				entx.SkipIO()),
-		object.IDField("project_id").
-			Comment("ID of the project to belong, empty means for all projects.").
-			Immutable().
-			Optional(),
 	}
 }
 
@@ -115,6 +127,15 @@ func (TemplateVersion) Edges() []ent.Edge {
 			Immutable().
 			Annotations(
 				entx.ValidateContext(intercept.WithProjectInterceptor)),
+		// Catalog 1-* TemplateVersions.
+		edge.From("catalog", Catalog.Type).
+			Ref("template_versions").
+			Field("catalog_id").
+			Comment("Catalog to which the template version belongs.").
+			Unique().
+			Immutable().
+			Annotations(
+				entx.SkipInput()),
 	}
 }
 

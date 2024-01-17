@@ -68,6 +68,11 @@ func (Catalog) Edges() []ent.Edge {
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),
 				entx.SkipIO()),
+		// Catalog 1-* TemplateVersions.
+		edge.To("template_versions", TemplateVersion.Type).
+			Comment("Template versions that belong to this catalog.").
+			Annotations(
+				entx.SkipIO()),
 		// Project 1-* Catalogs.
 		edge.From("project", Project.Type).
 			Ref("catalogs").
