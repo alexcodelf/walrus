@@ -43,6 +43,8 @@ const (
 	FieldProjectID = "project_id"
 	// EdgeTemplates holds the string denoting the templates edge name in mutations.
 	EdgeTemplates = "templates"
+	// EdgeTemplateVersions holds the string denoting the template_versions edge name in mutations.
+	EdgeTemplateVersions = "template_versions"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// Table holds the table name of the catalog in the database.
@@ -54,6 +56,13 @@ const (
 	TemplatesInverseTable = "templates"
 	// TemplatesColumn is the table column denoting the templates relation/edge.
 	TemplatesColumn = "catalog_id"
+	// TemplateVersionsTable is the table that holds the template_versions relation/edge.
+	TemplateVersionsTable = "template_versions"
+	// TemplateVersionsInverseTable is the table name for the TemplateVersion entity.
+	// It exists in this package in order to avoid circular dependency with the "templateversion" package.
+	TemplateVersionsInverseTable = "template_versions"
+	// TemplateVersionsColumn is the table column denoting the template_versions relation/edge.
+	TemplateVersionsColumn = "catalog_id"
 	// ProjectTable is the table that holds the project relation/edge.
 	ProjectTable = "catalogs"
 	// ProjectInverseTable is the table name for the Project entity.
@@ -172,6 +181,20 @@ func ByTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByTemplateVersionsCount orders the results by template_versions count.
+func ByTemplateVersionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTemplateVersionsStep(), opts...)
+	}
+}
+
+// ByTemplateVersions orders the results by template_versions terms.
+func ByTemplateVersions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTemplateVersionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProjectField orders the results by project field.
 func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -183,6 +206,13 @@ func newTemplatesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TemplatesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TemplatesTable, TemplatesColumn),
+	)
+}
+func newTemplateVersionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TemplateVersionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TemplateVersionsTable, TemplateVersionsColumn),
 	)
 }
 func newProjectStep() *sqlgraph.Step {

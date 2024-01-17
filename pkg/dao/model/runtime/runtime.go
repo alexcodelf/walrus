@@ -801,27 +801,27 @@ func init() {
 	// templateversion.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	templateversion.UpdateDefaultUpdateTime = templateversionDescUpdateTime.UpdateDefault.(func() time.Time)
 	// templateversionDescTemplateID is the schema descriptor for template_id field.
-	templateversionDescTemplateID := templateversionFields[0].Descriptor()
+	templateversionDescTemplateID := templateversionFields[2].Descriptor()
 	// templateversion.TemplateIDValidator is a validator for the "template_id" field. It is called by the builders before save.
 	templateversion.TemplateIDValidator = templateversionDescTemplateID.Validators[0].(func(string) error)
 	// templateversionDescName is the schema descriptor for name field.
-	templateversionDescName := templateversionFields[1].Descriptor()
+	templateversionDescName := templateversionFields[3].Descriptor()
 	// templateversion.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	templateversion.NameValidator = templateversionDescName.Validators[0].(func(string) error)
 	// templateversionDescVersion is the schema descriptor for version field.
-	templateversionDescVersion := templateversionFields[2].Descriptor()
+	templateversionDescVersion := templateversionFields[4].Descriptor()
 	// templateversion.VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	templateversion.VersionValidator = templateversionDescVersion.Validators[0].(func(string) error)
 	// templateversionDescSource is the schema descriptor for source field.
-	templateversionDescSource := templateversionFields[3].Descriptor()
+	templateversionDescSource := templateversionFields[5].Descriptor()
 	// templateversion.SourceValidator is a validator for the "source" field. It is called by the builders before save.
 	templateversion.SourceValidator = templateversionDescSource.Validators[0].(func(string) error)
 	// templateversionDescSchema is the schema descriptor for schema field.
-	templateversionDescSchema := templateversionFields[4].Descriptor()
+	templateversionDescSchema := templateversionFields[6].Descriptor()
 	// templateversion.DefaultSchema holds the default value on creation for the schema field.
 	templateversion.DefaultSchema = templateversionDescSchema.Default.(types.TemplateVersionSchema)
 	// templateversionDescUiSchema is the schema descriptor for uiSchema field.
-	templateversionDescUiSchema := templateversionFields[5].Descriptor()
+	templateversionDescUiSchema := templateversionFields[7].Descriptor()
 	// templateversion.DefaultUiSchema holds the default value on creation for the uiSchema field.
 	templateversion.DefaultUiSchema = templateversionDescUiSchema.Default.(types.UISchema)
 	tokenMixin := schema.Token{}.Mixin()

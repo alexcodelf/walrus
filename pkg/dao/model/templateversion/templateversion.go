@@ -25,6 +25,10 @@ const (
 	FieldCreateTime = "create_time"
 	// FieldUpdateTime holds the string denoting the update_time field in the database.
 	FieldUpdateTime = "update_time"
+	// FieldProjectID holds the string denoting the project_id field in the database.
+	FieldProjectID = "project_id"
+	// FieldCatalogID holds the string denoting the catalog_id field in the database.
+	FieldCatalogID = "catalog_id"
 	// FieldTemplateID holds the string denoting the template_id field in the database.
 	FieldTemplateID = "template_id"
 	// FieldName holds the string denoting the name field in the database.
@@ -39,8 +43,6 @@ const (
 	FieldUiSchema = "ui_schema"
 	// FieldSchemaDefaultValue holds the string denoting the schema_default_value field in the database.
 	FieldSchemaDefaultValue = "schema_default_value"
-	// FieldProjectID holds the string denoting the project_id field in the database.
-	FieldProjectID = "project_id"
 	// EdgeTemplate holds the string denoting the template edge name in mutations.
 	EdgeTemplate = "template"
 	// EdgeResources holds the string denoting the resources edge name in mutations.
@@ -49,6 +51,8 @@ const (
 	EdgeResourceDefinitions = "resource_definitions"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
+	// EdgeCatalog holds the string denoting the catalog edge name in mutations.
+	EdgeCatalog = "catalog"
 	// Table holds the table name of the templateversion in the database.
 	Table = "template_versions"
 	// TemplateTable is the table that holds the template relation/edge.
@@ -79,6 +83,13 @@ const (
 	ProjectInverseTable = "projects"
 	// ProjectColumn is the table column denoting the project relation/edge.
 	ProjectColumn = "project_id"
+	// CatalogTable is the table that holds the catalog relation/edge.
+	CatalogTable = "template_versions"
+	// CatalogInverseTable is the table name for the Catalog entity.
+	// It exists in this package in order to avoid circular dependency with the "catalog" package.
+	CatalogInverseTable = "catalogs"
+	// CatalogColumn is the table column denoting the catalog relation/edge.
+	CatalogColumn = "catalog_id"
 )
 
 // Columns holds all SQL columns for templateversion fields.
@@ -86,6 +97,8 @@ var Columns = []string{
 	FieldID,
 	FieldCreateTime,
 	FieldUpdateTime,
+	FieldProjectID,
+	FieldCatalogID,
 	FieldTemplateID,
 	FieldName,
 	FieldVersion,
@@ -93,7 +106,6 @@ var Columns = []string{
 	FieldSchema,
 	FieldUiSchema,
 	FieldSchemaDefaultValue,
-	FieldProjectID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -152,6 +164,16 @@ func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
 }
 
+// ByProjectID orders the results by the project_id field.
+func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
+}
+
+// ByCatalogID orders the results by the catalog_id field.
+func ByCatalogID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCatalogID, opts...).ToFunc()
+}
+
 // ByTemplateID orders the results by the template_id field.
 func ByTemplateID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTemplateID, opts...).ToFunc()
@@ -170,11 +192,6 @@ func ByVersion(opts ...sql.OrderTermOption) OrderOption {
 // BySource orders the results by the source field.
 func BySource(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSource, opts...).ToFunc()
-}
-
-// ByProjectID orders the results by the project_id field.
-func ByProjectID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldProjectID, opts...).ToFunc()
 }
 
 // ByTemplateField orders the results by template field.
@@ -218,6 +235,13 @@ func ByProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newProjectStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByCatalogField orders the results by catalog field.
+func ByCatalogField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCatalogStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newTemplateStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -244,6 +268,13 @@ func newProjectStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProjectInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ProjectTable, ProjectColumn),
+	)
+}
+func newCatalogStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CatalogInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CatalogTable, CatalogColumn),
 	)
 }
 

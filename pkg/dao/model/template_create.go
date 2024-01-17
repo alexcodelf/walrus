@@ -481,6 +481,11 @@ func (tc *TemplateCreate) SaveE(ctx context.Context, cbs ...func(ctx context.Con
 		} else {
 			q.Where(template.ProjectIDIsNil())
 		}
+		if obj.CatalogID != "" {
+			q.Where(template.CatalogID(obj.CatalogID))
+		} else {
+			q.Where(template.CatalogIDIsNil())
+		}
 		obj.ID, err = q.OnlyID(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("model: failed to query id of Template entity: %w", err)
@@ -616,6 +621,11 @@ func (tcb *TemplateCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx contex
 				q.Where(template.ProjectID(obj.ProjectID))
 			} else {
 				q.Where(template.ProjectIDIsNil())
+			}
+			if obj.CatalogID != "" {
+				q.Where(template.CatalogID(obj.CatalogID))
+			} else {
+				q.Where(template.CatalogIDIsNil())
 			}
 			objs[i].ID, err = q.OnlyID(ctx)
 			if err != nil {

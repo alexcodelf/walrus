@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/template"
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
@@ -30,6 +31,10 @@ type TemplateVersion struct {
 	CreateTime *time.Time `json:"create_time,omitempty"`
 	// UpdateTime holds the value of the "update_time" field.
 	UpdateTime *time.Time `json:"update_time,omitempty"`
+	// ID of the project to belong, empty means for all projects.
+	ProjectID object.ID `json:"project_id,omitempty"`
+	// ID of the catalog to belong, empty means no catalog
+	CatalogID object.ID `json:"catalog_id,omitempty"`
 	// ID of the template.
 	TemplateID object.ID `json:"template_id,omitempty"`
 	// Name of the template.
@@ -44,8 +49,6 @@ type TemplateVersion struct {
 	UiSchema types.UISchema `json:"uiSchema,omitempty"`
 	// Default value generated from schema and ui schema
 	SchemaDefaultValue []byte `json:"schema_default_value,omitempty"`
-	// ID of the project to belong, empty means for all projects.
-	ProjectID object.ID `json:"project_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TemplateVersionQuery when eager-loading is set.
 	Edges        TemplateVersionEdges `json:"edges,omitempty"`
@@ -62,9 +65,11 @@ type TemplateVersionEdges struct {
 	ResourceDefinitions []*ResourceDefinitionMatchingRule `json:"resource_definitions,omitempty"`
 	// Project to which the template version belongs.
 	Project *Project `json:"project,omitempty"`
+	// Catalog to which the template version belongs.
+	Catalog *Catalog `json:"catalog,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -111,6 +116,19 @@ func (e TemplateVersionEdges) ProjectOrErr() (*Project, error) {
 	return nil, &NotLoadedError{edge: "project"}
 }
 
+// CatalogOrErr returns the Catalog value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TemplateVersionEdges) CatalogOrErr() (*Catalog, error) {
+	if e.loadedTypes[4] {
+		if e.Catalog == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: catalog.Label}
+		}
+		return e.Catalog, nil
+	}
+	return nil, &NotLoadedError{edge: "catalog"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*TemplateVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -118,7 +136,7 @@ func (*TemplateVersion) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case templateversion.FieldSchema, templateversion.FieldUiSchema, templateversion.FieldSchemaDefaultValue:
 			values[i] = new([]byte)
-		case templateversion.FieldID, templateversion.FieldTemplateID, templateversion.FieldProjectID:
+		case templateversion.FieldID, templateversion.FieldProjectID, templateversion.FieldCatalogID, templateversion.FieldTemplateID:
 			values[i] = new(object.ID)
 		case templateversion.FieldName, templateversion.FieldVersion, templateversion.FieldSource:
 			values[i] = new(sql.NullString)
@@ -158,6 +176,18 @@ func (tv *TemplateVersion) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				tv.UpdateTime = new(time.Time)
 				*tv.UpdateTime = value.Time
+			}
+		case templateversion.FieldProjectID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field project_id", values[i])
+			} else if value != nil {
+				tv.ProjectID = *value
+			}
+		case templateversion.FieldCatalogID:
+			if value, ok := values[i].(*object.ID); !ok {
+				return fmt.Errorf("unexpected type %T for field catalog_id", values[i])
+			} else if value != nil {
+				tv.CatalogID = *value
 			}
 		case templateversion.FieldTemplateID:
 			if value, ok := values[i].(*object.ID); !ok {
@@ -205,12 +235,6 @@ func (tv *TemplateVersion) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				tv.SchemaDefaultValue = *value
 			}
-		case templateversion.FieldProjectID:
-			if value, ok := values[i].(*object.ID); !ok {
-				return fmt.Errorf("unexpected type %T for field project_id", values[i])
-			} else if value != nil {
-				tv.ProjectID = *value
-			}
 		default:
 			tv.selectValues.Set(columns[i], values[i])
 		}
@@ -242,6 +266,11 @@ func (tv *TemplateVersion) QueryResourceDefinitions() *ResourceDefinitionMatchin
 // QueryProject queries the "project" edge of the TemplateVersion entity.
 func (tv *TemplateVersion) QueryProject() *ProjectQuery {
 	return NewTemplateVersionClient(tv.config).QueryProject(tv)
+}
+
+// QueryCatalog queries the "catalog" edge of the TemplateVersion entity.
+func (tv *TemplateVersion) QueryCatalog() *CatalogQuery {
+	return NewTemplateVersionClient(tv.config).QueryCatalog(tv)
 }
 
 // Update returns a builder for updating this TemplateVersion.
@@ -277,6 +306,12 @@ func (tv *TemplateVersion) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
+	builder.WriteString("project_id=")
+	builder.WriteString(fmt.Sprintf("%v", tv.ProjectID))
+	builder.WriteString(", ")
+	builder.WriteString("catalog_id=")
+	builder.WriteString(fmt.Sprintf("%v", tv.CatalogID))
+	builder.WriteString(", ")
 	builder.WriteString("template_id=")
 	builder.WriteString(fmt.Sprintf("%v", tv.TemplateID))
 	builder.WriteString(", ")
@@ -297,9 +332,6 @@ func (tv *TemplateVersion) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("schema_default_value=")
 	builder.WriteString(fmt.Sprintf("%v", tv.SchemaDefaultValue))
-	builder.WriteString(", ")
-	builder.WriteString("project_id=")
-	builder.WriteString(fmt.Sprintf("%v", tv.ProjectID))
 	builder.WriteByte(')')
 	return builder.String()
 }

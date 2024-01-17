@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/resource"
 	"github.com/seal-io/walrus/pkg/dao/model/resourcedefinitionmatchingrule"
@@ -60,6 +61,34 @@ func (tvc *TemplateVersionCreate) SetUpdateTime(t time.Time) *TemplateVersionCre
 func (tvc *TemplateVersionCreate) SetNillableUpdateTime(t *time.Time) *TemplateVersionCreate {
 	if t != nil {
 		tvc.SetUpdateTime(*t)
+	}
+	return tvc
+}
+
+// SetProjectID sets the "project_id" field.
+func (tvc *TemplateVersionCreate) SetProjectID(o object.ID) *TemplateVersionCreate {
+	tvc.mutation.SetProjectID(o)
+	return tvc
+}
+
+// SetNillableProjectID sets the "project_id" field if the given value is not nil.
+func (tvc *TemplateVersionCreate) SetNillableProjectID(o *object.ID) *TemplateVersionCreate {
+	if o != nil {
+		tvc.SetProjectID(*o)
+	}
+	return tvc
+}
+
+// SetCatalogID sets the "catalog_id" field.
+func (tvc *TemplateVersionCreate) SetCatalogID(o object.ID) *TemplateVersionCreate {
+	tvc.mutation.SetCatalogID(o)
+	return tvc
+}
+
+// SetNillableCatalogID sets the "catalog_id" field if the given value is not nil.
+func (tvc *TemplateVersionCreate) SetNillableCatalogID(o *object.ID) *TemplateVersionCreate {
+	if o != nil {
+		tvc.SetCatalogID(*o)
 	}
 	return tvc
 }
@@ -122,20 +151,6 @@ func (tvc *TemplateVersionCreate) SetSchemaDefaultValue(b []byte) *TemplateVersi
 	return tvc
 }
 
-// SetProjectID sets the "project_id" field.
-func (tvc *TemplateVersionCreate) SetProjectID(o object.ID) *TemplateVersionCreate {
-	tvc.mutation.SetProjectID(o)
-	return tvc
-}
-
-// SetNillableProjectID sets the "project_id" field if the given value is not nil.
-func (tvc *TemplateVersionCreate) SetNillableProjectID(o *object.ID) *TemplateVersionCreate {
-	if o != nil {
-		tvc.SetProjectID(*o)
-	}
-	return tvc
-}
-
 // SetID sets the "id" field.
 func (tvc *TemplateVersionCreate) SetID(o object.ID) *TemplateVersionCreate {
 	tvc.mutation.SetID(o)
@@ -180,6 +195,11 @@ func (tvc *TemplateVersionCreate) AddResourceDefinitions(r ...*ResourceDefinitio
 // SetProject sets the "project" edge to the Project entity.
 func (tvc *TemplateVersionCreate) SetProject(p *Project) *TemplateVersionCreate {
 	return tvc.SetProjectID(p.ID)
+}
+
+// SetCatalog sets the "catalog" edge to the Catalog entity.
+func (tvc *TemplateVersionCreate) SetCatalog(c *Catalog) *TemplateVersionCreate {
+	return tvc.SetCatalogID(c.ID)
 }
 
 // Mutation returns the TemplateVersionMutation object of the builder.
@@ -442,6 +462,24 @@ func (tvc *TemplateVersionCreate) createSpec() (*TemplateVersion, *sqlgraph.Crea
 		_node.ProjectID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := tvc.mutation.CatalogIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   templateversion.CatalogTable,
+			Columns: []string{templateversion.CatalogColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(catalog.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = tvc.schemaConfig.TemplateVersion
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CatalogID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -479,11 +517,14 @@ func (tvc *TemplateVersionCreate) Set(obj *TemplateVersion) *TemplateVersionCrea
 	if obj.UpdateTime != nil {
 		tvc.SetUpdateTime(*obj.UpdateTime)
 	}
-	if !reflect.ValueOf(obj.SchemaDefaultValue).IsZero() {
-		tvc.SetSchemaDefaultValue(obj.SchemaDefaultValue)
-	}
 	if obj.ProjectID != "" {
 		tvc.SetProjectID(obj.ProjectID)
+	}
+	if obj.CatalogID != "" {
+		tvc.SetCatalogID(obj.CatalogID)
+	}
+	if !reflect.ValueOf(obj.SchemaDefaultValue).IsZero() {
+		tvc.SetSchemaDefaultValue(obj.SchemaDefaultValue)
 	}
 
 	// Record the given object.
@@ -530,6 +571,11 @@ func (tvc *TemplateVersionCreate) SaveE(ctx context.Context, cbs ...func(ctx con
 		} else {
 			q.Where(templateversion.ProjectIDIsNil())
 		}
+		if obj.CatalogID != "" {
+			q.Where(templateversion.CatalogID(obj.CatalogID))
+		} else {
+			q.Where(templateversion.CatalogIDIsNil())
+		}
 		obj.ID, err = q.OnlyID(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("model: failed to query id of TemplateVersion entity: %w", err)
@@ -537,6 +583,12 @@ func (tvc *TemplateVersionCreate) SaveE(ctx context.Context, cbs ...func(ctx con
 	}
 
 	if x := tvc.object; x != nil {
+		if _, set := tvc.mutation.Field(templateversion.FieldProjectID); set {
+			obj.ProjectID = x.ProjectID
+		}
+		if _, set := tvc.mutation.Field(templateversion.FieldCatalogID); set {
+			obj.CatalogID = x.CatalogID
+		}
 		if _, set := tvc.mutation.Field(templateversion.FieldTemplateID); set {
 			obj.TemplateID = x.TemplateID
 		}
@@ -551,9 +603,6 @@ func (tvc *TemplateVersionCreate) SaveE(ctx context.Context, cbs ...func(ctx con
 		}
 		if _, set := tvc.mutation.Field(templateversion.FieldSchemaDefaultValue); set {
 			obj.SchemaDefaultValue = x.SchemaDefaultValue
-		}
-		if _, set := tvc.mutation.Field(templateversion.FieldProjectID); set {
-			obj.ProjectID = x.ProjectID
 		}
 		obj.Edges = x.Edges
 	}
@@ -664,6 +713,11 @@ func (tvcb *TemplateVersionCreateBulk) SaveE(ctx context.Context, cbs ...func(ct
 			} else {
 				q.Where(templateversion.ProjectIDIsNil())
 			}
+			if obj.CatalogID != "" {
+				q.Where(templateversion.CatalogID(obj.CatalogID))
+			} else {
+				q.Where(templateversion.CatalogIDIsNil())
+			}
 			objs[i].ID, err = q.OnlyID(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("model: failed to query id of TemplateVersion entity: %w", err)
@@ -673,6 +727,12 @@ func (tvcb *TemplateVersionCreateBulk) SaveE(ctx context.Context, cbs ...func(ct
 
 	if x := tvcb.objects; x != nil {
 		for i := range x {
+			if _, set := tvcb.builders[i].mutation.Field(templateversion.FieldProjectID); set {
+				objs[i].ProjectID = x[i].ProjectID
+			}
+			if _, set := tvcb.builders[i].mutation.Field(templateversion.FieldCatalogID); set {
+				objs[i].CatalogID = x[i].CatalogID
+			}
 			if _, set := tvcb.builders[i].mutation.Field(templateversion.FieldTemplateID); set {
 				objs[i].TemplateID = x[i].TemplateID
 			}
@@ -687,9 +747,6 @@ func (tvcb *TemplateVersionCreateBulk) SaveE(ctx context.Context, cbs ...func(ct
 			}
 			if _, set := tvcb.builders[i].mutation.Field(templateversion.FieldSchemaDefaultValue); set {
 				objs[i].SchemaDefaultValue = x[i].SchemaDefaultValue
-			}
-			if _, set := tvcb.builders[i].mutation.Field(templateversion.FieldProjectID); set {
-				objs[i].ProjectID = x[i].ProjectID
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -891,6 +948,12 @@ func (u *TemplateVersionUpsertOne) UpdateNewValues() *TemplateVersionUpsertOne {
 		if _, exists := u.create.mutation.CreateTime(); exists {
 			s.SetIgnore(templateversion.FieldCreateTime)
 		}
+		if _, exists := u.create.mutation.ProjectID(); exists {
+			s.SetIgnore(templateversion.FieldProjectID)
+		}
+		if _, exists := u.create.mutation.CatalogID(); exists {
+			s.SetIgnore(templateversion.FieldCatalogID)
+		}
 		if _, exists := u.create.mutation.TemplateID(); exists {
 			s.SetIgnore(templateversion.FieldTemplateID)
 		}
@@ -902,9 +965,6 @@ func (u *TemplateVersionUpsertOne) UpdateNewValues() *TemplateVersionUpsertOne {
 		}
 		if _, exists := u.create.mutation.Source(); exists {
 			s.SetIgnore(templateversion.FieldSource)
-		}
-		if _, exists := u.create.mutation.ProjectID(); exists {
-			s.SetIgnore(templateversion.FieldProjectID)
 		}
 	}))
 	return u
@@ -1184,6 +1244,12 @@ func (u *TemplateVersionUpsertBulk) UpdateNewValues() *TemplateVersionUpsertBulk
 			if _, exists := b.mutation.CreateTime(); exists {
 				s.SetIgnore(templateversion.FieldCreateTime)
 			}
+			if _, exists := b.mutation.ProjectID(); exists {
+				s.SetIgnore(templateversion.FieldProjectID)
+			}
+			if _, exists := b.mutation.CatalogID(); exists {
+				s.SetIgnore(templateversion.FieldCatalogID)
+			}
 			if _, exists := b.mutation.TemplateID(); exists {
 				s.SetIgnore(templateversion.FieldTemplateID)
 			}
@@ -1195,9 +1261,6 @@ func (u *TemplateVersionUpsertBulk) UpdateNewValues() *TemplateVersionUpsertBulk
 			}
 			if _, exists := b.mutation.Source(); exists {
 				s.SetIgnore(templateversion.FieldSource)
-			}
-			if _, exists := b.mutation.ProjectID(); exists {
-				s.SetIgnore(templateversion.FieldProjectID)
 			}
 		}
 	}))

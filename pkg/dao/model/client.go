@@ -745,6 +745,25 @@ func (c *CatalogClient) QueryTemplates(ca *Catalog) *TemplateQuery {
 	return query
 }
 
+// QueryTemplateVersions queries the template_versions edge of a Catalog.
+func (c *CatalogClient) QueryTemplateVersions(ca *Catalog) *TemplateVersionQuery {
+	query := (&TemplateVersionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ca.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(catalog.Table, catalog.FieldID, id),
+			sqlgraph.To(templateversion.Table, templateversion.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, catalog.TemplateVersionsTable, catalog.TemplateVersionsColumn),
+		)
+		schemaConfig := ca.schemaConfig
+		step.To.Schema = schemaConfig.TemplateVersion
+		step.Edge.Schema = schemaConfig.TemplateVersion
+		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryProject queries the project edge of a Catalog.
 func (c *CatalogClient) QueryProject(ca *Catalog) *ProjectQuery {
 	query := (&ProjectClient{config: c.config}).Query()
@@ -4494,6 +4513,25 @@ func (c *TemplateVersionClient) QueryProject(tv *TemplateVersion) *ProjectQuery 
 		)
 		schemaConfig := tv.schemaConfig
 		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.TemplateVersion
+		fromV = sqlgraph.Neighbors(tv.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCatalog queries the catalog edge of a TemplateVersion.
+func (c *TemplateVersionClient) QueryCatalog(tv *TemplateVersion) *CatalogQuery {
+	query := (&CatalogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tv.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(templateversion.Table, templateversion.FieldID, id),
+			sqlgraph.To(catalog.Table, catalog.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, templateversion.CatalogTable, templateversion.CatalogColumn),
+		)
+		schemaConfig := tv.schemaConfig
+		step.To.Schema = schemaConfig.Catalog
 		step.Edge.Schema = schemaConfig.TemplateVersion
 		fromV = sqlgraph.Neighbors(tv.driver.Dialect(), step)
 		return fromV, nil

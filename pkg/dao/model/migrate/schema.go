@@ -828,11 +828,27 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
+				Name:    "template_project_id_catalog_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{TemplatesColumns[10], TemplatesColumns[9], TemplatesColumns[1]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "project_id IS NOT NULL AND catalog_id IS NOT NULL",
+				},
+			},
+			{
 				Name:    "template_project_id_name",
 				Unique:  true,
 				Columns: []*schema.Column{TemplatesColumns[10], TemplatesColumns[1]},
 				Annotation: &entsql.IndexAnnotation{
-					Where: "project_id IS NOT NULL",
+					Where: "project_id IS NOT NULL AND catalog_id IS NULL",
+				},
+			},
+			{
+				Name:    "template_catalog_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{TemplatesColumns[9], TemplatesColumns[1]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "project_id IS NULL AND catalog_id IS NOT NULL",
 				},
 			},
 			{
@@ -840,7 +856,7 @@ var (
 				Unique:  true,
 				Columns: []*schema.Column{TemplatesColumns[1]},
 				Annotation: &entsql.IndexAnnotation{
-					Where: "project_id IS NULL",
+					Where: "project_id IS NULL AND catalog_id IS NULL",
 				},
 			},
 		},
@@ -856,6 +872,7 @@ var (
 		{Name: "schema", Type: field.TypeJSON},
 		{Name: "ui_schema", Type: field.TypeJSON},
 		{Name: "schema_default_value", Type: field.TypeBytes, Nullable: true},
+		{Name: "catalog_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "project_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 		{Name: "template_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "bigint", "postgres": "bigint", "sqlite3": "integer"}},
 	}
@@ -866,14 +883,20 @@ var (
 		PrimaryKey: []*schema.Column{TemplateVersionsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "template_versions_projects_template_versions",
+				Symbol:     "template_versions_catalogs_template_versions",
 				Columns:    []*schema.Column{TemplateVersionsColumns[9]},
+				RefColumns: []*schema.Column{CatalogsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "template_versions_projects_template_versions",
+				Columns:    []*schema.Column{TemplateVersionsColumns[10]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "template_versions_templates_versions",
-				Columns:    []*schema.Column{TemplateVersionsColumns[10]},
+				Columns:    []*schema.Column{TemplateVersionsColumns[11]},
 				RefColumns: []*schema.Column{TemplatesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -885,11 +908,27 @@ var (
 				Columns: []*schema.Column{TemplateVersionsColumns[1]},
 			},
 			{
-				Name:    "templateversion_name_version_project_id",
+				Name:    "templateversion_project_id_catalog_id_name_version",
 				Unique:  true,
-				Columns: []*schema.Column{TemplateVersionsColumns[3], TemplateVersionsColumns[4], TemplateVersionsColumns[9]},
+				Columns: []*schema.Column{TemplateVersionsColumns[10], TemplateVersionsColumns[9], TemplateVersionsColumns[3], TemplateVersionsColumns[4]},
 				Annotation: &entsql.IndexAnnotation{
-					Where: "project_id IS NOT NULL",
+					Where: "project_id IS NOT NULL AND catalog_id IS NOT NULL",
+				},
+			},
+			{
+				Name:    "templateversion_project_id_name_version",
+				Unique:  true,
+				Columns: []*schema.Column{TemplateVersionsColumns[10], TemplateVersionsColumns[3], TemplateVersionsColumns[4]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "project_id IS NOT NULL AND catalog_id IS NULL",
+				},
+			},
+			{
+				Name:    "templateversion_catalog_id_name_version",
+				Unique:  true,
+				Columns: []*schema.Column{TemplateVersionsColumns[9], TemplateVersionsColumns[3], TemplateVersionsColumns[4]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "project_id IS NULL AND catalog_id IS NOT NULL",
 				},
 			},
 			{
@@ -897,7 +936,7 @@ var (
 				Unique:  true,
 				Columns: []*schema.Column{TemplateVersionsColumns[3], TemplateVersionsColumns[4]},
 				Annotation: &entsql.IndexAnnotation{
-					Where: "project_id IS NULL",
+					Where: "project_id IS NULL AND catalog_id IS NULL",
 				},
 			},
 		},
@@ -1305,8 +1344,9 @@ func init() {
 	SubjectRoleRelationshipsTable.ForeignKeys[2].RefTable = RolesTable
 	TemplatesTable.ForeignKeys[0].RefTable = CatalogsTable
 	TemplatesTable.ForeignKeys[1].RefTable = ProjectsTable
-	TemplateVersionsTable.ForeignKeys[0].RefTable = ProjectsTable
-	TemplateVersionsTable.ForeignKeys[1].RefTable = TemplatesTable
+	TemplateVersionsTable.ForeignKeys[0].RefTable = CatalogsTable
+	TemplateVersionsTable.ForeignKeys[1].RefTable = ProjectsTable
+	TemplateVersionsTable.ForeignKeys[2].RefTable = TemplatesTable
 	TokensTable.ForeignKeys[0].RefTable = SubjectsTable
 	VariablesTable.ForeignKeys[0].RefTable = EnvironmentsTable
 	VariablesTable.ForeignKeys[1].RefTable = ProjectsTable

@@ -21,19 +21,21 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
 	"github.com/seal-io/walrus/pkg/dao/model/template"
+	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 )
 
 // CatalogQuery is the builder for querying Catalog entities.
 type CatalogQuery struct {
 	config
-	ctx           *QueryContext
-	order         []catalog.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.Catalog
-	withTemplates *TemplateQuery
-	withProject   *ProjectQuery
-	modifiers     []func(*sql.Selector)
+	ctx                  *QueryContext
+	order                []catalog.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.Catalog
+	withTemplates        *TemplateQuery
+	withTemplateVersions *TemplateVersionQuery
+	withProject          *ProjectQuery
+	modifiers            []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -89,6 +91,31 @@ func (cq *CatalogQuery) QueryTemplates() *TemplateQuery {
 		schemaConfig := cq.schemaConfig
 		step.To.Schema = schemaConfig.Template
 		step.Edge.Schema = schemaConfig.Template
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTemplateVersions chains the current query on the "template_versions" edge.
+func (cq *CatalogQuery) QueryTemplateVersions() *TemplateVersionQuery {
+	query := (&TemplateVersionClient{config: cq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(catalog.Table, catalog.FieldID, selector),
+			sqlgraph.To(templateversion.Table, templateversion.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, catalog.TemplateVersionsTable, catalog.TemplateVersionsColumn),
+		)
+		schemaConfig := cq.schemaConfig
+		step.To.Schema = schemaConfig.TemplateVersion
+		step.Edge.Schema = schemaConfig.TemplateVersion
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -307,13 +334,14 @@ func (cq *CatalogQuery) Clone() *CatalogQuery {
 		return nil
 	}
 	return &CatalogQuery{
-		config:        cq.config,
-		ctx:           cq.ctx.Clone(),
-		order:         append([]catalog.OrderOption{}, cq.order...),
-		inters:        append([]Interceptor{}, cq.inters...),
-		predicates:    append([]predicate.Catalog{}, cq.predicates...),
-		withTemplates: cq.withTemplates.Clone(),
-		withProject:   cq.withProject.Clone(),
+		config:               cq.config,
+		ctx:                  cq.ctx.Clone(),
+		order:                append([]catalog.OrderOption{}, cq.order...),
+		inters:               append([]Interceptor{}, cq.inters...),
+		predicates:           append([]predicate.Catalog{}, cq.predicates...),
+		withTemplates:        cq.withTemplates.Clone(),
+		withTemplateVersions: cq.withTemplateVersions.Clone(),
+		withProject:          cq.withProject.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
@@ -328,6 +356,17 @@ func (cq *CatalogQuery) WithTemplates(opts ...func(*TemplateQuery)) *CatalogQuer
 		opt(query)
 	}
 	cq.withTemplates = query
+	return cq
+}
+
+// WithTemplateVersions tells the query-builder to eager-load the nodes that are connected to
+// the "template_versions" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CatalogQuery) WithTemplateVersions(opts ...func(*TemplateVersionQuery)) *CatalogQuery {
+	query := (&TemplateVersionClient{config: cq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withTemplateVersions = query
 	return cq
 }
 
@@ -420,8 +459,9 @@ func (cq *CatalogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cata
 	var (
 		nodes       = []*Catalog{}
 		_spec       = cq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			cq.withTemplates != nil,
+			cq.withTemplateVersions != nil,
 			cq.withProject != nil,
 		}
 	)
@@ -455,6 +495,13 @@ func (cq *CatalogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cata
 			return nil, err
 		}
 	}
+	if query := cq.withTemplateVersions; query != nil {
+		if err := cq.loadTemplateVersions(ctx, query, nodes,
+			func(n *Catalog) { n.Edges.TemplateVersions = []*TemplateVersion{} },
+			func(n *Catalog, e *TemplateVersion) { n.Edges.TemplateVersions = append(n.Edges.TemplateVersions, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := cq.withProject; query != nil {
 		if err := cq.loadProject(ctx, query, nodes, nil,
 			func(n *Catalog, e *Project) { n.Edges.Project = e }); err != nil {
@@ -479,6 +526,36 @@ func (cq *CatalogQuery) loadTemplates(ctx context.Context, query *TemplateQuery,
 	}
 	query.Where(predicate.Template(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(catalog.TemplatesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CatalogID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "catalog_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (cq *CatalogQuery) loadTemplateVersions(ctx context.Context, query *TemplateVersionQuery, nodes []*Catalog, init func(*Catalog), assign func(*Catalog, *TemplateVersion)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[object.ID]*Catalog)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(templateversion.FieldCatalogID)
+	}
+	query.Where(predicate.TemplateVersion(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(catalog.TemplateVersionsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

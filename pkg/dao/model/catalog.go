@@ -58,11 +58,13 @@ type Catalog struct {
 type CatalogEdges struct {
 	// Templates that belong to this catalog.
 	Templates []*Template `json:"templates,omitempty"`
+	// Template versions that belong to this catalog.
+	TemplateVersions []*TemplateVersion `json:"template_versions,omitempty"`
 	// Project to which the catalog belongs.
 	Project *Project `json:"project,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // TemplatesOrErr returns the Templates value or an error if the edge
@@ -74,10 +76,19 @@ func (e CatalogEdges) TemplatesOrErr() ([]*Template, error) {
 	return nil, &NotLoadedError{edge: "templates"}
 }
 
+// TemplateVersionsOrErr returns the TemplateVersions value or an error if the edge
+// was not loaded in eager-loading.
+func (e CatalogEdges) TemplateVersionsOrErr() ([]*TemplateVersion, error) {
+	if e.loadedTypes[1] {
+		return e.TemplateVersions, nil
+	}
+	return nil, &NotLoadedError{edge: "template_versions"}
+}
+
 // ProjectOrErr returns the Project value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e CatalogEdges) ProjectOrErr() (*Project, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		if e.Project == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: project.Label}
@@ -213,6 +224,11 @@ func (c *Catalog) Value(name string) (ent.Value, error) {
 // QueryTemplates queries the "templates" edge of the Catalog entity.
 func (c *Catalog) QueryTemplates() *TemplateQuery {
 	return NewCatalogClient(c.config).QueryTemplates(c)
+}
+
+// QueryTemplateVersions queries the "template_versions" edge of the Catalog entity.
+func (c *Catalog) QueryTemplateVersions() *TemplateVersionQuery {
+	return NewCatalogClient(c.config).QueryTemplateVersions(c)
 }
 
 // QueryProject queries the "project" edge of the Catalog entity.

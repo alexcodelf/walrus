@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 
+	"github.com/seal-io/walrus/pkg/dao/model/catalog"
 	"github.com/seal-io/walrus/pkg/dao/model/internal"
 	"github.com/seal-io/walrus/pkg/dao/model/predicate"
 	"github.com/seal-io/walrus/pkg/dao/model/project"
@@ -37,6 +38,7 @@ type TemplateVersionQuery struct {
 	withResources           *ResourceQuery
 	withResourceDefinitions *ResourceDefinitionMatchingRuleQuery
 	withProject             *ProjectQuery
+	withCatalog             *CatalogQuery
 	modifiers               []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -167,6 +169,31 @@ func (tvq *TemplateVersionQuery) QueryProject() *ProjectQuery {
 		)
 		schemaConfig := tvq.schemaConfig
 		step.To.Schema = schemaConfig.Project
+		step.Edge.Schema = schemaConfig.TemplateVersion
+		fromU = sqlgraph.SetNeighbors(tvq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCatalog chains the current query on the "catalog" edge.
+func (tvq *TemplateVersionQuery) QueryCatalog() *CatalogQuery {
+	query := (&CatalogClient{config: tvq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tvq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tvq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(templateversion.Table, templateversion.FieldID, selector),
+			sqlgraph.To(catalog.Table, catalog.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, templateversion.CatalogTable, templateversion.CatalogColumn),
+		)
+		schemaConfig := tvq.schemaConfig
+		step.To.Schema = schemaConfig.Catalog
 		step.Edge.Schema = schemaConfig.TemplateVersion
 		fromU = sqlgraph.SetNeighbors(tvq.driver.Dialect(), step)
 		return fromU, nil
@@ -370,6 +397,7 @@ func (tvq *TemplateVersionQuery) Clone() *TemplateVersionQuery {
 		withResources:           tvq.withResources.Clone(),
 		withResourceDefinitions: tvq.withResourceDefinitions.Clone(),
 		withProject:             tvq.withProject.Clone(),
+		withCatalog:             tvq.withCatalog.Clone(),
 		// clone intermediate query.
 		sql:  tvq.sql.Clone(),
 		path: tvq.path,
@@ -417,6 +445,17 @@ func (tvq *TemplateVersionQuery) WithProject(opts ...func(*ProjectQuery)) *Templ
 		opt(query)
 	}
 	tvq.withProject = query
+	return tvq
+}
+
+// WithCatalog tells the query-builder to eager-load the nodes that are connected to
+// the "catalog" edge. The optional arguments are used to configure the query builder of the edge.
+func (tvq *TemplateVersionQuery) WithCatalog(opts ...func(*CatalogQuery)) *TemplateVersionQuery {
+	query := (&CatalogClient{config: tvq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tvq.withCatalog = query
 	return tvq
 }
 
@@ -498,11 +537,12 @@ func (tvq *TemplateVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	var (
 		nodes       = []*TemplateVersion{}
 		_spec       = tvq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			tvq.withTemplate != nil,
 			tvq.withResources != nil,
 			tvq.withResourceDefinitions != nil,
 			tvq.withProject != nil,
+			tvq.withCatalog != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -553,6 +593,12 @@ func (tvq *TemplateVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	if query := tvq.withProject; query != nil {
 		if err := tvq.loadProject(ctx, query, nodes, nil,
 			func(n *TemplateVersion, e *Project) { n.Edges.Project = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tvq.withCatalog; query != nil {
+		if err := tvq.loadCatalog(ctx, query, nodes, nil,
+			func(n *TemplateVersion, e *Catalog) { n.Edges.Catalog = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -680,6 +726,35 @@ func (tvq *TemplateVersionQuery) loadProject(ctx context.Context, query *Project
 	}
 	return nil
 }
+func (tvq *TemplateVersionQuery) loadCatalog(ctx context.Context, query *CatalogQuery, nodes []*TemplateVersion, init func(*TemplateVersion), assign func(*TemplateVersion, *Catalog)) error {
+	ids := make([]object.ID, 0, len(nodes))
+	nodeids := make(map[object.ID][]*TemplateVersion)
+	for i := range nodes {
+		fk := nodes[i].CatalogID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(catalog.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "catalog_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (tvq *TemplateVersionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := tvq.querySpec()
@@ -716,6 +791,9 @@ func (tvq *TemplateVersionQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if tvq.withProject != nil {
 			_spec.Node.AddColumnOnce(templateversion.FieldProjectID)
+		}
+		if tvq.withCatalog != nil {
+			_spec.Node.AddColumnOnce(templateversion.FieldCatalogID)
 		}
 	}
 	if ps := tvq.predicates; len(ps) > 0 {

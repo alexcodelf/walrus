@@ -917,6 +917,7 @@ type TemplateVersionOutput struct {
 
 	Template *TemplateOutput `json:"template,omitempty"`
 	Project  *ProjectOutput  `json:"project,omitempty"`
+	Catalog  *CatalogOutput  `json:"catalog,omitempty"`
 }
 
 // View returns the output of TemplateVersion entity.
@@ -958,6 +959,13 @@ func ExposeTemplateVersion(_tv *TemplateVersion) *TemplateVersionOutput {
 	} else if _tv.ProjectID != "" {
 		tvo.Project = &ProjectOutput{
 			ID: _tv.ProjectID,
+		}
+	}
+	if _tv.Edges.Catalog != nil {
+		tvo.Catalog = ExposeCatalog(_tv.Edges.Catalog)
+	} else if _tv.CatalogID != "" {
+		tvo.Catalog = &CatalogOutput{
+			ID: _tv.CatalogID,
 		}
 	}
 	return tvo
