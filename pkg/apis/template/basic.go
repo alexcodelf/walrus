@@ -80,7 +80,8 @@ var (
 )
 
 func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse, int, error) {
-	query := h.modelClient.Templates().Query()
+	query := h.modelClient.Templates().Query().
+		WithCatalog()
 
 	if req.Project != nil {
 		ps := template.ProjectID(req.Project.ID)

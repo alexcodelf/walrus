@@ -6,14 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"entgo.io/ent/dialect/sql"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/hashicorp/go-version"
-
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/template"
-	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/settings"
@@ -42,21 +39,21 @@ func CreateTemplateVersionsFromRepo(
 		return err
 	}
 
-	templateVersionCreates := make([]*model.TemplateVersionCreate, 0, len(templateVersions))
+	logger.Debugf("create %d versions for template: %s", len(templateVersions), entity.Name)
 
 	for i := range templateVersions {
-		create := mc.TemplateVersions().Create().Set(templateVersions[i])
-		templateVersionCreates = append(templateVersionCreates, create)
+		conflictOptions := versionUpsertConflictOptions(templateVersions[i])
+
+		err = mc.TemplateVersions().Create().Set(templateVersions[i]).
+			OnConflict(conflictOptions...).
+			UpdateNewValues().
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
-	logger.Debugf("create %d versions for template: %s", len(templateVersionCreates), entity.Name)
-
-	conflictOptions := getTemplateVersionUpsertConflictOptions(entity)
-
-	return mc.TemplateVersions().CreateBulk(templateVersionCreates...).
-		OnConflict(conflictOptions...).
-		UpdateNewValues().
-		Exec(ctx)
+	return nil
 }
 
 // syncTemplateFromRef clones a git repository create template and template version with reference.
@@ -138,8 +135,6 @@ func syncTemplateFromRef(
 		ref = v.Original()
 	}
 
-	conflictOptions := getTemplateVersionUpsertConflictOptions(entity)
-
 	if repo.SubPath != "" {
 		source += "//" + repo.SubPath
 	}
@@ -155,6 +150,8 @@ func syncTemplateFromRef(
 		ProjectID:  entity.ProjectID,
 	}
 
+	conflictOptions := versionUpsertConflictOptions(tv)
+
 	err = SetTemplateSchemaDefault(ctx, tv)
 	if err != nil {
 		return err
@@ -166,30 +163,6 @@ func syncTemplateFromRef(
 		OnConflict(conflictOptions...).
 		UpdateNewValues().
 		Exec(ctx)
-}
-
-// getTemplateVersionUpsertConflictOptions returns template version conflict options with template project id.
-func getTemplateVersionUpsertConflictOptions(entity *model.Template) []sql.ConflictOption {
-	if entity.ProjectID == "" {
-		return []sql.ConflictOption{
-			sql.ConflictWhere(sql.P().
-				IsNull(templateversion.FieldProjectID)),
-			sql.ConflictColumns(
-				templateversion.FieldName,
-				templateversion.FieldVersion,
-			),
-		}
-	}
-
-	return []sql.ConflictOption{
-		sql.ConflictWhere(sql.P().
-			NotNull(templateversion.FieldProjectID)),
-		sql.ConflictColumns(
-			templateversion.FieldName,
-			templateversion.FieldVersion,
-			templateversion.FieldProjectID,
-		),
-	}
 }
 
 // updateTemplateStatus updates template status.
@@ -263,6 +236,12 @@ func SyncTemplateFromGitRepo(
 		query := mc.Templates().Query().
 			Where(template.Name(entity.Name))
 
+		if entity.CatalogID.Valid() {
+			query.Where(template.CatalogID(entity.CatalogID))
+		} else {
+			query.Where(template.CatalogIDIsNil())
+		}
+
 		if entity.ProjectID.Valid() {
 			query.Where(template.ProjectID(entity.ProjectID))
 		} else {
@@ -279,7 +258,7 @@ func SyncTemplateFromGitRepo(
 			return nil
 		}
 
-		// When template source contains no valid versions, set template status to initialized.
+		// When template source contains no valid versions, set template status initialized.
 		status.TemplateStatusInitialized.True(t, "")
 		t.Status.SetSummary(status.WalkTemplate(&t.Status))
 
@@ -352,6 +331,7 @@ func GetTemplateVersions(
 			Schema:     *schema.Schema,
 			UiSchema:   *schema.UISchema,
 			ProjectID:  entity.ProjectID,
+			CatalogID:  entity.CatalogID,
 		}
 
 		err = SetTemplateSchemaDefault(ctx, tv)
