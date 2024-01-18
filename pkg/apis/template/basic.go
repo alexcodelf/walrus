@@ -80,8 +80,9 @@ var (
 )
 
 func (h Handler) CollectionGet(req CollectionGetRequest) (CollectionGetResponse, int, error) {
-	query := h.modelClient.Templates().Query().
-		WithCatalog()
+	query := h.modelClient.Templates().Query()
+
+	// TODO optional catalog need append manually.
 
 	if req.Project != nil {
 		ps := template.ProjectID(req.Project.ID)
