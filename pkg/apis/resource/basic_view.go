@@ -21,10 +21,10 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
-	pkgresource "github.com/seal-io/walrus/pkg/resource"
 	"github.com/seal-io/walrus/pkg/resourcedefinitions"
-	"github.com/seal-io/walrus/pkg/resourcerun/config"
+	"github.com/seal-io/walrus/pkg/resourceruns/config"
+	runstatus "github.com/seal-io/walrus/pkg/resourceruns/status"
+	pkgresource "github.com/seal-io/walrus/pkg/resources"
 	"github.com/seal-io/walrus/pkg/terraform/convertor"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/json"
@@ -36,7 +36,8 @@ type (
 	CreateRequest struct {
 		model.ResourceCreateInput `path:",inline" json:",inline"`
 
-		Draft bool `json:"draft,default=false"`
+		Draft         bool   `json:"draft,default=false"`
+		ChangeComment string `json:"changeComment,omitempty"`
 	}
 
 	CreateResponse = *model.ResourceOutput
@@ -92,7 +93,8 @@ func (r *DeleteRequest) Validate() error {
 type PatchRequest struct {
 	model.ResourcePatchInput `path:",inline" json:",inline"`
 
-	Draft bool `json:"draft,default=false"`
+	Draft         bool   `json:"draft,default=false"`
+	ChangeComment string `json:"changeComment,omitempty"`
 }
 
 func (r *PatchRequest) Validate() error {
@@ -480,21 +482,11 @@ func validateRunsStatus(ctx context.Context, mc model.ClientSet, ids ...object.I
 	}
 
 	for _, r := range runs {
-		switch r.Status.SummaryStatus {
-		case status.ResourceRunSummaryStatusSucceed:
-		case status.ResourceRunSummaryStatusFailed:
-		case status.ResourceRunSummaryStatusRunning:
+		if runstatus.IsStatusRunning(r) {
 			return errorx.HttpErrorf(
 				http.StatusBadRequest,
 				"deployment of resource %q is running, please wait for it to finish",
 				r.Edges.Resource.Name,
-			)
-		default:
-			return errorx.HttpErrorf(
-				http.StatusBadRequest,
-				"invalid deployment status of resource %q: %s",
-				r.Edges.Resource.Name,
-				r.Status.SummaryStatus,
 			)
 		}
 	}

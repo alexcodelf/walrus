@@ -20,9 +20,9 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
-	pkgresource "github.com/seal-io/walrus/pkg/resource"
 	"github.com/seal-io/walrus/pkg/resourcedefinitions"
+	runstatus "github.com/seal-io/walrus/pkg/resourceruns/status"
+	pkgresource "github.com/seal-io/walrus/pkg/resources"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/strs"
 )
@@ -39,8 +39,9 @@ type RouteUpgradeRequest struct {
 
 	model.ResourceUpdateInput `path:",inline" json:",inline"`
 
-	Draft           bool `json:"draft,default=false"`
-	ReuseAttributes bool `json:"reuseAttributes,default=false"`
+	Draft           bool   `json:"draft,default=false"`
+	ChangeComment   string `json:"changeComment,omitempty"`
+	ReuseAttributes bool   `json:"reuseAttributes,default=false"`
 }
 
 func (r *RouteUpgradeRequest) Validate() error {
@@ -218,7 +219,7 @@ func (r *RouteRollbackRequest) Validate() error {
 		return fmt.Errorf("failed to get the latest run: %w", err)
 	}
 
-	if status.ResourceRunStatusReady.IsUnknown(latestRun) {
+	if runstatus.IsStatusRunning(latestRun) {
 		return errors.New("latest run is running")
 	}
 

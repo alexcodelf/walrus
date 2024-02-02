@@ -213,6 +213,46 @@ func (rru *ResourceRunUpdate) SetNillableCreatedBy(s *string) *ResourceRunUpdate
 	return rru
 }
 
+// SetType sets the "type" field.
+func (rru *ResourceRunUpdate) SetType(s string) *ResourceRunUpdate {
+	rru.mutation.SetType(s)
+	return rru
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (rru *ResourceRunUpdate) SetNillableType(s *string) *ResourceRunUpdate {
+	if s != nil {
+		rru.SetType(*s)
+	}
+	return rru
+}
+
+// SetApprovalRequired sets the "approval_required" field.
+func (rru *ResourceRunUpdate) SetApprovalRequired(b bool) *ResourceRunUpdate {
+	rru.mutation.SetApprovalRequired(b)
+	return rru
+}
+
+// SetNillableApprovalRequired sets the "approval_required" field if the given value is not nil.
+func (rru *ResourceRunUpdate) SetNillableApprovalRequired(b *bool) *ResourceRunUpdate {
+	if b != nil {
+		rru.SetApprovalRequired(*b)
+	}
+	return rru
+}
+
+// SetAnnotations sets the "annotations" field.
+func (rru *ResourceRunUpdate) SetAnnotations(m map[string]string) *ResourceRunUpdate {
+	rru.mutation.SetAnnotations(m)
+	return rru
+}
+
+// ClearAnnotations clears the value of the "annotations" field.
+func (rru *ResourceRunUpdate) ClearAnnotations() *ResourceRunUpdate {
+	rru.mutation.ClearAnnotations()
+	return rru
+}
+
 // Mutation returns the ResourceRunMutation object of the builder.
 func (rru *ResourceRunUpdate) Mutation() *ResourceRunMutation {
 	return rru.mutation
@@ -327,6 +367,11 @@ func (rru *ResourceRunUpdate) Set(obj *ResourceRun) *ResourceRunUpdate {
 		rru.ClearChangeComment()
 	}
 	rru.SetCreatedBy(obj.CreatedBy)
+	rru.SetType(obj.Type)
+	rru.SetApprovalRequired(obj.ApprovalRequired)
+	if !reflect.ValueOf(obj.Annotations).IsZero() {
+		rru.SetAnnotations(obj.Annotations)
+	}
 
 	// With Default.
 
@@ -412,6 +457,18 @@ func (rru *ResourceRunUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := rru.mutation.CreatedBy(); ok {
 		_spec.SetField(resourcerun.FieldCreatedBy, field.TypeString, value)
+	}
+	if value, ok := rru.mutation.GetType(); ok {
+		_spec.SetField(resourcerun.FieldType, field.TypeString, value)
+	}
+	if value, ok := rru.mutation.ApprovalRequired(); ok {
+		_spec.SetField(resourcerun.FieldApprovalRequired, field.TypeBool, value)
+	}
+	if value, ok := rru.mutation.Annotations(); ok {
+		_spec.SetField(resourcerun.FieldAnnotations, field.TypeJSON, value)
+	}
+	if rru.mutation.AnnotationsCleared() {
+		_spec.ClearField(resourcerun.FieldAnnotations, field.TypeJSON)
 	}
 	_spec.Node.Schema = rru.schemaConfig.ResourceRun
 	ctx = internal.NewSchemaConfigContext(ctx, rru.schemaConfig)
@@ -609,6 +666,46 @@ func (rruo *ResourceRunUpdateOne) SetNillableCreatedBy(s *string) *ResourceRunUp
 	return rruo
 }
 
+// SetType sets the "type" field.
+func (rruo *ResourceRunUpdateOne) SetType(s string) *ResourceRunUpdateOne {
+	rruo.mutation.SetType(s)
+	return rruo
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (rruo *ResourceRunUpdateOne) SetNillableType(s *string) *ResourceRunUpdateOne {
+	if s != nil {
+		rruo.SetType(*s)
+	}
+	return rruo
+}
+
+// SetApprovalRequired sets the "approval_required" field.
+func (rruo *ResourceRunUpdateOne) SetApprovalRequired(b bool) *ResourceRunUpdateOne {
+	rruo.mutation.SetApprovalRequired(b)
+	return rruo
+}
+
+// SetNillableApprovalRequired sets the "approval_required" field if the given value is not nil.
+func (rruo *ResourceRunUpdateOne) SetNillableApprovalRequired(b *bool) *ResourceRunUpdateOne {
+	if b != nil {
+		rruo.SetApprovalRequired(*b)
+	}
+	return rruo
+}
+
+// SetAnnotations sets the "annotations" field.
+func (rruo *ResourceRunUpdateOne) SetAnnotations(m map[string]string) *ResourceRunUpdateOne {
+	rruo.mutation.SetAnnotations(m)
+	return rruo
+}
+
+// ClearAnnotations clears the value of the "annotations" field.
+func (rruo *ResourceRunUpdateOne) ClearAnnotations() *ResourceRunUpdateOne {
+	rruo.mutation.ClearAnnotations()
+	return rruo
+}
+
 // Mutation returns the ResourceRunMutation object of the builder.
 func (rruo *ResourceRunUpdateOne) Mutation() *ResourceRunMutation {
 	return rruo.mutation
@@ -770,6 +867,17 @@ func (rruo *ResourceRunUpdateOne) Set(obj *ResourceRun) *ResourceRunUpdateOne {
 			if db.CreatedBy != obj.CreatedBy {
 				rruo.SetCreatedBy(obj.CreatedBy)
 			}
+			if db.Type != obj.Type {
+				rruo.SetType(obj.Type)
+			}
+			if db.ApprovalRequired != obj.ApprovalRequired {
+				rruo.SetApprovalRequired(obj.ApprovalRequired)
+			}
+			if !reflect.ValueOf(obj.Annotations).IsZero() {
+				if !reflect.DeepEqual(db.Annotations, obj.Annotations) {
+					rruo.SetAnnotations(obj.Annotations)
+				}
+			}
 
 			// With Default.
 
@@ -852,6 +960,15 @@ func (rruo *ResourceRunUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx con
 		}
 		if _, set := rruo.mutation.Field(resourcerun.FieldCreatedBy); set {
 			obj.CreatedBy = x.CreatedBy
+		}
+		if _, set := rruo.mutation.Field(resourcerun.FieldType); set {
+			obj.Type = x.Type
+		}
+		if _, set := rruo.mutation.Field(resourcerun.FieldApprovalRequired); set {
+			obj.ApprovalRequired = x.ApprovalRequired
+		}
+		if _, set := rruo.mutation.Field(resourcerun.FieldAnnotations); set {
+			obj.Annotations = x.Annotations
 		}
 		obj.Edges = x.Edges
 	}
@@ -981,6 +1098,18 @@ func (rruo *ResourceRunUpdateOne) sqlSave(ctx context.Context) (_node *ResourceR
 	}
 	if value, ok := rruo.mutation.CreatedBy(); ok {
 		_spec.SetField(resourcerun.FieldCreatedBy, field.TypeString, value)
+	}
+	if value, ok := rruo.mutation.GetType(); ok {
+		_spec.SetField(resourcerun.FieldType, field.TypeString, value)
+	}
+	if value, ok := rruo.mutation.ApprovalRequired(); ok {
+		_spec.SetField(resourcerun.FieldApprovalRequired, field.TypeBool, value)
+	}
+	if value, ok := rruo.mutation.Annotations(); ok {
+		_spec.SetField(resourcerun.FieldAnnotations, field.TypeJSON, value)
+	}
+	if rruo.mutation.AnnotationsCleared() {
+		_spec.ClearField(resourcerun.FieldAnnotations, field.TypeJSON)
 	}
 	_spec.Node.Schema = rruo.schemaConfig.ResourceRun
 	ctx = internal.NewSchemaConfigContext(ctx, rruo.schemaConfig)

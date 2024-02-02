@@ -15,7 +15,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model/templateversion"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	pkgresource "github.com/seal-io/walrus/pkg/resource"
+	pkgresource "github.com/seal-io/walrus/pkg/resources"
 	"github.com/seal-io/walrus/pkg/servervars"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/strs"

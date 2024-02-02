@@ -15,9 +15,32 @@ type OutputValue struct {
 	Schema    openapi3.Schema `json:"schema,omitempty"`
 }
 
+// Task type defines the type of the task to be performed with deployer.
 const (
-	RunJobTypeApply   = "apply"
-	RunJobTypeDestroy = "destroy"
+	RunTaskTypeApply   RunJobType = "apply"
+	RunTaskTypePlan    RunJobType = "plan"
+	RunTaskTypeDestroy RunJobType = "destroy"
 )
+
+const (
+	RunTypeCreate   RunType = "create"
+	RunTypeUpgrade  RunType = "upgrade"
+	RunTypeDelete   RunType = "delete"
+	RunTypeStart    RunType = "start"
+	RunTypeStop     RunType = "stop"
+	RunTypeRollback RunType = "rollback"
+)
+
+type RunType string
+
+func (t RunType) String() string {
+	return string(t)
+}
+
+type RunJobType string
+
+func (t RunJobType) String() string {
+	return string(t)
+}
 
 type ResourceRunConfigData = []byte

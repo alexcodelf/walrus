@@ -138,6 +138,16 @@ func CreatedBy(v string) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldEQ(FieldCreatedBy, v))
 }
 
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldType, v))
+}
+
+// ApprovalRequired applies equality check predicate on the "approval_required" field. It's identical to ApprovalRequiredEQ.
+func ApprovalRequired(v bool) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldApprovalRequired, v))
+}
+
 // CreateTimeEQ applies the EQ predicate on the "create_time" field.
 func CreateTimeEQ(v time.Time) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldEQ(FieldCreateTime, v))
@@ -1056,6 +1066,91 @@ func CreatedByEqualFold(v string) predicate.ResourceRun {
 // CreatedByContainsFold applies the ContainsFold predicate on the "created_by" field.
 func CreatedByContainsFold(v string) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldContainsFold(FieldCreatedBy, v))
+}
+
+// TypeEQ applies the EQ predicate on the "type" field.
+func TypeEQ(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldType, v))
+}
+
+// TypeNEQ applies the NEQ predicate on the "type" field.
+func TypeNEQ(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNEQ(FieldType, v))
+}
+
+// TypeIn applies the In predicate on the "type" field.
+func TypeIn(vs ...string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldIn(FieldType, vs...))
+}
+
+// TypeNotIn applies the NotIn predicate on the "type" field.
+func TypeNotIn(vs ...string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNotIn(FieldType, vs...))
+}
+
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldGT(FieldType, v))
+}
+
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldGTE(FieldType, v))
+}
+
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldLT(FieldType, v))
+}
+
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldLTE(FieldType, v))
+}
+
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldContains(FieldType, v))
+}
+
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldHasPrefix(FieldType, v))
+}
+
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldHasSuffix(FieldType, v))
+}
+
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEqualFold(FieldType, v))
+}
+
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldContainsFold(FieldType, v))
+}
+
+// ApprovalRequiredEQ applies the EQ predicate on the "approval_required" field.
+func ApprovalRequiredEQ(v bool) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldApprovalRequired, v))
+}
+
+// ApprovalRequiredNEQ applies the NEQ predicate on the "approval_required" field.
+func ApprovalRequiredNEQ(v bool) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNEQ(FieldApprovalRequired, v))
+}
+
+// AnnotationsIsNil applies the IsNil predicate on the "annotations" field.
+func AnnotationsIsNil() predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldIsNull(FieldAnnotations))
+}
+
+// AnnotationsNotNil applies the NotNil predicate on the "annotations" field.
+func AnnotationsNotNil() predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNotNull(FieldAnnotations))
 }
 
 // HasProject applies the HasEdge predicate on the "project" edge.

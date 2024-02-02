@@ -58,6 +58,8 @@ type ResourceRunCreateInput struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
+	// If the run requires approval.
+	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired,omitempty"`
 }
 
 // Model returns the ResourceRun entity for creating,
@@ -80,6 +82,7 @@ func (rrci *ResourceRunCreateInput) Model() *ResourceRun {
 		PreviousRequiredProviders: rrci.PreviousRequiredProviders,
 		Record:                    rrci.Record,
 		ChangeComment:             rrci.ChangeComment,
+		ApprovalRequired:          rrci.ApprovalRequired,
 	}
 
 	if rrci.Project != nil {
@@ -162,6 +165,8 @@ type ResourceRunCreateInputsItem struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
+	// If the run requires approval.
+	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired,omitempty"`
 }
 
 // ValidateWith checks the ResourceRunCreateInputsItem entity with the given context and client set.
@@ -216,6 +221,7 @@ func (rrci *ResourceRunCreateInputs) Model() []*ResourceRun {
 			PreviousRequiredProviders: rrci.Items[i].PreviousRequiredProviders,
 			Record:                    rrci.Items[i].Record,
 			ChangeComment:             rrci.Items[i].ChangeComment,
+			ApprovalRequired:          rrci.Items[i].ApprovalRequired,
 		}
 
 		if rrci.Project != nil {
@@ -481,6 +487,12 @@ type ResourceRunPatchInput struct {
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
 	// User who created the run.
 	CreatedBy string `path:"-" query:"-" json:"createdBy,omitempty"`
+	// Type of the run.
+	Type string `path:"-" query:"-" json:"type,omitempty"`
+	// If the run requires approval.
+	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired,omitempty"`
+	// Annotations holds the value of the "annotations" field.
+	Annotations map[string]string `path:"-" query:"-" json:"annotations,omitempty"`
 
 	patchedEntity *ResourceRun `path:"-" query:"-" json:"-"`
 }
@@ -507,6 +519,9 @@ func (rrpi *ResourceRunPatchInput) PatchModel() *ResourceRun {
 		Record:                    rrpi.Record,
 		ChangeComment:             rrpi.ChangeComment,
 		CreatedBy:                 rrpi.CreatedBy,
+		Type:                      rrpi.Type,
+		ApprovalRequired:          rrpi.ApprovalRequired,
+		Annotations:               rrpi.Annotations,
 	}
 
 	if rrpi.Project != nil {
@@ -603,6 +618,8 @@ func (rrpi *ResourceRunPatchInput) ValidateWith(ctx context.Context, cs ClientSe
 			resourcerun.FieldCreateTime,
 			resourcerun.FieldStatus,
 			resourcerun.FieldCreatedBy,
+			resourcerun.FieldType,
+			resourcerun.FieldAnnotations,
 		)...,
 	)
 
@@ -856,6 +873,8 @@ type ResourceRunUpdateInput struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
+	// If the run requires approval.
+	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired,omitempty"`
 }
 
 // Model returns the ResourceRun entity for modifying,
@@ -877,6 +896,7 @@ func (rrui *ResourceRunUpdateInput) Model() *ResourceRun {
 		PreviousRequiredProviders: rrui.PreviousRequiredProviders,
 		Record:                    rrui.Record,
 		ChangeComment:             rrui.ChangeComment,
+		ApprovalRequired:          rrui.ApprovalRequired,
 	}
 
 	return _rr
@@ -929,6 +949,8 @@ type ResourceRunUpdateInputsItem struct {
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
 	ChangeComment string `path:"-" query:"-" json:"changeComment,omitempty"`
+	// If the run requires approval.
+	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired"`
 }
 
 // ValidateWith checks the ResourceRunUpdateInputsItem entity with the given context and client set.
@@ -982,6 +1004,7 @@ func (rrui *ResourceRunUpdateInputs) Model() []*ResourceRun {
 			PreviousRequiredProviders: rrui.Items[i].PreviousRequiredProviders,
 			Record:                    rrui.Items[i].Record,
 			ChangeComment:             rrui.Items[i].ChangeComment,
+			ApprovalRequired:          rrui.Items[i].ApprovalRequired,
 		}
 
 		_rrs[i] = _rr
@@ -1114,6 +1137,8 @@ type ResourceRunOutput struct {
 	Record                    string                      `json:"record,omitempty"`
 	ChangeComment             string                      `json:"changeComment,omitempty"`
 	CreatedBy                 string                      `json:"createdBy,omitempty"`
+	Type                      string                      `json:"type,omitempty"`
+	ApprovalRequired          bool                        `json:"approvalRequired,omitempty"`
 
 	Project     *ProjectOutput     `json:"project,omitempty"`
 	Environment *EnvironmentOutput `json:"environment,omitempty"`
@@ -1152,6 +1177,8 @@ func ExposeResourceRun(_rr *ResourceRun) *ResourceRunOutput {
 		Record:                    _rr.Record,
 		ChangeComment:             _rr.ChangeComment,
 		CreatedBy:                 _rr.CreatedBy,
+		Type:                      _rr.Type,
+		ApprovalRequired:          _rr.ApprovalRequired,
 	}
 
 	if _rr.Edges.Project != nil {

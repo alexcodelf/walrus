@@ -178,3 +178,10 @@ func GetResourceDependantResource(
 		).QueryResource().
 		All(ctx)
 }
+
+func GetResourceLatestRun(ctx context.Context, mc model.ClientSet, resourceID object.ID) (*model.ResourceRun, error) {
+	return mc.ResourceRuns().Query().
+		Where(resourcerun.ResourceID(resourceID)).
+		Order(model.Desc(resourcerun.FieldCreateTime)).
+		First(ctx)
+}

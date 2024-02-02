@@ -18,7 +18,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	"github.com/seal-io/walrus/pkg/deployer"
 	deptypes "github.com/seal-io/walrus/pkg/deployer/types"
-	pkgresource "github.com/seal-io/walrus/pkg/resource"
+	pkgresource "github.com/seal-io/walrus/pkg/resources"
 	"github.com/seal-io/walrus/utils/log"
 	"github.com/seal-io/walrus/utils/strs"
 )
@@ -163,9 +163,7 @@ func (in *RelationshipCheckTask) destroyResources(ctx context.Context) error {
 			continue
 		}
 
-		err = pkgresource.Destroy(ctx, in.modelClient, res, pkgresource.Options{
-			Deployer: in.deployer,
-		})
+		err = pkgresource.PerformResource(ctx, in.modelClient, in.deployer, res.ID)
 		if err != nil {
 			return err
 		}
@@ -205,9 +203,7 @@ func (in *RelationshipCheckTask) stopResources(ctx context.Context) error {
 			continue
 		}
 
-		err = pkgresource.Stop(ctx, in.modelClient, res, pkgresource.Options{
-			Deployer: in.deployer,
-		})
+		err = pkgresource.PerformResource(ctx, in.modelClient, in.deployer, res.ID)
 		if err != nil {
 			return err
 		}
@@ -302,9 +298,7 @@ func (in *RelationshipCheckTask) deployResource(ctx context.Context, entity *mod
 		return err
 	}
 
-	return pkgresource.Apply(ctx, in.modelClient, entity, pkgresource.Options{
-		Deployer: in.deployer,
-	})
+	return pkgresource.PerformResource(ctx, in.modelClient, in.deployer, entity.ID)
 }
 
 // setResourceStatusFalse sets a resource status to false if parent dependencies statuses are false or deleted.
@@ -379,7 +373,7 @@ func (in *RelationshipCheckTask) checkDependantResourceStatus(
 		return false, nil
 	}
 
-	// If the dependant resource is deployed or to be deployed, the resource can not be deleted or stopped.
+	// If the dependant resource is deployed or to be deployed, the resource cannot be deleted or stopped.
 	if pkgresource.IsStatusDeployed(dependantResource) {
 		status.ResourceStatusProgressing.False(
 			res,

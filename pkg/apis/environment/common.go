@@ -19,8 +19,8 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	deptypes "github.com/seal-io/walrus/pkg/deployer/types"
-	pkgresource "github.com/seal-io/walrus/pkg/resource"
 	"github.com/seal-io/walrus/pkg/resourcedefinitions"
+	pkgresource "github.com/seal-io/walrus/pkg/resources"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/validation"
 )
@@ -75,16 +75,13 @@ func createEnvironment(
 		}
 
 		var resources model.Resources
-		if draft {
-			resources, err = pkgresource.CreateDraftResources(ctx, tx, resourceInputs...)
-			if err != nil {
-				return err
-			}
-		} else {
-			resources, err = pkgresource.CreateScheduledResources(ctx, tx, dp, resourceInputs)
-			if err != nil {
-				return err
-			}
+
+		resources, err = pkgresource.CollectionCreate(ctx, tx, resourceInputs, pkgresource.Options{
+			Deployer: dp,
+			Draft:    draft,
+		})
+		if err != nil {
+			return err
 		}
 
 		entity.Edges.Resources = resources

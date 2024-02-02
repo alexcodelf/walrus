@@ -51,10 +51,10 @@ func (r *RouteLogRequest) Validate() error {
 	}
 
 	if r.JobType == "" {
-		r.JobType = types.RunJobTypeApply
+		r.JobType = types.RunTaskTypeApply.String()
 	}
 
-	if r.JobType != types.RunJobTypeApply && r.JobType != types.RunJobTypeDestroy {
+	if r.JobType != types.RunTaskTypeApply.String() && r.JobType != types.RunTaskTypeDestroy.String() {
 		return errors.New("invalid job type")
 	}
 

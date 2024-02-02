@@ -58,6 +58,12 @@ const (
 	FieldChangeComment = "change_comment"
 	// FieldCreatedBy holds the string denoting the created_by field in the database.
 	FieldCreatedBy = "created_by"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
+	// FieldApprovalRequired holds the string denoting the approval_required field in the database.
+	FieldApprovalRequired = "approval_required"
+	// FieldAnnotations holds the string denoting the annotations field in the database.
+	FieldAnnotations = "annotations"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// EdgeEnvironment holds the string denoting the environment edge name in mutations.
@@ -110,6 +116,9 @@ var Columns = []string{
 	FieldRecord,
 	FieldChangeComment,
 	FieldCreatedBy,
+	FieldType,
+	FieldApprovalRequired,
+	FieldAnnotations,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -152,6 +161,10 @@ var (
 	DefaultDuration int
 	// DefaultPreviousRequiredProviders holds the default value on creation for the "previous_required_providers" field.
 	DefaultPreviousRequiredProviders []types.ProviderRequirement
+	// DefaultApprovalRequired holds the default value on creation for the "approval_required" field.
+	DefaultApprovalRequired bool
+	// DefaultAnnotations holds the default value on creation for the "annotations" field.
+	DefaultAnnotations map[string]string
 )
 
 // OrderOption defines the ordering options for the ResourceRun queries.
@@ -235,6 +248,16 @@ func ByChangeComment(opts ...sql.OrderTermOption) OrderOption {
 // ByCreatedBy orders the results by the created_by field.
 func ByCreatedBy(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedBy, opts...).ToFunc()
+}
+
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByApprovalRequired orders the results by the approval_required field.
+func ByApprovalRequired(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldApprovalRequired, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.

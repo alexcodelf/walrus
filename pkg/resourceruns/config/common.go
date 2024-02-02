@@ -1,17 +1,46 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"github.com/seal-io/walrus/pkg/auths/session"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types"
+	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/terraform/config"
 	"github.com/seal-io/walrus/utils/json"
 )
+
+func GetSubjectID(entity *model.ResourceRun) (object.ID, error) {
+	if entity == nil {
+		return "", fmt.Errorf("resource is nil")
+	}
+
+	subjectIDStr := entity.Annotations[types.AnnotationSubjectID]
+
+	return object.ID(subjectIDStr), nil
+}
+
+func SetSubjectID(ctx context.Context, resources ...*model.ResourceRun) error {
+	sj, err := session.GetSubject(ctx)
+	if err != nil {
+		return err
+	}
+
+	for i := range resources {
+		if resources[i].Annotations == nil {
+			resources[i].Annotations = make(map[string]string)
+		}
+		resources[i].Annotations[types.AnnotationSubjectID] = string(sj.ID)
+	}
+
+	return nil
+}
 
 func matchAnyRegex(list []string) (*regexp.Regexp, error) {
 	var sb strings.Builder

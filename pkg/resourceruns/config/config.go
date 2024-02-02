@@ -10,13 +10,12 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
-	"github.com/seal-io/walrus/pkg/dao/types/status"
 	pkgenv "github.com/seal-io/walrus/pkg/environment"
-	pkgresource "github.com/seal-io/walrus/pkg/resource"
+	"github.com/seal-io/walrus/pkg/resourceruns/status"
 )
 
-// Loader is the interface to construct input configs and dependency connectors for the run.
-type Loader interface {
+// Configurator is the interface to construct input configs and dependency connectors for the run.
+type Configurator interface {
 	InputLoader
 	ProviderLoader
 }
@@ -24,9 +23,9 @@ type Loader interface {
 // InputLoader is the interface to construct input configs for the run.
 type InputLoader interface {
 	// LoadMain loads the main config file of the config options.
-	LoadMain(context.Context, model.ClientSet, *LoaderOptions) (types.ResourceRunConfigData, error)
+	LoadMain(context.Context, model.ClientSet, *Options) (types.ResourceRunConfigData, error)
 	// LoadAll loads the configs files of the config options.
-	LoadAll(context.Context, model.ClientSet, *LoaderOptions) (map[string]types.ResourceRunConfigData, error)
+	LoadAll(context.Context, model.ClientSet, *Options) (map[string]types.ResourceRunConfigData, error)
 }
 
 // ProviderLoader is the interface to construct dependency connectors files for the run.
@@ -36,8 +35,8 @@ type ProviderLoader interface {
 	LoadProviders(model.Connectors) (map[string]types.ResourceRunConfigData, error)
 }
 
-// LoaderOptions are the options for load a run config files.
-type LoaderOptions struct {
+// Options are the options for load a run config files.
+type Options struct {
 	// SecretMountPath of the deployment job.
 	SecretMountPath string
 
@@ -48,30 +47,30 @@ type LoaderOptions struct {
 	Context types.Context
 }
 
-// NewInputLoader creates a new plan with the plan type.
-func NewInputLoader(deployerType string) Loader {
+// NewConfigurator creates a new configurator with the deployer type.
+func NewConfigurator(deployerType string) Configurator {
 	switch deployerType {
 	case types.DeployerTypeTF:
-		return NewTerraformLoader()
+		return NewTerraformConfigurator()
 	default:
 		return nil
 	}
 }
 
-// GetConfigLoaderOptions sets the config loader options.
+// GetConfigOptions sets the config loader options.
 // It will fetch the resource run, environment, project, resource and subject.
-func GetConfigLoaderOptions(
+func GetConfigOptions(
 	ctx context.Context,
 	mc model.ClientSet,
 	run *model.ResourceRun,
 	secretMountPath string,
-) (*LoaderOptions, error) {
-	opts := &LoaderOptions{
+) (*Options, error) {
+	opts := &Options{
 		ResourceRun:     run,
 		SecretMountPath: secretMountPath,
 	}
 
-	if !status.ResourceRunStatusReady.IsUnknown(run) {
+	if !status.IsStatusRunning(run) {
 		return nil, errors.New("resource run is not running")
 	}
 
@@ -95,7 +94,7 @@ func GetConfigLoaderOptions(
 		return nil, err
 	}
 
-	sj, err := getSubject(ctx, mc, res)
+	sj, err := getSubject(ctx, mc, run)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +112,7 @@ func GetConfigLoaderOptions(
 }
 
 // getSubject gets the subject of the given resource.
-func getSubject(ctx context.Context, mc model.ClientSet, res *model.Resource) (*model.Subject, error) {
+func getSubject(ctx context.Context, mc model.ClientSet, run *model.ResourceRun) (*model.Subject, error) {
 	var (
 		subjectID object.ID
 		err       error
@@ -123,7 +122,7 @@ func getSubject(ctx context.Context, mc model.ClientSet, res *model.Resource) (*
 	if s.ID != "" {
 		subjectID = s.ID
 	} else {
-		subjectID, err = pkgresource.GetSubjectID(res)
+		subjectID, err = GetSubjectID(run)
 		if err != nil {
 			return nil, err
 		}

@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	runbus "github.com/seal-io/walrus/pkg/bus/resourcerun"
 	"github.com/seal-io/walrus/pkg/dao"
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/model/connector"
@@ -30,6 +29,7 @@ import (
 	"github.com/seal-io/walrus/pkg/operator"
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
 	"github.com/seal-io/walrus/pkg/resourcecomponents"
+	runstatus "github.com/seal-io/walrus/pkg/resourceruns/status"
 	"github.com/seal-io/walrus/pkg/servervars"
 	"github.com/seal-io/walrus/pkg/settings"
 	tfparser "github.com/seal-io/walrus/pkg/terraform/parser"
@@ -122,25 +122,12 @@ func (h Handler) RouteUpdateTerraformStates(
 		updateCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		status.ResourceRunStatusReady.False(entity, err.Error())
-		entity.Status.SetSummary(status.WalkResourceRun(&entity.Status))
+		runstatus.SetStatusFalse(entity, err.Error())
 
-		uerr := h.modelClient.ResourceRuns().UpdateOne(entity).
-			SetStatus(entity.Status).
-			Exec(updateCtx)
-		if uerr != nil {
+		if _, uerr := runstatus.UpdateStatus(updateCtx, h.modelClient, entity); uerr != nil {
 			logger.Errorf("update status failed: %v", err)
-			return
-		}
-
-		if nerr := runbus.Notify(updateCtx, h.modelClient, entity); nerr != nil {
-			logger.Errorf("notify failed: %v", nerr)
 		}
 	}()
-
-	if err = runbus.Notify(req.Context, h.modelClient, entity); err != nil {
-		return err
-	}
 
 	return manageResourceComponentsAndEndpoints(req.Context, h.modelClient, entity, state.Data)
 }

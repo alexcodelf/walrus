@@ -33,23 +33,23 @@ const (
 	_backendAPI = "/v1/projects/%s/environments/%s/resources/%s/runs/%s/terraform-states"
 )
 
-// TerraformLoader constructs the terraform config files for the run.
-type TerraformLoader struct {
+// TerraformConfigurator constructs the terraform config files for the run.
+type TerraformConfigurator struct {
 	logger log.Logger
 }
 
-func NewTerraformLoader() Loader {
-	return &TerraformLoader{
+func NewTerraformConfigurator() Configurator {
+	return &TerraformConfigurator{
 		logger: log.WithName("resource-run").WithName("tf"),
 	}
 }
 
-func (l *TerraformLoader) LoadMain(
+func (c *TerraformConfigurator) LoadMain(
 	ctx context.Context,
 	mc model.ClientSet,
-	opts *LoaderOptions,
+	opts *Options,
 ) (types.ResourceRunConfigData, error) {
-	planConfig, err := l.LoadAll(ctx, mc, opts)
+	planConfig, err := c.LoadAll(ctx, mc, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -57,14 +57,14 @@ func (l *TerraformLoader) LoadMain(
 	return planConfig[config.FileMain], nil
 }
 
-func (l *TerraformLoader) LoadAll(
+func (c *TerraformConfigurator) LoadAll(
 	ctx context.Context,
 	mc model.ClientSet,
-	opts *LoaderOptions,
+	opts *Options,
 ) (map[string]types.ResourceRunConfigData, error) {
 	// Prepare terraform tfConfig.
 	//  get module configs from resource run.
-	moduleConfig, providerRequirements, err := l.getModuleConfig(ctx, mc, opts)
+	moduleConfig, providerRequirements, err := c.getModuleConfig(ctx, mc, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (l *TerraformLoader) LoadAll(
 		if _, ok := requiredProviders[p.Name]; !ok {
 			requiredProviders[p.Name] = p.ProviderRequirement
 		} else {
-			l.logger.Warnf("duplicate provider requirement: %s", p.Name)
+			c.logger.Warnf("duplicate provider requirement: %s", p.Name)
 		}
 	}
 
@@ -113,7 +113,7 @@ func (l *TerraformLoader) LoadAll(
 		requiredProviderNames = requiredProviderNames.Insert(p.Name)
 	}
 
-	address, token, err := l.getBackendConfig(ctx, mc, opts)
+	address, token, err := c.getBackendConfig(ctx, mc, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -182,10 +182,10 @@ func (l *TerraformLoader) LoadAll(
 
 // getModuleConfig returns module configs and required connectors to
 // get terraform module config block from resource run.
-func (l *TerraformLoader) getModuleConfig(
+func (c *TerraformConfigurator) getModuleConfig(
 	ctx context.Context,
 	mc model.ClientSet,
-	opts *LoaderOptions,
+	opts *Options,
 ) (*config.ModuleConfig, []types.ProviderRequirement, error) {
 	var (
 		requiredProviders = make([]types.ProviderRequirement, 0)
@@ -227,10 +227,10 @@ func (l *TerraformLoader) getModuleConfig(
 }
 
 // getBackendConfig returns the terraform backend config.
-func (l *TerraformLoader) getBackendConfig(
+func (c *TerraformConfigurator) getBackendConfig(
 	ctx context.Context,
 	mc model.ClientSet,
-	opts *LoaderOptions,
+	opts *Options,
 ) (address, token string, err error) {
 	// Prepare address for terraform backend.
 	serverAddress, err := settings.ServeUrl.Value(ctx, mc)
@@ -251,8 +251,19 @@ func (l *TerraformLoader) getBackendConfig(
 	// Prepare API token for terraform backend.
 	const _1Day = 60 * 60 * 24
 
-	at, err := auths.CreateAccessToken(ctx,
-		mc, opts.SubjectID, types.TokenKindDeployment, string(opts.ResourceRun.ID), pointer.Int(_1Day))
+	at, err := auths.GetAccessToken(ctx,
+		mc, opts.SubjectID, types.TokenKindDeployment, opts.ResourceRun.ID.String())
+	if err != nil && !model.IsNotFound(err) {
+		return "", "", err
+	}
+
+	if at != nil {
+		token = at.AccessToken
+		return
+	}
+
+	at, err = auths.CreateAccessToken(ctx,
+		mc, opts.SubjectID, types.TokenKindDeployment, opts.ResourceRun.ID.String(), pointer.Int(_1Day))
 	if err != nil {
 		return "", "", err
 	}
@@ -265,7 +276,7 @@ func (l *TerraformLoader) getBackendConfig(
 func getModuleConfig(
 	run *model.ResourceRun,
 	template *model.TemplateVersion,
-	opts *LoaderOptions,
+	opts *Options,
 ) (*config.ModuleConfig, error) {
 	mc := &config.ModuleConfig{
 		Name:   opts.Context.Resource.Name,
@@ -344,7 +355,9 @@ func getModuleConfig(
 	return mc, nil
 }
 
-func (l *TerraformLoader) LoadProviders(connectors model.Connectors) (map[string]types.ResourceRunConfigData, error) {
+func (c *TerraformConfigurator) LoadProviders(
+	connectors model.Connectors,
+) (map[string]types.ResourceRunConfigData, error) {
 	providerConfigs := make(map[string]types.ResourceRunConfigData, len(connectors))
 
 	for _, c := range connectors {
