@@ -24,9 +24,9 @@ import (
 	"github.com/seal-io/walrus/pkg/deployer"
 	deptypes "github.com/seal-io/walrus/pkg/deployer/types"
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
-	pkgresource "github.com/seal-io/walrus/pkg/resource"
 	pkgcomponent "github.com/seal-io/walrus/pkg/resourcecomponents"
 	"github.com/seal-io/walrus/pkg/resourcedefinitions"
+	pkgresource "github.com/seal-io/walrus/pkg/resources"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/log"
 )
@@ -230,7 +230,11 @@ func (h Handler) RouteClone(req RouteCloneEnvironmentRequest) (*RouteCloneEnviro
 		}
 	}
 
-	return createEnvironment(req.Context, h.modelClient, dp, entity, req.Draft)
+	return createEnvironment(req.Context, h.modelClient, entity, pkgresource.Options{
+		Deployer:            dp,
+		Draft:               req.Draft,
+		RunApprovalRequired: req.ApprovalRequired,
+	})
 }
 
 func (h Handler) RouteGetResourceDefinitions(
@@ -338,7 +342,10 @@ func (h Handler) RouteStart(req RouteStartRequest) error {
 			return err
 		}
 
-		return pkgresource.SetResourceStatusScheduled(req.Context, tx, dp, toStartResources...)
+		return pkgresource.CollectionStart(req.Context, tx, toStartResources, pkgresource.Options{
+			Deployer:            dp,
+			RunApprovalRequired: req.ApprovalRequired,
+		})
 	})
 	if err != nil {
 		return errorx.Wrap(err, "failed to start environment")
@@ -360,25 +367,11 @@ func (h Handler) RouteStop(req RouteStopRequest) error {
 		}
 
 		destroyOpts := pkgresource.Options{
-			Deployer: dp,
+			Deployer:            dp,
+			RunApprovalRequired: req.ApprovalRequired,
 		}
 
-		for _, s := range req.stoppableResources {
-			if !pkgresource.CanBeStopped(s) {
-				continue
-			}
-
-			if err = pkgresource.UpdateResourceSubjectID(req.Context, tx, s); err != nil {
-				return err
-			}
-
-			err = pkgresource.Stop(req.Context, tx, s, destroyOpts)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
+		return pkgresource.CollectionStop(req.Context, tx, req.stoppableResources, destroyOpts)
 	})
 }
 

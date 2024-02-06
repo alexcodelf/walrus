@@ -85,6 +85,24 @@ func (ResourceRun) Fields() []ent.Field {
 		field.String("created_by").
 			Comment("User who created the run.").
 			Annotations(entx.SkipInput()),
+		field.String("type").
+			Comment("Type of the run.").
+			Annotations(entx.SkipInput()),
+		field.Bool("approval_required").
+			Comment("If the run requires approval.").
+			Default(false),
+		field.JSON("annotations", map[string]string{}).
+			Optional().
+			Default(map[string]string{}).
+			Annotations(
+				entx.SkipInput(),
+				entx.SkipOutput()),
+		field.JSON("component_changes", []types.ResourceComponentChange{}).
+			Comment("Changes of the resource components.").
+			Optional(),
+		field.JSON("component_change_summary", types.ResourceComponentChangeSummary{}).
+			Comment("Change summary of the resource.").
+			Optional(),
 	}
 }
 

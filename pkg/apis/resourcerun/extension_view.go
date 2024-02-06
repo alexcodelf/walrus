@@ -51,10 +51,10 @@ func (r *RouteLogRequest) Validate() error {
 	}
 
 	if r.JobType == "" {
-		r.JobType = types.RunJobTypeApply
+		r.JobType = types.RunTaskTypeApply.String()
 	}
 
-	if r.JobType != types.RunJobTypeApply && r.JobType != types.RunJobTypeDestroy {
+	if r.JobType != types.RunTaskTypeApply.String() && r.JobType != types.RunTaskTypeDestroy.String() {
 		return errors.New("invalid job type")
 	}
 
@@ -90,3 +90,31 @@ type (
 		New RunDiff `json:"new"`
 	}
 )
+
+type (
+	RouteApplyRequest struct {
+		_ struct{} `route:"PUT=/apply"`
+
+		model.ResourceRunQueryInput `path:",inline"`
+
+		Approve bool `json:"approve,default=false"`
+	}
+)
+
+func (r *RouteApplyRequest) Validate() error {
+	return r.ResourceRunQueryInput.Validate()
+}
+
+type (
+	RouteComponentChangeRequest struct {
+		_ struct{} `route:"PUT=/component-change"`
+
+		model.ResourceRunQueryInput `path:",inline"`
+
+		json.RawMessage `path:"-" json:",inline"`
+	}
+)
+
+func (r *RouteComponentChangeRequest) Validate() error {
+	return r.ResourceRunQueryInput.Validate()
+}

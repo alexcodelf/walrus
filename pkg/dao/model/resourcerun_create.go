@@ -194,6 +194,52 @@ func (rrc *ResourceRunCreate) SetCreatedBy(s string) *ResourceRunCreate {
 	return rrc
 }
 
+// SetType sets the "type" field.
+func (rrc *ResourceRunCreate) SetType(s string) *ResourceRunCreate {
+	rrc.mutation.SetType(s)
+	return rrc
+}
+
+// SetApprovalRequired sets the "approval_required" field.
+func (rrc *ResourceRunCreate) SetApprovalRequired(b bool) *ResourceRunCreate {
+	rrc.mutation.SetApprovalRequired(b)
+	return rrc
+}
+
+// SetNillableApprovalRequired sets the "approval_required" field if the given value is not nil.
+func (rrc *ResourceRunCreate) SetNillableApprovalRequired(b *bool) *ResourceRunCreate {
+	if b != nil {
+		rrc.SetApprovalRequired(*b)
+	}
+	return rrc
+}
+
+// SetAnnotations sets the "annotations" field.
+func (rrc *ResourceRunCreate) SetAnnotations(m map[string]string) *ResourceRunCreate {
+	rrc.mutation.SetAnnotations(m)
+	return rrc
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (rrc *ResourceRunCreate) SetComponentChanges(tcc []types.ResourceComponentChange) *ResourceRunCreate {
+	rrc.mutation.SetComponentChanges(tcc)
+	return rrc
+}
+
+// SetComponentChangeSummary sets the "component_change_summary" field.
+func (rrc *ResourceRunCreate) SetComponentChangeSummary(tccs types.ResourceComponentChangeSummary) *ResourceRunCreate {
+	rrc.mutation.SetComponentChangeSummary(tccs)
+	return rrc
+}
+
+// SetNillableComponentChangeSummary sets the "component_change_summary" field if the given value is not nil.
+func (rrc *ResourceRunCreate) SetNillableComponentChangeSummary(tccs *types.ResourceComponentChangeSummary) *ResourceRunCreate {
+	if tccs != nil {
+		rrc.SetComponentChangeSummary(*tccs)
+	}
+	return rrc
+}
+
 // SetID sets the "id" field.
 func (rrc *ResourceRunCreate) SetID(o object.ID) *ResourceRunCreate {
 	rrc.mutation.SetID(o)
@@ -275,6 +321,14 @@ func (rrc *ResourceRunCreate) defaults() error {
 		v := resourcerun.DefaultPreviousRequiredProviders
 		rrc.mutation.SetPreviousRequiredProviders(v)
 	}
+	if _, ok := rrc.mutation.ApprovalRequired(); !ok {
+		v := resourcerun.DefaultApprovalRequired
+		rrc.mutation.SetApprovalRequired(v)
+	}
+	if _, ok := rrc.mutation.Annotations(); !ok {
+		v := resourcerun.DefaultAnnotations
+		rrc.mutation.SetAnnotations(v)
+	}
 	return nil
 }
 
@@ -348,6 +402,12 @@ func (rrc *ResourceRunCreate) check() error {
 	}
 	if _, ok := rrc.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`model: missing required field "ResourceRun.created_by"`)}
+	}
+	if _, ok := rrc.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`model: missing required field "ResourceRun.type"`)}
+	}
+	if _, ok := rrc.mutation.ApprovalRequired(); !ok {
+		return &ValidationError{Name: "approval_required", err: errors.New(`model: missing required field "ResourceRun.approval_required"`)}
 	}
 	if _, ok := rrc.mutation.ProjectID(); !ok {
 		return &ValidationError{Name: "project", err: errors.New(`model: missing required edge "ResourceRun.project"`)}
@@ -455,6 +515,26 @@ func (rrc *ResourceRunCreate) createSpec() (*ResourceRun, *sqlgraph.CreateSpec) 
 		_spec.SetField(resourcerun.FieldCreatedBy, field.TypeString, value)
 		_node.CreatedBy = value
 	}
+	if value, ok := rrc.mutation.GetType(); ok {
+		_spec.SetField(resourcerun.FieldType, field.TypeString, value)
+		_node.Type = value
+	}
+	if value, ok := rrc.mutation.ApprovalRequired(); ok {
+		_spec.SetField(resourcerun.FieldApprovalRequired, field.TypeBool, value)
+		_node.ApprovalRequired = value
+	}
+	if value, ok := rrc.mutation.Annotations(); ok {
+		_spec.SetField(resourcerun.FieldAnnotations, field.TypeJSON, value)
+		_node.Annotations = value
+	}
+	if value, ok := rrc.mutation.ComponentChanges(); ok {
+		_spec.SetField(resourcerun.FieldComponentChanges, field.TypeJSON, value)
+		_node.ComponentChanges = value
+	}
+	if value, ok := rrc.mutation.ComponentChangeSummary(); ok {
+		_spec.SetField(resourcerun.FieldComponentChangeSummary, field.TypeJSON, value)
+		_node.ComponentChangeSummary = value
+	}
 	if nodes := rrc.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -544,6 +624,8 @@ func (rrc *ResourceRunCreate) Set(obj *ResourceRun) *ResourceRunCreate {
 	rrc.SetDuration(obj.Duration)
 	rrc.SetPreviousRequiredProviders(obj.PreviousRequiredProviders)
 	rrc.SetCreatedBy(obj.CreatedBy)
+	rrc.SetType(obj.Type)
+	rrc.SetApprovalRequired(obj.ApprovalRequired)
 
 	// Optional.
 	if obj.CreateTime != nil {
@@ -563,6 +645,15 @@ func (rrc *ResourceRunCreate) Set(obj *ResourceRun) *ResourceRunCreate {
 	}
 	if obj.ChangeComment != "" {
 		rrc.SetChangeComment(obj.ChangeComment)
+	}
+	if !reflect.ValueOf(obj.Annotations).IsZero() {
+		rrc.SetAnnotations(obj.Annotations)
+	}
+	if !reflect.ValueOf(obj.ComponentChanges).IsZero() {
+		rrc.SetComponentChanges(obj.ComponentChanges)
+	}
+	if !reflect.ValueOf(obj.ComponentChangeSummary).IsZero() {
+		rrc.SetComponentChangeSummary(obj.ComponentChangeSummary)
 	}
 
 	// Record the given object.
@@ -638,6 +729,15 @@ func (rrc *ResourceRunCreate) SaveE(ctx context.Context, cbs ...func(ctx context
 		}
 		if _, set := rrc.mutation.Field(resourcerun.FieldCreatedBy); set {
 			obj.CreatedBy = x.CreatedBy
+		}
+		if _, set := rrc.mutation.Field(resourcerun.FieldType); set {
+			obj.Type = x.Type
+		}
+		if _, set := rrc.mutation.Field(resourcerun.FieldComponentChanges); set {
+			obj.ComponentChanges = x.ComponentChanges
+		}
+		if _, set := rrc.mutation.Field(resourcerun.FieldComponentChangeSummary); set {
+			obj.ComponentChangeSummary = x.ComponentChangeSummary
 		}
 		obj.Edges = x.Edges
 	}
@@ -776,6 +876,15 @@ func (rrcb *ResourceRunCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx co
 			}
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldCreatedBy); set {
 				objs[i].CreatedBy = x[i].CreatedBy
+			}
+			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldType); set {
+				objs[i].Type = x[i].Type
+			}
+			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldComponentChanges); set {
+				objs[i].ComponentChanges = x[i].ComponentChanges
+			}
+			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldComponentChangeSummary); set {
+				objs[i].ComponentChangeSummary = x[i].ComponentChangeSummary
 			}
 			objs[i].Edges = x[i].Edges
 		}
@@ -1083,6 +1192,84 @@ func (u *ResourceRunUpsert) UpdateCreatedBy() *ResourceRunUpsert {
 	return u
 }
 
+// SetType sets the "type" field.
+func (u *ResourceRunUpsert) SetType(v string) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldType, v)
+	return u
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateType() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldType)
+	return u
+}
+
+// SetApprovalRequired sets the "approval_required" field.
+func (u *ResourceRunUpsert) SetApprovalRequired(v bool) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldApprovalRequired, v)
+	return u
+}
+
+// UpdateApprovalRequired sets the "approval_required" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateApprovalRequired() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldApprovalRequired)
+	return u
+}
+
+// SetAnnotations sets the "annotations" field.
+func (u *ResourceRunUpsert) SetAnnotations(v map[string]string) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldAnnotations, v)
+	return u
+}
+
+// UpdateAnnotations sets the "annotations" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateAnnotations() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldAnnotations)
+	return u
+}
+
+// ClearAnnotations clears the value of the "annotations" field.
+func (u *ResourceRunUpsert) ClearAnnotations() *ResourceRunUpsert {
+	u.SetNull(resourcerun.FieldAnnotations)
+	return u
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (u *ResourceRunUpsert) SetComponentChanges(v []types.ResourceComponentChange) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldComponentChanges, v)
+	return u
+}
+
+// UpdateComponentChanges sets the "component_changes" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateComponentChanges() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldComponentChanges)
+	return u
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (u *ResourceRunUpsert) ClearComponentChanges() *ResourceRunUpsert {
+	u.SetNull(resourcerun.FieldComponentChanges)
+	return u
+}
+
+// SetComponentChangeSummary sets the "component_change_summary" field.
+func (u *ResourceRunUpsert) SetComponentChangeSummary(v types.ResourceComponentChangeSummary) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldComponentChangeSummary, v)
+	return u
+}
+
+// UpdateComponentChangeSummary sets the "component_change_summary" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdateComponentChangeSummary() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldComponentChangeSummary)
+	return u
+}
+
+// ClearComponentChangeSummary clears the value of the "component_change_summary" field.
+func (u *ResourceRunUpsert) ClearComponentChangeSummary() *ResourceRunUpsert {
+	u.SetNull(resourcerun.FieldComponentChangeSummary)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1356,6 +1543,97 @@ func (u *ResourceRunUpsertOne) SetCreatedBy(v string) *ResourceRunUpsertOne {
 func (u *ResourceRunUpsertOne) UpdateCreatedBy() *ResourceRunUpsertOne {
 	return u.Update(func(s *ResourceRunUpsert) {
 		s.UpdateCreatedBy()
+	})
+}
+
+// SetType sets the "type" field.
+func (u *ResourceRunUpsertOne) SetType(v string) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateType() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateType()
+	})
+}
+
+// SetApprovalRequired sets the "approval_required" field.
+func (u *ResourceRunUpsertOne) SetApprovalRequired(v bool) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetApprovalRequired(v)
+	})
+}
+
+// UpdateApprovalRequired sets the "approval_required" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateApprovalRequired() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateApprovalRequired()
+	})
+}
+
+// SetAnnotations sets the "annotations" field.
+func (u *ResourceRunUpsertOne) SetAnnotations(v map[string]string) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetAnnotations(v)
+	})
+}
+
+// UpdateAnnotations sets the "annotations" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateAnnotations() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateAnnotations()
+	})
+}
+
+// ClearAnnotations clears the value of the "annotations" field.
+func (u *ResourceRunUpsertOne) ClearAnnotations() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearAnnotations()
+	})
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (u *ResourceRunUpsertOne) SetComponentChanges(v []types.ResourceComponentChange) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetComponentChanges(v)
+	})
+}
+
+// UpdateComponentChanges sets the "component_changes" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateComponentChanges() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateComponentChanges()
+	})
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (u *ResourceRunUpsertOne) ClearComponentChanges() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearComponentChanges()
+	})
+}
+
+// SetComponentChangeSummary sets the "component_change_summary" field.
+func (u *ResourceRunUpsertOne) SetComponentChangeSummary(v types.ResourceComponentChangeSummary) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetComponentChangeSummary(v)
+	})
+}
+
+// UpdateComponentChangeSummary sets the "component_change_summary" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdateComponentChangeSummary() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateComponentChangeSummary()
+	})
+}
+
+// ClearComponentChangeSummary clears the value of the "component_change_summary" field.
+func (u *ResourceRunUpsertOne) ClearComponentChangeSummary() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearComponentChangeSummary()
 	})
 }
 
@@ -1801,6 +2079,97 @@ func (u *ResourceRunUpsertBulk) SetCreatedBy(v string) *ResourceRunUpsertBulk {
 func (u *ResourceRunUpsertBulk) UpdateCreatedBy() *ResourceRunUpsertBulk {
 	return u.Update(func(s *ResourceRunUpsert) {
 		s.UpdateCreatedBy()
+	})
+}
+
+// SetType sets the "type" field.
+func (u *ResourceRunUpsertBulk) SetType(v string) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateType() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateType()
+	})
+}
+
+// SetApprovalRequired sets the "approval_required" field.
+func (u *ResourceRunUpsertBulk) SetApprovalRequired(v bool) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetApprovalRequired(v)
+	})
+}
+
+// UpdateApprovalRequired sets the "approval_required" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateApprovalRequired() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateApprovalRequired()
+	})
+}
+
+// SetAnnotations sets the "annotations" field.
+func (u *ResourceRunUpsertBulk) SetAnnotations(v map[string]string) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetAnnotations(v)
+	})
+}
+
+// UpdateAnnotations sets the "annotations" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateAnnotations() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateAnnotations()
+	})
+}
+
+// ClearAnnotations clears the value of the "annotations" field.
+func (u *ResourceRunUpsertBulk) ClearAnnotations() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearAnnotations()
+	})
+}
+
+// SetComponentChanges sets the "component_changes" field.
+func (u *ResourceRunUpsertBulk) SetComponentChanges(v []types.ResourceComponentChange) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetComponentChanges(v)
+	})
+}
+
+// UpdateComponentChanges sets the "component_changes" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateComponentChanges() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateComponentChanges()
+	})
+}
+
+// ClearComponentChanges clears the value of the "component_changes" field.
+func (u *ResourceRunUpsertBulk) ClearComponentChanges() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearComponentChanges()
+	})
+}
+
+// SetComponentChangeSummary sets the "component_change_summary" field.
+func (u *ResourceRunUpsertBulk) SetComponentChangeSummary(v types.ResourceComponentChangeSummary) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetComponentChangeSummary(v)
+	})
+}
+
+// UpdateComponentChangeSummary sets the "component_change_summary" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdateComponentChangeSummary() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdateComponentChangeSummary()
+	})
+}
+
+// ClearComponentChangeSummary clears the value of the "component_change_summary" field.
+func (u *ResourceRunUpsertBulk) ClearComponentChangeSummary() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearComponentChangeSummary()
 	})
 }
 
