@@ -610,6 +610,7 @@ var (
 		{Name: "deployer_type", Type: field.TypeString, Default: "Terraform"},
 		{Name: "duration", Type: field.TypeInt, Default: 0},
 		{Name: "previous_required_providers", Type: field.TypeJSON},
+		{Name: "plan_record", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "record", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "change_comment", Type: field.TypeString, Nullable: true},
 		{Name: "created_by", Type: field.TypeString},
@@ -630,19 +631,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "resource_runs_environments_resource_runs",
-				Columns:    []*schema.Column{ResourceRunsColumns[21]},
+				Columns:    []*schema.Column{ResourceRunsColumns[22]},
 				RefColumns: []*schema.Column{EnvironmentsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "resource_runs_projects_resource_runs",
-				Columns:    []*schema.Column{ResourceRunsColumns[22]},
+				Columns:    []*schema.Column{ResourceRunsColumns[23]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "resource_runs_resources_runs",
-				Columns:    []*schema.Column{ResourceRunsColumns[23]},
+				Columns:    []*schema.Column{ResourceRunsColumns[24]},
 				RefColumns: []*schema.Column{ResourcesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},

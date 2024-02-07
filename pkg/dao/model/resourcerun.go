@@ -60,6 +60,8 @@ type ResourceRun struct {
 	Duration int `json:"duration,omitempty"`
 	// Previous provider requirement of the run.
 	PreviousRequiredProviders []types.ProviderRequirement `json:"previous_required_providers,omitempty"`
+	// Record of the run plan.
+	PlanRecord string `json:"plan_record,omitempty"`
 	// Record of the run.
 	Record string `json:"record,omitempty"`
 	// Change comment of the run.
@@ -151,7 +153,7 @@ func (*ResourceRun) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case resourcerun.FieldDuration:
 			values[i] = new(sql.NullInt64)
-		case resourcerun.FieldTemplateName, resourcerun.FieldTemplateVersion, resourcerun.FieldDeployerType, resourcerun.FieldRecord, resourcerun.FieldChangeComment, resourcerun.FieldCreatedBy, resourcerun.FieldType:
+		case resourcerun.FieldTemplateName, resourcerun.FieldTemplateVersion, resourcerun.FieldDeployerType, resourcerun.FieldPlanRecord, resourcerun.FieldRecord, resourcerun.FieldChangeComment, resourcerun.FieldCreatedBy, resourcerun.FieldType:
 			values[i] = new(sql.NullString)
 		case resourcerun.FieldCreateTime:
 			values[i] = new(sql.NullTime)
@@ -272,6 +274,12 @@ func (rr *ResourceRun) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &rr.PreviousRequiredProviders); err != nil {
 					return fmt.Errorf("unmarshal field previous_required_providers: %w", err)
 				}
+			}
+		case resourcerun.FieldPlanRecord:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field plan_record", values[i])
+			} else if value.Valid {
+				rr.PlanRecord = value.String
 			}
 		case resourcerun.FieldRecord:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -423,6 +431,9 @@ func (rr *ResourceRun) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("previous_required_providers=")
 	builder.WriteString(fmt.Sprintf("%v", rr.PreviousRequiredProviders))
+	builder.WriteString(", ")
+	builder.WriteString("plan_record=")
+	builder.WriteString(rr.PlanRecord)
 	builder.WriteString(", ")
 	builder.WriteString("record=")
 	builder.WriteString(rr.Record)

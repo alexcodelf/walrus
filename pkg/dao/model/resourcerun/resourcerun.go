@@ -52,6 +52,8 @@ const (
 	FieldDuration = "duration"
 	// FieldPreviousRequiredProviders holds the string denoting the previous_required_providers field in the database.
 	FieldPreviousRequiredProviders = "previous_required_providers"
+	// FieldPlanRecord holds the string denoting the plan_record field in the database.
+	FieldPlanRecord = "plan_record"
 	// FieldRecord holds the string denoting the record field in the database.
 	FieldRecord = "record"
 	// FieldChangeComment holds the string denoting the change_comment field in the database.
@@ -117,6 +119,7 @@ var Columns = []string{
 	FieldDeployerType,
 	FieldDuration,
 	FieldPreviousRequiredProviders,
+	FieldPlanRecord,
 	FieldRecord,
 	FieldChangeComment,
 	FieldCreatedBy,
@@ -239,6 +242,11 @@ func ByDeployerType(opts ...sql.OrderTermOption) OrderOption {
 // ByDuration orders the results by the duration field.
 func ByDuration(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDuration, opts...).ToFunc()
+}
+
+// ByPlanRecord orders the results by the plan_record field.
+func ByPlanRecord(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPlanRecord, opts...).ToFunc()
 }
 
 // ByRecord orders the results by the record field.

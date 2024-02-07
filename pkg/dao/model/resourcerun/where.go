@@ -123,6 +123,11 @@ func Duration(v int) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldEQ(FieldDuration, v))
 }
 
+// PlanRecord applies equality check predicate on the "plan_record" field. It's identical to PlanRecordEQ.
+func PlanRecord(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldPlanRecord, v))
+}
+
 // Record applies equality check predicate on the "record" field. It's identical to RecordEQ.
 func Record(v string) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldEQ(FieldRecord, v))
@@ -851,6 +856,81 @@ func DurationLT(v int) predicate.ResourceRun {
 // DurationLTE applies the LTE predicate on the "duration" field.
 func DurationLTE(v int) predicate.ResourceRun {
 	return predicate.ResourceRun(sql.FieldLTE(FieldDuration, v))
+}
+
+// PlanRecordEQ applies the EQ predicate on the "plan_record" field.
+func PlanRecordEQ(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEQ(FieldPlanRecord, v))
+}
+
+// PlanRecordNEQ applies the NEQ predicate on the "plan_record" field.
+func PlanRecordNEQ(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNEQ(FieldPlanRecord, v))
+}
+
+// PlanRecordIn applies the In predicate on the "plan_record" field.
+func PlanRecordIn(vs ...string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldIn(FieldPlanRecord, vs...))
+}
+
+// PlanRecordNotIn applies the NotIn predicate on the "plan_record" field.
+func PlanRecordNotIn(vs ...string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNotIn(FieldPlanRecord, vs...))
+}
+
+// PlanRecordGT applies the GT predicate on the "plan_record" field.
+func PlanRecordGT(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldGT(FieldPlanRecord, v))
+}
+
+// PlanRecordGTE applies the GTE predicate on the "plan_record" field.
+func PlanRecordGTE(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldGTE(FieldPlanRecord, v))
+}
+
+// PlanRecordLT applies the LT predicate on the "plan_record" field.
+func PlanRecordLT(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldLT(FieldPlanRecord, v))
+}
+
+// PlanRecordLTE applies the LTE predicate on the "plan_record" field.
+func PlanRecordLTE(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldLTE(FieldPlanRecord, v))
+}
+
+// PlanRecordContains applies the Contains predicate on the "plan_record" field.
+func PlanRecordContains(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldContains(FieldPlanRecord, v))
+}
+
+// PlanRecordHasPrefix applies the HasPrefix predicate on the "plan_record" field.
+func PlanRecordHasPrefix(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldHasPrefix(FieldPlanRecord, v))
+}
+
+// PlanRecordHasSuffix applies the HasSuffix predicate on the "plan_record" field.
+func PlanRecordHasSuffix(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldHasSuffix(FieldPlanRecord, v))
+}
+
+// PlanRecordIsNil applies the IsNil predicate on the "plan_record" field.
+func PlanRecordIsNil() predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldIsNull(FieldPlanRecord))
+}
+
+// PlanRecordNotNil applies the NotNil predicate on the "plan_record" field.
+func PlanRecordNotNil() predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldNotNull(FieldPlanRecord))
+}
+
+// PlanRecordEqualFold applies the EqualFold predicate on the "plan_record" field.
+func PlanRecordEqualFold(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldEqualFold(FieldPlanRecord, v))
+}
+
+// PlanRecordContainsFold applies the ContainsFold predicate on the "plan_record" field.
+func PlanRecordContainsFold(v string) predicate.ResourceRun {
+	return predicate.ResourceRun(sql.FieldContainsFold(FieldPlanRecord, v))
 }
 
 // RecordEQ applies the EQ predicate on the "record" field.

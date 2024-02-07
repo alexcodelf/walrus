@@ -76,6 +76,9 @@ func (ResourceRun) Fields() []ent.Field {
 		field.JSON("previous_required_providers", []types.ProviderRequirement{}).
 			Comment("Previous provider requirement of the run.").
 			Default([]types.ProviderRequirement{}),
+		field.Text("plan_record").
+			Comment("Record of the run plan.").
+			Optional(),
 		field.Text("record").
 			Comment("Record of the run.").
 			Optional(),

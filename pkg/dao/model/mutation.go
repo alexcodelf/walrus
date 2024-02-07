@@ -17352,6 +17352,7 @@ type ResourceRunMutation struct {
 	addduration                       *int
 	previous_required_providers       *[]types.ProviderRequirement
 	appendprevious_required_providers []types.ProviderRequirement
+	plan_record                       *string
 	record                            *string
 	change_comment                    *string
 	created_by                        *string
@@ -18091,6 +18092,55 @@ func (m *ResourceRunMutation) ResetPreviousRequiredProviders() {
 	m.appendprevious_required_providers = nil
 }
 
+// SetPlanRecord sets the "plan_record" field.
+func (m *ResourceRunMutation) SetPlanRecord(s string) {
+	m.plan_record = &s
+}
+
+// PlanRecord returns the value of the "plan_record" field in the mutation.
+func (m *ResourceRunMutation) PlanRecord() (r string, exists bool) {
+	v := m.plan_record
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlanRecord returns the old "plan_record" field's value of the ResourceRun entity.
+// If the ResourceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceRunMutation) OldPlanRecord(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlanRecord is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlanRecord requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlanRecord: %w", err)
+	}
+	return oldValue.PlanRecord, nil
+}
+
+// ClearPlanRecord clears the value of the "plan_record" field.
+func (m *ResourceRunMutation) ClearPlanRecord() {
+	m.plan_record = nil
+	m.clearedFields[resourcerun.FieldPlanRecord] = struct{}{}
+}
+
+// PlanRecordCleared returns if the "plan_record" field was cleared in this mutation.
+func (m *ResourceRunMutation) PlanRecordCleared() bool {
+	_, ok := m.clearedFields[resourcerun.FieldPlanRecord]
+	return ok
+}
+
+// ResetPlanRecord resets all changes to the "plan_record" field.
+func (m *ResourceRunMutation) ResetPlanRecord() {
+	m.plan_record = nil
+	delete(m.clearedFields, resourcerun.FieldPlanRecord)
+}
+
 // SetRecord sets the "record" field.
 func (m *ResourceRunMutation) SetRecord(s string) {
 	m.record = &s
@@ -18575,7 +18625,7 @@ func (m *ResourceRunMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ResourceRunMutation) Fields() []string {
-	fields := make([]string, 0, 23)
+	fields := make([]string, 0, 24)
 	if m.create_time != nil {
 		fields = append(fields, resourcerun.FieldCreateTime)
 	}
@@ -18620,6 +18670,9 @@ func (m *ResourceRunMutation) Fields() []string {
 	}
 	if m.previous_required_providers != nil {
 		fields = append(fields, resourcerun.FieldPreviousRequiredProviders)
+	}
+	if m.plan_record != nil {
+		fields = append(fields, resourcerun.FieldPlanRecord)
 	}
 	if m.record != nil {
 		fields = append(fields, resourcerun.FieldRecord)
@@ -18683,6 +18736,8 @@ func (m *ResourceRunMutation) Field(name string) (ent.Value, bool) {
 		return m.Duration()
 	case resourcerun.FieldPreviousRequiredProviders:
 		return m.PreviousRequiredProviders()
+	case resourcerun.FieldPlanRecord:
+		return m.PlanRecord()
 	case resourcerun.FieldRecord:
 		return m.Record()
 	case resourcerun.FieldChangeComment:
@@ -18738,6 +18793,8 @@ func (m *ResourceRunMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldDuration(ctx)
 	case resourcerun.FieldPreviousRequiredProviders:
 		return m.OldPreviousRequiredProviders(ctx)
+	case resourcerun.FieldPlanRecord:
+		return m.OldPlanRecord(ctx)
 	case resourcerun.FieldRecord:
 		return m.OldRecord(ctx)
 	case resourcerun.FieldChangeComment:
@@ -18868,6 +18925,13 @@ func (m *ResourceRunMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPreviousRequiredProviders(v)
 		return nil
+	case resourcerun.FieldPlanRecord:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlanRecord(v)
+		return nil
 	case resourcerun.FieldRecord:
 		v, ok := value.(string)
 		if !ok {
@@ -18978,6 +19042,9 @@ func (m *ResourceRunMutation) ClearedFields() []string {
 	if m.FieldCleared(resourcerun.FieldComputedAttributes) {
 		fields = append(fields, resourcerun.FieldComputedAttributes)
 	}
+	if m.FieldCleared(resourcerun.FieldPlanRecord) {
+		fields = append(fields, resourcerun.FieldPlanRecord)
+	}
 	if m.FieldCleared(resourcerun.FieldRecord) {
 		fields = append(fields, resourcerun.FieldRecord)
 	}
@@ -19015,6 +19082,9 @@ func (m *ResourceRunMutation) ClearField(name string) error {
 		return nil
 	case resourcerun.FieldComputedAttributes:
 		m.ClearComputedAttributes()
+		return nil
+	case resourcerun.FieldPlanRecord:
+		m.ClearPlanRecord()
 		return nil
 	case resourcerun.FieldRecord:
 		m.ClearRecord()
@@ -19083,6 +19153,9 @@ func (m *ResourceRunMutation) ResetField(name string) error {
 		return nil
 	case resourcerun.FieldPreviousRequiredProviders:
 		m.ResetPreviousRequiredProviders()
+		return nil
+	case resourcerun.FieldPlanRecord:
+		m.ResetPlanRecord()
 		return nil
 	case resourcerun.FieldRecord:
 		m.ResetRecord()

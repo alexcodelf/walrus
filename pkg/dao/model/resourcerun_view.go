@@ -54,6 +54,8 @@ type ResourceRunCreateInput struct {
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
 	// Previous provider requirement of the run.
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
+	// Record of the run plan.
+	PlanRecord string `path:"-" query:"-" json:"planRecord,omitempty"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
@@ -84,6 +86,7 @@ func (rrci *ResourceRunCreateInput) Model() *ResourceRun {
 		DeployerType:              rrci.DeployerType,
 		Duration:                  rrci.Duration,
 		PreviousRequiredProviders: rrci.PreviousRequiredProviders,
+		PlanRecord:                rrci.PlanRecord,
 		Record:                    rrci.Record,
 		ChangeComment:             rrci.ChangeComment,
 		ApprovalRequired:          rrci.ApprovalRequired,
@@ -167,6 +170,8 @@ type ResourceRunCreateInputsItem struct {
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
 	// Previous provider requirement of the run.
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
+	// Record of the run plan.
+	PlanRecord string `path:"-" query:"-" json:"planRecord,omitempty"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
@@ -229,6 +234,7 @@ func (rrci *ResourceRunCreateInputs) Model() []*ResourceRun {
 			DeployerType:              rrci.Items[i].DeployerType,
 			Duration:                  rrci.Items[i].Duration,
 			PreviousRequiredProviders: rrci.Items[i].PreviousRequiredProviders,
+			PlanRecord:                rrci.Items[i].PlanRecord,
 			Record:                    rrci.Items[i].Record,
 			ChangeComment:             rrci.Items[i].ChangeComment,
 			ApprovalRequired:          rrci.Items[i].ApprovalRequired,
@@ -493,6 +499,8 @@ type ResourceRunPatchInput struct {
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
 	// Previous provider requirement of the run.
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
+	// Record of the run plan.
+	PlanRecord string `path:"-" query:"-" json:"planRecord,omitempty"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
@@ -532,6 +540,7 @@ func (rrpi *ResourceRunPatchInput) PatchModel() *ResourceRun {
 		DeployerType:              rrpi.DeployerType,
 		Duration:                  rrpi.Duration,
 		PreviousRequiredProviders: rrpi.PreviousRequiredProviders,
+		PlanRecord:                rrpi.PlanRecord,
 		Record:                    rrpi.Record,
 		ChangeComment:             rrpi.ChangeComment,
 		CreatedBy:                 rrpi.CreatedBy,
@@ -887,6 +896,8 @@ type ResourceRunUpdateInput struct {
 	Duration int `path:"-" query:"-" json:"duration,omitempty"`
 	// Previous provider requirement of the run.
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders,omitempty"`
+	// Record of the run plan.
+	PlanRecord string `path:"-" query:"-" json:"planRecord,omitempty"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
@@ -916,6 +927,7 @@ func (rrui *ResourceRunUpdateInput) Model() *ResourceRun {
 		DeployerType:              rrui.DeployerType,
 		Duration:                  rrui.Duration,
 		PreviousRequiredProviders: rrui.PreviousRequiredProviders,
+		PlanRecord:                rrui.PlanRecord,
 		Record:                    rrui.Record,
 		ChangeComment:             rrui.ChangeComment,
 		ApprovalRequired:          rrui.ApprovalRequired,
@@ -969,6 +981,8 @@ type ResourceRunUpdateInputsItem struct {
 	Duration int `path:"-" query:"-" json:"duration"`
 	// Previous provider requirement of the run.
 	PreviousRequiredProviders []types.ProviderRequirement `path:"-" query:"-" json:"previousRequiredProviders"`
+	// Record of the run plan.
+	PlanRecord string `path:"-" query:"-" json:"planRecord,omitempty"`
 	// Record of the run.
 	Record string `path:"-" query:"-" json:"record,omitempty"`
 	// Change comment of the run.
@@ -1030,6 +1044,7 @@ func (rrui *ResourceRunUpdateInputs) Model() []*ResourceRun {
 			DeployerType:              rrui.Items[i].DeployerType,
 			Duration:                  rrui.Items[i].Duration,
 			PreviousRequiredProviders: rrui.Items[i].PreviousRequiredProviders,
+			PlanRecord:                rrui.Items[i].PlanRecord,
 			Record:                    rrui.Items[i].Record,
 			ChangeComment:             rrui.Items[i].ChangeComment,
 			ApprovalRequired:          rrui.Items[i].ApprovalRequired,
@@ -1164,6 +1179,7 @@ type ResourceRunOutput struct {
 	DeployerType              string                               `json:"deployerType,omitempty"`
 	Duration                  int                                  `json:"duration,omitempty"`
 	PreviousRequiredProviders []types.ProviderRequirement          `json:"previousRequiredProviders,omitempty"`
+	PlanRecord                string                               `json:"planRecord,omitempty"`
 	Record                    string                               `json:"record,omitempty"`
 	ChangeComment             string                               `json:"changeComment,omitempty"`
 	CreatedBy                 string                               `json:"createdBy,omitempty"`
@@ -1206,6 +1222,7 @@ func ExposeResourceRun(_rr *ResourceRun) *ResourceRunOutput {
 		DeployerType:              _rr.DeployerType,
 		Duration:                  _rr.Duration,
 		PreviousRequiredProviders: _rr.PreviousRequiredProviders,
+		PlanRecord:                _rr.PlanRecord,
 		Record:                    _rr.Record,
 		ChangeComment:             _rr.ChangeComment,
 		CreatedBy:                 _rr.CreatedBy,

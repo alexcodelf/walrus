@@ -159,6 +159,26 @@ func (rru *ResourceRunUpdate) AppendPreviousRequiredProviders(tr []types.Provide
 	return rru
 }
 
+// SetPlanRecord sets the "plan_record" field.
+func (rru *ResourceRunUpdate) SetPlanRecord(s string) *ResourceRunUpdate {
+	rru.mutation.SetPlanRecord(s)
+	return rru
+}
+
+// SetNillablePlanRecord sets the "plan_record" field if the given value is not nil.
+func (rru *ResourceRunUpdate) SetNillablePlanRecord(s *string) *ResourceRunUpdate {
+	if s != nil {
+		rru.SetPlanRecord(*s)
+	}
+	return rru
+}
+
+// ClearPlanRecord clears the value of the "plan_record" field.
+func (rru *ResourceRunUpdate) ClearPlanRecord() *ResourceRunUpdate {
+	rru.mutation.ClearPlanRecord()
+	return rru
+}
+
 // SetRecord sets the "record" field.
 func (rru *ResourceRunUpdate) SetRecord(s string) *ResourceRunUpdate {
 	rru.mutation.SetRecord(s)
@@ -394,6 +414,11 @@ func (rru *ResourceRunUpdate) Set(obj *ResourceRun) *ResourceRunUpdate {
 	rru.SetDeployerType(obj.DeployerType)
 	rru.SetDuration(obj.Duration)
 	rru.SetPreviousRequiredProviders(obj.PreviousRequiredProviders)
+	if obj.PlanRecord != "" {
+		rru.SetPlanRecord(obj.PlanRecord)
+	} else {
+		rru.ClearPlanRecord()
+	}
 	if obj.Record != "" {
 		rru.SetRecord(obj.Record)
 	} else {
@@ -490,6 +515,12 @@ func (rru *ResourceRunUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, resourcerun.FieldPreviousRequiredProviders, value)
 		})
+	}
+	if value, ok := rru.mutation.PlanRecord(); ok {
+		_spec.SetField(resourcerun.FieldPlanRecord, field.TypeString, value)
+	}
+	if rru.mutation.PlanRecordCleared() {
+		_spec.ClearField(resourcerun.FieldPlanRecord, field.TypeString)
 	}
 	if value, ok := rru.mutation.Record(); ok {
 		_spec.SetField(resourcerun.FieldRecord, field.TypeString, value)
@@ -674,6 +705,26 @@ func (rruo *ResourceRunUpdateOne) SetPreviousRequiredProviders(tr []types.Provid
 // AppendPreviousRequiredProviders appends tr to the "previous_required_providers" field.
 func (rruo *ResourceRunUpdateOne) AppendPreviousRequiredProviders(tr []types.ProviderRequirement) *ResourceRunUpdateOne {
 	rruo.mutation.AppendPreviousRequiredProviders(tr)
+	return rruo
+}
+
+// SetPlanRecord sets the "plan_record" field.
+func (rruo *ResourceRunUpdateOne) SetPlanRecord(s string) *ResourceRunUpdateOne {
+	rruo.mutation.SetPlanRecord(s)
+	return rruo
+}
+
+// SetNillablePlanRecord sets the "plan_record" field if the given value is not nil.
+func (rruo *ResourceRunUpdateOne) SetNillablePlanRecord(s *string) *ResourceRunUpdateOne {
+	if s != nil {
+		rruo.SetPlanRecord(*s)
+	}
+	return rruo
+}
+
+// ClearPlanRecord clears the value of the "plan_record" field.
+func (rruo *ResourceRunUpdateOne) ClearPlanRecord() *ResourceRunUpdateOne {
+	rruo.mutation.ClearPlanRecord()
 	return rruo
 }
 
@@ -953,6 +1004,13 @@ func (rruo *ResourceRunUpdateOne) Set(obj *ResourceRun) *ResourceRunUpdateOne {
 			if !reflect.DeepEqual(db.PreviousRequiredProviders, obj.PreviousRequiredProviders) {
 				rruo.SetPreviousRequiredProviders(obj.PreviousRequiredProviders)
 			}
+			if obj.PlanRecord != "" {
+				if db.PlanRecord != obj.PlanRecord {
+					rruo.SetPlanRecord(obj.PlanRecord)
+				}
+			} else {
+				rruo.ClearPlanRecord()
+			}
 			if obj.Record != "" {
 				if db.Record != obj.Record {
 					rruo.SetRecord(obj.Record)
@@ -1068,6 +1126,9 @@ func (rruo *ResourceRunUpdateOne) SaveE(ctx context.Context, cbs ...func(ctx con
 		}
 		if _, set := rruo.mutation.Field(resourcerun.FieldPreviousRequiredProviders); set {
 			obj.PreviousRequiredProviders = x.PreviousRequiredProviders
+		}
+		if _, set := rruo.mutation.Field(resourcerun.FieldPlanRecord); set {
+			obj.PlanRecord = x.PlanRecord
 		}
 		if _, set := rruo.mutation.Field(resourcerun.FieldRecord); set {
 			obj.Record = x.Record
@@ -1206,6 +1267,12 @@ func (rruo *ResourceRunUpdateOne) sqlSave(ctx context.Context) (_node *ResourceR
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, resourcerun.FieldPreviousRequiredProviders, value)
 		})
+	}
+	if value, ok := rruo.mutation.PlanRecord(); ok {
+		_spec.SetField(resourcerun.FieldPlanRecord, field.TypeString, value)
+	}
+	if rruo.mutation.PlanRecordCleared() {
+		_spec.ClearField(resourcerun.FieldPlanRecord, field.TypeString)
 	}
 	if value, ok := rruo.mutation.Record(); ok {
 		_spec.SetField(resourcerun.FieldRecord, field.TypeString, value)

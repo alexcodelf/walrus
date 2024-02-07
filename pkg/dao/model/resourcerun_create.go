@@ -160,6 +160,20 @@ func (rrc *ResourceRunCreate) SetPreviousRequiredProviders(tr []types.ProviderRe
 	return rrc
 }
 
+// SetPlanRecord sets the "plan_record" field.
+func (rrc *ResourceRunCreate) SetPlanRecord(s string) *ResourceRunCreate {
+	rrc.mutation.SetPlanRecord(s)
+	return rrc
+}
+
+// SetNillablePlanRecord sets the "plan_record" field if the given value is not nil.
+func (rrc *ResourceRunCreate) SetNillablePlanRecord(s *string) *ResourceRunCreate {
+	if s != nil {
+		rrc.SetPlanRecord(*s)
+	}
+	return rrc
+}
+
 // SetRecord sets the "record" field.
 func (rrc *ResourceRunCreate) SetRecord(s string) *ResourceRunCreate {
 	rrc.mutation.SetRecord(s)
@@ -503,6 +517,10 @@ func (rrc *ResourceRunCreate) createSpec() (*ResourceRun, *sqlgraph.CreateSpec) 
 		_spec.SetField(resourcerun.FieldPreviousRequiredProviders, field.TypeJSON, value)
 		_node.PreviousRequiredProviders = value
 	}
+	if value, ok := rrc.mutation.PlanRecord(); ok {
+		_spec.SetField(resourcerun.FieldPlanRecord, field.TypeString, value)
+		_node.PlanRecord = value
+	}
 	if value, ok := rrc.mutation.Record(); ok {
 		_spec.SetField(resourcerun.FieldRecord, field.TypeString, value)
 		_node.Record = value
@@ -640,6 +658,9 @@ func (rrc *ResourceRunCreate) Set(obj *ResourceRun) *ResourceRunCreate {
 	if !reflect.ValueOf(obj.ComputedAttributes).IsZero() {
 		rrc.SetComputedAttributes(obj.ComputedAttributes)
 	}
+	if obj.PlanRecord != "" {
+		rrc.SetPlanRecord(obj.PlanRecord)
+	}
 	if obj.Record != "" {
 		rrc.SetRecord(obj.Record)
 	}
@@ -720,6 +741,9 @@ func (rrc *ResourceRunCreate) SaveE(ctx context.Context, cbs ...func(ctx context
 		}
 		if _, set := rrc.mutation.Field(resourcerun.FieldInputConfigs); set {
 			obj.InputConfigs = x.InputConfigs
+		}
+		if _, set := rrc.mutation.Field(resourcerun.FieldPlanRecord); set {
+			obj.PlanRecord = x.PlanRecord
 		}
 		if _, set := rrc.mutation.Field(resourcerun.FieldRecord); set {
 			obj.Record = x.Record
@@ -867,6 +891,9 @@ func (rrcb *ResourceRunCreateBulk) SaveE(ctx context.Context, cbs ...func(ctx co
 			}
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldInputConfigs); set {
 				objs[i].InputConfigs = x[i].InputConfigs
+			}
+			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldPlanRecord); set {
+				objs[i].PlanRecord = x[i].PlanRecord
 			}
 			if _, set := rrcb.builders[i].mutation.Field(resourcerun.FieldRecord); set {
 				objs[i].Record = x[i].Record
@@ -1141,6 +1168,24 @@ func (u *ResourceRunUpsert) SetPreviousRequiredProviders(v []types.ProviderRequi
 // UpdatePreviousRequiredProviders sets the "previous_required_providers" field to the value that was provided on create.
 func (u *ResourceRunUpsert) UpdatePreviousRequiredProviders() *ResourceRunUpsert {
 	u.SetExcluded(resourcerun.FieldPreviousRequiredProviders)
+	return u
+}
+
+// SetPlanRecord sets the "plan_record" field.
+func (u *ResourceRunUpsert) SetPlanRecord(v string) *ResourceRunUpsert {
+	u.Set(resourcerun.FieldPlanRecord, v)
+	return u
+}
+
+// UpdatePlanRecord sets the "plan_record" field to the value that was provided on create.
+func (u *ResourceRunUpsert) UpdatePlanRecord() *ResourceRunUpsert {
+	u.SetExcluded(resourcerun.FieldPlanRecord)
+	return u
+}
+
+// ClearPlanRecord clears the value of the "plan_record" field.
+func (u *ResourceRunUpsert) ClearPlanRecord() *ResourceRunUpsert {
+	u.SetNull(resourcerun.FieldPlanRecord)
 	return u
 }
 
@@ -1487,6 +1532,27 @@ func (u *ResourceRunUpsertOne) SetPreviousRequiredProviders(v []types.ProviderRe
 func (u *ResourceRunUpsertOne) UpdatePreviousRequiredProviders() *ResourceRunUpsertOne {
 	return u.Update(func(s *ResourceRunUpsert) {
 		s.UpdatePreviousRequiredProviders()
+	})
+}
+
+// SetPlanRecord sets the "plan_record" field.
+func (u *ResourceRunUpsertOne) SetPlanRecord(v string) *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetPlanRecord(v)
+	})
+}
+
+// UpdatePlanRecord sets the "plan_record" field to the value that was provided on create.
+func (u *ResourceRunUpsertOne) UpdatePlanRecord() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdatePlanRecord()
+	})
+}
+
+// ClearPlanRecord clears the value of the "plan_record" field.
+func (u *ResourceRunUpsertOne) ClearPlanRecord() *ResourceRunUpsertOne {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearPlanRecord()
 	})
 }
 
@@ -2023,6 +2089,27 @@ func (u *ResourceRunUpsertBulk) SetPreviousRequiredProviders(v []types.ProviderR
 func (u *ResourceRunUpsertBulk) UpdatePreviousRequiredProviders() *ResourceRunUpsertBulk {
 	return u.Update(func(s *ResourceRunUpsert) {
 		s.UpdatePreviousRequiredProviders()
+	})
+}
+
+// SetPlanRecord sets the "plan_record" field.
+func (u *ResourceRunUpsertBulk) SetPlanRecord(v string) *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.SetPlanRecord(v)
+	})
+}
+
+// UpdatePlanRecord sets the "plan_record" field to the value that was provided on create.
+func (u *ResourceRunUpsertBulk) UpdatePlanRecord() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.UpdatePlanRecord()
+	})
+}
+
+// ClearPlanRecord clears the value of the "plan_record" field.
+func (u *ResourceRunUpsertBulk) ClearPlanRecord() *ResourceRunUpsertBulk {
+	return u.Update(func(s *ResourceRunUpsert) {
+		s.ClearPlanRecord()
 	})
 }
 

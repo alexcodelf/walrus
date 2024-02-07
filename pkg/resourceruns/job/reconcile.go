@@ -96,12 +96,18 @@ func (r Reconciler) syncRunStatus(ctx context.Context, job *batchv1.Job) (err er
 	}
 
 	// Report to application run.
-	run.Record = record
+	if runstatus.IsStatusPlanCondition(run) {
+		run.PlanRecord = record
+	} else {
+		run.Record = record
+	}
+
 	run.Status.SetSummary(status.WalkResourceRun(&run.Status))
 	run.Duration = int(time.Since(*run.CreateTime).Seconds())
 
 	run, err = r.ModelClient.ResourceRuns().UpdateOne(run).
 		SetStatus(run.Status).
+		SetPlanRecord(run.PlanRecord).
 		SetRecord(run.Record).
 		SetDuration(run.Duration).
 		Save(ctx)
