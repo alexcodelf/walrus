@@ -96,6 +96,6 @@ type Change struct {
 	Before          json.RawMessage `json:"before"`
 	After           json.RawMessage `json:"after"`
 	AfterUnknown    json.RawMessage `json:"after_unknown"`
-	BeforeSensitive bool            `json:"before_sensitive"`
+	BeforeSensitive json.RawMessage `json:"before_sensitive"`
 	AfterSensitive  json.RawMessage `json:"after_sensitive"`
 }

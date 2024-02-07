@@ -642,13 +642,13 @@ func (h Handler) RouteComponentChange(req RouteComponentChangeRequest) error {
 		switch {
 		case actions.Has(types.ResourceComponentChangeTypeCreate):
 			componentChangeSummary.Created++
-			c.Type = types.ResourceComponentChangeTypeCreate
+			c.Change.Type = types.ResourceComponentChangeTypeCreate
 		case actions.Has(types.ResourceComponentChangeTypeUpdate):
 			componentChangeSummary.Updated++
-			c.Type = types.ResourceComponentChangeTypeUpdate
+			c.Change.Type = types.ResourceComponentChangeTypeUpdate
 		case actions.Has(types.ResourceComponentChangeTypeDelete):
 			componentChangeSummary.Deleted++
-			c.Type = types.ResourceComponentChangeTypeDelete
+			c.Change.Type = types.ResourceComponentChangeTypeDelete
 		}
 	}
 
