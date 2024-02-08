@@ -51,12 +51,12 @@ func (d Deployer) Apply(
 ) (err error) {
 	defer d.errorHandle(mc, run, err)
 
-	if !status.ResourceRunStatusPlan.IsTrue(run) {
+	if !status.ResourceRunStatusPlanned.IsTrue(run) {
 		err = fmt.Errorf("resource run %s is not planned", run.ID)
 		return
 	}
 
-	status.ResourceRunStatusPlan.True(run, "")
+	status.ResourceRunStatusPlanned.True(run, "")
 	status.ResourceRunStatusApply.Unknown(run, "")
 
 	run, err = runstatus.UpdateStatus(ctx, mc, run)
@@ -86,7 +86,7 @@ func (d Deployer) Plan(
 	}
 
 	status.ResourceRunStatusPending.True(run, "")
-	status.ResourceRunStatusPlan.Unknown(run, "")
+	status.ResourceRunStatusPlanned.Unknown(run, "")
 
 	run, err = runstatus.UpdateStatus(ctx, mc, run)
 	if err != nil {
@@ -111,12 +111,12 @@ func (d Deployer) Destroy(
 ) (err error) {
 	defer d.errorHandle(mc, run, err)
 
-	if !status.ResourceRunStatusPlan.IsTrue(run) {
+	if !status.ResourceRunStatusPlanned.IsTrue(run) {
 		err = fmt.Errorf("resource run %s is not planned", run.ID)
 		return
 	}
 
-	status.ResourceRunStatusPlan.True(run, "")
+	status.ResourceRunStatusPlanned.True(run, "")
 	status.ResourceRunStatusApply.Unknown(run, "")
 
 	run, err = runstatus.UpdateStatus(ctx, mc, run)

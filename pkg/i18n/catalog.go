@@ -52,13 +52,13 @@ var messageKeyToIndex = map[string]int{
 	"You are translating natural language to a Terraform module. Please do not explain, just write pure terraform HCL code. Please do not explain, just write pure terraform HCL code. Please do not explain, just write pure terraform HCL code.": 6,
 }
 
-var enIndex = []uint32{ // 12 elements
+var enIndex = []uint32{ // 12 elements.
 	0x00000000, 0x0000001f, 0x0000005b, 0x00000083,
 	0x000000dc, 0x000000f0, 0x00000118, 0x00000205,
 	0x00000230, 0x000002af, 0x00000303, 0x0000031d,
-} // Size: 72 bytes
+} // Size: 72 bytes.
 
-const enData string = "" + // Size: 797 bytes
+const enData string = "" + // Size: 797 bytes.
 	"\x02Create a Kubernetes deployment\x02# Create a Kubernetes deployment. " +
 	"Provide common variables.\x02Create an alibaba cloud virtual machine\x02" +
 	"# Create a resource group, virtual network, subnet and virtual machine o" +
@@ -72,13 +72,13 @@ const enData string = "" + // Size: 797 bytes
 	"\x02Terraform code that is fixed. Please do not explain, just write terr" +
 	"aform HCL code.\x02Explanation of the fixes."
 
-var zhIndex = []uint32{ // 12 elements
+var zhIndex = []uint32{ // 12 elements.
 	0x00000000, 0x00000022, 0x00000061, 0x00000080,
 	0x000000ce, 0x000000de, 0x00000103, 0x000001f0,
 	0x00000216, 0x0000027a, 0x000002ce, 0x000002f6,
-} // Size: 72 bytes
+} // Size: 72 bytes.
 
-const zhData string = "" + // Size: 758 bytes
+const zhData string = "" + // Size: 758 bytes.
 	"\x02创建一个Kubernetes deployment\x02# 创建一个Kubernetes deployment，提供常用的变量。" +
 	"\x02创建一个阿里云虚拟机\x02# 在阿里云上创建一个资源组，虚拟网络，子网和虚拟机。\x02部署ELK组件\x02# 使用Helm cha" +
 	"rt部署ELK组件。\x02You are translating natural language to a Terraform module" +
@@ -89,4 +89,4 @@ const zhData string = "" + // Size: 758 bytes
 	"fixed. Please do not explain, just write terraform HCL code.\x02对代码修复的中文" +
 	"解释说明。"
 
-	// Total table size 1699 bytes (1KiB); checksum: 8F5B9935
+	// Total table size 1699 bytes (1KiB); checksum: 8F5B9935.

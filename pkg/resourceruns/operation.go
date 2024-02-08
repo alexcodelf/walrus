@@ -22,7 +22,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	deptypes "github.com/seal-io/walrus/pkg/deployer/types"
-	"github.com/seal-io/walrus/pkg/resourcerun/annotaion"
+	"github.com/seal-io/walrus/pkg/resourceruns/annotations"
 	runjob "github.com/seal-io/walrus/pkg/resourceruns/job"
 	runstatus "github.com/seal-io/walrus/pkg/resourceruns/status"
 	"github.com/seal-io/walrus/pkg/terraform/parser"
@@ -204,7 +204,7 @@ func Create(ctx context.Context, mc model.ClientSet, opts CreateOptions) (*model
 	}
 
 	// Set subject ID.
-	err = annotaion.SetSubjectID(ctx, entity)
+	err = annotations.SetSubjectID(ctx, entity)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +262,7 @@ func Apply(ctx context.Context, mc model.ClientSet, dp deptypes.Deployer, run *m
 		return errorx.Errorf("Only the latest resource run can be applied")
 	}
 
-	if runstatus.IsStatusPlanned(run) {
+	if !runstatus.IsStatusPlanned(run) {
 		return fmt.Errorf("can not apply run in status: %s", run.Status.SummaryStatus)
 	}
 

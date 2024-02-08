@@ -2,7 +2,7 @@ package status
 
 const (
 	ResourceRunStatusPending  ConditionType = "Pending"
-	ResourceRunStatusPlan     ConditionType = "Plan"
+	ResourceRunStatusPlanned  ConditionType = "Planned"
 	ResourceRunStatusApply    ConditionType = "Apply"
 	ResourceRunStatusCanceled ConditionType = "Canceled"
 
@@ -28,10 +28,28 @@ var resourceRunStatusPaths = NewWalker(
 	[][]ConditionType{
 		{
 			ResourceRunStatusPending,
-			ResourceRunStatusPlan,
+			ResourceRunStatusPlanned,
 			ResourceRunStatusApply,
 			ResourceRunStatusCanceled,
 		},
+	},
+	func(d Decision[ConditionType]) {
+		d.Make(ResourceRunStatusCanceled,
+			func(st ConditionStatus, reason string) *Summary {
+				switch st {
+				case ConditionStatusUnknown:
+					return &Summary{
+						SummaryStatus: "Canceling",
+						Transitioning: true,
+					}
+				case ConditionStatusFalse:
+					return &Summary{
+						SummaryStatus: "CancelFailed",
+						Error:         true,
+					}
+				}
+				return &Summary{SummaryStatus: "Canceled", Inactive: true}
+			})
 	},
 )
 

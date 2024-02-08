@@ -65,10 +65,9 @@ func (s syncer) Do(ctx context.Context, bm runbus.BusMessage) (err error) {
 			}
 		}
 
-		// Planned -> Apply.
-		status.ResourceStatusDeployed.True(entity, "")
-		// Planned does need to prepare components.
-		status.ResourceStatusReady.True(entity, "")
+		// If approval required, set the status to planned.
+		status.ResourceStatusPlanned.Reset(entity, "")
+		status.ResourceStatusPlanned.True(entity, "")
 
 	case runstatus.IsStatusSucceeded(run):
 		switch {

@@ -11,13 +11,13 @@ import (
 
 func IsStatusRunning(run *model.ResourceRun) bool {
 	return status.ResourceRunStatusPending.IsUnknown(run) ||
-		status.ResourceRunStatusPlan.IsUnknown(run) ||
+		status.ResourceRunStatusPlanned.IsUnknown(run) ||
 		status.ResourceRunStatusApply.IsUnknown(run)
 }
 
 func IsStatusFailed(run *model.ResourceRun) bool {
 	return status.ResourceRunStatusPending.IsFalse(run) ||
-		status.ResourceRunStatusPlan.IsFalse(run) ||
+		status.ResourceRunStatusPlanned.IsFalse(run) ||
 		status.ResourceRunStatusApply.IsFalse(run)
 }
 
@@ -26,7 +26,7 @@ func IsStatusPending(run *model.ResourceRun) bool {
 }
 
 func IsStatusPlanned(run *model.ResourceRun) bool {
-	return status.ResourceRunStatusPlan.IsTrue(run) &&
+	return status.ResourceRunStatusPlanned.IsTrue(run) &&
 		!status.ResourceRunStatusApply.Exist(run)
 }
 
@@ -37,9 +37,9 @@ func IsStatusSucceeded(run *model.ResourceRun) bool {
 // SetStatusFalse sets the status of the resource run to false.
 func SetStatusFalse(run *model.ResourceRun, errMsg string) {
 	switch {
-	case status.ResourceRunStatusPlan.IsUnknown(run):
+	case status.ResourceRunStatusPlanned.IsUnknown(run):
 		errMsg = fmt.Sprintf("plan failed: %s", errMsg)
-		status.ResourceRunStatusPlan.False(run, errMsg)
+		status.ResourceRunStatusPlanned.False(run, errMsg)
 	case status.ResourceRunStatusApply.IsUnknown(run):
 		errMsg = fmt.Sprintf("apply failed: %s", errMsg)
 		status.ResourceRunStatusApply.False(run, errMsg)
@@ -52,8 +52,8 @@ func SetStatusFalse(run *model.ResourceRun, errMsg string) {
 // It marks the status of the resource run as "Succeeded".
 func SetStatusTrue(run *model.ResourceRun, msg string) {
 	switch {
-	case status.ResourceRunStatusPlan.IsUnknown(run):
-		status.ResourceRunStatusPlan.True(run, msg)
+	case status.ResourceRunStatusPlanned.IsUnknown(run):
+		status.ResourceRunStatusPlanned.True(run, msg)
 	case status.ResourceRunStatusApply.IsUnknown(run):
 		status.ResourceRunStatusApply.True(run, msg)
 	}

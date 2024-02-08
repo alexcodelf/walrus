@@ -12,7 +12,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	pkgenv "github.com/seal-io/walrus/pkg/environment"
-	"github.com/seal-io/walrus/pkg/resourcerun/annotaion"
+	"github.com/seal-io/walrus/pkg/resourceruns/annotations"
 	"github.com/seal-io/walrus/pkg/resourceruns/status"
 	"github.com/seal-io/walrus/pkg/settings"
 	"github.com/seal-io/walrus/utils/pointer"
@@ -135,7 +135,7 @@ func getSubject(ctx context.Context, mc model.ClientSet, run *model.ResourceRun)
 	if s.ID != "" {
 		subjectID = s.ID
 	} else {
-		subjectID, err = annotaion.GetSubjectID(run)
+		subjectID, err = annotations.GetSubjectID(run)
 		if err != nil {
 			return nil, err
 		}
