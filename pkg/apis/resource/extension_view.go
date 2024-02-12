@@ -23,6 +23,7 @@ import (
 	"github.com/seal-io/walrus/pkg/resourcedefinitions"
 	runstatus "github.com/seal-io/walrus/pkg/resourceruns/status"
 	pkgresource "github.com/seal-io/walrus/pkg/resources"
+	"github.com/seal-io/walrus/pkg/resources/status"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/strs"
 )
@@ -75,7 +76,7 @@ func (r *RouteUpgradeRequest) Validate() error {
 		return fmt.Errorf("failed to get resource: %w", err)
 	}
 
-	if r.Draft && !pkgresource.IsInactive(entity) {
+	if r.Draft && !status.IsInactive(entity) {
 		return errorx.HttpErrorf(http.StatusBadRequest,
 			"cannot update resource draft in %q status", entity.Status.SummaryStatus)
 	}
@@ -353,7 +354,7 @@ func (r *RouteStartRequest) Validate() error {
 		return err
 	}
 
-	if !pkgresource.IsInactive(res) {
+	if !status.IsInactive(res) {
 		return errorx.HttpErrorf(
 			http.StatusBadRequest,
 			"cannot start resource %q: in %q status",
@@ -462,7 +463,7 @@ func (r *CollectionRouteStartRequest) Validate() error {
 
 	for i := range entities {
 		entity := entities[i]
-		if !pkgresource.IsInactive(entity) {
+		if !status.IsInactive(entity) {
 			return errorx.HttpErrorf(
 				http.StatusBadRequest,
 				"cannot start resource %q: in %q status",
@@ -562,7 +563,7 @@ func (r *CollectionRouteUpgradeRequest) Validate() error {
 		for i := range entities {
 			entitiesMap[entities[i].ID] = entities[i]
 
-			if r.Draft && !pkgresource.IsInactive(entities[i]) {
+			if r.Draft && !status.IsInactive(entities[i]) {
 				return errorx.HttpErrorf(http.StatusBadRequest,
 					"cannot update resource draft in %q status", entities[i].Status.SummaryStatus)
 			}

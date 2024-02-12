@@ -32,7 +32,7 @@ func IsStatusPlanned(run *model.ResourceRun) bool {
 
 // IsStatusPlanCondition checks if the resource run is in the plan condition.
 func IsStatusPlanCondition(run *model.ResourceRun) bool {
-	return status.ResourceRunStatusPlan.Exist(run) &&
+	return status.ResourceRunStatusPlanned.Exist(run) &&
 		!status.ResourceRunStatusApply.Exist(run)
 }
 

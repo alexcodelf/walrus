@@ -6,8 +6,10 @@ import (
 
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types"
+	"github.com/seal-io/walrus/pkg/dao/types/status"
 	deptypes "github.com/seal-io/walrus/pkg/deployer/types"
-	"github.com/seal-io/walrus/pkg/resourceruns/status"
+	runstatus "github.com/seal-io/walrus/pkg/resourceruns/status"
+	resstatus "github.com/seal-io/walrus/pkg/resources/status"
 )
 
 // PerformRunJob performs the run job by the given run.
@@ -22,8 +24,36 @@ func PerformRunJob(ctx context.Context, mc model.ClientSet, dp deptypes.Deployer
 	case types.RunTaskTypePlan:
 		return dp.Plan(ctx, mc, run, deptypes.PlanOptions{})
 	case types.RunTaskTypeApply:
+		// Mark resource status as deploying.
+		res, err := mc.Resources().Get(ctx, run.ResourceID)
+		if err != nil {
+			return err
+		}
+
+		status.ResourceStatusDeployed.Reset(res, "")
+
+		if err = resstatus.UpdateStatus(ctx, mc, res); err != nil {
+			return err
+		}
+
 		return dp.Apply(ctx, mc, run, deptypes.ApplyOptions{})
 	case types.RunTaskTypeDestroy:
+		res, err := mc.Resources().Get(ctx, run.ResourceID)
+		if err != nil {
+			return err
+		}
+		// Mark resource status as destroying.（stop or delete）.
+		switch types.RunType(run.Type) {
+		case types.RunTypeStop:
+			status.ResourceStatusStopped.Reset(res, "")
+		case types.RunTypeDelete:
+			status.ResourceStatusDeleted.Reset(res, "")
+		}
+
+		if err = resstatus.UpdateStatus(ctx, mc, res); err != nil {
+			return err
+		}
+
 		return dp.Destroy(ctx, mc, run, deptypes.DestroyOptions{})
 	}
 
@@ -48,11 +78,11 @@ func PerformRunJob(ctx context.Context, mc model.ClientSet, dp deptypes.Deployer
 //	| rollback         | pending          | plan             |
 //	| rollback         | planed           | apply            |
 func GetRunJobType(run *model.ResourceRun) (types.RunJobType, error) {
-	if status.IsStatusPending(run) {
+	if runstatus.IsStatusPending(run) {
 		return types.RunTaskTypePlan, nil
 	}
 
-	if status.IsStatusPlanned(run) {
+	if runstatus.IsStatusPlanned(run) {
 		switch types.RunType(run.Type) {
 		case types.RunTypeCreate, types.RunTypeUpgrade, types.RunTypeStart, types.RunTypeRollback:
 			return types.RunTaskTypeApply, nil

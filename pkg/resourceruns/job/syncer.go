@@ -63,9 +63,11 @@ func (s syncer) Do(ctx context.Context, bm runbus.BusMessage) (err error) {
 			if err != nil {
 				return err
 			}
+
+			return nil
 		}
 
-		// If approval required, set the status to planned.
+		// If approval required, set the status planned.
 		status.ResourceStatusPlanned.Reset(entity, "")
 		status.ResourceStatusPlanned.True(entity, "")
 

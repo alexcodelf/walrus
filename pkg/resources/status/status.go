@@ -1,6 +1,8 @@
-package resources
+package status
 
 import (
+	"context"
+
 	"github.com/seal-io/walrus/pkg/dao/model"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 )
@@ -83,4 +85,22 @@ func IsInactive(r *model.Resource) bool {
 
 	return r.Status.SummaryStatus == status.ResourceStatusUnDeployed.String() ||
 		r.Status.SummaryStatus == status.ResourceStatusStopped.String()
+}
+
+// UpdateStatus updates the status of the given resource.
+func UpdateStatus(
+	ctx context.Context,
+	mc model.ClientSet,
+	entity *model.Resource,
+) error {
+	entity.Status.SetSummary(status.WalkResource(&entity.Status))
+
+	err := mc.Resources().UpdateOne(entity).
+		SetStatus(entity.Status).
+		Exec(ctx)
+	if err != nil && !model.IsNotFound(err) {
+		return err
+	}
+
+	return nil
 }

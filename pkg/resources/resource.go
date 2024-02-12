@@ -17,26 +17,10 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	"github.com/seal-io/walrus/pkg/dao/types/status"
 	deptypes "github.com/seal-io/walrus/pkg/deployer/types"
+	resstatus "github.com/seal-io/walrus/pkg/resources/status"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/strs"
 )
-
-func UpdateStatus(
-	ctx context.Context,
-	mc model.ClientSet,
-	entity *model.Resource,
-) error {
-	entity.Status.SetSummary(status.WalkResource(&entity.Status))
-
-	err := mc.Resources().UpdateOne(entity).
-		SetStatus(entity.Status).
-		Exec(ctx)
-	if err != nil && !model.IsNotFound(err) {
-		return err
-	}
-
-	return nil
-}
 
 func GetSubjectID(entity *model.Resource) (object.ID, error) {
 	if entity == nil {
@@ -158,7 +142,7 @@ func CheckDependencyStatus(
 	msg := fmt.Sprintf("Waiting for dependent resources to be ready: %s", strs.Join(", ", dependencyNames.List()...))
 	status.ResourceStatusProgressing.Reset(entity, msg)
 
-	if err = UpdateStatus(ctx, mc, entity); err != nil {
+	if err = resstatus.UpdateStatus(ctx, mc, entity); err != nil {
 		return false, fmt.Errorf("failed to update resource status: %w", err)
 	}
 
@@ -216,7 +200,7 @@ func CheckDependantStatus(
 			status.ResourceStatusDeleted.Reset(entity, msg)
 			status.ResourceStatusProgressing.Unknown(entity, "")
 
-			if err = UpdateStatus(ctx, mc, entity); err != nil {
+			if err = resstatus.UpdateStatus(ctx, mc, entity); err != nil {
 				return false, fmt.Errorf("failed to update resource status: %w", err)
 			}
 		}
@@ -228,7 +212,7 @@ func CheckDependantStatus(
 			status.ResourceStatusStopped.Reset(entity, "")
 			status.ResourceStatusProgressing.Unknown(entity, msg)
 
-			if err = UpdateStatus(ctx, mc, entity); err != nil {
+			if err = resstatus.UpdateStatus(ctx, mc, entity); err != nil {
 				return false, fmt.Errorf("failed to update resource status: %w", err)
 			}
 		}

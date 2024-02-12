@@ -25,6 +25,7 @@ import (
 	"github.com/seal-io/walrus/pkg/resourceruns/config"
 	runstatus "github.com/seal-io/walrus/pkg/resourceruns/status"
 	pkgresource "github.com/seal-io/walrus/pkg/resources"
+	"github.com/seal-io/walrus/pkg/resources/status"
 	"github.com/seal-io/walrus/pkg/terraform/convertor"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/json"
@@ -137,7 +138,7 @@ func (r *PatchRequest) Validate() error {
 		return fmt.Errorf("failed to get resource: %w", err)
 	}
 
-	if r.Draft && !pkgresource.IsInactive(entity) {
+	if r.Draft && !status.IsInactive(entity) {
 		return errorx.HttpErrorf(http.StatusBadRequest,
 			"cannot update resource draft in %q status", entity.Status.SummaryStatus)
 	}

@@ -27,6 +27,7 @@ import (
 	pkgcomponent "github.com/seal-io/walrus/pkg/resourcecomponents"
 	"github.com/seal-io/walrus/pkg/resourcedefinitions"
 	pkgresource "github.com/seal-io/walrus/pkg/resources"
+	"github.com/seal-io/walrus/pkg/resources/status"
 	"github.com/seal-io/walrus/utils/errorx"
 	"github.com/seal-io/walrus/utils/log"
 )
@@ -332,7 +333,7 @@ func (h Handler) RouteStart(req RouteStartRequest) error {
 	toStartResources := make(model.Resources, 0, len(resources))
 
 	for _, r := range resources {
-		if pkgresource.IsInactive(r) {
+		if status.IsInactive(r) {
 			toStartResources = append(toStartResources, r)
 		}
 	}
