@@ -2,6 +2,7 @@ package resourcerun
 
 import (
 	"errors"
+	"mime/multipart"
 
 	"github.com/seal-io/walrus/pkg/apis/runtime"
 	"github.com/seal-io/walrus/pkg/dao/model"
@@ -104,15 +105,24 @@ func (r *RouteApplyRequest) Validate() error {
 }
 
 type (
-	RouteComponentChangeRequest struct {
-		_ struct{} `route:"PUT=/component-change"`
+	RouteSetPlanRequest struct {
+		_ struct{} `route:"POST=/plan"`
 
 		model.ResourceRunQueryInput `path:",inline"`
 
-		json.RawMessage `path:"-" json:",inline"`
+		JsonPlan *multipart.FileHeader `form:"jsonplan"`
+		Plan     *multipart.FileHeader `form:"plan"`
 	}
 )
 
-func (r *RouteComponentChangeRequest) Validate() error {
+func (r *RouteSetPlanRequest) Validate() error {
 	return r.ResourceRunQueryInput.Validate()
 }
+
+type (
+	RouteGetPlanRequest struct {
+		_ struct{} `route:"GET=/plan"`
+
+		model.ResourceRunQueryInput `path:",inline"`
+	}
+)

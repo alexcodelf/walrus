@@ -75,7 +75,7 @@ type ResourceRun struct {
 	// Annotations holds the value of the "annotations" field.
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// Changes of the resource components.
-	ComponentChanges []types.ResourceComponentChange `json:"component_changes,omitempty"`
+	ComponentChanges []*types.ResourceComponentChange `json:"component_changes,omitempty"`
 	// Change summary of the resource.
 	ComponentChangeSummary types.ResourceComponentChangeSummary `json:"component_change_summary,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.

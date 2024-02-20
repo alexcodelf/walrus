@@ -63,7 +63,7 @@ type ResourceRunCreateInput struct {
 	// If the run requires approval.
 	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired,omitempty"`
 	// Changes of the resource components.
-	ComponentChanges []types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change summary of the resource.
 	ComponentChangeSummary types.ResourceComponentChangeSummary `path:"-" query:"-" json:"componentChangeSummary,omitempty"`
 }
@@ -179,7 +179,7 @@ type ResourceRunCreateInputsItem struct {
 	// If the run requires approval.
 	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired,omitempty"`
 	// Changes of the resource components.
-	ComponentChanges []types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change summary of the resource.
 	ComponentChangeSummary types.ResourceComponentChangeSummary `path:"-" query:"-" json:"componentChangeSummary,omitempty"`
 }
@@ -514,7 +514,7 @@ type ResourceRunPatchInput struct {
 	// Annotations holds the value of the "annotations" field.
 	Annotations map[string]string `path:"-" query:"-" json:"annotations,omitempty"`
 	// Changes of the resource components.
-	ComponentChanges []types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change summary of the resource.
 	ComponentChangeSummary types.ResourceComponentChangeSummary `path:"-" query:"-" json:"componentChangeSummary,omitempty"`
 
@@ -905,7 +905,7 @@ type ResourceRunUpdateInput struct {
 	// If the run requires approval.
 	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired,omitempty"`
 	// Changes of the resource components.
-	ComponentChanges []types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change summary of the resource.
 	ComponentChangeSummary types.ResourceComponentChangeSummary `path:"-" query:"-" json:"componentChangeSummary,omitempty"`
 }
@@ -990,7 +990,7 @@ type ResourceRunUpdateInputsItem struct {
 	// If the run requires approval.
 	ApprovalRequired bool `path:"-" query:"-" json:"approvalRequired"`
 	// Changes of the resource components.
-	ComponentChanges []types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
+	ComponentChanges []*types.ResourceComponentChange `path:"-" query:"-" json:"componentChanges,omitempty"`
 	// Change summary of the resource.
 	ComponentChangeSummary types.ResourceComponentChangeSummary `path:"-" query:"-" json:"componentChangeSummary,omitempty"`
 }
@@ -1185,7 +1185,7 @@ type ResourceRunOutput struct {
 	CreatedBy                 string                               `json:"createdBy,omitempty"`
 	Type                      string                               `json:"type,omitempty"`
 	ApprovalRequired          bool                                 `json:"approvalRequired,omitempty"`
-	ComponentChanges          []types.ResourceComponentChange      `json:"componentChanges,omitempty"`
+	ComponentChanges          []*types.ResourceComponentChange     `json:"componentChanges,omitempty"`
 	ComponentChangeSummary    types.ResourceComponentChangeSummary `json:"componentChangeSummary,omitempty"`
 
 	Project     *ProjectOutput     `json:"project,omitempty"`

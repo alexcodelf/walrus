@@ -1,13 +1,11 @@
 package types
 
 import (
-	"encoding/json"
-	"time"
-
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/zclconf/go-cty/cty"
-
+	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/seal-io/walrus/pkg/dao/types/property"
+	"github.com/seal-io/walrus/utils/json"
+	"github.com/zclconf/go-cty/cty"
 )
 
 type OutputValue struct {
@@ -48,17 +46,58 @@ func (t RunJobType) String() string {
 
 type ResourceRunConfigData = []byte
 
-type TerraformPlan struct {
-	FormatVersion            string                    `json:"format_version"`
-	TerraformVersion         string                    `json:"terraform_version"`
-	Variables                json.RawMessage           `json:"variables"`
-	PlannedValues            json.RawMessage           `json:"planned_values"`
-	ResourceComponentChanges []ResourceComponentChange `json:"resource_changes"`
-	OutputChanges            json.RawMessage           `json:"output_changes"`
-	PriorState               json.RawMessage           `json:"prior_state"`
-	Configuration            json.RawMessage           `json:"configuration"`
-	RelevantAttributes       []RelevantAttribute       `json:"relevant_attributes"`
-	Timestamp                time.Time                 `json:"timestamp"`
+type Plan struct {
+	tfjson.Plan `json:",inline"`
+
+	// ResourceComponentChanges is the changes of the resource components.
+	ResourceComponentChanges []*ResourceComponentChange `json:"resource_changes,omitempty"`
+}
+
+// UnmarshalJSON customizes the JSON decoding of the Plan.
+func (p *Plan) UnmarshalJSON(data []byte) error {
+	// Unmarshal data into the embedded tfjson.Plan.
+	if err := json.Unmarshal(data, &p.Plan); err != nil {
+		return err
+	}
+
+	p.ResourceComponentChanges = make([]*ResourceComponentChange, len(p.Plan.ResourceChanges))
+
+	for i, rc := range p.Plan.ResourceChanges {
+		p.ResourceComponentChanges[i] = &ResourceComponentChange{
+			ResourceChange: rc,
+			Change: &Change{
+				Change: rc.Change,
+			},
+		}
+
+		switch {
+		case rc.Change.Actions.Create():
+			p.ResourceComponentChanges[i].Change.Type = ResourceComponentChangeTypeCreate
+		case rc.Change.Actions.Update():
+			p.ResourceComponentChanges[i].Change.Type = ResourceComponentChangeTypeUpdate
+		case rc.Change.Actions.Delete():
+			p.ResourceComponentChanges[i].Change.Type = ResourceComponentChangeTypeDelete
+		}
+	}
+
+	return nil
+}
+
+func (p *Plan) GetResourceChangeSummary() ResourceComponentChangeSummary {
+	summary := ResourceComponentChangeSummary{}
+
+	for _, change := range p.ResourceComponentChanges {
+		switch change.Change.Type {
+		case ResourceComponentChangeTypeCreate:
+			summary.Created++
+		case ResourceComponentChangeTypeUpdate:
+			summary.Updated++
+		case ResourceComponentChangeTypeDelete:
+			summary.Deleted++
+		}
+	}
+
+	return summary
 }
 
 // ResourceComponentChangeSummary is the summary of the resource component changes.
@@ -68,20 +107,11 @@ type ResourceComponentChangeSummary struct {
 	Deleted int `json:"deleted"`
 }
 
-type RelevantAttribute struct {
-	Resource  string `json:"resource"`
-	Attribute []any  `json:"attribute"`
-}
-
+// ResourceComponentChange is the change of the resource component.
 type ResourceComponentChange struct {
-	Address       string `json:"address"`
-	Mode          string `json:"mode"`
-	Type          string `json:"type"`
-	Name          string `json:"name"`
-	ProviderName  string `json:"provider_name"`
-	Change        Change `json:"change"`
-	ModuleAddress string `json:"module_address,omitempty"`
-	Index         string `json:"index,omitempty"`
+	*tfjson.ResourceChange `json:",inline"`
+
+	Change *Change `json:"change"`
 }
 
 const (
@@ -91,11 +121,7 @@ const (
 )
 
 type Change struct {
-	Actions         []string        `json:"actions"`
-	Type            string          `json:"type"`
-	Before          json.RawMessage `json:"before"`
-	After           json.RawMessage `json:"after"`
-	AfterUnknown    json.RawMessage `json:"after_unknown"`
-	BeforeSensitive json.RawMessage `json:"before_sensitive"`
-	AfterSensitive  json.RawMessage `json:"after_sensitive"`
+	*tfjson.Change `json:",inline"`
+
+	Type string `json:"type"`
 }

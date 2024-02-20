@@ -235,7 +235,7 @@ func (rrc *ResourceRunCreate) SetAnnotations(m map[string]string) *ResourceRunCr
 }
 
 // SetComponentChanges sets the "component_changes" field.
-func (rrc *ResourceRunCreate) SetComponentChanges(tcc []types.ResourceComponentChange) *ResourceRunCreate {
+func (rrc *ResourceRunCreate) SetComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunCreate {
 	rrc.mutation.SetComponentChanges(tcc)
 	return rrc
 }
@@ -1280,7 +1280,7 @@ func (u *ResourceRunUpsert) ClearAnnotations() *ResourceRunUpsert {
 }
 
 // SetComponentChanges sets the "component_changes" field.
-func (u *ResourceRunUpsert) SetComponentChanges(v []types.ResourceComponentChange) *ResourceRunUpsert {
+func (u *ResourceRunUpsert) SetComponentChanges(v []*types.ResourceComponentChange) *ResourceRunUpsert {
 	u.Set(resourcerun.FieldComponentChanges, v)
 	return u
 }
@@ -1662,7 +1662,7 @@ func (u *ResourceRunUpsertOne) ClearAnnotations() *ResourceRunUpsertOne {
 }
 
 // SetComponentChanges sets the "component_changes" field.
-func (u *ResourceRunUpsertOne) SetComponentChanges(v []types.ResourceComponentChange) *ResourceRunUpsertOne {
+func (u *ResourceRunUpsertOne) SetComponentChanges(v []*types.ResourceComponentChange) *ResourceRunUpsertOne {
 	return u.Update(func(s *ResourceRunUpsert) {
 		s.SetComponentChanges(v)
 	})
@@ -2219,7 +2219,7 @@ func (u *ResourceRunUpsertBulk) ClearAnnotations() *ResourceRunUpsertBulk {
 }
 
 // SetComponentChanges sets the "component_changes" field.
-func (u *ResourceRunUpsertBulk) SetComponentChanges(v []types.ResourceComponentChange) *ResourceRunUpsertBulk {
+func (u *ResourceRunUpsertBulk) SetComponentChanges(v []*types.ResourceComponentChange) *ResourceRunUpsertBulk {
 	return u.Update(func(s *ResourceRunUpsert) {
 		s.SetComponentChanges(v)
 	})

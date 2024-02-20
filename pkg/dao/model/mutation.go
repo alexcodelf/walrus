@@ -17359,8 +17359,8 @@ type ResourceRunMutation struct {
 	_type                             *string
 	approval_required                 *bool
 	annotations                       *map[string]string
-	component_changes                 *[]types.ResourceComponentChange
-	appendcomponent_changes           []types.ResourceComponentChange
+	component_changes                 *[]*types.ResourceComponentChange
+	appendcomponent_changes           []*types.ResourceComponentChange
 	component_change_summary          *types.ResourceComponentChangeSummary
 	clearedFields                     map[string]struct{}
 	project                           *object.ID
@@ -18397,13 +18397,13 @@ func (m *ResourceRunMutation) ResetAnnotations() {
 }
 
 // SetComponentChanges sets the "component_changes" field.
-func (m *ResourceRunMutation) SetComponentChanges(tcc []types.ResourceComponentChange) {
+func (m *ResourceRunMutation) SetComponentChanges(tcc []*types.ResourceComponentChange) {
 	m.component_changes = &tcc
 	m.appendcomponent_changes = nil
 }
 
 // ComponentChanges returns the value of the "component_changes" field in the mutation.
-func (m *ResourceRunMutation) ComponentChanges() (r []types.ResourceComponentChange, exists bool) {
+func (m *ResourceRunMutation) ComponentChanges() (r []*types.ResourceComponentChange, exists bool) {
 	v := m.component_changes
 	if v == nil {
 		return
@@ -18414,7 +18414,7 @@ func (m *ResourceRunMutation) ComponentChanges() (r []types.ResourceComponentCha
 // OldComponentChanges returns the old "component_changes" field's value of the ResourceRun entity.
 // If the ResourceRun object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResourceRunMutation) OldComponentChanges(ctx context.Context) (v []types.ResourceComponentChange, err error) {
+func (m *ResourceRunMutation) OldComponentChanges(ctx context.Context) (v []*types.ResourceComponentChange, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldComponentChanges is only allowed on UpdateOne operations")
 	}
@@ -18429,12 +18429,12 @@ func (m *ResourceRunMutation) OldComponentChanges(ctx context.Context) (v []type
 }
 
 // AppendComponentChanges adds tcc to the "component_changes" field.
-func (m *ResourceRunMutation) AppendComponentChanges(tcc []types.ResourceComponentChange) {
+func (m *ResourceRunMutation) AppendComponentChanges(tcc []*types.ResourceComponentChange) {
 	m.appendcomponent_changes = append(m.appendcomponent_changes, tcc...)
 }
 
 // AppendedComponentChanges returns the list of values that were appended to the "component_changes" field in this mutation.
-func (m *ResourceRunMutation) AppendedComponentChanges() ([]types.ResourceComponentChange, bool) {
+func (m *ResourceRunMutation) AppendedComponentChanges() ([]*types.ResourceComponentChange, bool) {
 	if len(m.appendcomponent_changes) == 0 {
 		return nil, false
 	}
@@ -18975,7 +18975,7 @@ func (m *ResourceRunMutation) SetField(name string, value ent.Value) error {
 		m.SetAnnotations(v)
 		return nil
 	case resourcerun.FieldComponentChanges:
-		v, ok := value.([]types.ResourceComponentChange)
+		v, ok := value.([]*types.ResourceComponentChange)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

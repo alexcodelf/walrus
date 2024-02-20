@@ -274,13 +274,13 @@ func (rru *ResourceRunUpdate) ClearAnnotations() *ResourceRunUpdate {
 }
 
 // SetComponentChanges sets the "component_changes" field.
-func (rru *ResourceRunUpdate) SetComponentChanges(tcc []types.ResourceComponentChange) *ResourceRunUpdate {
+func (rru *ResourceRunUpdate) SetComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunUpdate {
 	rru.mutation.SetComponentChanges(tcc)
 	return rru
 }
 
 // AppendComponentChanges appends tcc to the "component_changes" field.
-func (rru *ResourceRunUpdate) AppendComponentChanges(tcc []types.ResourceComponentChange) *ResourceRunUpdate {
+func (rru *ResourceRunUpdate) AppendComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunUpdate {
 	rru.mutation.AppendComponentChanges(tcc)
 	return rru
 }
@@ -823,13 +823,13 @@ func (rruo *ResourceRunUpdateOne) ClearAnnotations() *ResourceRunUpdateOne {
 }
 
 // SetComponentChanges sets the "component_changes" field.
-func (rruo *ResourceRunUpdateOne) SetComponentChanges(tcc []types.ResourceComponentChange) *ResourceRunUpdateOne {
+func (rruo *ResourceRunUpdateOne) SetComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunUpdateOne {
 	rruo.mutation.SetComponentChanges(tcc)
 	return rruo
 }
 
 // AppendComponentChanges appends tcc to the "component_changes" field.
-func (rruo *ResourceRunUpdateOne) AppendComponentChanges(tcc []types.ResourceComponentChange) *ResourceRunUpdateOne {
+func (rruo *ResourceRunUpdateOne) AppendComponentChanges(tcc []*types.ResourceComponentChange) *ResourceRunUpdateOne {
 	rruo.mutation.AppendComponentChanges(tcc)
 	return rruo
 }

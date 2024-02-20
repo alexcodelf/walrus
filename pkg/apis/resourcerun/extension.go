@@ -622,41 +622,82 @@ func (h Handler) RouteApply(req RouteApplyRequest) error {
 	return pkgrun.Apply(req.Context, h.modelClient, dp, run)
 }
 
-func (h Handler) RouteComponentChange(req RouteComponentChangeRequest) error {
+func (h Handler) RouteSetPlan(req RouteSetPlanRequest) error {
 	run, err := h.modelClient.ResourceRuns().Get(req.Context, req.ID)
 	if err != nil {
 		return err
 	}
 
-	var plan *types.TerraformPlan
-	if err = json.Unmarshal(req.RawMessage, &plan); err != nil {
+	jsonPlanHeader, err := req.Context.FormFile("jsonplan")
+	if err != nil {
 		return err
 	}
 
-	var componentChangeSummary types.ResourceComponentChangeSummary
+	// Get change file from form change field.
+	jsonPlanFile, err := jsonPlanHeader.Open()
+	if err != nil {
+		return err
+	}
+	defer jsonPlanFile.Close()
 
-	for i := range plan.ResourceComponentChanges {
-		c := &plan.ResourceComponentChanges[i]
-		actions := sets.NewString(c.Change.Actions...)
-
-		switch {
-		case actions.Has(types.ResourceComponentChangeTypeCreate):
-			componentChangeSummary.Created++
-			c.Change.Type = types.ResourceComponentChangeTypeCreate
-		case actions.Has(types.ResourceComponentChangeTypeUpdate):
-			componentChangeSummary.Updated++
-			c.Change.Type = types.ResourceComponentChangeTypeUpdate
-		case actions.Has(types.ResourceComponentChangeTypeDelete):
-			componentChangeSummary.Deleted++
-			c.Change.Type = types.ResourceComponentChangeTypeDelete
-		}
+	jsonPlanBytes, err := io.ReadAll(jsonPlanFile)
+	if err != nil {
+		return err
 	}
 
-	run.ComponentChangeSummary = componentChangeSummary
-	run.ComponentChanges = plan.ResourceComponentChanges
+	var runPlanChanges *types.Plan
+	if err = json.Unmarshal(jsonPlanBytes, &runPlanChanges); err != nil {
+		return err
+	}
 
-	return h.modelClient.ResourceRuns().UpdateOne(run).
+	run.ComponentChangeSummary = runPlanChanges.GetResourceChangeSummary()
+	run.ComponentChanges = runPlanChanges.ResourceComponentChanges
+
+	err = h.modelClient.ResourceRuns().UpdateOne(run).
 		SetComponentChangeSummary(run.ComponentChangeSummary).
 		SetComponentChanges(run.ComponentChanges).
 		Exec(req.Context)
+	if err != nil {
+		return err
+	}
+
+	planHeader, err := req.Context.FormFile("plan")
+	if err != nil {
+		return err
+	}
+
+	// Get plan file from form plan field.
+	planFile, err := planHeader.Open()
+	if err != nil {
+		return err
+	}
+	defer planFile.Close()
+
+	// Set plan file to storage.
+	planBytes, err := io.ReadAll(planFile)
+	if err != nil {
+		return err
+	}
+
+	return h.storageManager.SetRunPlan(req.Context, run, planBytes)
+}
+
+func (h Handler) RouteGetPlan(req RouteGetPlanRequest) error {
+	run, err := h.modelClient.ResourceRuns().Get(req.Context, req.ID)
+	if err != nil {
+		return err
+	}
+
+	// TODO Encrypt the plan file with key.
+	plan, err := h.storageManager.GetRunPlan(req.Context, run)
+	if err != nil {
+		return err
+	}
+
+	req.Context.Writer.Header().Set("Content-Type", "application/zip")
+	req.Context.Writer.Header().Set("Content-Disposition", "attachment; filename=plan.out")
+
+	_, err = req.Context.Writer.Write(plan)
+
+	return err
 }

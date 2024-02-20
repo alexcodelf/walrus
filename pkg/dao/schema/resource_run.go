@@ -100,7 +100,7 @@ func (ResourceRun) Fields() []ent.Field {
 			Annotations(
 				entx.SkipInput(),
 				entx.SkipOutput()),
-		field.JSON("component_changes", []types.ResourceComponentChange{}).
+		field.JSON("component_changes", []*types.ResourceComponentChange{}).
 			Comment("Changes of the resource components.").
 			Optional(),
 		field.JSON("component_change_summary", types.ResourceComponentChangeSummary{}).
