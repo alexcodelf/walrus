@@ -71,7 +71,7 @@ func TestParseInstanceID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		actualOutput, actualError := ParseInstanceID(tc.input)
+		actualOutput, actualError := ParseInstanceID(resourceState{}, tc.input)
 		assert.Equal(t, tc.expectedOutput, actualOutput)
 
 		if tc.expectedError {

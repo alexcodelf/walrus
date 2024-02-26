@@ -3,6 +3,7 @@ package resourcecomponents
 import (
 	"context"
 
+	tfjson "github.com/hashicorp/terraform-json"
 	"go.uber.org/multierr"
 
 	"github.com/seal-io/walrus/pkg/dao/model"
@@ -10,6 +11,7 @@ import (
 	"github.com/seal-io/walrus/pkg/dao/types"
 	"github.com/seal-io/walrus/pkg/dao/types/object"
 	optypes "github.com/seal-io/walrus/pkg/operator/types"
+	"github.com/seal-io/walrus/pkg/terraform/parser"
 	"github.com/seal-io/walrus/utils/strs"
 )
 
@@ -117,4 +119,64 @@ func Discover(
 	}
 
 	return ncrs, berr
+}
+
+// FilterResourceComponentChange filters the given types.ResourceComponentChange items with current model.
+func FilterResourceComponentChange(
+	ctx context.Context,
+	mc model.ClientSet,
+	resourceID object.ID,
+	changes []*types.ResourceComponentChange,
+) ([]*types.ResourceComponentChange, error) {
+	// Get the resource components of the resource.
+	rcs, err := mc.ResourceComponents().Query().
+		Where(resourcecomponent.ResourceID(resourceID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Index the resource components by their type and name.
+	rcsIndex := make(map[string]*model.ResourceComponent, len(rcs))
+
+	for i := range rcs {
+		if rcs[i].IndexKey == "" {
+			continue
+		}
+
+		rcsIndex[rcs[i].IndexKey] = rcs[i]
+	}
+
+	// Filter the changes.
+	var fchanges []*types.ResourceComponentChange
+
+	for i := range changes {
+		rcc := changes[i]
+		if rcc.Type == parser.TerraformTypeData || rcc.Mode == tfjson.DataResourceMode {
+			continue
+		}
+
+		// Create change is always accepted.
+		if rcc.Change.Type == types.ResourceComponentChangeTypeCreate {
+			fchanges = append(fchanges, rcc)
+			continue
+		}
+
+		is, ok := rcc.Index.(string)
+		if ok {
+			if rc, ok := rcsIndex[is]; ok {
+				rcc.Name = rc.Name
+				fchanges = append(fchanges, rcc)
+				continue
+			}
+		}
+
+		key := strs.Join("-", rcc.Type, rcc.ModuleAddress, rcc.Name)
+		if rc, ok := rcsIndex[key]; ok {
+			rcc.Name = rc.Name
+			fchanges = append(fchanges, rcc)
+		}
+	}
+
+	return fchanges, nil
 }
