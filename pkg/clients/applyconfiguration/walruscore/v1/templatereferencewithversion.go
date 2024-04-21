@@ -5,24 +5,23 @@
 
 package v1
 
-// TempalteVersionReferenceApplyConfiguration represents an declarative configuration of the TempalteVersionReference type for use
+// TemplateReferenceWithVersionApplyConfiguration represents an declarative configuration of the TemplateReferenceWithVersion type for use
 // with apply.
-type TempalteVersionReferenceApplyConfiguration struct {
-	Namespace *string `json:"namespace,omitempty"`
-	Name      *string `json:"name,omitempty"`
-	Version   *string `json:"version,omitempty"`
+type TemplateReferenceWithVersionApplyConfiguration struct {
+	TemplateReferenceApplyConfiguration `json:",inline"`
+	Version                             *string `json:"version,omitempty"`
 }
 
-// TempalteVersionReferenceApplyConfiguration constructs an declarative configuration of the TempalteVersionReference type for use with
+// TemplateReferenceWithVersionApplyConfiguration constructs an declarative configuration of the TemplateReferenceWithVersion type for use with
 // apply.
-func TempalteVersionReference() *TempalteVersionReferenceApplyConfiguration {
-	return &TempalteVersionReferenceApplyConfiguration{}
+func TemplateReferenceWithVersion() *TemplateReferenceWithVersionApplyConfiguration {
+	return &TemplateReferenceWithVersionApplyConfiguration{}
 }
 
 // WithNamespace sets the Namespace field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespace field is set to the value of the last call.
-func (b *TempalteVersionReferenceApplyConfiguration) WithNamespace(value string) *TempalteVersionReferenceApplyConfiguration {
+func (b *TemplateReferenceWithVersionApplyConfiguration) WithNamespace(value string) *TemplateReferenceWithVersionApplyConfiguration {
 	b.Namespace = &value
 	return b
 }
@@ -30,7 +29,7 @@ func (b *TempalteVersionReferenceApplyConfiguration) WithNamespace(value string)
 // WithName sets the Name field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Name field is set to the value of the last call.
-func (b *TempalteVersionReferenceApplyConfiguration) WithName(value string) *TempalteVersionReferenceApplyConfiguration {
+func (b *TemplateReferenceWithVersionApplyConfiguration) WithName(value string) *TemplateReferenceWithVersionApplyConfiguration {
 	b.Name = &value
 	return b
 }
@@ -38,7 +37,7 @@ func (b *TempalteVersionReferenceApplyConfiguration) WithName(value string) *Tem
 // WithVersion sets the Version field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Version field is set to the value of the last call.
-func (b *TempalteVersionReferenceApplyConfiguration) WithVersion(value string) *TempalteVersionReferenceApplyConfiguration {
+func (b *TemplateReferenceWithVersionApplyConfiguration) WithVersion(value string) *TemplateReferenceWithVersionApplyConfiguration {
 	b.Version = &value
 	return b
 }

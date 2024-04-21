@@ -75,7 +75,9 @@ func (*Catalog) GetSingularName() string {
 var _ rest.ShortNamesProvider = (*Catalog)(nil)
 
 func (*Catalog) ShortNames() []string {
-	return []string{}
+	return []string{
+		"cat",
+	}
 }
 
 var _ rest.CategoriesProvider = (*Catalog)(nil)
@@ -154,7 +156,7 @@ var _ rest.ShortNamesProvider = (*ConnectorBinding)(nil)
 
 func (*ConnectorBinding) ShortNames() []string {
 	return []string{
-		"cb",
+		"connbd",
 	}
 }
 
@@ -166,10 +168,36 @@ func (*ConnectorBinding) Categories() []string {
 	}
 }
 
-var _ WithStatusSubResource = (*ConnectorBinding)(nil)
+var _ rest.Scoper = (*ConnectorConfig)(nil)
 
-func (in *ConnectorBinding) CopyStatusTo(out runtime.Object) {
-	out.(*ConnectorBinding).Status = in.Status
+func (*ConnectorConfig) NamespaceScoped() bool {
+	return true
+}
+
+var _ rest.KindProvider = (*ConnectorConfig)(nil)
+
+func (*ConnectorConfig) Kind() string {
+	return "ConnectorConfig"
+}
+
+var _ rest.SingularNameProvider = (*ConnectorConfig)(nil)
+
+func (*ConnectorConfig) GetSingularName() string {
+	return "connectorconfig"
+}
+
+var _ rest.ShortNamesProvider = (*ConnectorConfig)(nil)
+
+func (*ConnectorConfig) ShortNames() []string {
+	return []string{}
+}
+
+var _ rest.CategoriesProvider = (*ConnectorConfig)(nil)
+
+func (*ConnectorConfig) Categories() []string {
+	return []string{
+		"walrus",
+	}
 }
 
 var _ rest.Scoper = (*Environment)(nil)
@@ -680,7 +708,7 @@ var _ rest.ShortNamesProvider = (*Template)(nil)
 
 func (*Template) ShortNames() []string {
 	return []string{
-		"tpl",
+		"tmpl",
 	}
 }
 

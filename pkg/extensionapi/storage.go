@@ -801,38 +801,66 @@ type (
 		// NewListForProxy returns an empty object that can be used with the List call for proxy.
 		NewListForProxy() runtime.Object
 		// CastObjectTo casts the object from downstream to upstream.
-		CastObjectTo(DO) UO
+		//
+		// It is usually recommended to perform type conversion in this method,
+		// for example, `return UO(do)`.
+		CastObjectTo(do DO) UO
 		// CastObjectFrom casts the object from upstream to downstream.
-		CastObjectFrom(UO) DO
+		//
+		// It is usually recommended to perform type conversion in this method,
+		// for example, `return DO(uo)`.
+		CastObjectFrom(uo UO) DO
 	}
 
-	// CurdProxyOnCreateAdvice is an interface for intercepting OnCreate.
-	CurdProxyOnCreateAdvice[DO MetaObject] interface {
-		// BeforeOnCreate is called before create.
+	// CurdProxyOnCreateBeforeAdvice is an interface for intercepting before OnCreate.
+	CurdProxyOnCreateBeforeAdvice[DO MetaObject] interface {
+		// BeforeOnCreate is called before create,
+		// to modify the creating object and options.
 		BeforeOnCreate(ctx context.Context, obj DO, opts *ctrlcli.CreateOptions) error
 	}
 
-	// CurdProxyOnListWatchAdvice is an interface for interception OnList/OnWatch.
-	CurdProxyOnListWatchAdvice interface {
-		// BeforeOnListWatch is called before list/watch.
-		BeforeOnListWatch(ctx context.Context, options *ctrlcli.ListOptions) error
+	// CurdProxyOnListWatchBeforeAdvice is an interface for interception before OnList/OnWatch.
+	CurdProxyOnListWatchBeforeAdvice interface {
+		// BeforeOnListWatch is called before list/watch,
+		// to modify the list/watch options.
+		BeforeOnListWatch(ctx context.Context, opts *ctrlcli.ListOptions) error
 	}
 
-	// CurdProxyOnGetAdvice is an interface for intercepting OnGet.
-	CurdProxyOnGetAdvice[DO MetaObject] interface {
-		// BeforeOnGet is called before get.
+	// CurdProxyOnListAfterAdvice is an interface for intercepting after OnList.
+	CurdProxyOnListAfterAdvice[DOL MetaObjectList] interface {
+		// AfterOnList is called after list,
+		// to modify the list result.
+		AfterOnList(dol DOL, opts *ctrlcli.ListOptions) (mdol DOL)
+	}
+
+	// CurdProxyOnWatchDuringAdvice is an interface for intercepting during OnWatch.
+	CurdProxyOnWatchDuringAdvice[DO MetaObject] interface {
+		// DuringWatching is called during watch,
+		// to modify the receiving result.
+		//
+		// If the return value of `send` is true,
+		// the result will be sent to the client.
+		DuringWatching(do DO, opts *ctrlcli.ListOptions) (mdo DO, send bool)
+	}
+
+	// CurdProxyOnGetBeforeAdvice is an interface for intercepting before OnGet.
+	CurdProxyOnGetBeforeAdvice[DO MetaObject] interface {
+		// BeforeOnGet is called before get,
+		// to modify the getting options.
 		BeforeOnGet(ctx context.Context, key types.NamespacedName, opts *ctrlcli.GetOptions) error
 	}
 
-	// CurdProxyOnUpdateAdvice is an interface for intercepting OnUpdate.
-	CurdProxyOnUpdateAdvice[DO MetaObject] interface {
-		// BeforeOnUpdate is called before update.
+	// CurdProxyOnUpdateBeforeAdvice is an interface for intercepting before OnUpdate.
+	CurdProxyOnUpdateBeforeAdvice[DO MetaObject] interface {
+		// BeforeOnUpdate is called before update,
+		// to modify the updating object and options.
 		BeforeOnUpdate(ctx context.Context, obj, oldObj DO, opts *ctrlcli.UpdateOptions) error
 	}
 
-	// CurdProxyOnDeleteAdvice is an interface for intercepting OnDelete.
-	CurdProxyOnDeleteAdvice[DO MetaObject] interface {
-		// BeforeOnDelete is called before delete.
+	// CurdProxyOnDeleteBeforeAdvice is an interface for intercepting before OnDelete.
+	CurdProxyOnDeleteBeforeAdvice[DO MetaObject] interface {
+		// BeforeOnDelete is called before delete,
+		// to modify the deleting object and options.
 		BeforeOnDelete(ctx context.Context, obj DO, opts *ctrlcli.DeleteOptions) error
 	}
 
@@ -903,11 +931,13 @@ func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnCreate(
 	obj runtime.Object,
 	opts ctrlcli.CreateOptions,
 ) (runtime.Object, error) {
+	// Bypass if the handler implements CreateHandler.
 	if gh, ok := h.CurdProxyHandler.(_CreateHandlerWithoutNew); ok {
 		return gh.OnCreate(ctx, obj, opts)
 	}
 
-	if bf, ok := h.CurdProxyHandler.(CurdProxyOnCreateAdvice[DO]); ok {
+	// Before advice.
+	if bf, ok := h.CurdProxyHandler.(CurdProxyOnCreateBeforeAdvice[DO]); ok {
 		err := bf.BeforeOnCreate(ctx, obj.(DO), &opts)
 		if err != nil {
 			return nil, err
@@ -926,19 +956,22 @@ func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnList(
 	ctx context.Context,
 	opts ctrlcli.ListOptions,
 ) (runtime.Object, error) {
+	// Bypass if the handler implements ListHandler.
 	if gh, ok := h.CurdProxyHandler.(ListHandler); ok {
 		return gh.OnList(ctx, opts)
 	}
 
-	if bf, ok := h.CurdProxyHandler.(CurdProxyOnListWatchAdvice); ok {
-		err := bf.BeforeOnListWatch(ctx, &opts)
+	// Before advice.
+	uopts := copyListOptions(opts)
+	if bf, ok := h.CurdProxyHandler.(CurdProxyOnListWatchBeforeAdvice); ok {
+		err := bf.BeforeOnListWatch(ctx, uopts)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	uol := h.NewListForProxy().(UOL)
-	err := h.CtrlReader.List(ctx, uol, &opts)
+	err := h.CtrlReader.List(ctx, uol, uopts)
 	if err != nil {
 		return nil, err
 	}
@@ -974,6 +1007,11 @@ func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnList(
 		dolm.SetSelfLink(uolm.GetSelfLink())
 	}
 
+	// After advice.
+	if af, ok := h.CurdProxyHandler.(CurdProxyOnListAfterAdvice[DOL]); ok {
+		dol = af.AfterOnList(dol.(DOL), &opts)
+	}
+
 	return dol, nil
 }
 
@@ -981,19 +1019,22 @@ func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnWatch(
 	ctx context.Context,
 	opts ctrlcli.ListOptions,
 ) (watch.Interface, error) {
+	// Bypass if the handler implements WatchHandler.
 	if gh, ok := h.CurdProxyHandler.(WatchHandler); ok {
 		return gh.OnWatch(ctx, opts)
 	}
 
-	if bf, ok := h.CurdProxyHandler.(CurdProxyOnListWatchAdvice); ok {
-		err := bf.BeforeOnListWatch(ctx, &opts)
+	// Before advice.
+	uopts := copyListOptions(opts)
+	if bf, ok := h.CurdProxyHandler.(CurdProxyOnListWatchBeforeAdvice); ok {
+		err := bf.BeforeOnListWatch(ctx, uopts)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	uol := h.NewListForProxy().(UOL)
-	uw, err := h.CtrlClient.Watch(ctx, uol, &opts)
+	uw, err := h.CtrlClient.Watch(ctx, uol, uopts)
 	if err != nil {
 		return nil, err
 	}
@@ -1031,7 +1072,17 @@ func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnWatch(
 				}
 
 				// Cast.
-				e.Object = h.CastObjectFrom(uo)
+				do := h.CastObjectFrom(uo)
+
+				// During advice.
+				if da, ok := h.CurdProxyHandler.(CurdProxyOnWatchDuringAdvice[DO]); ok {
+					do, ok = da.DuringWatching(do, &opts)
+					if !ok {
+						continue
+					}
+				}
+
+				e.Object = do
 				c <- e
 			}
 		}
@@ -1040,16 +1091,34 @@ func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnWatch(
 	return dw, nil
 }
 
+func copyListOptions(opts ctrlcli.ListOptions) *ctrlcli.ListOptions {
+	if opts.LabelSelector != nil {
+		opts.LabelSelector = opts.LabelSelector.DeepCopySelector()
+	}
+	if opts.FieldSelector != nil {
+		opts.FieldSelector = opts.FieldSelector.DeepCopySelector()
+	}
+	if opts.UnsafeDisableDeepCopy != nil {
+		opts.UnsafeDisableDeepCopy = ptr.To(ptr.Deref(opts.UnsafeDisableDeepCopy, false))
+	}
+	if opts.Raw != nil {
+		opts.Raw = opts.Raw.DeepCopy()
+	}
+	return &opts
+}
+
 func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnGet(
 	ctx context.Context,
 	key types.NamespacedName,
 	opts ctrlcli.GetOptions,
 ) (runtime.Object, error) {
+	// Bypass if the handler implements GetHandler.
 	if gh, ok := h.CurdProxyHandler.(GetHandler); ok {
 		return gh.OnGet(ctx, key, opts)
 	}
 
-	if bf, ok := h.CurdProxyHandler.(CurdProxyOnGetAdvice[DO]); ok {
+	// Before advice.
+	if bf, ok := h.CurdProxyHandler.(CurdProxyOnGetBeforeAdvice[DO]); ok {
 		err := bf.BeforeOnGet(ctx, key, &opts)
 		if err != nil {
 			return nil, err
@@ -1075,18 +1144,26 @@ func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnUpdate(
 	obj, oldObj runtime.Object,
 	opts ctrlcli.UpdateOptions,
 ) (runtime.Object, error) {
+	// Bypass if the handler implements UpdateHandler.
 	if gh, ok := h.CurdProxyHandler.(_UpdateHandlerWithoutNew); ok {
 		return gh.OnUpdate(ctx, obj, oldObj, opts)
 	}
 
-	if bf, ok := h.CurdProxyHandler.(CurdProxyOnUpdateAdvice[DO]); ok {
+	// Before advice.
+	if bf, ok := h.CurdProxyHandler.(CurdProxyOnUpdateBeforeAdvice[DO]); ok {
 		err := bf.BeforeOnUpdate(ctx, obj.(DO), oldObj.(DO), &opts)
 		if err != nil {
 			return nil, err
 		}
 	}
 	uo := h.CastObjectTo(obj.(DO))
-	err := h.CtrlClient.Update(ctx, uo, &opts)
+	var err error
+	ri, ok := genericapirequest.RequestInfoFrom(ctx)
+	if ok && ri.Subresource != "" {
+		err = h.CtrlClient.SubResource(ri.Subresource).Update(ctx, uo, &ctrlcli.SubResourceUpdateOptions{UpdateOptions: opts})
+	} else {
+		err = h.CtrlClient.Update(ctx, uo, &opts)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -1098,11 +1175,13 @@ func (h _CurdProxyHandler[DO, DOL, UO, UOL]) OnDelete(
 	obj runtime.Object,
 	opts ctrlcli.DeleteOptions,
 ) error {
+	// Bypass if the handler implements DeleteHandler.
 	if gh, ok := h.CurdProxyHandler.(DeleteHandler); ok {
 		return gh.OnDelete(ctx, obj, opts)
 	}
 
-	if bf, ok := h.CurdProxyHandler.(CurdProxyOnDeleteAdvice[DO]); ok {
+	// Before advice.
+	if bf, ok := h.CurdProxyHandler.(CurdProxyOnDeleteBeforeAdvice[DO]); ok {
 		err := bf.BeforeOnDelete(ctx, obj.(DO), &opts)
 		if err != nil {
 			return err

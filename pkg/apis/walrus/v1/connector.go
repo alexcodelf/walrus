@@ -9,6 +9,7 @@ import (
 // Connector is the schema for the connectors API.
 //
 // +genclient
+// +genclient:method=GetConfig,verb=get,subresource=config,result=ConnectorConfig
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["conn"],subResources=["status"]
 type Connector walruscore.Connector

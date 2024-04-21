@@ -1294,14 +1294,14 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationwalruscorev1.ConnectorBindingApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("ConnectorBindingSpec"):
 		return &applyconfigurationwalruscorev1.ConnectorBindingSpecApplyConfiguration{}
-	case walruscorev1.SchemeGroupVersion.WithKind("ConnectorBindingStatus"):
-		return &applyconfigurationwalruscorev1.ConnectorBindingStatusApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("ConnectorConfig"):
 		return &applyconfigurationwalruscorev1.ConnectorConfigApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("ConnectorConfigEntry"):
 		return &applyconfigurationwalruscorev1.ConnectorConfigEntryApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("ConnectorReference"):
 		return &applyconfigurationwalruscorev1.ConnectorReferenceApplyConfiguration{}
+	case walruscorev1.SchemeGroupVersion.WithKind("ConnectorReferenceWithType"):
+		return &applyconfigurationwalruscorev1.ConnectorReferenceWithTypeApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("ConnectorSpec"):
 		return &applyconfigurationwalruscorev1.ConnectorSpecApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("ConnectorStatus"):
@@ -1374,10 +1374,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationwalruscorev1.SchemaStatusApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("StatusDescriptor"):
 		return &applyconfigurationwalruscorev1.StatusDescriptorApplyConfiguration{}
-	case walruscorev1.SchemeGroupVersion.WithKind("TempalteVersionReference"):
-		return &applyconfigurationwalruscorev1.TempalteVersionReferenceApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("Template"):
 		return &applyconfigurationwalruscorev1.TemplateApplyConfiguration{}
+	case walruscorev1.SchemeGroupVersion.WithKind("TemplateReference"):
+		return &applyconfigurationwalruscorev1.TemplateReferenceApplyConfiguration{}
+	case walruscorev1.SchemeGroupVersion.WithKind("TemplateReferenceWithVersion"):
+		return &applyconfigurationwalruscorev1.TemplateReferenceWithVersionApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("TemplateSpec"):
 		return &applyconfigurationwalruscorev1.TemplateSpecApplyConfiguration{}
 	case walruscorev1.SchemeGroupVersion.WithKind("TemplateStatus"):

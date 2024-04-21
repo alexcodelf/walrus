@@ -62,19 +62,18 @@ func (h *ConnectorBindingHandler) SetupHandler(
 			},
 			extensionapi.JSONPathTableColumnDefinition{
 				TableColumnDefinition: meta.TableColumnDefinition{
-					Name: "Connector Type",
-					Type: "string",
-				},
-				JSONPath: ".status.Type",
-			},
-			extensionapi.JSONPathTableColumnDefinition{
-				TableColumnDefinition: meta.TableColumnDefinition{
 					Name: "Connector Category",
 					Type: "string",
 				},
-				JSONPath: ".status.Category",
+				JSONPath: ".spec.connector.category",
 			},
-		)
+			extensionapi.JSONPathTableColumnDefinition{
+				TableColumnDefinition: meta.TableColumnDefinition{
+					Name: "Connector Type",
+					Type: "string",
+				},
+				JSONPath: ".spec.connector.type",
+			})
 		if err != nil {
 			return gvr, nil, err
 		}

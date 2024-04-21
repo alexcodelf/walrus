@@ -228,7 +228,7 @@ func (h *SettingHandler) OnWatch(ctx context.Context, opts ctrlcli.ListOptions) 
 					case !ok:
 						// insert
 						setIndexer[setIndexKey] = *set
-					case !set.Equal(&prevSet):
+					case set.Status.Value_ != prevSet.Status.Value_:
 						// update
 						setIndexer[setIndexKey] = *set
 					}

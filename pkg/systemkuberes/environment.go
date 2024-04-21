@@ -98,9 +98,13 @@ func InstallDefaultEnvironment(ctx context.Context, cli clientset.Interface) err
 			Name:      DefaultConnectorName,
 		},
 		Spec: walruscore.ConnectorBindingSpec{
-			Connector: walruscore.ConnectorReference{
-				Name:      conn.Name,
-				Namespace: conn.Namespace,
+			Connector: walruscore.ConnectorReferenceWithType{
+				ConnectorReference: walruscore.ConnectorReference{
+					Namespace: conn.Namespace,
+					Name:      conn.Name,
+				},
+				Category: conn.Spec.Category,
+				Type:     conn.Spec.Type,
 			},
 		},
 	}

@@ -61,6 +61,7 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&Connector{},
 		&ConnectorBinding{},
 		&ConnectorBindingList{},
+		&ConnectorConfig{},
 		&ConnectorList{},
 		&Environment{},
 		&EnvironmentList{},

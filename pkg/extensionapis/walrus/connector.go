@@ -62,17 +62,17 @@ func (h *ConnectorHandler) SetupHandler(
 			},
 			extensionapi.JSONPathTableColumnDefinition{
 				TableColumnDefinition: meta.TableColumnDefinition{
-					Name: "Applicable Environment Type",
-					Type: "string",
-				},
-				JSONPath: ".spec.applicableEnvironmentType",
-			},
-			extensionapi.JSONPathTableColumnDefinition{
-				TableColumnDefinition: meta.TableColumnDefinition{
 					Name: "Project",
 					Type: "string",
 				},
 				JSONPath: ".status.project",
+			},
+			extensionapi.JSONPathTableColumnDefinition{
+				TableColumnDefinition: meta.TableColumnDefinition{
+					Name: "Status",
+					Type: "string",
+				},
+				JSONPath: ".status.phase",
 			})
 		if err != nil {
 			return gvr, nil, err
@@ -85,7 +85,12 @@ func (h *ConnectorHandler) SetupHandler(
 		*walrus.Connector, *walrus.ConnectorList, *walruscore.Connector, *walruscore.ConnectorList,
 	](tc, h, opts.Manager.GetClient().(ctrlcli.WithWatch), opts.Manager.GetAPIReader())
 
-	return gvr, nil, nil
+	// Create subresource handlers.
+	srs = map[string]rest.Storage{
+		"config": newConnectorConfigHandler(opts),
+	}
+
+	return gvr, srs, err
 }
 
 var (

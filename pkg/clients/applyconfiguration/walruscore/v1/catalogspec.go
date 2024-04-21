@@ -8,9 +8,9 @@ package v1
 // CatalogSpecApplyConfiguration represents an declarative configuration of the CatalogSpec type for use
 // with apply.
 type CatalogSpecApplyConfiguration struct {
+	Description    *string                      `json:"description,omitempty"`
 	Builtin        *bool                        `json:"builtin,omitempty"`
 	TemplateFormat *string                      `json:"templateFormat,omitempty"`
-	Description    *string                      `json:"description,omitempty"`
 	Filters        *FiltersApplyConfiguration   `json:"filters,omitempty"`
 	VCSSource      *VCSSourceApplyConfiguration `json:"vcsSource,omitempty"`
 }
@@ -19,6 +19,14 @@ type CatalogSpecApplyConfiguration struct {
 // apply.
 func CatalogSpec() *CatalogSpecApplyConfiguration {
 	return &CatalogSpecApplyConfiguration{}
+}
+
+// WithDescription sets the Description field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Description field is set to the value of the last call.
+func (b *CatalogSpecApplyConfiguration) WithDescription(value string) *CatalogSpecApplyConfiguration {
+	b.Description = &value
+	return b
 }
 
 // WithBuiltin sets the Builtin field in the declarative configuration to the given value
@@ -34,14 +42,6 @@ func (b *CatalogSpecApplyConfiguration) WithBuiltin(value bool) *CatalogSpecAppl
 // If called multiple times, the TemplateFormat field is set to the value of the last call.
 func (b *CatalogSpecApplyConfiguration) WithTemplateFormat(value string) *CatalogSpecApplyConfiguration {
 	b.TemplateFormat = &value
-	return b
-}
-
-// WithDescription sets the Description field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Description field is set to the value of the last call.
-func (b *CatalogSpecApplyConfiguration) WithDescription(value string) *CatalogSpecApplyConfiguration {
-	b.Description = &value
 	return b
 }
 

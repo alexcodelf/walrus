@@ -331,7 +331,7 @@ func TestWalker_multiple(t *testing.T) {
 				},
 				Before: func(i *input) {
 					// Remove deleted status and mark deployed status.
-					ExampleResourceStatusDeployed.Reset(i, "")
+					ExampleResourceStatusDeployed.Reset(i, "", "")
 				},
 			},
 			expected: &walruscore.ConditionSummary{

@@ -3,41 +3,50 @@ package apistatus
 import "github.com/seal-io/walrus/pkg/apis/walruscore/v1"
 
 const (
-	TemplateConditionReady   v1.ConditionType = "Ready"
-	TemplateConditionRefresh v1.ConditionType = "Refresh"
+	TemplateConditionSynced v1.ConditionType = "Synced"
+
+	TemplateConditionDeleting v1.ConditionType = "Deleting"
 )
 
 const (
-	TemplateConditionReasonPreparing = "Preparing"
-	TemplateConditionReasonError     = "Error"
+	TemplateConditionSyncedReasonFailed = "SyncFailed"
 )
 
 // templateStatusPaths makes the following decision.
 //
 //	|  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
 //	| ---------------- | ----------------------- | --------------------- | --------------------- |
-//	| Refresh          | Unknown                 | Refreshing            | Transitioning         |
-//	| Refresh          | False                   | /                     | /                     |
-//	| Refresh          | True                    | /                     | /                     |
-//	| Ready            | Unknown                 | Preparing             | Transitioning         |
-//	| Ready            | False                   | NotReady              | Interrupted           |
-//	| Ready            | True                    | Ready                 |                       |
+//	| Synced           | Unknown                 | Syncing               | Transitioning         |
+//	| Synced           | False                   | SyncFailed            | Interrupted           |
+//	| Synced           | True                    | Ready                 | /                     |
+//	| Deleting         | True                    | Deleting              | Transitioning         |
 var templateStatusPaths = NewWalker(
 	[][]v1.ConditionType{
 		{
-			TemplateConditionRefresh,
-			TemplateConditionReady,
+			TemplateConditionSynced,
+		},
+		{
+			TemplateConditionDeleting,
 		},
 	},
 	func(d Decision[v1.ConditionType]) {
-		d.Make(TemplateConditionRefresh,
+		d.Make(TemplateConditionSynced,
 			func(st v1.ConditionStatus, reason string) (string, string, Score) {
 				switch st {
 				default:
-					return "Refresh", "", SummaryScoreDone
-				case v1.ConditionUnknown:
-					return "Refreshing", "", SummaryScoreTransitioning
+					if reason == "" {
+						reason = "Syncing"
+					}
+					return reason, "", SummaryScoreTransitioning
+				case v1.ConditionFalse:
+					return reason, "", SummaryScoreInterrupted
+				case v1.ConditionTrue:
+					return "Ready", "", SummaryScoreDone
 				}
+			})
+		d.Make(TemplateConditionDeleting,
+			func(st v1.ConditionStatus, reason string) (string, string, Score) {
+				return "Deleting", "", SummaryScoreTransitioning
 			})
 	},
 )

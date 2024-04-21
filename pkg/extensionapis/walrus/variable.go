@@ -423,7 +423,9 @@ func (h *VariableHandler) OnWatch(ctx context.Context, opts ctrlcli.ListOptions)
 						e2.Object = vra
 						e2.Type = watch.Modified
 						c <- *e2
-					case !vra.Equal(&prevVra):
+					case vra.Spec.Sensitive != prevVra.Spec.Sensitive ||
+						vra.Status.Scope != prevVra.Status.Scope ||
+						vra.Status.Value_ != prevVra.Status.Value_:
 						// Update if changed.
 						vraIndexer[vraIndexKey] = *vra
 						if opts.Namespace != "" && vra.Namespace != opts.Namespace {

@@ -39,6 +39,8 @@ type ConnectorInterface interface {
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Connector, err error)
 	Apply(ctx context.Context, connector *walrusv1.ConnectorApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Connector, err error)
 	ApplyStatus(ctx context.Context, connector *walrusv1.ConnectorApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Connector, err error)
+	GetConfig(ctx context.Context, connectorName string, options metav1.GetOptions) (*v1.ConnectorConfig, error)
+
 	ConnectorExpansion
 }
 
@@ -237,6 +239,20 @@ func (c *connectors) ApplyStatus(ctx context.Context, connector *walrusv1.Connec
 		SubResource("status").
 		VersionedParams(&patchOpts, scheme.ParameterCodec).
 		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// GetConfig takes name of the connector, and returns the corresponding v1.ConnectorConfig object, and an error if there is any.
+func (c *connectors) GetConfig(ctx context.Context, connectorName string, options metav1.GetOptions) (result *v1.ConnectorConfig, err error) {
+	result = &v1.ConnectorConfig{}
+	err = c.client.Get().
+		Namespace(c.ns).
+		Resource("connectors").
+		Name(connectorName).
+		SubResource("config").
+		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
 		Into(result)
 	return

@@ -13,10 +13,10 @@ import (
 // with apply.
 type CatalogStatusApplyConfiguration struct {
 	StatusDescriptorApplyConfiguration `json:",inline"`
-	LastSyncTime                       *metav1.Time `json:"lastSyncTime,omitempty"`
-	TemplateCount                      *int64       `json:"templateCount,omitempty"`
-	URL                                *string      `json:"url,omitempty"`
 	Project                            *string      `json:"project,omitempty"`
+	URL                                *string      `json:"url,omitempty"`
+	TemplateCount                      *int64       `json:"templateCount,omitempty"`
+	LastSuccessfulSyncTime             *metav1.Time `json:"lastSuccessfulSyncTime,omitempty"`
 }
 
 // CatalogStatusApplyConfiguration constructs an declarative configuration of the CatalogStatus type for use with
@@ -54,19 +54,11 @@ func (b *CatalogStatusApplyConfiguration) WithConditions(values ...*ConditionApp
 	return b
 }
 
-// WithLastSyncTime sets the LastSyncTime field in the declarative configuration to the given value
+// WithProject sets the Project field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the LastSyncTime field is set to the value of the last call.
-func (b *CatalogStatusApplyConfiguration) WithLastSyncTime(value metav1.Time) *CatalogStatusApplyConfiguration {
-	b.LastSyncTime = &value
-	return b
-}
-
-// WithTemplateCount sets the TemplateCount field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TemplateCount field is set to the value of the last call.
-func (b *CatalogStatusApplyConfiguration) WithTemplateCount(value int64) *CatalogStatusApplyConfiguration {
-	b.TemplateCount = &value
+// If called multiple times, the Project field is set to the value of the last call.
+func (b *CatalogStatusApplyConfiguration) WithProject(value string) *CatalogStatusApplyConfiguration {
+	b.Project = &value
 	return b
 }
 
@@ -78,10 +70,18 @@ func (b *CatalogStatusApplyConfiguration) WithURL(value string) *CatalogStatusAp
 	return b
 }
 
-// WithProject sets the Project field in the declarative configuration to the given value
+// WithTemplateCount sets the TemplateCount field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Project field is set to the value of the last call.
-func (b *CatalogStatusApplyConfiguration) WithProject(value string) *CatalogStatusApplyConfiguration {
-	b.Project = &value
+// If called multiple times, the TemplateCount field is set to the value of the last call.
+func (b *CatalogStatusApplyConfiguration) WithTemplateCount(value int64) *CatalogStatusApplyConfiguration {
+	b.TemplateCount = &value
+	return b
+}
+
+// WithLastSuccessfulSyncTime sets the LastSuccessfulSyncTime field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LastSuccessfulSyncTime field is set to the value of the last call.
+func (b *CatalogStatusApplyConfiguration) WithLastSuccessfulSyncTime(value metav1.Time) *CatalogStatusApplyConfiguration {
+	b.LastSuccessfulSyncTime = &value
 	return b
 }

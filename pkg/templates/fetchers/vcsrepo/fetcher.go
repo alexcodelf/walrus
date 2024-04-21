@@ -5,19 +5,15 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/seal-io/utils/stringx"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"golang.org/x/exp/maps"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/set"
 
 	walruscore "github.com/seal-io/walrus/pkg/apis/walruscore/v1"
-	"github.com/seal-io/walrus/pkg/apistatus"
-	"github.com/seal-io/walrus/pkg/system"
-	"github.com/seal-io/walrus/pkg/systemmeta"
 	"github.com/seal-io/walrus/pkg/systemsetting"
 	"github.com/seal-io/walrus/pkg/templates/api"
 	"github.com/seal-io/walrus/pkg/templates/kubehelper"
@@ -31,12 +27,12 @@ func New() *Fetcher {
 	return &Fetcher{}
 }
 
-// Fetch the template info and fill in to template status it.
-func (l *Fetcher) Fetch(ctx context.Context, obj *walruscore.Template) (*walruscore.Template, error) {
+// Fetch fills the template status.
+func (l *Fetcher) Fetch(ctx context.Context, tmpl *walruscore.Template) (*walruscore.Template, error) {
 	tempDir := filepath.Join(os.TempDir(), "seal-template-"+stringx.RandomHex(10))
 	defer os.RemoveAll(tempDir)
 
-	source := obj.Spec.VCSRepository
+	source := tmpl.Spec.VCSRepository
 
 	// Clone.
 	{
@@ -64,104 +60,63 @@ func (l *Fetcher) Fetch(ctx context.Context, obj *walruscore.Template) (*walrusc
 		return nil, err
 	}
 
-	// Icon.
-	iconURL, err := gitRepoIconURL(r, source.URL)
-	if err != nil {
-		return nil, err
-	}
+	// Get URL.
+	tmpl.Status.URL = source.URL
 
-	// Versions.
-	versions, versionSchema, err := getVersions(obj, r)
-	if err != nil {
-		return nil, err
-	}
-
-	// Skip template without valid version.
-	if len(versions) == 0 {
-		return nil, nil
-	}
-
-	// Ensure template before create schema.
-	obj, err = getOrCreateTemplate(ctx, obj)
-	if err != nil {
-		return nil, err
-	}
-
-	templateVersions, err := genTemplateVersions(ctx, obj, versions, versionSchema)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set template status.
-	apistatus.TemplateConditionReady.True(obj, "", "")
-	obj.Status.Project = systemmeta.GetProjectName(obj.Namespace)
-	obj.Status.LastSyncTime = meta.Now()
-	obj.Status.URL = source.URL
-	obj.Status.Icon = iconURL
-	obj.Status.Versions = templateVersions
-
-	err = updateTemplateStatus(ctx, obj)
-	return obj, err
-}
-
-func updateTemplateStatus(ctx context.Context, obj *walruscore.Template) error {
-	loopbackKubeClient := system.LoopbackKubeClient.Get()
-
-	existed, err := loopbackKubeClient.WalruscoreV1().Templates(obj.Namespace).Get(ctx, obj.Name, meta.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	newSet := set.Set[string]{}
-	for _, v := range obj.Status.Versions {
-		newSet.Insert(v.Version)
-	}
-
-	// Set of versions are removed.
-	var removed []walruscore.TemplateVersion
-	for i, v := range existed.Status.Versions {
-		if !newSet.Has(v.Version) {
-			existed.Status.Versions[i].Removed = true
-			removed = append(removed, existed.Status.Versions[i])
-		}
-	}
-
-	// Update template status.
-	existed.Status = obj.Status
-	existed.Status.ConditionSummary = *apistatus.WalkTemplate(&existed.Status.StatusDescriptor)
-	existed.Status.Versions = append(existed.Status.Versions, removed...)
-	_, err = loopbackKubeClient.WalruscoreV1().Templates(existed.Namespace).UpdateStatus(ctx, existed, meta.UpdateOptions{})
-	return err
-}
-
-// getOrCreateTemplate get or create template.
-func getOrCreateTemplate(ctx context.Context, obj *walruscore.Template) (*walruscore.Template, error) {
-	loopbackKubeClient := system.LoopbackKubeClient.Get()
-
-	existed, err := loopbackKubeClient.WalruscoreV1().Templates(obj.Namespace).Get(ctx, obj.Name, meta.GetOptions{})
-	if err != nil {
-		if !kerrors.IsNotFound(err) {
+	// Get icon.
+	{
+		icon, err := gitRepoIconURL(r, source.URL)
+		if err != nil {
 			return nil, err
 		}
+		tmpl.Status.Icon = icon
+	}
 
-		// Create template.
-		existed, err = loopbackKubeClient.WalruscoreV1().Templates(obj.Namespace).Create(ctx, obj, meta.CreateOptions{})
-		if err != nil && !kerrors.IsAlreadyExists(err) {
+	// Get versions.
+	{
+		vers, versionSchema, err := getVersions(tmpl, r)
+		if err != nil {
 			return nil, err
 		}
-
-		return existed, nil
+		tmplVers, err := genTemplateVersions(ctx, tmpl, vers, versionSchema)
+		if err != nil {
+			return nil, err
+		}
+		// Index remote versions.
+		tmplVersReverseIndexer := make(map[string]int)
+		for i, v := range tmplVers {
+			tmplVersReverseIndexer[v.Version] = i
+		}
+		// Mark removed versions.
+		for i := range tmpl.Status.Versions {
+			if _, ok := tmplVersReverseIndexer[tmpl.Status.Versions[i].Version]; ok {
+				delete(tmplVersReverseIndexer, tmpl.Status.Versions[i].Version)
+				continue
+			}
+			tmpl.Status.Versions[i].Removed = true
+		}
+		// Append new versions.
+		newTmplVersIndexes := maps.Values(tmplVersReverseIndexer)
+		sort.Ints(newTmplVersIndexes)
+		for _, i := range newTmplVersIndexes {
+			tmpl.Status.Versions = append(tmpl.Status.Versions, tmplVers[i])
+		}
 	}
-	return existed, nil
+
+	return tmpl, nil
 }
 
-// genTemplateVersionsFromGitRepo retrieves template versions from a git repository.
+// genTemplateVersions retrieves template versions from a git repository.
 func genTemplateVersions(
 	ctx context.Context,
 	obj *walruscore.Template,
 	versions []string,
 	versionSchema map[string]*api.SchemaGroup,
 ) ([]walruscore.TemplateVersion, error) {
+	if len(versions) == 0 {
+		return nil, nil
+	}
+
 	var (
 		logger = klog.NewStandardLogger("WARNING")
 		tvs    = make([]walruscore.TemplateVersion, 0, len(versionSchema))

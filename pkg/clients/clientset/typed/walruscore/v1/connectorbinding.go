@@ -30,7 +30,6 @@ type ConnectorBindingsGetter interface {
 type ConnectorBindingInterface interface {
 	Create(ctx context.Context, connectorBinding *v1.ConnectorBinding, opts metav1.CreateOptions) (*v1.ConnectorBinding, error)
 	Update(ctx context.Context, connectorBinding *v1.ConnectorBinding, opts metav1.UpdateOptions) (*v1.ConnectorBinding, error)
-	UpdateStatus(ctx context.Context, connectorBinding *v1.ConnectorBinding, opts metav1.UpdateOptions) (*v1.ConnectorBinding, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
 	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.ConnectorBinding, error)
@@ -38,7 +37,6 @@ type ConnectorBindingInterface interface {
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ConnectorBinding, err error)
 	Apply(ctx context.Context, connectorBinding *walruscorev1.ConnectorBindingApplyConfiguration, opts metav1.ApplyOptions) (result *v1.ConnectorBinding, err error)
-	ApplyStatus(ctx context.Context, connectorBinding *walruscorev1.ConnectorBindingApplyConfiguration, opts metav1.ApplyOptions) (result *v1.ConnectorBinding, err error)
 	ConnectorBindingExpansion
 }
 
@@ -128,22 +126,6 @@ func (c *connectorBindings) Update(ctx context.Context, connectorBinding *v1.Con
 	return
 }
 
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *connectorBindings) UpdateStatus(ctx context.Context, connectorBinding *v1.ConnectorBinding, opts metav1.UpdateOptions) (result *v1.ConnectorBinding, err error) {
-	result = &v1.ConnectorBinding{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("connectorbindings").
-		Name(connectorBinding.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(connectorBinding).
-		Do(ctx).
-		Into(result)
-	return
-}
-
 // Delete takes name of the connectorBinding and deletes it. Returns an error if one occurs.
 func (c *connectorBindings) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	return c.client.Delete().
@@ -205,36 +187,6 @@ func (c *connectorBindings) Apply(ctx context.Context, connectorBinding *walrusc
 		Namespace(c.ns).
 		Resource("connectorbindings").
 		Name(*name).
-		VersionedParams(&patchOpts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// ApplyStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-func (c *connectorBindings) ApplyStatus(ctx context.Context, connectorBinding *walruscorev1.ConnectorBindingApplyConfiguration, opts metav1.ApplyOptions) (result *v1.ConnectorBinding, err error) {
-	if connectorBinding == nil {
-		return nil, fmt.Errorf("connectorBinding provided to Apply must not be nil")
-	}
-	patchOpts := opts.ToPatchOptions()
-	data, err := json.Marshal(connectorBinding)
-	if err != nil {
-		return nil, err
-	}
-
-	name := connectorBinding.Name
-	if name == nil {
-		return nil, fmt.Errorf("connectorBinding.Name must be provided to Apply")
-	}
-
-	result = &v1.ConnectorBinding{}
-	err = c.client.Patch(types.ApplyPatchType).
-		Namespace(c.ns).
-		Resource("connectorbindings").
-		Name(*name).
-		SubResource("status").
 		VersionedParams(&patchOpts, scheme.ParameterCodec).
 		Body(data).
 		Do(ctx).

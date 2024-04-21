@@ -49,6 +49,13 @@ func (h *CatalogHandler) SetupHandler(
 			},
 			extensionapi.JSONPathTableColumnDefinition{
 				TableColumnDefinition: meta.TableColumnDefinition{
+					Name: "Template Count",
+					Type: "integer",
+				},
+				JSONPath: ".status.templateCount",
+			},
+			extensionapi.JSONPathTableColumnDefinition{
+				TableColumnDefinition: meta.TableColumnDefinition{
 					Name: "Project",
 					Type: "string",
 				},
@@ -73,7 +80,7 @@ func (h *CatalogHandler) SetupHandler(
 		*walrus.Catalog, *walrus.CatalogList, *walruscore.Catalog, *walruscore.CatalogList,
 	](tc, h, opts.Manager.GetClient().(ctrlcli.WithWatch), opts.Manager.GetAPIReader())
 
-	return gvr, srs, nil
+	return gvr, srs, err
 }
 
 var (

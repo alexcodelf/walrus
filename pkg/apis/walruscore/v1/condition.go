@@ -65,6 +65,48 @@ func (c ConditionType) IsUnknown(obj any) bool {
 	return getStatus(obj, string(c)) == string(ConditionUnknown)
 }
 
+// IsTrueOrFalse check status value for object,
+// which must be True or False,
+// object must be a pointer.
+func (c ConditionType) IsTrueOrFalse(obj any) bool {
+	cond := findCond(obj, string(c))
+	if cond == nil {
+		return false
+	}
+	st := getFieldValue(*cond, "Status").String()
+	return st == string(ConditionTrue) || st == string(ConditionFalse)
+}
+
+// IsTrueOrUnknown check status value for object,
+// which must be Unknown or True,
+// object must be a pointer.
+func (c ConditionType) IsTrueOrUnknown(obj any) bool {
+	cond := findCond(obj, string(c))
+	if cond == nil {
+		return false
+	}
+	st := getFieldValue(*cond, "Status").String()
+	return st == string(ConditionTrue) || st == string(ConditionUnknown)
+}
+
+// IsFalseOrUnknown check status value for object,
+// which must be Unknown or False,
+// object must be a pointer.
+func (c ConditionType) IsFalseOrUnknown(obj any) bool {
+	cond := findCond(obj, string(c))
+	if cond == nil {
+		return false
+	}
+	st := getFieldValue(*cond, "Status").String()
+	return st == string(ConditionFalse) || st == string(ConditionUnknown)
+}
+
+// Exists check conditionType exists in object field .Status.Conditions,
+// object must be a pointer.
+func (c ConditionType) Exists(obj any) bool {
+	return findCond(obj, string(c)) != nil
+}
+
 // GetStatus get status from conditionType for object field .Status.Conditions.
 func (c ConditionType) GetStatus(obj any) string {
 	return getStatus(obj, string(c))
@@ -157,8 +199,22 @@ func (c ConditionType) SetMessageIfBlank(obj any, message string) {
 // Reset clean the object field .Status.Conditions,
 // and set the status as Unknown type into the object field .Status.Conditions,
 // object must be a pointer.
-func (c ConditionType) Reset(obj any, message string) {
-	resetCond(obj, string(c), string(meta.ConditionUnknown), message)
+func (c ConditionType) Reset(obj any, reason, message string) {
+	resetCond(obj, string(c), string(meta.ConditionUnknown), reason, message)
+}
+
+// ResetTrue clean the object field .Status.Conditions,
+// and set the status as True type into the object field .Status.Conditions,
+// object must be a pointer.
+func (c ConditionType) ResetTrue(obj any, reason, message string) {
+	resetCond(obj, string(c), string(meta.ConditionTrue), reason, message)
+}
+
+// ResetFalse clean the object field .Status.Conditions,
+// and set the status as False type into the object field .Status.Conditions,
+// object must be a pointer.
+func (c ConditionType) ResetFalse(obj any, reason, message string) {
+	resetCond(obj, string(c), string(meta.ConditionFalse), reason, message)
 }
 
 // upsertTS create to update condition and set last transition time.
@@ -264,12 +320,13 @@ func upsertCond(obj any, condName string) reflect.Value {
 }
 
 // resetCond clean the object field .Status.Conditions, and set the status to Unknown.
-func resetCond(obj any, condName, status, message string) {
+func resetCond(obj any, condName, status, reason, message string) {
 	conds := getValue(obj, "Status", "Conditions")
 
 	newCond := reflect.New(conds.Type().Elem()).Elem()
 	newCond.FieldByName("Type").SetString(condName)
 	newCond.FieldByName("Status").SetString(status)
+	newCond.FieldByName("Reason").SetString(reason)
 	newCond.FieldByName("Message").SetString(message)
 	setTS(newCond)
 

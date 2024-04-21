@@ -13,12 +13,11 @@ import (
 // with apply.
 type TemplateStatusApplyConfiguration struct {
 	StatusDescriptorApplyConfiguration `json:",inline"`
-	LastSyncTime                       *metav1.Time                        `json:"lastSyncTime,omitempty"`
-	OriginalName                       *string                             `json:"originalName,omitempty"`
-	URL                                *string                             `json:"url,omitempty"`
 	Project                            *string                             `json:"project,omitempty"`
+	URL                                *string                             `json:"url,omitempty"`
 	Icon                               *string                             `json:"icon,omitempty"`
 	Versions                           []TemplateVersionApplyConfiguration `json:"versions,omitempty"`
+	LastSuccessfulSyncTime             *metav1.Time                        `json:"lastSuccessfulSyncTime,omitempty"`
 }
 
 // TemplateStatusApplyConfiguration constructs an declarative configuration of the TemplateStatus type for use with
@@ -56,19 +55,11 @@ func (b *TemplateStatusApplyConfiguration) WithConditions(values ...*ConditionAp
 	return b
 }
 
-// WithLastSyncTime sets the LastSyncTime field in the declarative configuration to the given value
+// WithProject sets the Project field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the LastSyncTime field is set to the value of the last call.
-func (b *TemplateStatusApplyConfiguration) WithLastSyncTime(value metav1.Time) *TemplateStatusApplyConfiguration {
-	b.LastSyncTime = &value
-	return b
-}
-
-// WithOriginalName sets the OriginalName field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the OriginalName field is set to the value of the last call.
-func (b *TemplateStatusApplyConfiguration) WithOriginalName(value string) *TemplateStatusApplyConfiguration {
-	b.OriginalName = &value
+// If called multiple times, the Project field is set to the value of the last call.
+func (b *TemplateStatusApplyConfiguration) WithProject(value string) *TemplateStatusApplyConfiguration {
+	b.Project = &value
 	return b
 }
 
@@ -77,14 +68,6 @@ func (b *TemplateStatusApplyConfiguration) WithOriginalName(value string) *Templ
 // If called multiple times, the URL field is set to the value of the last call.
 func (b *TemplateStatusApplyConfiguration) WithURL(value string) *TemplateStatusApplyConfiguration {
 	b.URL = &value
-	return b
-}
-
-// WithProject sets the Project field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Project field is set to the value of the last call.
-func (b *TemplateStatusApplyConfiguration) WithProject(value string) *TemplateStatusApplyConfiguration {
-	b.Project = &value
 	return b
 }
 
@@ -106,5 +89,13 @@ func (b *TemplateStatusApplyConfiguration) WithVersions(values ...*TemplateVersi
 		}
 		b.Versions = append(b.Versions, *values[i])
 	}
+	return b
+}
+
+// WithLastSuccessfulSyncTime sets the LastSuccessfulSyncTime field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LastSuccessfulSyncTime field is set to the value of the last call.
+func (b *TemplateStatusApplyConfiguration) WithLastSuccessfulSyncTime(value metav1.Time) *TemplateStatusApplyConfiguration {
+	b.LastSuccessfulSyncTime = &value
 	return b
 }

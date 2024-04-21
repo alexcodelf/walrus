@@ -58,10 +58,6 @@ type SettingStatus struct {
 	Value_ string `json:"-"`
 }
 
-func (in *Setting) Equal(in2 *Setting) bool {
-	return in.Status.Value_ == in2.Status.Value_
-}
-
 // SettingList holds the list of Setting.
 //
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

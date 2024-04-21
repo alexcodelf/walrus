@@ -15,14 +15,14 @@ import (
 	"k8s.io/klog/v2"
 
 	walrus "github.com/seal-io/walrus/pkg/apis/walrus/v1"
+	walruscore "github.com/seal-io/walrus/pkg/apis/walruscore/v1"
 	"github.com/seal-io/walrus/pkg/resourcehandler"
 )
 
 const OperatorType = resourcehandler.ConnectorTypeKubernetes
 
-// New returns resourcehandlers.ResourceHandler with the given options.
-func New(ctx context.Context, opts resourcehandler.CreateOptions) (resourcehandler.ResourceHandler, error) {
-	restConfig, err := GetConfig(ctx, opts, func(c *rest.Config) {
+func New(_ context.Context, connCfg walrus.ConnectorConfig) (resourcehandler.ResourceHandler, error) {
+	restConfig, err := GetConfig(connCfg, func(c *rest.Config) {
 		c.Timeout = 0
 	})
 	if err != nil {
@@ -77,12 +77,10 @@ type Operator struct {
 	DynamicCli    *dynamicclient.DynamicClient
 }
 
-// Type implements resourcehandlers.ResourceHandler.
 func (Operator) Type() resourcehandler.Type {
 	return OperatorType
 }
 
-// IsConnected implements resourcehandlers.ResourceHandler.
 func (op Operator) IsConnected(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -96,7 +94,6 @@ func (op Operator) IsConnected(ctx context.Context) error {
 	return err
 }
 
-// Burst implements resourcehandlers.ResourceHandler.
 func (op Operator) Burst() int {
 	if op.RestConfig.Burst == 0 {
 		return rest.DefaultBurst
@@ -105,35 +102,28 @@ func (op Operator) Burst() int {
 	return op.RestConfig.Burst
 }
 
-// ID implements resourcehandlers.ResourceHandler.
 func (op Operator) ID() string {
 	return op.Identifier
 }
 
-// GetComponents implements resourcehandlers.ResourceHandler.
-func (op Operator) GetComponents(
-	ctx context.Context,
-	resource *walrus.ResourceComponents,
-) ([]*walrus.ResourceComponents, error) {
+func (op Operator) GetKeys(ctx context.Context, resComps *walruscore.ResourceComponents) (*walruscore.ResourceComponentOperationKeys, error) {
 	return nil, nil
 }
 
-// Log implements resourcehandlers.ResourceHandler.
+func (op Operator) GetStatus(ctx context.Context, resComps *walruscore.ResourceComponents) ([]meta.Condition, error) {
+	// TODO: Implement this method after resource is migrated.
+
+	return nil, nil
+}
+
+func (op Operator) GetComponents(ctx context.Context, resComps *walruscore.ResourceComponents) ([]*walruscore.ResourceComponents, error) {
+	return nil, nil
+}
+
 func (op Operator) Log(ctx context.Context, key string, opts resourcehandler.LogOptions) error {
 	return nil
 }
 
-// Exec implements resourcehandlers.ResourceHandler.
 func (op Operator) Exec(ctx context.Context, key string, opts resourcehandler.ExecOptions) error {
 	return nil
-}
-
-func (op Operator) GetKeys(ctx context.Context, component *walrus.ResourceComponents) (*resourcehandler.ResourceComponentOperationKeys, error) {
-	return nil, nil
-}
-
-func (op Operator) GetStatus(ctx context.Context, component *walrus.ResourceComponents) ([]meta.Condition, error) {
-	// TODO: Implement this method after resource is migrated.
-
-	return nil, nil
 }

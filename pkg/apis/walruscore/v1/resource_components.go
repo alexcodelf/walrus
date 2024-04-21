@@ -34,8 +34,9 @@ type ResourceComponentsStatus struct {
 	// ResourceName is the resource name of the resource components.
 	ResourceName string `json:"resource"`
 
-	// TemplateVersion template version to which is used to create the resource components.
-	TemplateVersion *TempalteVersionReference `json:"templateVersionReference"`
+	// Template is the reference to the Template which to create the resource components,
+	// it must point to a specific version of the Template.
+	Template TemplateReferenceWithVersion `json:"template"`
 
 	// ComputedAttributes stores the computed attributes of the component.
 	// It stores the attributes of the resource that used to create the component.

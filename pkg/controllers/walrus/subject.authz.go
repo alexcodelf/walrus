@@ -22,8 +22,7 @@ import (
 	"github.com/seal-io/walrus/pkg/systemmeta"
 )
 
-// SubjectAuthzReconciler reconciles a Subject object below the system namespace.
-//
+// SubjectAuthzReconciler reconciles a Subject object below the system namespace,
 // and ensures its permissions are granted.
 type SubjectAuthzReconciler struct {
 	Client ctrlcli.Client

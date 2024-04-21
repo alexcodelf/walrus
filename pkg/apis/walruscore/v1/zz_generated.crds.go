@@ -216,10 +216,11 @@ func crd_pkg_apis_walruscore_v1_Catalog() *v1.CustomResourceDefinition {
 											},
 											Nullable: true,
 										},
-										"lastSyncTime": {
-											Description: "LastSyncTime record the last sync catalog time.",
+										"lastSuccessfulSyncTime": {
+											Description: "LastSuccessfulSyncTime records the last time the catalog was synchronized successfully.",
 											Type:        "string",
 											Format:      "date-time",
+											Nullable:    true,
 										},
 										"phase": {
 											Description: "Phase is the summary of conditions.",
@@ -234,7 +235,7 @@ func crd_pkg_apis_walruscore_v1_Catalog() *v1.CustomResourceDefinition {
 											Type:        "string",
 										},
 										"templateCount": {
-											Description: "TemplateCount is the count of templates.",
+											Description: "TemplateCount records the count of the related templates.",
 											Type:        "integer",
 											Format:      "int64",
 										},
@@ -318,6 +319,12 @@ func crd_pkg_apis_walruscore_v1_Connector() *v1.CustomResourceDefinition {
 													Raw: []byte(`"Production"`),
 												},
 											},
+											XValidations: []v1.ValidationRule{
+												{
+													Rule:    "oldSelf == self",
+													Message: "immutable field",
+												},
+											},
 										},
 										"category": {
 											Description: "Category is the category of the connector.",
@@ -336,9 +343,15 @@ func crd_pkg_apis_walruscore_v1_Connector() *v1.CustomResourceDefinition {
 													Raw: []byte(`"CloudProvider"`),
 												},
 											},
+											XValidations: []v1.ValidationRule{
+												{
+													Rule:    "oldSelf == self",
+													Message: "immutable field",
+												},
+											},
 										},
 										"config": {
-											Description: "Config is the configuration of the connector.",
+											Description: "Config is the configuration of the connector.\nAny sensitive configuration entry will be erased before storing.",
 											Type:        "object",
 											Required: []string{
 												"version",
@@ -346,29 +359,34 @@ func crd_pkg_apis_walruscore_v1_Connector() *v1.CustomResourceDefinition {
 											},
 											Properties: map[string]v1.JSONSchemaProps{
 												"data": {
-													Type: "object",
+													Description: "Data holds the configuration entries.",
+													Type:        "object",
 													AdditionalProperties: &v1.JSONSchemaPropsOrBool{
 														Allows: true,
 														Schema: &v1.JSONSchemaProps{
 															Type: "object",
 															Required: []string{
+																"sensitive",
 																"value",
-																"visible",
 															},
 															Properties: map[string]v1.JSONSchemaProps{
-																"value": {
-																	Type: "string",
+																"sensitive": {
+																	Description: "Sensitive indicates whether the entry is sensitive.",
+																	Type:        "boolean",
 																},
-																"visible": {
-																	Type: "boolean",
+																"value": {
+																	Description: "Value is the value of the configuration entry.\nWhen Sensitive is true,\nit is provided as a write-only input field,\nand returns \"(sensitive)\".",
+																	Type:        "string",
 																},
 															},
 														},
 													},
 													Nullable: true,
+													XMapType: ptr.To[string]("atomic"),
 												},
 												"version": {
-													Type: "string",
+													Description: "Version is the version of the configuration.",
+													Type:        "string",
 												},
 											},
 										},
@@ -377,12 +395,24 @@ func crd_pkg_apis_walruscore_v1_Connector() *v1.CustomResourceDefinition {
 											Type:        "string",
 										},
 										"secretName": {
-											Description: "SecretName is the auto-generated secret name for the connector configuration. Will be overridden if set.",
+											Description: "SecretName is the name of the secret that stores the Config.\nIf the secret name is not provided, a secret will be created to store the Config,\notherwise, the Config will be stored in the secret with the provided name.",
 											Type:        "string",
+											XValidations: []v1.ValidationRule{
+												{
+													Rule:    "oldSelf == self",
+													Message: "immutable field",
+												},
+											},
 										},
 										"type": {
 											Description: "Type is the type of the connector.",
 											Type:        "string",
+											XValidations: []v1.ValidationRule{
+												{
+													Rule:    "oldSelf == self",
+													Message: "immutable field",
+												},
+											},
 										},
 									},
 								},
@@ -515,11 +545,17 @@ func crd_pkg_apis_walruscore_v1_ConnectorBinding() *v1.CustomResourceDefinition 
 										"connector": {
 											Description: "Connector is the reference to the connector.",
 											Type:        "object",
-											Required: []string{
-												"name",
-												"namespace",
-											},
 											Properties: map[string]v1.JSONSchemaProps{
+												"category": {
+													Description: "Category is the category of the connector.\nIf the Category is empty,\nthe Category will be set to the category of the connector.",
+													Type:        "string",
+													XValidations: []v1.ValidationRule{
+														{
+															Rule:    "oldSelf == self",
+															Message: "immutable field",
+														},
+													},
+												},
 												"name": {
 													Description: "Name is the name of the connector.",
 													Type:        "string",
@@ -528,32 +564,22 @@ func crd_pkg_apis_walruscore_v1_ConnectorBinding() *v1.CustomResourceDefinition 
 													Description: "Namespace is the namespace of the connector.",
 													Type:        "string",
 												},
+												"type": {
+													Description: "Type is the type of the connector.\nIf the Type is empty,\nthe Type will be set to the type of the connector.",
+													Type:        "string",
+													XValidations: []v1.ValidationRule{
+														{
+															Rule:    "oldSelf == self",
+															Message: "immutable field",
+														},
+													},
+												},
 											},
-										},
-									},
-								},
-								"status": {
-									Type: "object",
-									Required: []string{
-										"Type",
-										"Category",
-									},
-									Properties: map[string]v1.JSONSchemaProps{
-										"Category": {
-											Description: "Category is the category of the connector.",
-											Type:        "string",
-										},
-										"Type": {
-											Description: "Type is the type of the connector.",
-											Type:        "string",
 										},
 									},
 								},
 							},
 						},
-					},
-					Subresources: &v1.CustomResourceSubresources{
-						Status: &v1.CustomResourceSubresourceStatus{},
 					},
 				},
 			},
@@ -614,30 +640,29 @@ func crd_pkg_apis_walruscore_v1_Resource() *v1.CustomResourceDefinition {
 											Description: "Stop indicates whether to stop the resource.",
 											Type:        "boolean",
 										},
-										"templateVersionReference": {
-											Description: "TemplateVersion template version to which the resource belongs.",
+										"template": {
+											Description: "Template is the reference to the Template which the resource used,\nit is able to pointed to a specific version of the Template.\nIf the version is not specified,\nthe default version of the Template will be used.",
 											Type:        "object",
-											Required: []string{
-												"namespace",
-												"name",
-												"version",
-											},
 											Properties: map[string]v1.JSONSchemaProps{
 												"name": {
-													Type: "string",
+													Description: "Name is the name of the template.",
+													Type:        "string",
 												},
 												"namespace": {
-													Type: "string",
+													Description: "Namespace is the namespace of the template.",
+													Type:        "string",
 												},
 												"version": {
-													Type: "string",
+													Description: "Version is a specific version of the template.",
+													Type:        "string",
 												},
 											},
 											Nullable: true,
 										},
 										"type": {
-											Description: "Type is a resource definition type.",
+											Description: "Type is the type of the ResourceDefinition which the resource be.",
 											Type:        "string",
+											Nullable:    true,
 										},
 									},
 								},
@@ -847,7 +872,7 @@ func crd_pkg_apis_walruscore_v1_ResourceComponents() *v1.CustomResourceDefinitio
 									Required: []string{
 										"project",
 										"resource",
-										"templateVersionReference",
+										"template",
 										"computedAttributes",
 										"components",
 										"dependencies",
@@ -1006,26 +1031,23 @@ func crd_pkg_apis_walruscore_v1_ResourceComponents() *v1.CustomResourceDefinitio
 											Description: "ResourceName is the resource name of the resource components.",
 											Type:        "string",
 										},
-										"templateVersionReference": {
-											Description: "TemplateVersion template version to which is used to create the resource components.",
+										"template": {
+											Description: "Template is the reference to the Template which to create the resource components,\nit must point to a specific version of the Template.",
 											Type:        "object",
-											Required: []string{
-												"namespace",
-												"name",
-												"version",
-											},
 											Properties: map[string]v1.JSONSchemaProps{
 												"name": {
-													Type: "string",
+													Description: "Name is the name of the template.",
+													Type:        "string",
 												},
 												"namespace": {
-													Type: "string",
+													Description: "Namespace is the namespace of the template.",
+													Type:        "string",
 												},
 												"version": {
-													Type: "string",
+													Description: "Version is a specific version of the template.",
+													Type:        "string",
 												},
 											},
-											Nullable: true,
 										},
 									},
 								},
@@ -6716,7 +6738,7 @@ func crd_pkg_apis_walruscore_v1_ResourceRun() *v1.CustomResourceDefinition {
 										"resource",
 										"type",
 										"attributes",
-										"templateVersionReference",
+										"template",
 									},
 									Properties: map[string]v1.JSONSchemaProps{
 										"attributes": {
@@ -6750,30 +6772,21 @@ func crd_pkg_apis_walruscore_v1_ResourceRun() *v1.CustomResourceDefinition {
 												},
 											},
 										},
-										"templateVersionReference": {
-											Description: "TemplateVersion template version to which the resource belongs.",
+										"template": {
+											Description: "Template is the reference to the Template which to create the resource components,\nit must point to a specific version of the Template.",
 											Type:        "object",
-											Required: []string{
-												"namespace",
-												"name",
-												"version",
-											},
 											Properties: map[string]v1.JSONSchemaProps{
 												"name": {
-													Type: "string",
+													Description: "Name is the name of the template.",
+													Type:        "string",
 												},
 												"namespace": {
-													Type: "string",
+													Description: "Namespace is the namespace of the template.",
+													Type:        "string",
 												},
 												"version": {
-													Type: "string",
-												},
-											},
-											Nullable: true,
-											XValidations: []v1.ValidationRule{
-												{
-													Rule:    "oldSelf == self",
-													Message: "immutable field",
+													Description: "Version is a specific version of the template.",
+													Type:        "string",
 												},
 											},
 										},
@@ -15651,14 +15664,11 @@ func crd_pkg_apis_walruscore_v1_Template() *v1.CustomResourceDefinition {
 											Description: "A URL to an SVG or PNG image to be used as an icon.",
 											Type:        "string",
 										},
-										"lastSyncTime": {
-											Description: "LastSyncTime record the last sync catalog time.",
+										"lastSuccessfulSyncTime": {
+											Description: "LastSuccessfulSyncTime record the last sync time the template was synchronized successfully.",
 											Type:        "string",
 											Format:      "date-time",
-										},
-										"originalName": {
-											Description: "The original name of the template.",
-											Type:        "string",
+											Nullable:    true,
 										},
 										"phase": {
 											Description: "Phase is the summary of conditions.",
@@ -15669,7 +15679,7 @@ func crd_pkg_apis_walruscore_v1_Template() *v1.CustomResourceDefinition {
 											Type:        "string",
 										},
 										"project": {
-											Description: "Project is the project that the catalog belongs to.",
+											Description: "Project is the project that the template belongs to.",
 											Type:        "string",
 										},
 										"url": {

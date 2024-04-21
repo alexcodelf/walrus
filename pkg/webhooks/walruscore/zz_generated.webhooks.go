@@ -83,13 +83,13 @@ func vwh_walrus_pkg_webhooks_walruscore_CatalogWebhook(c v1.WebhookClientConfig)
 					},
 					Resources: []string{
 						"catalogs",
+						"catalogs/status",
 					},
 					Scope: ptr.To[v1.ScopeType]("Namespaced"),
 				},
 				Operations: []v1.OperationType{
 					"CREATE",
 					"UPDATE",
-					"DELETE",
 				},
 			},
 		},
@@ -137,7 +137,6 @@ func vwh_walrus_pkg_webhooks_walruscore_ConnectorBindingWebhook(c v1.WebhookClie
 				Operations: []v1.OperationType{
 					"CREATE",
 					"UPDATE",
-					"DELETE",
 				},
 			},
 		},
@@ -369,11 +368,13 @@ func vwh_walrus_pkg_webhooks_walruscore_TemplateWebhook(c v1.WebhookClientConfig
 					},
 					Resources: []string{
 						"templates",
+						"templates/status",
 					},
 					Scope: ptr.To[v1.ScopeType]("Namespaced"),
 				},
 				Operations: []v1.OperationType{
 					"CREATE",
+					"UPDATE",
 					"DELETE",
 				},
 			},

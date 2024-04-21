@@ -3,6 +3,7 @@ package v1
 import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // Connector is the schema for the connectors API.
@@ -20,40 +21,96 @@ type Connector struct {
 
 var _ runtime.Object = (*Connector)(nil)
 
+// ConnectorReference is a reference to a connector.
+type ConnectorReference struct {
+	// Name is the name of the connector.
+	Name string `json:"name"`
+	// Namespace is the namespace of the connector.
+	Namespace string `json:"namespace"`
+}
+
+func (in *ConnectorReference) ToNamespacedName() types.NamespacedName {
+	return types.NamespacedName{
+		Namespace: in.Namespace,
+		Name:      in.Name,
+	}
+}
+
+// ConnectorCategory is the category of the connector.
+//
+// +enum
+type ConnectorCategory string
+
+const (
+	ConnectorCategoryDocker        ConnectorCategory = "Docker"
+	ConnectorCategoryKubernetes    ConnectorCategory = "Kubernetes"
+	ConnectorCategoryCustom        ConnectorCategory = "Custom"
+	ConnectorCategoryCloudProvider ConnectorCategory = "CloudProvider"
+)
+
 // ConnectorSpec defines the desired state of Connector.
 type ConnectorSpec struct {
 	// ApplicableEnvironmentType is the environment type that the connector is applicable to.
 	//
+	// +k8s:validation:cel[0]:rule="oldSelf == self"
+	// +k8s:validation:cel[0]:message="immutable field"
 	// +k8s:validation:enum=["Development","Staging","Production"]
 	ApplicableEnvironmentType EnvironmentType `json:"applicableEnvironmentType,omitempty"`
 
 	// Category is the category of the connector.
 	//
+	// +k8s:validation:cel[0]:rule="oldSelf == self"
+	// +k8s:validation:cel[0]:message="immutable field"
 	// +k8s:validation:enum=["Docker","Kubernetes","Custom","CloudProvider"]
 	Category ConnectorCategory `json:"category"`
 
 	// Type is the type of the connector.
+	//
+	// +k8s:validation:cel[0]:rule="oldSelf == self"
+	// +k8s:validation:cel[0]:message="immutable field"
 	Type string `json:"type"`
 
 	// Config is the configuration of the connector.
+	//
+	// Any sensitive configuration entry will be erased before storing.
 	Config ConnectorConfig `json:"config"`
+
+	// SecretName is the name of the secret that stores the Config.
+	//
+	// If the secret name is not provided, a secret will be created to store the Config,
+	// otherwise, the Config will be stored in the secret with the provided name.
+	//
+	// +k8s:validation:cel[0]:rule="oldSelf == self"
+	// +k8s:validation:cel[0]:message="immutable field"
+	SecretName string `json:"secretName,omitempty"`
 
 	// Description is the description of the connector.
 	Description string `json:"description,omitempty"`
-
-	// SecretName is the auto-generated secret name for the connector configuration. Will be overridden if set.
-	SecretName string `json:"secretName,omitempty"`
 }
 
-type ConnectorConfig struct {
-	Version string                          `json:"version"`
-	Data    map[string]ConnectorConfigEntry `json:"data"`
-}
+type (
+	// ConnectorConfig defines the configuration of the Connector.
+	ConnectorConfig struct {
+		// Version is the version of the configuration.
+		Version string `json:"version"`
+		// Data holds the configuration entries.
+		//
+		// +mapType=atomic
+		Data map[string]ConnectorConfigEntry `json:"data"`
+	}
 
-type ConnectorConfigEntry struct {
-	Value   string `json:"value"`
-	Visible bool   `json:"visible"`
-}
+	// ConnectorConfigEntry defines the configuration entry of the Connector.
+	ConnectorConfigEntry struct {
+		// Sensitive indicates whether the entry is sensitive.
+		Sensitive bool `json:"sensitive"`
+		// Value is the value of the configuration entry.
+		//
+		// When Sensitive is true,
+		// it is provided as a write-only input field,
+		// and returns "(sensitive)".
+		Value string `json:"value"`
+	}
+)
 
 // ConnectorStatus defines the observed state of Connector.
 type ConnectorStatus struct {
@@ -75,24 +132,3 @@ type ConnectorList struct {
 }
 
 var _ runtime.Object = (*ConnectorList)(nil)
-
-// ConnectorCategory is the category of the connector.
-//
-// +enum
-type ConnectorCategory string
-
-const (
-	ConnectorCategoryDocker        ConnectorCategory = "Docker"
-	ConnectorCategoryKubernetes    ConnectorCategory = "Kubernetes"
-	ConnectorCategoryCustom        ConnectorCategory = "Custom"
-	ConnectorCategoryCloudProvider ConnectorCategory = "CloudProvider"
-)
-
-// ConnectorReference is a reference to a connector.
-type ConnectorReference struct {
-	// Name is the name of the connector.
-	Name string `json:"name"`
-
-	// Namespace is the namespace of the connector.
-	Namespace string `json:"namespace"`
-}

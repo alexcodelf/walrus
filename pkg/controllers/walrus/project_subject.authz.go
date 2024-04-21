@@ -225,12 +225,7 @@ func (r *ProjectSubjectAuthzReconciler) SetupController(ctx context.Context, opt
 		).
 		Watches(
 			// Requeue when creating an Environment.
-			&meta.PartialObjectMetadata{
-				TypeMeta: meta.TypeMeta{
-					APIVersion: walrus.SchemeGroupVersion.String(),
-					Kind:       "Environment",
-				},
-			},
+			&walrus.Environment{},
 			ctrlhandler.EnqueueRequestsFromMapFunc(r.findObjectsWhenEnvironmentCreating),
 			ctrlbuilder.WithPredicates(envFilter),
 		).
@@ -263,7 +258,7 @@ func (r *ProjectSubjectAuthzReconciler) findObjectsWhenEnvironmentCreating(ctx c
 	reqs := make([]ctrlreconcile.Request, len(projSubjs.Items))
 	for i, item := range projSubjs.Items {
 		reqs[i] = ctrlreconcile.Request{
-			NamespacedName: types.NamespacedName{
+			NamespacedName: ctrlcli.ObjectKey{
 				Namespace: env.GetNamespace(),
 				Name:      systemauthz.GetProjectSubjectRoleBindingName(ptr.To(item.SubjectReference)),
 			},

@@ -2,7 +2,6 @@ package v1
 
 import (
 	"errors"
-	"reflect"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -87,12 +86,6 @@ type VariableStatus struct {
 	//
 	// DO NOT EXPOSE AND STORE IT.
 	Value_ string `json:"-"`
-}
-
-func (in *Variable) Equal(in2 *Variable) bool {
-	return reflect.DeepEqual(in.Spec, in2.Spec) &&
-		in.Status.Scope == in2.Status.Scope &&
-		in.Status.Value_ == in2.Status.Value_
 }
 
 // VariableList holds the list of Variable.

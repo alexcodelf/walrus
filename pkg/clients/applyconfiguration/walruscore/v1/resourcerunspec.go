@@ -13,11 +13,11 @@ import (
 // ResourceRunSpecApplyConfiguration represents an declarative configuration of the ResourceRunSpec type for use
 // with apply.
 type ResourceRunSpecApplyConfiguration struct {
-	Project         *string                                     `json:"project,omitempty"`
-	ResourceName    *string                                     `json:"resource,omitempty"`
-	Type            *v1.ResourceRunType                         `json:"type,omitempty"`
-	Attributes      *runtime.RawExtension                       `json:"attributes,omitempty"`
-	TemplateVersion *TempalteVersionReferenceApplyConfiguration `json:"templateVersionReference,omitempty"`
+	Project      *string                                         `json:"project,omitempty"`
+	ResourceName *string                                         `json:"resource,omitempty"`
+	Type         *v1.ResourceRunType                             `json:"type,omitempty"`
+	Attributes   *runtime.RawExtension                           `json:"attributes,omitempty"`
+	Template     *TemplateReferenceWithVersionApplyConfiguration `json:"template,omitempty"`
 }
 
 // ResourceRunSpecApplyConfiguration constructs an declarative configuration of the ResourceRunSpec type for use with
@@ -58,10 +58,10 @@ func (b *ResourceRunSpecApplyConfiguration) WithAttributes(value runtime.RawExte
 	return b
 }
 
-// WithTemplateVersion sets the TemplateVersion field in the declarative configuration to the given value
+// WithTemplate sets the Template field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TemplateVersion field is set to the value of the last call.
-func (b *ResourceRunSpecApplyConfiguration) WithTemplateVersion(value *TempalteVersionReferenceApplyConfiguration) *ResourceRunSpecApplyConfiguration {
-	b.TemplateVersion = value
+// If called multiple times, the Template field is set to the value of the last call.
+func (b *ResourceRunSpecApplyConfiguration) WithTemplate(value *TemplateReferenceWithVersionApplyConfiguration) *ResourceRunSpecApplyConfiguration {
+	b.Template = value
 	return b
 }

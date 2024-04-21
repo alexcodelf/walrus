@@ -55,3 +55,15 @@ func Unlock(obj MetaObject) (unlocked bool) {
 	obj.SetFinalizers(fs2)
 	return false
 }
+
+// IsLocked returns true if the resource is locked by system.
+func IsLocked(obj MetaObject) (locked bool) {
+	if obj == nil {
+		panic("object is nil")
+	}
+
+	fs := obj.GetFinalizers()
+	return slices.IndexFunc(fs, func(s string) bool {
+		return s == LockedResourceFinalizer
+	}) != -1
+}

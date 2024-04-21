@@ -10,7 +10,7 @@ import (
 //
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["cb"],subResources=["status"]
+// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["connbd"]
 type ConnectorBinding walruscore.ConnectorBinding
 
 var _ runtime.Object = (*ConnectorBinding)(nil)

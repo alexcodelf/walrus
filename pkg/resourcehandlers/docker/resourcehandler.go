@@ -10,21 +10,14 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	walrus "github.com/seal-io/walrus/pkg/apis/walrus/v1"
+	walruscore "github.com/seal-io/walrus/pkg/apis/walruscore/v1"
 	"github.com/seal-io/walrus/pkg/resourcehandler"
-	optypes "github.com/seal-io/walrus/pkg/resourcehandlers/types"
 )
 
 const OperatorType = resourcehandler.ConnectorTypeDocker
 
-// New returns resourcehandlers.ResourceHandler with the given options.
-func New(ctx context.Context, opts resourcehandler.CreateOptions) (resourcehandler.ResourceHandler, error) {
-	name := opts.Connector.Name
-	config, err := optypes.GetConfigData(ctx, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	host := string(config["host"])
+func New(_ context.Context, connCfg walrus.ConnectorConfig) (resourcehandler.ResourceHandler, error) {
+	host := string(connCfg.Status.Data["host"])
 	if host == "" {
 		return nil, errors.New("host is empty")
 	}
@@ -35,7 +28,7 @@ func New(ctx context.Context, opts resourcehandler.CreateOptions) (resourcehandl
 	}
 
 	return Operator{
-		name:       name,
+		name:       connCfg.Name,
 		identifier: stringx.SumBySHA256("docker:", host),
 		client:     cli,
 	}, nil
@@ -67,30 +60,24 @@ func (op Operator) ID() string {
 	return op.identifier
 }
 
-// GetComponents implements resourcehandlers.ResourceHandler.
-func (op Operator) GetComponents(
-	ctx context.Context,
-	resource *walrus.ResourceComponents,
-) ([]*walrus.ResourceComponents, error) {
+func (op Operator) GetKeys(ctx context.Context, resComps *walruscore.ResourceComponents) (*walruscore.ResourceComponentOperationKeys, error) {
 	return nil, nil
 }
 
-// Log implements resourcehandlers.ResourceHandler.
+func (op Operator) GetStatus(ctx context.Context, resComps *walruscore.ResourceComponents) ([]meta.Condition, error) {
+	// TODO: Implement this method after resource is migrated.
+
+	return nil, nil
+}
+
+func (op Operator) GetComponents(ctx context.Context, resComps *walruscore.ResourceComponents) ([]*walruscore.ResourceComponents, error) {
+	return nil, nil
+}
+
 func (op Operator) Log(ctx context.Context, key string, opts resourcehandler.LogOptions) error {
 	return nil
 }
 
-// Exec implements resourcehandlers.ResourceHandler.
 func (op Operator) Exec(ctx context.Context, key string, opts resourcehandler.ExecOptions) error {
 	return nil
-}
-
-func (op Operator) GetKeys(ctx context.Context, component *walrus.ResourceComponents) (*resourcehandler.ResourceComponentOperationKeys, error) {
-	return nil, nil
-}
-
-func (op Operator) GetStatus(ctx context.Context, component *walrus.ResourceComponents) ([]meta.Condition, error) {
-	// TODO: Implement this method after resource is migrated.
-
-	return nil, nil
 }

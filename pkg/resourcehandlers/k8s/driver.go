@@ -1,7 +1,6 @@
 package k8s
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -10,15 +9,14 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
-	"github.com/seal-io/walrus/pkg/resourcehandler"
-	optypes "github.com/seal-io/walrus/pkg/resourcehandlers/types"
+	walrus "github.com/seal-io/walrus/pkg/apis/walrus/v1"
 )
 
 // GetConfig returns the rest.Config with the given model,
 // by default, the rest.Config configures with 15s timeout/16 qps/64 burst,
 // please modify the default configuration with ConfigOption as need.
-func GetConfig(ctx context.Context, createOpts resourcehandler.CreateOptions, opts ...func(*rest.Config)) (restConfig *rest.Config, err error) {
-	apiConfig, _, err := LoadApiConfig(ctx, createOpts)
+func GetConfig(connCfg walrus.ConnectorConfig, opts ...func(*rest.Config)) (restConfig *rest.Config, err error) {
+	apiConfig, _, err := LoadApiConfig(connCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -40,28 +38,22 @@ func GetConfig(ctx context.Context, createOpts resourcehandler.CreateOptions, op
 }
 
 // LoadApiConfig returns the api.Config with the given model.
-func LoadApiConfig(ctx context.Context, opts resourcehandler.CreateOptions) (apiConfig *clientcmdapi.Config, raw string, err error) {
-	con := opts.Connector
-	version := con.Spec.Config.Version
+func LoadApiConfig(connCfg walrus.ConnectorConfig) (apiConfig *clientcmdapi.Config, raw string, err error) {
+	version := connCfg.Status.Version
 
 	switch version {
 	default:
 		return nil, "", fmt.Errorf("unknown config version: %v", version)
 	case "v1":
-		config, err := optypes.GetConfigData(ctx, opts)
-		if err != nil {
-			return nil, "", fmt.Errorf("error get config data: %w", err)
-		}
-
 		// {
 		//      "configVersion": "v1",
 		//      "configData": {
 		//          "kubeconfig": "..."
 		//      }
 		// }.
-		raw, err = loadRawConfigV1(config)
+		raw, err = loadRawConfigV1(connCfg.Status.Data)
 		if err != nil {
-			return nil, "", fmt.Errorf("error load config from connector %s: %w", con.Name, err)
+			return nil, "", fmt.Errorf("error load config from connector %s: %w", connCfg.Name, err)
 		}
 
 		apiConfig, err = loadApiConfigV1(raw)

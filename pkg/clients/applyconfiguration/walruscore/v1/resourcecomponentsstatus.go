@@ -15,7 +15,7 @@ type ResourceComponentsStatusApplyConfiguration struct {
 	StatusDescriptorApplyConfiguration `json:",inline"`
 	Project                            *string                                         `json:"project,omitempty"`
 	ResourceName                       *string                                         `json:"resource,omitempty"`
-	TemplateVersion                    *TempalteVersionReferenceApplyConfiguration     `json:"templateVersionReference,omitempty"`
+	Template                           *TemplateReferenceWithVersionApplyConfiguration `json:"template,omitempty"`
 	ComputedAttributes                 *runtime.RawExtension                           `json:"computedAttributes,omitempty"`
 	Components                         []ResourceComponentApplyConfiguration           `json:"components,omitempty"`
 	Dependencies                       []ResourceComponentDependencyApplyConfiguration `json:"dependencies,omitempty"`
@@ -72,11 +72,11 @@ func (b *ResourceComponentsStatusApplyConfiguration) WithResourceName(value stri
 	return b
 }
 
-// WithTemplateVersion sets the TemplateVersion field in the declarative configuration to the given value
+// WithTemplate sets the Template field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TemplateVersion field is set to the value of the last call.
-func (b *ResourceComponentsStatusApplyConfiguration) WithTemplateVersion(value *TempalteVersionReferenceApplyConfiguration) *ResourceComponentsStatusApplyConfiguration {
-	b.TemplateVersion = value
+// If called multiple times, the Template field is set to the value of the last call.
+func (b *ResourceComponentsStatusApplyConfiguration) WithTemplate(value *TemplateReferenceWithVersionApplyConfiguration) *ResourceComponentsStatusApplyConfiguration {
+	b.Template = value
 	return b
 }
 

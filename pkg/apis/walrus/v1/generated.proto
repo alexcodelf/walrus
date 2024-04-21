@@ -23,7 +23,7 @@ option go_package = "github.com/seal-io/walrus/pkg/apis/walrus/v1";
 //
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],subResources=["status"]
+// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["cat"],subResources=["status"]
 message Catalog {
   optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
 
@@ -44,6 +44,7 @@ message CatalogList {
 // Connector is the schema for the connectors API.
 //
 // +genclient
+// +genclient:method=GetConfig,verb=get,subresource=config,result=ConnectorConfig
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["conn"],subResources=["status"]
 message Connector {
@@ -58,13 +59,11 @@ message Connector {
 //
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["cb"],subResources=["status"]
+// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["connbd"]
 message ConnectorBinding {
   optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
 
   optional github.com.seal_io.walrus.pkg.apis.walruscore.v1.ConnectorBindingSpec spec = 2;
-
-  optional github.com.seal_io.walrus.pkg.apis.walruscore.v1.ConnectorBindingStatus status = 3;
 }
 
 // ConnectorBindingList contains a list of ConnectorBinding.
@@ -74,6 +73,37 @@ message ConnectorBindingList {
   optional k8s.io.apimachinery.pkg.apis.meta.v1.ListMeta metadata = 1;
 
   repeated github.com.seal_io.walrus.pkg.apis.walruscore.v1.ConnectorBinding items = 2;
+}
+
+// ConnectorConfig is the subresource of the Connector resource for extract configuration.
+//
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"]
+message ConnectorConfig {
+  optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
+
+  optional ConnectorConfigStatus status = 2;
+}
+
+// ConnectorConfigStatus defines the observed state of ConnectorConfig.
+message ConnectorConfigStatus {
+  // ApplicableEnvironmentType is the environment type that the connector is applicable to.
+  optional string applicableEnvironmentType = 1;
+
+  // Category is the category of the connector.
+  optional string category = 2;
+
+  // Type is the type of the connector.
+  optional string type = 3;
+
+  // Version is the version of the configuration.
+  optional string version = 4;
+
+  // Data is the configuration of the connector.
+  map<string, bytes> data = 5;
+
+  // ConditionSummary is the summary of the conditions.
+  optional github.com.seal_io.walrus.pkg.apis.walruscore.v1.ConditionSummary conditionSummary = 6;
 }
 
 // ConnectorList holds the list of Connector.
@@ -845,7 +875,7 @@ message SubjectTokenStatus {
 //
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["tpl"],subResources=["status"]
+// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["tmpl"],subResources=["status"]
 message Template {
   optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
 

@@ -73,7 +73,7 @@ func (h *TemplateHandler) SetupHandler(
 		*walrus.Template, *walrus.TemplateList, *walruscore.Template, *walruscore.TemplateList,
 	](tc, h, opts.Manager.GetClient().(ctrlcli.WithWatch), opts.Manager.GetAPIReader())
 
-	return gvr, srs, nil
+	return gvr, srs, err
 }
 
 var (

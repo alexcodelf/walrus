@@ -58,7 +58,7 @@ type DummySpec struct {
 
 	// Map.
 
-	// +mapType="atomic"
+	// +mapType=atomic
 	// +k8s:validation:maxProperties=3
 	MapString      map[string]string  `json:"mapString,omitempty"`
 	MapPointString map[string]*string `json:"mapPointString,omitempty"`
@@ -70,7 +70,7 @@ type DummySpec struct {
 		E map[string]struct{} `json:"e"`
 		F []struct{}          `json:"f"`
 	} `json:"mapObject,omitempty"`
-	// +mapType="atomic"
+	// +mapType=atomic
 	MapInOrString    map[string]intstr.IntOrString `json:"mapInOrString,omitempty"`
 	MapStringPointer *map[string]string            `json:"mapStringPointer,omitempty"`
 	MapInterface     map[string]any                `json:"mapInterface,omitempty"`

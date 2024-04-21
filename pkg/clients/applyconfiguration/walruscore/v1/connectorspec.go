@@ -16,8 +16,8 @@ type ConnectorSpecApplyConfiguration struct {
 	Category                  *v1.ConnectorCategory              `json:"category,omitempty"`
 	Type                      *string                            `json:"type,omitempty"`
 	Config                    *ConnectorConfigApplyConfiguration `json:"config,omitempty"`
-	Description               *string                            `json:"description,omitempty"`
 	SecretName                *string                            `json:"secretName,omitempty"`
+	Description               *string                            `json:"description,omitempty"`
 }
 
 // ConnectorSpecApplyConfiguration constructs an declarative configuration of the ConnectorSpec type for use with
@@ -58,18 +58,18 @@ func (b *ConnectorSpecApplyConfiguration) WithConfig(value *ConnectorConfigApply
 	return b
 }
 
-// WithDescription sets the Description field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Description field is set to the value of the last call.
-func (b *ConnectorSpecApplyConfiguration) WithDescription(value string) *ConnectorSpecApplyConfiguration {
-	b.Description = &value
-	return b
-}
-
 // WithSecretName sets the SecretName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SecretName field is set to the value of the last call.
 func (b *ConnectorSpecApplyConfiguration) WithSecretName(value string) *ConnectorSpecApplyConfiguration {
 	b.SecretName = &value
+	return b
+}
+
+// WithDescription sets the Description field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Description field is set to the value of the last call.
+func (b *ConnectorSpecApplyConfiguration) WithDescription(value string) *ConnectorSpecApplyConfiguration {
+	b.Description = &value
 	return b
 }

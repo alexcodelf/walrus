@@ -3,6 +3,7 @@ package v1
 import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // Template is the schema for the templates API.
@@ -19,6 +20,21 @@ type Template struct {
 }
 
 var _ runtime.Object = (*Template)(nil)
+
+// TemplateReference is a reference to a template.
+type TemplateReference struct {
+	// Namespace is the namespace of the template.
+	Namespace string `json:"namespace"`
+	// Name is the name of the template.
+	Name string `json:"name"`
+}
+
+func (in *TemplateReference) ToNamespacedName() types.NamespacedName {
+	return types.NamespacedName{
+		Namespace: in.Namespace,
+		Name:      in.Name,
+	}
+}
 
 // TemplateSpec defines the desired state of Template.
 type TemplateSpec struct {
@@ -40,23 +56,20 @@ type TemplateStatus struct {
 	// StatusDescriptor defines the status of the catalog.
 	StatusDescriptor `json:",inline"`
 
-	// LastSyncTime record the last sync catalog time.
-	LastSyncTime meta.Time `json:"lastSyncTime,omitempty"`
-
-	// The original name of the template.
-	OriginalName string `json:"originalName,omitempty"`
+	// Project is the project that the template belongs to.
+	Project string `json:"project,omitempty"`
 
 	// URL of the template.
 	URL string `json:"url,omitempty"`
-
-	// Project is the project that the catalog belongs to.
-	Project string `json:"project,omitempty"`
 
 	// A URL to an SVG or PNG image to be used as an icon.
 	Icon string `json:"icon,omitempty"`
 
 	// Versions contains the versions for the template.
 	Versions []TemplateVersion `json:"versions,omitempty"`
+
+	// LastSuccessfulSyncTime record the last sync time the template was synchronized successfully.
+	LastSuccessfulSyncTime *meta.Time `json:"lastSuccessfulSyncTime,omitempty"`
 }
 
 // TemplateList holds the list of Template.
@@ -109,8 +122,10 @@ type TemplateVersion struct {
 	Removed bool `json:"removed,omitempty"`
 }
 
-type TempalteVersionReference struct {
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
-	Version   string `json:"version"`
+// TemplateReferenceWithVersion is a reference to a template with a specific version.
+type TemplateReferenceWithVersion struct {
+	TemplateReference `json:",inline"`
+
+	// Version is a specific version of the template.
+	Version string `json:"version,omitempty"`
 }

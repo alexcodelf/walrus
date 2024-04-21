@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	dtypes "github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
+	dclient "github.com/docker/docker/client"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -26,42 +26,47 @@ func installDefaultKubernetesConnector(
 ) (*walrus.Connector, error) {
 	connCli := cli.WalrusV1().Connectors(project)
 
-	config, err := readKubeConfig()
+	config, err := readLoopbackKubeConfig()
 	if err != nil {
 		return nil, fmt.Errorf("read kube config: %w", err)
 	}
 
-	c := &walrus.Connector{
+	eConn := &walrus.Connector{
 		ObjectMeta: meta.ObjectMeta{
 			Namespace: project,
 			Name:      DefaultConnectorName,
 		},
 		Spec: walruscore.ConnectorSpec{
+			ApplicableEnvironmentType: envType,
+			Category:                  walruscore.ConnectorCategoryKubernetes,
 			Type:                      resourcehandler.ConnectorTypeKubernetes,
 			Description:               "Local Kubernetes",
-			Category:                  walruscore.ConnectorCategoryKubernetes,
-			ApplicableEnvironmentType: envType,
 			Config: walruscore.ConnectorConfig{
 				Version: "v1",
 				Data: map[string]walruscore.ConnectorConfigEntry{
 					"kubeconfig": {
-						Value:   config,
-						Visible: false,
+						Value:     config,
+						Sensitive: true,
 					},
 				},
 			},
 		},
 	}
+	alignFn := func(aConn *walrus.Connector) (*walrus.Connector, bool, error) {
+		aConn.Spec.Config = eConn.Spec.Config
+		return aConn, false, nil
+	}
 
-	conn, err := kubeclientset.Update(ctx, connCli, c, kubeclientset.WithCreateIfNotExisted[*walrus.Connector]())
+	eConn, err = kubeclientset.Create(ctx, connCli, eConn,
+		kubeclientset.WithUpdateIfExisted(alignFn))
 	if err != nil {
 		return nil, fmt.Errorf("install default kubernetes connector: %w", err)
 	}
 
-	return conn, nil
+	return eConn, nil
 }
 
-func readKubeConfig() (string, error) {
+func readLoopbackKubeConfig() (string, error) {
 	kubeConfig := system.LoopbackKubeClientConfig.Get()
 
 	kc, err := kubeconfig.ConvertRestConfigToApiConfig(&kubeConfig)
@@ -85,64 +90,67 @@ func installDefaultDockerConnector(
 ) (*walrus.Connector, error) {
 	connCli := cli.WalrusV1().Connectors(project)
 
-	c := &walrus.Connector{
+	eConn := &walrus.Connector{
 		ObjectMeta: meta.ObjectMeta{
 			Namespace: project,
 			Name:      DefaultConnectorName,
 		},
 		Spec: walruscore.ConnectorSpec{
-			Type:                      resourcehandler.ConnectorTypeDocker,
-			Category:                  walruscore.ConnectorCategoryDocker,
 			ApplicableEnvironmentType: envType,
+			Category:                  walruscore.ConnectorCategoryDocker,
+			Type:                      resourcehandler.ConnectorTypeDocker,
+			Description:               "Local Docker",
 			Config: walruscore.ConnectorConfig{
 				Version: "v1",
 				Data:    map[string]walruscore.ConnectorConfigEntry{},
 			},
 		},
 	}
+	alignFn := func(aConn *walrus.Connector) (*walrus.Connector, bool, error) {
+		aConn.Spec.Config = eConn.Spec.Config
+		return aConn, false, nil
+	}
 
-	conn, err := kubeclientset.Create(ctx, connCli, c)
+	eConn, err := kubeclientset.Create(ctx, connCli, eConn,
+		kubeclientset.WithUpdateIfExisted(alignFn))
 	if err != nil {
 		return nil, fmt.Errorf("install default docker connector: %w", err)
 	}
 
-	if err := applyLocalDockerNetwork(ctx); err != nil {
-		return nil, fmt.Errorf("apply local docker network: %w", err)
+	if err = applyLoopbackDockerNetwork(ctx); err != nil {
+		return nil, fmt.Errorf("apply docker network: %w", err)
 	}
 
-	return conn, nil
+	return eConn, nil
 }
 
-func applyLocalDockerNetwork(ctx context.Context) error {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+func applyLoopbackDockerNetwork(ctx context.Context) error {
+	cli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
 	}
 
-	networkName := "local-walrus"
-
-	networks, err := cli.NetworkList(ctx, dtypes.NetworkListOptions{})
-	if err != nil {
-		return err
+	nw := &dtypes.NetworkResource{
+		Name: "local-walrus",
 	}
-
-	exists := false
-
-	for _, n := range networks {
-		if n.Name == networkName {
-			exists = true
-			break
-		}
-	}
-
-	if !exists {
-		_, err = cli.NetworkCreate(ctx, networkName, dtypes.NetworkCreate{
-			Driver: "bridge",
-		})
+	{
+		nws, err := cli.NetworkList(ctx, dtypes.NetworkListOptions{})
 		if err != nil {
 			return err
 		}
+		for i := range nws {
+			if nws[i].Name == nw.Name {
+				nw = &nws[i]
+				break
+			}
+		}
+	}
+	if nw.ID != "" {
+		return nil
 	}
 
-	return nil
+	_, err = cli.NetworkCreate(ctx, nw.Name, dtypes.NetworkCreate{
+		Driver: "bridge",
+	})
+	return err
 }

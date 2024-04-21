@@ -174,3 +174,14 @@ func (c *FakeConnectors) ApplyStatus(ctx context.Context, connector *walrusv1.Co
 	}
 	return obj.(*v1.Connector), err
 }
+
+// GetConfig takes name of the connector, and returns the corresponding connectorConfig object, and an error if there is any.
+func (c *FakeConnectors) GetConfig(ctx context.Context, connectorName string, options metav1.GetOptions) (result *v1.ConnectorConfig, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewGetSubresourceAction(connectorsResource, c.ns, "config", connectorName), &v1.ConnectorConfig{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1.ConnectorConfig), err
+}

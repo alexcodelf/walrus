@@ -10,7 +10,7 @@ import (
 //
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["tpl"],subResources=["status"]
+// +k8s:apireg-gen:resource:scope="Namespaced",categories=["walrus"],shortName=["tmpl"],subResources=["status"]
 type Template walruscore.Template
 
 var _ runtime.Object = (*Template)(nil)

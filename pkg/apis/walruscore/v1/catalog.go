@@ -22,6 +22,9 @@ var _ runtime.Object = (*Catalog)(nil)
 
 // CatalogSpec defines the desired state of Catalog.
 type CatalogSpec struct {
+	// Description of the catalog.
+	Description string `json:"description,omitempty"`
+
 	// Builtin indicate the catalog is builtin catalog.
 	//
 	// +k8s:validation:cel[0]:rule="oldSelf == self"
@@ -33,9 +36,6 @@ type CatalogSpec struct {
 	// +k8s:validation:cel[0]:rule="oldSelf == self"
 	// +k8s:validation:cel[0]:message="immutable field"
 	TemplateFormat string `json:"templateFormat"`
-
-	// Description of the catalog.
-	Description string `json:"description,omitempty"`
 
 	// Filters specifies the filtering rules for the catalog.
 	Filters *Filters `json:"filters,omitempty"`
@@ -49,17 +49,17 @@ type CatalogStatus struct {
 	// StatusDescriptor defines the status of the catalog.
 	StatusDescriptor `json:",inline"`
 
-	// LastSyncTime record the last sync catalog time.
-	LastSyncTime meta.Time `json:"lastSyncTime,omitempty"`
-
-	// TemplateCount is the count of templates.
-	TemplateCount int64 `json:"templateCount,omitempty"`
+	// Project is the project to which the catalog belongs.
+	Project string `json:"project,omitempty"`
 
 	//  URL of the catalog.
 	URL string `json:"url,omitempty"`
 
-	// Project is the project to which the catalog belongs.
-	Project string `json:"project,omitempty"`
+	// TemplateCount records the count of the related templates.
+	TemplateCount int64 `json:"templateCount,omitempty"`
+
+	// LastSuccessfulSyncTime records the last time the catalog was synchronized successfully.
+	LastSuccessfulSyncTime *meta.Time `json:"lastSuccessfulSyncTime,omitempty"`
 }
 
 // CatalogList holds the list of Catalog.

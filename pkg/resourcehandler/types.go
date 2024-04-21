@@ -6,7 +6,6 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	walrus "github.com/seal-io/walrus/pkg/apis/walrus/v1"
 	walruscore "github.com/seal-io/walrus/pkg/apis/walruscore/v1"
 )
 
@@ -41,18 +40,18 @@ type ResourceHandler interface {
 	//
 	// The given walrus.ResourceComponent item must specify the following fields:
 	// ID, DeployerType, Type and Name.
-	GetKeys(context.Context, *walrus.ResourceComponents) (*ResourceComponentOperationKeys, error)
+	GetKeys(context.Context, *walruscore.ResourceComponents) (*walruscore.ResourceComponentOperationKeys, error)
 
 	// GetStatus gets status of the given resource.
 	//
 	// The given walrus.ResourceComponent item must specify the following fields:
 	// ID, DeployerType, Type and Name.
-	GetStatus(context.Context, *walrus.ResourceComponents) ([]meta.Condition, error)
+	GetStatus(context.Context, *walruscore.ResourceComponents) ([]meta.Condition, error)
 
 	// GetComponents gets components of the given resource,
 	// returns list must not be `nil` unless unexpected input or raising error,
 	// it can be used to clean stale items safety if got an empty list.
-	GetComponents(context.Context, *walrus.ResourceComponents) ([]*walrus.ResourceComponents, error)
+	GetComponents(context.Context, *walruscore.ResourceComponents) ([]*walruscore.ResourceComponents, error)
 
 	// Log gets logs from the given key.
 	Log(context.Context, string, LogOptions) error
@@ -96,12 +95,11 @@ type TerminalResizer interface {
 	Next() (width, height uint16, ok bool)
 }
 
-type CreateOptions struct {
-	Connector walruscore.Connector
-}
-
-type Creator func(context.Context, CreateOptions) (ResourceHandler, error)
-
-type ResourceComponentOperationKeys struct {
-	// TODO: Need to consider how the resource component is used
+// GetOptions holds the options to get a resource handler.
+type GetOptions struct {
+	// Connector is reference that pointer to a Walrus Connector.
+	Connector walruscore.ConnectorReference
+	// Type is the type of the resource handler,
+	// it is always the same as the given Walrus Connector's type.
+	Type string
 }

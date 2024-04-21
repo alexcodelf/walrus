@@ -47,11 +47,9 @@ type ResourceRunSpec struct {
 	// +k8s:validation:cel[0]:message="immutable field"
 	Attributes runtime.RawExtension `json:"attributes"`
 
-	// TemplateVersion template version to which the resource belongs.
-	//
-	// +k8s:validation:cel[0]:rule="oldSelf == self"
-	// +k8s:validation:cel[0]:message="immutable field"
-	TemplateVersion *TempalteVersionReference `json:"templateVersionReference"`
+	// Template is the reference to the Template which to create the resource components,
+	// it must point to a specific version of the Template.
+	Template TemplateReferenceWithVersion `json:"template"`
 }
 
 // ResourceRunStatus defines the observed state of ResourceRun.

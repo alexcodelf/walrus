@@ -3,41 +3,74 @@ package apistatus
 import "github.com/seal-io/walrus/pkg/apis/walruscore/v1"
 
 const (
-	CatalogConditionReady   v1.ConditionType = "Ready"
-	CatalogConditionRefresh v1.ConditionType = "Refresh"
+	CatalogConditionFetched         v1.ConditionType = "Fetched"
+	CatalogConditionSyncedTemplates v1.ConditionType = "SyncedTemplates"
+
+	CatalogConditionDeleting v1.ConditionType = "Deleting"
 )
 
 const (
-	CatalogConditionReasonPreparing = "Preparing"
-	CatalogConditionReasonError     = "Error"
+	CatalogConditionFetchedReasonPartialFailed = "PartialFetchFailed"
+	CatalogConditionFetchedReasonAllFailed     = "AllFetchFailed"
+
+	CatalogConditionSyncedTemplatesReasonSyncing = "SyncingTemplates"
+	CatalogConditionSyncedTemplatesReasonFailed  = "SyncTemplatesFailed"
 )
 
 // catalogStatusPaths makes the following decision.
 //
 //	|  Condition Type  |     Condition Status    | Human Readable Status | Human Sensible Status |
 //	| ---------------- | ----------------------- | --------------------- | --------------------- |
-//	| Refresh          | Unknown                 | Refreshing            | Transitioning         |
-//	| Refresh          | False                   | /                     | /                     |
-//	| Refresh          | True                    | /                     | /                     |
-//	| Ready            | Unknown                 | Preparing             | Transitioning         |
-//	| Ready            | False                   | NotReady              | Interrupted           |
-//	| Ready            | True                    | Ready                 |                       |
+//	| Fetched          | Unknown                 | Fetching              | Transitioning         |
+//	| Fetched          | False                   | PartialFetchFailed    | Interrupted           |
+//	| Fetched          | False                   | AllFetchFailed        | Interrupted           |
+//	| Fetched          | True                    | Fetched               | /                     |
+//	| SyncedTemplates  | Unknown                 | SyncingTemplates      | Transitioning         |
+//	| SyncedTemplates  | False                   | SyncTemplatesFailed   | Interrupted           |
+//	| SyncedTemplates  | True                    | Ready                 | /                     |
+//	| Deleting         | True                    | Deleting              | Transitioning         |
 var catalogStatusPaths = NewWalker(
 	[][]v1.ConditionType{
 		{
-			CatalogConditionRefresh,
-			CatalogConditionReady,
+			CatalogConditionFetched,
+			CatalogConditionSyncedTemplates,
+		},
+		{
+			CatalogConditionDeleting,
 		},
 	},
 	func(d Decision[v1.ConditionType]) {
-		d.Make(CatalogConditionRefresh,
+		d.Make(CatalogConditionFetched,
 			func(st v1.ConditionStatus, reason string) (string, string, Score) {
 				switch st {
 				default:
-					return "Refresh", "", SummaryScoreDone
-				case v1.ConditionUnknown:
-					return "Refreshing", "", SummaryScoreTransitioning
+					if reason == "" {
+						reason = "Fetching"
+					}
+					return reason, "", SummaryScoreTransitioning
+				case v1.ConditionFalse:
+					return reason, "", SummaryScoreInterrupted
+				case v1.ConditionTrue:
+					return "Fetched", "", SummaryScoreDone
 				}
+			})
+		d.Make(CatalogConditionSyncedTemplates,
+			func(st v1.ConditionStatus, reason string) (string, string, Score) {
+				switch st {
+				default:
+					if reason == "" {
+						reason = "SyncingTemplates"
+					}
+					return reason, "", SummaryScoreTransitioning
+				case v1.ConditionFalse:
+					return reason, "", SummaryScoreInterrupted
+				case v1.ConditionTrue:
+					return "Ready", "", SummaryScoreDone
+				}
+			})
+		d.Make(CatalogConditionDeleting,
+			func(st v1.ConditionStatus, reason string) (string, string, Score) {
+				return "Deleting", "", SummaryScoreTransitioning
 			})
 	},
 )

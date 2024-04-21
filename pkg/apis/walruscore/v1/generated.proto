@@ -42,20 +42,20 @@ message CatalogList {
 
 // CatalogSpec defines the desired state of Catalog.
 message CatalogSpec {
+  // Description of the catalog.
+  optional string description = 1;
+
   // Builtin indicate the catalog is builtin catalog.
   //
   // +k8s:validation:cel[0]:rule="oldSelf == self"
   // +k8s:validation:cel[0]:message="immutable field"
-  optional bool builtin = 1;
+  optional bool builtin = 2;
 
   // TemplateFormat of the catalog.
   //
   // +k8s:validation:cel[0]:rule="oldSelf == self"
   // +k8s:validation:cel[0]:message="immutable field"
-  optional string templateFormat = 2;
-
-  // Description of the catalog.
-  optional string description = 3;
+  optional string templateFormat = 3;
 
   // Filters specifies the filtering rules for the catalog.
   optional Filters filters = 4;
@@ -69,17 +69,17 @@ message CatalogStatus {
   // StatusDescriptor defines the status of the catalog.
   optional StatusDescriptor statusDescriptor = 1;
 
-  // LastSyncTime record the last sync catalog time.
-  optional k8s.io.apimachinery.pkg.apis.meta.v1.Time lastSyncTime = 2;
-
-  // TemplateCount is the count of templates.
-  optional int64 templateCount = 3;
+  // Project is the project to which the catalog belongs.
+  optional string project = 2;
 
   //  URL of the catalog.
-  optional string url = 4;
+  optional string url = 3;
 
-  // Project is the project to which the catalog belongs.
-  optional string project = 5;
+  // TemplateCount records the count of the related templates.
+  optional int64 templateCount = 4;
+
+  // LastSuccessfulSyncTime records the last time the catalog was synchronized successfully.
+  optional k8s.io.apimachinery.pkg.apis.meta.v1.Time lastSuccessfulSyncTime = 5;
 }
 
 // Condition describes the state of a condition at a certain point.
@@ -128,13 +128,11 @@ message Connector {
 //
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:crd-gen:resource:scope="Namespaced",subResources=["status"]
+// +k8s:crd-gen:resource:scope="Namespaced"
 message ConnectorBinding {
   optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
 
   optional ConnectorBindingSpec spec = 2;
-
-  optional ConnectorBindingStatus status = 3;
 }
 
 // ConnectorBindingList contains a list of ConnectorBinding.
@@ -149,28 +147,31 @@ message ConnectorBindingList {
 // ConnectorBindingSpec defines the desired state of ConnectorBinding.
 message ConnectorBindingSpec {
   // Connector is the reference to the connector.
-  optional ConnectorReference connector = 1;
+  optional ConnectorReferenceWithType connector = 1;
 }
 
-// ConnectorBindingStatus defines the observed state of ConnectorBinding.
-message ConnectorBindingStatus {
-  // Type is the type of the connector.
-  optional string Type = 1;
-
-  // Category is the category of the connector.
-  optional string Category = 2;
-}
-
+// ConnectorConfig defines the configuration of the Connector.
 message ConnectorConfig {
+  // Version is the version of the configuration.
   optional string version = 1;
 
+  // Data holds the configuration entries.
+  //
+  // +mapType=atomic
   map<string, ConnectorConfigEntry> data = 2;
 }
 
+// ConnectorConfigEntry defines the configuration entry of the Connector.
 message ConnectorConfigEntry {
-  optional string value = 1;
+  // Sensitive indicates whether the entry is sensitive.
+  optional bool sensitive = 1;
 
-  optional bool visible = 2;
+  // Value is the value of the configuration entry.
+  //
+  // When Sensitive is true,
+  // it is provided as a write-only input field,
+  // and returns "(sensitive)".
+  optional string value = 2;
 }
 
 // ConnectorList holds the list of Connector.
@@ -191,29 +192,67 @@ message ConnectorReference {
   optional string namespace = 2;
 }
 
+// ConnectorReferenceWithType is a reference to a connector with its category and type.
+message ConnectorReferenceWithType {
+  optional ConnectorReference connectorReference = 1;
+
+  // Category is the category of the connector.
+  //
+  // If the Category is empty,
+  // the Category will be set to the category of the connector.
+  //
+  // +k8s:validation:cel[0]:rule="oldSelf == self"
+  // +k8s:validation:cel[0]:message="immutable field"
+  optional string category = 2;
+
+  // Type is the type of the connector.
+  //
+  // If the Type is empty,
+  // the Type will be set to the type of the connector.
+  //
+  // +k8s:validation:cel[0]:rule="oldSelf == self"
+  // +k8s:validation:cel[0]:message="immutable field"
+  optional string type = 3;
+}
+
 // ConnectorSpec defines the desired state of Connector.
 message ConnectorSpec {
   // ApplicableEnvironmentType is the environment type that the connector is applicable to.
   //
+  // +k8s:validation:cel[0]:rule="oldSelf == self"
+  // +k8s:validation:cel[0]:message="immutable field"
   // +k8s:validation:enum=["Development","Staging","Production"]
   optional string applicableEnvironmentType = 1;
 
   // Category is the category of the connector.
   //
+  // +k8s:validation:cel[0]:rule="oldSelf == self"
+  // +k8s:validation:cel[0]:message="immutable field"
   // +k8s:validation:enum=["Docker","Kubernetes","Custom","CloudProvider"]
   optional string category = 2;
 
   // Type is the type of the connector.
+  //
+  // +k8s:validation:cel[0]:rule="oldSelf == self"
+  // +k8s:validation:cel[0]:message="immutable field"
   optional string type = 3;
 
   // Config is the configuration of the connector.
+  //
+  // Any sensitive configuration entry will be erased before storing.
   optional ConnectorConfig config = 4;
 
-  // Description is the description of the connector.
-  optional string description = 5;
+  // SecretName is the name of the secret that stores the Config.
+  //
+  // If the secret name is not provided, a secret will be created to store the Config,
+  // otherwise, the Config will be stored in the secret with the provided name.
+  //
+  // +k8s:validation:cel[0]:rule="oldSelf == self"
+  // +k8s:validation:cel[0]:message="immutable field"
+  optional string secretName = 5;
 
-  // SecretName is the auto-generated secret name for the connector configuration. Will be overridden if set.
-  optional string secretName = 6;
+  // Description is the description of the connector.
+  optional string description = 6;
 }
 
 // ConnectorStatus defines the observed state of Connector.
@@ -354,8 +393,9 @@ message ResourceComponentsStatus {
   // ResourceName is the resource name of the resource components.
   optional string resource = 3;
 
-  // TemplateVersion template version to which is used to create the resource components.
-  optional TempalteVersionReference templateVersionReference = 4;
+  // Template is the reference to the Template which to create the resource components,
+  // it must point to a specific version of the Template.
+  optional TemplateReferenceWithVersion template = 4;
 
   // ComputedAttributes stores the computed attributes of the component.
   // It stores the attributes of the resource that used to create the component.
@@ -562,11 +602,9 @@ message ResourceRunSpec {
   // +k8s:validation:cel[0]:message="immutable field"
   optional k8s.io.apimachinery.pkg.runtime.RawExtension attributes = 4;
 
-  // TemplateVersion template version to which the resource belongs.
-  //
-  // +k8s:validation:cel[0]:rule="oldSelf == self"
-  // +k8s:validation:cel[0]:message="immutable field"
-  optional TempalteVersionReference templateVersionReference = 5;
+  // Template is the reference to the Template which to create the resource components,
+  // it must point to a specific version of the Template.
+  optional TemplateReferenceWithVersion template = 5;
 }
 
 // ResourceRunStatus defines the observed state of ResourceRun.
@@ -778,10 +816,14 @@ message ResourceSpec {
   // Attributes to configure the template.
   optional k8s.io.apimachinery.pkg.runtime.RawExtension attributes = 1;
 
-  // TemplateVersion template version to which the resource belongs.
-  optional TempalteVersionReference templateVersionReference = 2;
+  // Template is the reference to the Template which the resource used,
+  // it is able to pointed to a specific version of the Template.
+  //
+  // If the version is not specified,
+  // the default version of the Template will be used.
+  optional TemplateReferenceWithVersion template = 2;
 
-  // Type is a resource definition type.
+  // Type is the type of the ResourceDefinition which the resource be.
   optional string type = 3;
 
   // Draft indicates whether the resource is a draft.
@@ -859,14 +901,6 @@ message StatusDescriptor {
   repeated Condition conditions = 2;
 }
 
-message TempalteVersionReference {
-  optional string namespace = 1;
-
-  optional string name = 2;
-
-  optional string version = 3;
-}
-
 // Template is the schema for the templates API.
 //
 // +genclient
@@ -889,6 +923,23 @@ message TemplateList {
   repeated Template items = 2;
 }
 
+// TemplateReference is a reference to a template.
+message TemplateReference {
+  // Namespace is the namespace of the template.
+  optional string namespace = 1;
+
+  // Name is the name of the template.
+  optional string name = 2;
+}
+
+// TemplateReferenceWithVersion is a reference to a template with a specific version.
+message TemplateReferenceWithVersion {
+  optional TemplateReference templateReference = 1;
+
+  // Version is a specific version of the template.
+  optional string version = 2;
+}
+
 // TemplateSpec defines the desired state of Template.
 message TemplateSpec {
   // TemplateFormat of the content.
@@ -909,23 +960,20 @@ message TemplateStatus {
   // StatusDescriptor defines the status of the catalog.
   optional StatusDescriptor statusDescriptor = 1;
 
-  // LastSyncTime record the last sync catalog time.
-  optional k8s.io.apimachinery.pkg.apis.meta.v1.Time lastSyncTime = 2;
-
-  // The original name of the template.
-  optional string originalName = 3;
+  // Project is the project that the template belongs to.
+  optional string project = 2;
 
   // URL of the template.
-  optional string url = 4;
-
-  // Project is the project that the catalog belongs to.
-  optional string project = 5;
+  optional string url = 3;
 
   // A URL to an SVG or PNG image to be used as an icon.
-  optional string icon = 6;
+  optional string icon = 4;
 
   // Versions contains the versions for the template.
-  repeated TemplateVersion versions = 7;
+  repeated TemplateVersion versions = 5;
+
+  // LastSuccessfulSyncTime record the last sync time the template was synchronized successfully.
+  optional k8s.io.apimachinery.pkg.apis.meta.v1.Time lastSuccessfulSyncTime = 6;
 }
 
 // TemplateVersion defines the version of Template.

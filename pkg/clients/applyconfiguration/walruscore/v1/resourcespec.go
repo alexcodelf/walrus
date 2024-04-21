@@ -12,11 +12,11 @@ import (
 // ResourceSpecApplyConfiguration represents an declarative configuration of the ResourceSpec type for use
 // with apply.
 type ResourceSpecApplyConfiguration struct {
-	Attributes      *runtime.RawExtension                       `json:"attributes,omitempty"`
-	TemplateVersion *TempalteVersionReferenceApplyConfiguration `json:"templateVersionReference,omitempty"`
-	Type            *string                                     `json:"type,omitempty"`
-	Draft           *bool                                       `json:"draft,omitempty"`
-	Stop            *bool                                       `json:"stop,omitempty"`
+	Attributes *runtime.RawExtension                           `json:"attributes,omitempty"`
+	Template   *TemplateReferenceWithVersionApplyConfiguration `json:"template,omitempty"`
+	Type       *string                                         `json:"type,omitempty"`
+	Draft      *bool                                           `json:"draft,omitempty"`
+	Stop       *bool                                           `json:"stop,omitempty"`
 }
 
 // ResourceSpecApplyConfiguration constructs an declarative configuration of the ResourceSpec type for use with
@@ -33,11 +33,11 @@ func (b *ResourceSpecApplyConfiguration) WithAttributes(value runtime.RawExtensi
 	return b
 }
 
-// WithTemplateVersion sets the TemplateVersion field in the declarative configuration to the given value
+// WithTemplate sets the Template field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TemplateVersion field is set to the value of the last call.
-func (b *ResourceSpecApplyConfiguration) WithTemplateVersion(value *TempalteVersionReferenceApplyConfiguration) *ResourceSpecApplyConfiguration {
-	b.TemplateVersion = value
+// If called multiple times, the Template field is set to the value of the last call.
+func (b *ResourceSpecApplyConfiguration) WithTemplate(value *TemplateReferenceWithVersionApplyConfiguration) *ResourceSpecApplyConfiguration {
+	b.Template = value
 	return b
 }
 

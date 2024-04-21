@@ -5,19 +5,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-const ProviderLabelPrefix = "walrus.seal.io/provider-"
-
 // ConnectorBinding is the schema for the connectorbindings API.
 //
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:crd-gen:resource:scope="Namespaced",subResources=["status"]
+// +k8s:crd-gen:resource:scope="Namespaced"
 type ConnectorBinding struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ConnectorBindingSpec   `json:"spec"`
-	Status ConnectorBindingStatus `json:"status,omitempty"`
+	Spec ConnectorBindingSpec `json:"spec"`
 }
 
 var _ runtime.Object = (*ConnectorBinding)(nil)
@@ -25,16 +22,7 @@ var _ runtime.Object = (*ConnectorBinding)(nil)
 // ConnectorBindingSpec defines the desired state of ConnectorBinding.
 type ConnectorBindingSpec struct {
 	// Connector is the reference to the connector.
-	Connector ConnectorReference `json:"connector"`
-}
-
-// ConnectorBindingStatus defines the observed state of ConnectorBinding.
-type ConnectorBindingStatus struct {
-	// Type is the type of the connector.
-	Type string `json:"Type"`
-
-	// Category is the category of the connector.
-	Category ConnectorCategory `json:"Category"`
+	Connector ConnectorReferenceWithType `json:"connector"`
 }
 
 // ConnectorBindingList contains a list of ConnectorBinding.
@@ -48,3 +36,26 @@ type ConnectorBindingList struct {
 }
 
 var _ runtime.Object = (*ConnectorList)(nil)
+
+// ConnectorReferenceWithType is a reference to a connector with its category and type.
+type ConnectorReferenceWithType struct {
+	ConnectorReference `json:",inline"`
+
+	// Category is the category of the connector.
+	//
+	// If the Category is empty,
+	// the Category will be set to the category of the connector.
+	//
+	// +k8s:validation:cel[0]:rule="oldSelf == self"
+	// +k8s:validation:cel[0]:message="immutable field"
+	Category ConnectorCategory `json:"category,omitempty"`
+
+	// Type is the type of the connector.
+	//
+	// If the Type is empty,
+	// the Type will be set to the type of the connector.
+	//
+	// +k8s:validation:cel[0]:rule="oldSelf == self"
+	// +k8s:validation:cel[0]:message="immutable field"
+	Type string `json:"type,omitempty"`
+}

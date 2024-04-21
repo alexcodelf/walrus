@@ -25,11 +25,15 @@ type ResourceSpec struct {
 	// Attributes to configure the template.
 	Attributes runtime.RawExtension `json:"attributes,omitempty"`
 
-	// TemplateVersion template version to which the resource belongs.
-	TemplateVersion *TempalteVersionReference `json:"templateVersionReference,omitempty"`
+	// Template is the reference to the Template which the resource used,
+	// it is able to pointed to a specific version of the Template.
+	//
+	// If the version is not specified,
+	// the default version of the Template will be used.
+	Template *TemplateReferenceWithVersion `json:"template,omitempty"`
 
-	// Type is a resource definition type.
-	Type string `json:"type,omitempty"`
+	// Type is the type of the ResourceDefinition which the resource be.
+	Type *string `json:"type,omitempty"`
 
 	// Draft indicates whether the resource is a draft.
 	Draft bool `json:"draft,omitempty"`

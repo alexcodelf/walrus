@@ -60,7 +60,7 @@ func (ps paths[T]) Walk(st *walruscore.StatusDescriptor) *walruscore.ConditionSu
 		r, rs = l, ls
 
 		// Quit soon if found one highest result.
-		if rs == HighestSummaryScore {
+		if rs >= _HighestSummaryScore {
 			break
 		}
 	}
@@ -71,10 +71,11 @@ func (ps paths[T]) Walk(st *walruscore.StatusDescriptor) *walruscore.ConditionSu
 type Score int
 
 const (
-	SummaryScoreDone Score = iota
+	_LowestSummaryScore Score = iota
+	SummaryScoreDone          = iota
 	SummaryScoreTransitioning
 	SummaryScoreInterrupted
-	HighestSummaryScore = SummaryScoreInterrupted
+	_HighestSummaryScore = SummaryScoreInterrupted
 )
 
 // ConditionSummary is the summary of conditions with score.
@@ -136,6 +137,10 @@ func (f path[T]) Walk(st *walruscore.StatusDescriptor) *ConditionSummary {
 		// Walk the path to configure the summary.
 		for i := range f.steps {
 			if stepsConditionIndex[i] == 0 {
+				if i == 0 {
+					// Give up the walk if the first step is not found.
+					return s
+				}
 				// Not found step in the given status's condition list.
 				continue
 			}
