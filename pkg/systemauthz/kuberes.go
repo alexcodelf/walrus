@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -182,7 +183,86 @@ func Initialize(ctx context.Context, cli clientset.Interface) error {
 						rbac.VerbAll,
 					},
 				},
-				// Kaniko need to manage basic Jobs, Secrets, Pods and Pods/Log for kaniko.
+				// Argo Workflow need to manage:
+				// - Pods
+				// - WorkflowTaskResults
+				// - WorkflowTaskSets(/status)
+				// - WorkflowArtifactGCTasks(/status)
+				{
+					APIGroups: []string{
+						core.GroupName,
+					},
+					Resources: []string{
+						"pods",
+					},
+					Verbs: []string{
+						"get",
+						"watch",
+						"patch",
+					},
+				},
+				{
+					APIGroups: []string{
+						core.GroupName,
+					},
+					Resources: []string{
+						"pods/log",
+					},
+					Verbs: []string{
+						"get",
+						"watch",
+					},
+				},
+				{
+					APIGroups: []string{
+						core.GroupName,
+					},
+					Resources: []string{
+						"pods/exec",
+					},
+					Verbs: []string{
+						"create",
+					},
+				},
+				{
+					APIGroups: []string{
+						workflow.Group,
+					},
+					Resources: []string{
+						"workflowtaskresults",
+					},
+					Verbs: []string{
+						"create",
+						"patch",
+					},
+				},
+				{
+					APIGroups: []string{
+						workflow.Group,
+					},
+					Resources: []string{
+						"workflowtasksets",
+						"workflowartifactgctasks",
+					},
+					Verbs: []string{
+						"list",
+						"watch",
+					},
+				},
+				{
+					APIGroups: []string{
+						workflow.Group,
+					},
+					Resources: []string{
+						"workflowtasksets/status",
+						"workflowartifactgctasks/status",
+					},
+					Verbs: []string{
+						"patch",
+					},
+				},
+				// Kaniko need to manage:
+				// - basic Jobs, Secrets and Pods(/log).
 				{
 					APIGroups: []string{
 						batch.GroupName,
@@ -191,7 +271,7 @@ func Initialize(ctx context.Context, cli clientset.Interface) error {
 						"jobs",
 					},
 					Verbs: []string{
-						rbac.VerbAll,
+						rbac.VerbAll, // TODO: need to narrow.
 					},
 				},
 				{
@@ -204,7 +284,7 @@ func Initialize(ctx context.Context, cli clientset.Interface) error {
 						"pods/log",
 					},
 					Verbs: []string{
-						rbac.VerbAll,
+						rbac.VerbAll, // TODO: need to narrow.
 					},
 				},
 			},

@@ -44,7 +44,7 @@ fullnameOverride: "{{ .Release }}"
 
 namespaceOverride: "{{ .Namespace }}"
 
-singleNamespace: true
+singleNamespace: false
 
 workflow:
   rbac:
@@ -55,6 +55,11 @@ controller:
     registry: "{{ .ImageRegistry }}"
     repository: "sealio/mirrored-workflow-controller"
   name: "controller"
+  instanceID:
+    enabled: true
+    useReleaseName: true
+  workflowNamespaces: []
+  persistence: {}
 
 executor:
   image:
