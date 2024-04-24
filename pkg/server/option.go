@@ -12,8 +12,12 @@ import (
 	"github.com/seal-io/utils/certs/kubecert"
 	"github.com/seal-io/utils/osx"
 	"github.com/spf13/pflag"
+	"k8s.io/apiserver/pkg/admission/plugin/namespace/lifecycle"
+	"k8s.io/apiserver/pkg/admission/plugin/validatingadmissionpolicy"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	genericoptions "k8s.io/apiserver/pkg/server/options"
+	"k8s.io/client-go/informers"
+	kclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	cliflag "k8s.io/component-base/cli/flag"
 
@@ -277,12 +281,25 @@ func (o *Options) Complete(ctx context.Context) (*Config, error) {
 	audit.LogOptions.Path = o.AuditLogFile
 	audit.WebhookOptions.ConfigFile = o.AuditWebhookConfigFile
 
-	apiSrvCfg := genericapiserver.NewConfig(scheme.Codecs)
+	admit := genericoptions.NewAdmissionOptions()
+	admit.DisablePlugins = []string{lifecycle.PluginName, validatingadmissionpolicy.PluginName}
+
+	lpCliCfg, lpHttpCli := rest.CopyConfig(&mgrConfig.KubeClientConfig), mgrConfig.KubeHTTPClient
+	lpCli, err := kclientset.NewForConfigAndClient(rest.CopyConfig(lpCliCfg), lpHttpCli)
+	if err != nil {
+		return nil, fmt.Errorf("create kubernete native client: %w", err)
+	}
+	lpInf := informers.NewSharedInformerFactory(lpCli, o.ManagerOptions.InformerCacheResyncPeriod)
+
+	apiSrvCfg := genericapiserver.NewRecommendedConfig(scheme.Codecs)
 	{
+		// Configure shared informer factory.
+		apiSrvCfg.SharedInformerFactory = lpInf
 		// Configure CORS allowed origins.
 		apiSrvCfg.CorsAllowedOriginList = o.CorsAllowedOrigins
 		// Feedback Kubernetes client configuration.
-		apiSrvCfg.LoopbackClientConfig = rest.CopyConfig(&mgrConfig.KubeClientConfig)
+		apiSrvCfg.LoopbackClientConfig = lpCliCfg
+		apiSrvCfg.ClientConfig = lpCliCfg
 		// Disable default metrics service.
 		apiSrvCfg.EnableMetrics = false
 		// Disable default profiling service.
@@ -299,11 +316,14 @@ func (o *Options) Complete(ctx context.Context) (*Config, error) {
 	}
 
 	return &Config{
-		ManagerConfig:   mgrConfig,
-		APIServerConfig: apiSrvCfg,
-		Serve:           serve,
-		Authn:           authn,
-		Authz:           authz,
-		Audit:           audit,
+		ManagerConfig:      mgrConfig,
+		APIServerConfig:    apiSrvCfg,
+		Serve:              serve,
+		Authn:              authn,
+		Authz:              authz,
+		Audit:              audit,
+		Admit:              admit,
+		KubeNativeClient:   lpCli,
+		KubeNativeInformer: lpInf,
 	}, nil
 }

@@ -92,6 +92,7 @@ func generate() error {
 			Specify the package paths of the Admission webhooks.
 		*/
 		Webhooks: []string{
+			"github.com/seal-io/walrus/pkg/webhooks/walrus",
 			"github.com/seal-io/walrus/pkg/webhooks/walruscore",
 		},
 		/*

@@ -525,23 +525,7 @@ func (h *VariableHandler) OnGet(ctx context.Context, name types.NamespacedName, 
 }
 
 func (h *VariableHandler) OnUpdate(ctx context.Context, obj, _ runtime.Object, opts ctrlcli.UpdateOptions) (runtime.Object, error) {
-	// Validate.
 	vra := obj.(*walrus.Variable)
-	{
-		var errs field.ErrorList
-		if vra.Spec.Value == nil {
-			errs = field.ErrorList{
-				field.Required(field.NewPath("spec.value"), "variable value is required"),
-			}
-		}
-		if len(vra.Finalizers) != 0 {
-			errs = append(errs,
-				field.Invalid(field.NewPath("metadata.finalizers"), vra.Finalizers, "finalizers are not allowed"))
-		}
-		if len(errs) > 0 {
-			return nil, kerrors.NewInvalid(walrus.SchemeKind("variables"), vra.Name, errs)
-		}
-	}
 
 	// Update.
 	eSec := &core.Secret{
@@ -549,9 +533,11 @@ func (h *VariableHandler) OnUpdate(ctx context.Context, obj, _ runtime.Object, o
 			Namespace: vra.Namespace,
 			Name:      systemkuberes.VariablesDelegatedSecretName,
 		},
-		Data: map[string][]byte{
+	}
+	if vra.Spec.Value != nil {
+		eSec.Data = map[string][]byte{
 			vra.Name: []byte(*vra.Spec.Value),
-		},
+		}
 	}
 	eNotes := map[string]string{
 		vra.Name + "-sensitive": strconv.FormatBool(vra.Spec.Sensitive),
@@ -563,7 +549,9 @@ func (h *VariableHandler) OnUpdate(ctx context.Context, obj, _ runtime.Object, o
 			return nil, true, kerrors.NewNotFound(walrus.SchemeResource("variables"), vra.Name)
 		}
 		// Align data.
-		aSec.Data[vra.Name] = eSec.Data[vra.Name]
+		if len(eSec.Data) != 0 {
+			aSec.Data[vra.Name] = eSec.Data[vra.Name]
+		}
 		// Align delegated info.
 		systemmeta.NoteResource(aSec, "variables", eNotes)
 		return aSec, false, nil

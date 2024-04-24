@@ -174,15 +174,15 @@ func (r *ConnectorWebhook) transferSecret(ctx context.Context, conn *walruscore.
 			}
 		case conn.Spec.SecretName != "":
 			// Check if we need to update the secret.
-			need := true
+			var need bool
 			for k := range conn.Spec.Config.Data {
 				if !conn.Spec.Config.Data[k].Sensitive {
 					continue
 				}
 				if conn.Spec.Config.Data[k].Value == "(sensitive)" {
-					need = false
 					continue
 				}
+				need = true
 				break
 			}
 			if !need {

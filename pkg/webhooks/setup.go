@@ -16,12 +16,15 @@ import (
 	"github.com/seal-io/walrus/pkg/kubeclientset"
 	"github.com/seal-io/walrus/pkg/kubeclientset/review"
 	"github.com/seal-io/walrus/pkg/webhook"
+	"github.com/seal-io/walrus/pkg/webhooks/walrus"
 	"github.com/seal-io/walrus/pkg/webhooks/walruscore"
 )
 
 // NB(thxCode): Register webhooks below.
 var (
 	setupers = []webhook.Setup{
+		new(walrus.SettingWebhook),
+		new(walrus.VariableWebhook),
 		new(walruscore.CatalogWebhook),
 		new(walruscore.ConnectorWebhook),
 		new(walruscore.ConnectorBindingWebhook),
@@ -29,6 +32,7 @@ var (
 		new(walruscore.TemplateWebhook),
 	}
 	cfgGetters = []_WebhookConfigurationsGetter{
+		walrus.GetWebhookConfigurations,
 		walruscore.GetWebhookConfigurations,
 	}
 )

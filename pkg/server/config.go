@@ -14,6 +14,10 @@ import (
 	openapinamer "k8s.io/apiserver/pkg/endpoints/openapi"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	genericoptions "k8s.io/apiserver/pkg/server/options"
+	"k8s.io/apiserver/pkg/util/feature"
+	"k8s.io/client-go/dynamic"
+	kinformers "k8s.io/client-go/informers"
+	kclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
 
 	"github.com/seal-io/walrus/pkg/apis"
@@ -25,12 +29,15 @@ import (
 )
 
 type Config struct {
-	ManagerConfig   *manager.Config
-	APIServerConfig *genericapiserver.Config
-	Serve           *genericoptions.SecureServingOptions
-	Authn           *genericoptions.DelegatingAuthenticationOptions
-	Authz           *genericoptions.DelegatingAuthorizationOptions
-	Audit           *genericoptions.AuditOptions
+	ManagerConfig      *manager.Config
+	APIServerConfig    *genericapiserver.RecommendedConfig
+	Serve              *genericoptions.SecureServingOptions
+	Authn              *genericoptions.DelegatingAuthenticationOptions
+	Authz              *genericoptions.DelegatingAuthorizationOptions
+	Audit              *genericoptions.AuditOptions
+	Admit              *genericoptions.AdmissionOptions
+	KubeNativeClient   kclientset.Interface
+	KubeNativeInformer kinformers.SharedInformerFactory
 }
 
 func (c *Config) Apply(ctx context.Context) (*Server, error) {
@@ -47,16 +54,16 @@ func (c *Config) Apply(ctx context.Context) (*Server, error) {
 		return nil, fmt.Errorf("apply server config: %w", err)
 	}
 
+	// Apply the authentication configuration.
 	if c.Authn != nil {
-		// Apply the authentication configuration.
 		err = c.Authn.ApplyTo(&apiSrvCfg.Authentication, apiSrvCfg.SecureServing, nil)
 		if err != nil {
 			return nil, fmt.Errorf("apply authentication config: %w", err)
 		}
 	}
 
+	// Apply the authorization configuration.
 	if c.Authz != nil {
-		// Apply the authorization configuration.
 		err = c.Authz.ApplyTo(&apiSrvCfg.Authorization)
 		if err != nil {
 			return nil, fmt.Errorf("apply authorization config: %w", err)
@@ -64,9 +71,21 @@ func (c *Config) Apply(ctx context.Context) (*Server, error) {
 	}
 
 	// Apply the audit configuration.
-	err = c.Audit.ApplyTo(apiSrvCfg)
+	err = c.Audit.ApplyTo(&apiSrvCfg.Config)
 	if err != nil {
 		return nil, fmt.Errorf("apply audit config: %w", err)
+	}
+
+	// Apply the admission configuration.
+	{
+		dcli, err := dynamic.NewForConfig(apiSrvCfg.ClientConfig)
+		if err != nil {
+			return nil, fmt.Errorf("create dynamic client: %w", err)
+		}
+		err = c.Admit.ApplyTo(&apiSrvCfg.Config, apiSrvCfg.SharedInformerFactory, c.KubeNativeClient, dcli, feature.DefaultFeatureGate)
+		if err != nil {
+			return nil, fmt.Errorf("apply admission config: %w", err)
+		}
 	}
 
 	// Apply OpenAPI configuration.
@@ -91,7 +110,7 @@ func (c *Config) Apply(ctx context.Context) (*Server, error) {
 	apiSrvCfg.OpenAPIV3Config.Info.Title = title
 	apiSrvCfg.OpenAPIV3Config.Info.Version = fullVersion
 
-	apiSrvCompletedCfg := apiSrvCfg.Complete(nil)
+	apiSrvCompletedCfg := apiSrvCfg.Complete()
 	apiSrv, err := apiSrvCompletedCfg.New("walrus", genericapiserver.NewEmptyDelegate())
 	if err != nil {
 		return nil, fmt.Errorf("create APIServer: %w", err)

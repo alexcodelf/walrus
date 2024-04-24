@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/registry/rest"
 	ctrlcli "sigs.k8s.io/controller-runtime/pkg/client"
@@ -277,17 +276,13 @@ func (h *SettingHandler) OnUpdate(ctx context.Context, obj, _ runtime.Object, op
 		return nil, kerrors.NewForbidden(walrus.SchemeResource("settings"), set.Name,
 			errors.New("setting is not editable"))
 	}
-	if set.Spec.Value == nil {
-		errs := field.ErrorList{
-			field.Required(field.NewPath("spec.value"), "setting value is required"),
-		}
-		return nil, kerrors.NewInvalid(walrus.SchemeKind("settings"), set.Name, errs)
-	}
 
 	// Update.
-	err := s.Configure(ctx, *set.Spec.Value)
-	if err != nil {
-		return nil, kerrors.NewConflict(walrus.SchemeResource("settings"), set.Name, err)
+	if set.Spec.Value != nil {
+		err := s.Configure(ctx, *set.Spec.Value)
+		if err != nil {
+			return nil, kerrors.NewConflict(walrus.SchemeResource("settings"), set.Name, err)
+		}
 	}
 
 	// Get.

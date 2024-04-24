@@ -54,7 +54,7 @@ type SettingStatus struct {
 	// Value_ is the shadow of the Value,
 	// it is provided for system processing only.
 	//
-	// DO NOT EXPOSE AND STORE IT.
+	// DO NOT EXPOSE.
 	Value_ string `json:"-"`
 }
 
