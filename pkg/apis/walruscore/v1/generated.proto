@@ -273,6 +273,14 @@ message Filters {
   optional string excludeExpression = 2;
 }
 
+message Property {
+  // Value indicates the value of property.
+  optional string value = 1;
+
+  // Visible indicates to show the value of this property or not.
+  optional bool visible = 2;
+}
+
 // Resource is the schema for the resources API.
 //
 // +genclient
@@ -514,8 +522,11 @@ message ResourceHookSpec {
   // Plan defines the before and after steps to run in the resource hook.
   optional ResourceOperationHook plan = 1;
 
+  // Approve defines the before and after steps to approve in the resource hook.
+  optional ResourceOperationHook approve = 2;
+
   // Apply defines the before and after steps to apply in the resource hook.
-  optional ResourceOperationHook apply = 2;
+  optional ResourceOperationHook apply = 3;
 }
 
 // ResourceHookStatus defines the observed state of ResourceHook.
@@ -781,14 +792,18 @@ message ResourceRunTemplateReference {
 // The order of the steps will be:
 //
 // template pre-plan--> resource pre-plan --> plan --> resource post-plan
-// --> template post-plan --> template pre-apply --> resource pre-apply --> apply
+// --> template post-plan --> template pre-approve --> approve --> template post-approve
+// --> template pre-apply --> resource pre-apply --> apply
 // --> resource post-apply --> template post-apply.
 message ResourceRunTemplateSpec {
   // Plan defines the template steps to run in before and after the resource run template.
   optional ResourceOperationHook plan = 1;
 
+  // Approve defines the template steps to approve in the resource run template.
+  optional ResourceOperationHook approve = 2;
+
   // Apply defines the template steps to apply in the resource run template.
-  optional ResourceOperationHook apply = 2;
+  optional ResourceOperationHook apply = 3;
 }
 
 // ResourceRunTemplateStatus defines the observed state of ResourceRunTemplate.

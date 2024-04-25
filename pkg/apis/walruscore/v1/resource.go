@@ -20,6 +20,8 @@ type Resource struct {
 
 var _ runtime.Object = (*Resource)(nil)
 
+type Resources = []*Resource
+
 // ResourceSpec defines the desired state of Resource.
 type ResourceSpec struct {
 	// Attributes to configure the template.

@@ -20,6 +20,7 @@ var setupers = []controller.Setup{
 	new(walruscore.ConnectorReconciler),
 	new(walruscore.ConnectorBindingReconciler),
 	new(walruscore.ResourceReconciler),
+	new(walruscore.ResourceRunReconciler),
 	new(walruscore.ResourceDefinitionReconciler),
 	new(walruscore.TemplateReconciler),
 }

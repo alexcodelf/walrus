@@ -1,0 +1,71 @@
+dapiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  annotations:
+    walrus.io/environment: default-local
+    walrus.io/resource-run: resource-test-run-1713960488
+  creationTimestamp: "2024-04-24T12:08:21Z"
+  generation: 1
+  labels:
+    workflows.argoproj.io/controller-instanceid: walrus-workflow
+  name: resource-test-run-1713960488-plan
+  namespace: default-local
+  ownerReferences:
+  - apiVersion: walruscore.seal.io/v1
+    kind: ResourceRun
+    name: resource-test-run-1713960488
+    uid: dbe7a51d-fa98-472f-b5f6-d4e3f560309f
+  resourceVersion: "2689"
+  uid: db7b7659-b0c1-4fc7-8b22-2a680d1de76d
+spec:
+  arguments: {}
+  entrypoint: entrypoint
+  serviceAccountName: resource-test-run-1713960488-sa
+  templates:
+  - container:
+      command:
+      - /bin/sh
+      - -c
+      - 'cp /var/terraform/secrets/main.tf main.tf && export TF_HTTP_PASSWORD=$(cat
+        /var/run/secrets/kubernetes.io/serviceaccount/token) && terraform init -no-color
+        && terraform plan  -no-color -out=plan.out  -var-file=/var/terraform/secrets/terraform.tfvars
+        && terraform show -json plan.out > plan.json && curl -sS --fail-with-body
+        -X POST -H "Content-Type: multipart/form-data" -H "Authorization: Bearer $ACCESS_TOKEN"
+        https://198.19.249.2/v1/projects//environments/default-local/resources/resource-test/runs/resource-test-run-1713960488/plan
+        -F jsonplan=@plan.json -F plan=@plan.out -k'
+      env:
+      - name: TF_CLI_NETWORK_MIRROR_URL
+        value: https://walrus-terraform-mirror-hermitcrab.walrus-system/v1/providers/
+      - name: TF_CLI_NETWORK_MIRROR_INSECURE_SKIP_VERIFY
+        value: "true"
+      image: sealio/terraform-deployer:v1.5.7-seal.1
+      imagePullPolicy: IfNotPresent
+      name: deployment
+      resources: {}
+      volumeMounts:
+      - mountPath: /var/terraform/secrets
+        name: run-config-resource-test-run-1713960488
+      workingDir: /var/terraform/workspace
+    inputs: {}
+    metadata:
+      annotations:
+        walrus.seal.io/resource-run-name: resource-test-run-1713960488
+        walrus.seal.io/resource-run-step-type: Plan
+    name: deployer
+    outputs: {}
+    securityContext: {}
+    volumes:
+    - name: run-config-resource-test-run-1713960488
+      secret:
+        secretName: run-config-resource-test-run-1713960488
+  - inputs: {}
+    metadata: {}
+    name: entrypoint
+    outputs: {}
+    steps:
+    - - arguments: {}
+        name: deployer
+        template: deployer
+status:
+  finishedAt: null
+  startedAt: null

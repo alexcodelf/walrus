@@ -8,8 +8,9 @@ package v1
 // ResourceHookSpecApplyConfiguration represents an declarative configuration of the ResourceHookSpec type for use
 // with apply.
 type ResourceHookSpecApplyConfiguration struct {
-	Plan  *ResourceOperationHookApplyConfiguration `json:"plan,omitempty"`
-	Apply *ResourceOperationHookApplyConfiguration `json:"apply,omitempty"`
+	Plan    *ResourceOperationHookApplyConfiguration `json:"plan,omitempty"`
+	Approve *ResourceOperationHookApplyConfiguration `json:"approve,omitempty"`
+	Apply   *ResourceOperationHookApplyConfiguration `json:"apply,omitempty"`
 }
 
 // ResourceHookSpecApplyConfiguration constructs an declarative configuration of the ResourceHookSpec type for use with
@@ -23,6 +24,14 @@ func ResourceHookSpec() *ResourceHookSpecApplyConfiguration {
 // If called multiple times, the Plan field is set to the value of the last call.
 func (b *ResourceHookSpecApplyConfiguration) WithPlan(value *ResourceOperationHookApplyConfiguration) *ResourceHookSpecApplyConfiguration {
 	b.Plan = value
+	return b
+}
+
+// WithApprove sets the Approve field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Approve field is set to the value of the last call.
+func (b *ResourceHookSpecApplyConfiguration) WithApprove(value *ResourceOperationHookApplyConfiguration) *ResourceHookSpecApplyConfiguration {
+	b.Approve = value
 	return b
 }
 

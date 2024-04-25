@@ -7,6 +7,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/seal-io/utils/errorx"
 	"github.com/seal-io/utils/json"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -156,4 +157,14 @@ func HasAnyTypes(s *openapi3.Schema) bool {
 	}
 
 	return false
+}
+
+func AttributesToPropertyValues(attrs runtime.RawExtension) (Values, error) {
+	var values Values
+	err := json.Unmarshal(attrs.Raw, &values)
+	if err != nil {
+		return nil, err
+	}
+
+	return values, nil
 }

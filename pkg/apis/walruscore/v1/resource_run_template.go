@@ -31,11 +31,15 @@ var _ runtime.Object = (*ResourceRunTemplate)(nil)
 // The order of the steps will be:
 //
 // template pre-plan--> resource pre-plan --> plan --> resource post-plan
-// --> template post-plan --> template pre-apply --> resource pre-apply --> apply
+// --> template post-plan --> template pre-approve --> approve --> template post-approve
+// --> template pre-apply --> resource pre-apply --> apply
 // --> resource post-apply --> template post-apply.
 type ResourceRunTemplateSpec struct {
 	// Plan defines the template steps to run in before and after the resource run template.
 	Plan ResourceOperationHook `json:"plan,omitempty"`
+
+	// Approve defines the template steps to approve in the resource run template.
+	Approve ResourceOperationHook `json:"approve,omitempty"`
 
 	// Apply defines the template steps to apply in the resource run template.
 	Apply ResourceOperationHook `json:"apply,omitempty"`

@@ -108,6 +108,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/seal-io/walrus/pkg/apis/walruscore/v1.ConnectorSpec":                           schema_pkg_apis_walruscore_v1_ConnectorSpec(ref),
 		"github.com/seal-io/walrus/pkg/apis/walruscore/v1.ConnectorStatus":                         schema_pkg_apis_walruscore_v1_ConnectorStatus(ref),
 		"github.com/seal-io/walrus/pkg/apis/walruscore/v1.Filters":                                 schema_pkg_apis_walruscore_v1_Filters(ref),
+		"github.com/seal-io/walrus/pkg/apis/walruscore/v1.Property":                                schema_pkg_apis_walruscore_v1_Property(ref),
 		"github.com/seal-io/walrus/pkg/apis/walruscore/v1.Resource":                                schema_pkg_apis_walruscore_v1_Resource(ref),
 		"github.com/seal-io/walrus/pkg/apis/walruscore/v1.ResourceComponent":                       schema_pkg_apis_walruscore_v1_ResourceComponent(ref),
 		"github.com/seal-io/walrus/pkg/apis/walruscore/v1.ResourceComponentAppendix":               schema_pkg_apis_walruscore_v1_ResourceComponentAppendix(ref),
@@ -4388,6 +4389,35 @@ func schema_pkg_apis_walruscore_v1_Filters(ref common.ReferenceCallback) common.
 	}
 }
 
+func schema_pkg_apis_walruscore_v1_Property(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"value": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Value indicates the value of property.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"visible": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Visible indicates to show the value of this property or not.",
+							Default:     false,
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"value", "visible"},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_walruscore_v1_Resource(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -5300,6 +5330,13 @@ func schema_pkg_apis_walruscore_v1_ResourceHookSpec(ref common.ReferenceCallback
 					"plan": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Plan defines the before and after steps to run in the resource hook.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/seal-io/walrus/pkg/apis/walruscore/v1.ResourceOperationHook"),
+						},
+					},
+					"approve": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Approve defines the before and after steps to approve in the resource hook.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("github.com/seal-io/walrus/pkg/apis/walruscore/v1.ResourceOperationHook"),
 						},
@@ -6265,12 +6302,19 @@ func schema_pkg_apis_walruscore_v1_ResourceRunTemplateSpec(ref common.ReferenceC
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ResourceRunTemplateSpec defines the desired state of ResourceRunTemplate. It is a template for a resource run, which defines the previous and post step for resource operation like plan and apply. The order of the steps will be:\n\ntemplate pre-plan--> resource pre-plan --> plan --> resource post-plan --> template post-plan --> template pre-apply --> resource pre-apply --> apply --> resource post-apply --> template post-apply.",
+				Description: "ResourceRunTemplateSpec defines the desired state of ResourceRunTemplate. It is a template for a resource run, which defines the previous and post step for resource operation like plan and apply. The order of the steps will be:\n\ntemplate pre-plan--> resource pre-plan --> plan --> resource post-plan --> template post-plan --> template pre-approve --> approve --> template post-approve --> template pre-apply --> resource pre-apply --> apply --> resource post-apply --> template post-apply.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"plan": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Plan defines the template steps to run in before and after the resource run template.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/seal-io/walrus/pkg/apis/walruscore/v1.ResourceOperationHook"),
+						},
+					},
+					"approve": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Approve defines the template steps to approve in the resource run template.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("github.com/seal-io/walrus/pkg/apis/walruscore/v1.ResourceOperationHook"),
 						},

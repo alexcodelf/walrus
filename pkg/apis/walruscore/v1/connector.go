@@ -29,6 +29,8 @@ type ConnectorReference struct {
 	Namespace string `json:"namespace"`
 }
 
+type Connectors = []Connector
+
 func (in *ConnectorReference) ToNamespacedName() types.NamespacedName {
 	return types.NamespacedName{
 		Namespace: in.Namespace,
@@ -132,3 +134,10 @@ type ConnectorList struct {
 }
 
 var _ runtime.Object = (*ConnectorList)(nil)
+
+type Property struct {
+	// Value indicates the value of property.
+	Value string `json:"value"`
+	// Visible indicates to show the value of this property or not.
+	Visible bool `json:"visible"`
+}

@@ -8,8 +8,9 @@ package v1
 // ResourceRunTemplateSpecApplyConfiguration represents an declarative configuration of the ResourceRunTemplateSpec type for use
 // with apply.
 type ResourceRunTemplateSpecApplyConfiguration struct {
-	Plan  *ResourceOperationHookApplyConfiguration `json:"plan,omitempty"`
-	Apply *ResourceOperationHookApplyConfiguration `json:"apply,omitempty"`
+	Plan    *ResourceOperationHookApplyConfiguration `json:"plan,omitempty"`
+	Approve *ResourceOperationHookApplyConfiguration `json:"approve,omitempty"`
+	Apply   *ResourceOperationHookApplyConfiguration `json:"apply,omitempty"`
 }
 
 // ResourceRunTemplateSpecApplyConfiguration constructs an declarative configuration of the ResourceRunTemplateSpec type for use with
@@ -23,6 +24,14 @@ func ResourceRunTemplateSpec() *ResourceRunTemplateSpecApplyConfiguration {
 // If called multiple times, the Plan field is set to the value of the last call.
 func (b *ResourceRunTemplateSpecApplyConfiguration) WithPlan(value *ResourceOperationHookApplyConfiguration) *ResourceRunTemplateSpecApplyConfiguration {
 	b.Plan = value
+	return b
+}
+
+// WithApprove sets the Approve field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Approve field is set to the value of the last call.
+func (b *ResourceRunTemplateSpecApplyConfiguration) WithApprove(value *ResourceOperationHookApplyConfiguration) *ResourceRunTemplateSpecApplyConfiguration {
+	b.Approve = value
 	return b
 }
 

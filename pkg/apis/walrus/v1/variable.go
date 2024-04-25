@@ -23,6 +23,8 @@ type Variable struct {
 
 var _ runtime.Object = (*Variable)(nil)
 
+type Variables []*Variable
+
 // VariableSpec defines the desired state of Variable.
 type VariableSpec struct {
 	// Value contains the configuration data,

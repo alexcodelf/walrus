@@ -1,6 +1,8 @@
 package v1
 
 import (
+	fmt "fmt"
+
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -95,6 +97,10 @@ var _ runtime.Object = (*ResourceRunList)(nil)
 // +enum
 type ResourceRunType string
 
+func (t ResourceRunType) String() string {
+	return string(t)
+}
+
 const (
 	ResourceRunTypeCreate   ResourceRunType = "Create"
 	ResourceRunTypeUpdate   ResourceRunType = "Update"
@@ -109,8 +115,9 @@ const (
 type ResourceRunOperationType string
 
 const (
-	ResourceRunOperationTypePlan  ResourceRunOperationType = "Plan"
-	ResourceRunOperationTypeApply ResourceRunOperationType = "Apply"
+	ResourceRunOperationTypePlan    ResourceRunOperationType = "Plan"
+	ResourceRunOperationTypeApply   ResourceRunOperationType = "Apply"
+	ResourceRunOperationTypeDestory ResourceRunOperationType = "Destroy"
 )
 
 func (t ResourceRunOperationType) String() string {
@@ -120,6 +127,10 @@ func (t ResourceRunOperationType) String() string {
 // ResourceRunStepType describes the type of the resource run step.
 // +enum
 type ResourceRunStepType string
+
+func (t ResourceRunStepType) String() string {
+	return string(t)
+}
 
 const (
 	// ResourceRunStepTypePlan is the type of the plan resource, it is system generated.
@@ -278,4 +289,12 @@ type ResourceComponentChangeSummary struct {
 
 	// Deleted is the number of deleted components.
 	Deleted *int64 `json:"deleted"`
+}
+
+func ResourceRunPlanFileName(run *ResourceRun) string {
+	return fmt.Sprintf("walrus/project/%s/environment/%s/resource/%s-plan", run.Spec.Project, run.Namespace, run.GenerateName)
+}
+
+func ResourceRunConfigSecretName(run *ResourceRun) string {
+	return fmt.Sprintf("run-config-%s", run.Name)
 }

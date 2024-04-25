@@ -32,6 +32,9 @@ type ResourceHookSpec struct {
 	// Plan defines the before and after steps to run in the resource hook.
 	Plan ResourceOperationHook `json:"plan,omitempty"`
 
+	// Approve defines the before and after steps to approve in the resource hook.
+	Approve ResourceOperationHook `json:"approve,omitempty"`
+
 	// Apply defines the before and after steps to apply in the resource hook.
 	Apply ResourceOperationHook `json:"apply,omitempty"`
 }

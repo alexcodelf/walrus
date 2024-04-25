@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"github.com/seal-io/utils/stringx"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -66,6 +67,10 @@ type ResourceComponentAddress = string
 // +enum
 type ResourceComponentMode string
 
+func (r ResourceComponentMode) String() string {
+	return string(r)
+}
+
 const (
 	// ResourceComponentModeManaged indicates the resource created to target platform,
 	// it is writable(update or delete).
@@ -99,6 +104,10 @@ type ResourceComponent struct {
 // ResourceComponentShape is the shape of the resource component.
 // +enum
 type ResourceComponentShape string
+
+func (r ResourceComponentShape) String() string {
+	return string(r)
+}
 
 const (
 	// ResourceComponentShapeClass defines the resource component as class.
@@ -142,4 +151,10 @@ type ResourceComponentOperationKey struct {
 	Loggable *bool `json:"loggable,omitempty"`
 	// Executable indicates whether to be able to execute remote command.
 	Executable *bool `json:"executable,omitempty"`
+}
+
+// ResourceComponentGetUniqueKey returns the unique index key of the given model.ResourceComponent.
+func ResourceComponentGetUniqueKey(r *ResourceComponent) string {
+	// Align to schema definition.
+	return stringx.Join("-", r.Connector.Name, r.Shape.String(), r.Mode.String(), r.Type, r.Name)
 }

@@ -154,6 +154,18 @@ func (s *Server) Prepare(ctx context.Context) error {
 			return err
 		}
 
+		// Initialize builtin resource run template.
+		err = systemkuberes.InstallBuiltinResourceRunTemplate(ctx, loopbackKubeCli)
+		if err != nil {
+			return err
+		}
+
+		// Initialize builtin resource run step template.
+		err = systemkuberes.InstallBuiltinResourceRunStepTemplate(ctx, loopbackKubeCli)
+		if err != nil {
+			return err
+		}
+
 		klog.Info("!!! everything is ready !!!")
 		return nil
 	})
